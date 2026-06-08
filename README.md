@@ -4,7 +4,7 @@ Next.js App Router application for the TH PropTech platform.
 
 ## Requirements
 
-- Node.js >= 22.11.0
+- Node.js >= 22.13.0
 - pnpm >= 10.0.0
 
 ## Getting Started
