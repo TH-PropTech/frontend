@@ -3,13 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 20% 98%;
-  --foreground: 222 47% 11%;
-  --border: 214 32% 91%;
-  --primary: 172 72% 30%;
-  --primary-foreground: 0 0% 100%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
+  --background: 38 44% 97%;
+  --foreground: 14 18% 14%;
+  --surface: 40 100% 99%;
+  --border: 25 25% 85%;
+  --primary: 14 55% 50%;
+  --primary-hover: 11 58% 39%;
+  --primary-foreground: 40 100% 99%;
+  --control: 11 58% 39%;
+  --control-hover: 11 59% 32%;
+  --control-foreground: 40 100% 99%;
+  --accent: 33 84% 69%;
+  --muted: 32 37% 93%;
+  --muted-foreground: 22 11% 43%;
+  --success: 93 29% 43%;
+  --warning: 36 80% 57%;
+  --danger: 0 64% 56%;
 }
 
 * {
@@ -26,8 +35,7 @@ body {
   background: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family:
-    Inter,
-    ui-sans-serif,
+    'Be Vietnam Pro',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,

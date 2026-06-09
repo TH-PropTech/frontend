@@ -13,7 +13,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <Comp
         className={cn(
-          'inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground',
+          'inline-flex items-center justify-center rounded-md bg-control px-4 py-2 text-sm font-medium text-control-foreground transition-colors hover:bg-control-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-control focus-visible:ring-offset-2',
           className
         )}
         ref={ref}
