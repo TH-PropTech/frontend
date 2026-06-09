@@ -23,7 +23,7 @@ export function HomeDashboard(): React.ReactElement {
           </p>
         </div>
 
-        <aside className="rounded-lg border border-border bg-white p-6 shadow-sm">
+        <aside className="rounded-lg border border-border bg-surface p-6 shadow-sm">
           <h2 className="text-lg font-semibold">Runtime config</h2>
           <dl className="mt-5 space-y-4 text-sm">
             <div>
@@ -41,7 +41,7 @@ export function HomeDashboard(): React.ReactElement {
       <section className="mx-auto mt-12 grid max-w-6xl gap-4 md:grid-cols-3">
         {platformSignals.map(signal => (
           <article
-            className="rounded-lg border border-border bg-white p-5 shadow-sm"
+            className="rounded-lg border border-border bg-surface p-5 shadow-sm"
             key={signal}
           >
             <p className="text-sm font-medium">{signal}</p>
