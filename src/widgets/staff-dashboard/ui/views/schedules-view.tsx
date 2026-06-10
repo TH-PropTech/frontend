@@ -61,15 +61,15 @@ export function SchedulesView(): React.ReactElement {
     (a) => filter === 'all' || a.status === filter
   )
 
-  const handleConfirm = (id: string) => {
+  const handleConfirm = (id: string): void => {
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'confirmed' } : a))
   }
 
-  const handleCancel = (id: string) => {
+  const handleCancel = (id: string): void => {
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'cancelled' } : a))
   }
 
-  const handleReschedule = (id: string) => {
+  const handleReschedule = (id: string): void => {
     if (!rescheduleDate) return
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, dateTime: rescheduleDate, status: 'confirmed' } : a))
     setShowRescheduleDialog(false)

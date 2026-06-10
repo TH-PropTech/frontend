@@ -47,7 +47,6 @@ const mockTxLogs: TxLog[] = [
 ]
 
 export function ContractMonitorView(): React.ReactElement {
-  const [logs, setLogs] = React.useState<TxLog[]>(mockTxLogs)
   const [inspectAddress, setInspectAddress] = React.useState<string | null>(null)
   
   // State variables for contract query simulator
@@ -55,7 +54,7 @@ export function ContractMonitorView(): React.ReactElement {
   const [queryState, setQueryState] = React.useState('Active (Deposit Locked)')
   const [isQuerying, setIsQuerying] = React.useState(false)
 
-  const handleQueryState = (address: string) => {
+  const handleQueryState = (address: string): void => {
     setIsQuerying(true)
     setTimeout(() => {
       if (address.includes('1A2b')) {
@@ -114,7 +113,7 @@ export function ContractMonitorView(): React.ReactElement {
                 </tr>
               </thead>
               <tbody className="divide-y divide-line/60">
-                {logs.map((log, idx) => (
+                {mockTxLogs.map((log, idx) => (
                   <tr key={idx} className="hover:bg-bg/10 transition-colors">
                     <td className="p-3 font-mono text-primary font-semibold truncate max-w-[120px]" title={log.hash}>
                       {log.hash}
@@ -185,7 +184,7 @@ export function ContractMonitorView(): React.ReactElement {
                 </div>
 
                 <div className="bg-bg/40 border border-line p-3 rounded-lg text-[10px] font-mono text-muted-foreground space-y-1">
-                  <p className="text-indigo-900 font-bold">// ABI Read Functions</p>
+                  <p className="text-indigo-900 font-bold">{"// ABI Read Functions"}</p>
                   <p>function getLeaseState() public view returns (enum State)</p>
                   <p>function getLockedDeposit() public view returns (uint256)</p>
                   <p>function getEscrowParties() public view returns (address, address)</p>

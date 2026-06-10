@@ -69,12 +69,12 @@ export function KycApprovalsView(): React.ReactElement {
     (r) => filter === 'all' || r.status === filter
   )
 
-  const handleVerify = (id: string) => {
+  const handleVerify = (id: string): void => {
     setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' } : r))
     setSelectedRecord(null)
   }
 
-  const handleReject = (id: string) => {
+  const handleReject = (id: string): void => {
     if (!rejectReason.trim()) return
     setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'rejected' } : r))
     setShowRejectDialog(false)
