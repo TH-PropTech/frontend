@@ -37,7 +37,7 @@ export function Logo({
       <span
         className={`font-display font-bold tracking-tight ${textColor} ${text}`}
       >
-        TH<span className={accentColor}>PropTech</span>
+        TH-<span className={accentColor}>PropTech</span>
       </span>
     </div>
   )
