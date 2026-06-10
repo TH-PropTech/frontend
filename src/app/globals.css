@@ -111,7 +111,8 @@ a {
 }
 
 @keyframes pulse-subtle {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
@@ -124,4 +125,3 @@ a {
 .animate-pulse-subtle {
   animation: pulse-subtle 6s ease-in-out infinite;
 }
-
