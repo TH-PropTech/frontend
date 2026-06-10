@@ -9,6 +9,7 @@ import { SchedulesView } from './views/schedules-view'
 import { DisputesView } from './views/disputes-view'
 import { ContractMonitorView } from './views/contract-monitor-view'
 import { Logo } from '@/shared/ui/logo'
+import Link from 'next/link'
 
 type TabType = 'home' | 'overview' | 'properties' | 'kyc' | 'schedules' | 'disputes' | 'contracts'
 
@@ -74,7 +75,7 @@ export function StaffDashboard(): React.ReactElement {
     },
   ]
 
-  const renderActiveView = () => {
+  const renderActiveView = (): React.ReactNode => {
     switch (activeTab) {
       case 'home':
         return <HomeView onNavigateTab={(tab) => setActiveTab(tab)} />
@@ -95,7 +96,7 @@ export function StaffDashboard(): React.ReactElement {
     }
   }
 
-  const getTabTitle = () => {
+  const getTabTitle = (): string => {
     const matched = sidebarItems.find(item => item.type === activeTab)
     return matched ? matched.label : 'Bảng điều khiển'
   }
@@ -180,13 +181,13 @@ export function StaffDashboard(): React.ReactElement {
             <span className="text-[10px] font-bold text-muted bg-fg/5 px-2.5 py-1 rounded-full border border-line">
               Role: Nhân viên vận hành
             </span>
-            <a 
+            <Link 
               href="/"
               className="text-xs font-semibold text-muted hover:text-fg transition-colors flex items-center gap-1.5"
             >
               Trang chủ
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
-            </a>
+            </Link>
           </div>
         </header>
 

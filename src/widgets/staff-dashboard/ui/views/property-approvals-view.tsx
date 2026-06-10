@@ -63,12 +63,12 @@ export function PropertyApprovalsView(): React.ReactElement {
     (p) => filter === 'all' || p.status === filter
   )
 
-  const handleApprove = (id: string) => {
+  const handleApprove = (id: string): void => {
     setProperties(prev => prev.map(p => p.id === id ? { ...p, status: 'approved' } : p))
     setSelectedProp(null)
   }
 
-  const handleReject = (id: string) => {
+  const handleReject = (id: string): void => {
     if (!rejectReason.trim()) return
     setProperties(prev => prev.map(p => p.id === id ? { ...p, status: 'rejected' } : p))
     setShowRejectDialog(false)

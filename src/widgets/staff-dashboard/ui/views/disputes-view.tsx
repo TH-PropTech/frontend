@@ -56,12 +56,12 @@ export function DisputesView(): React.ReactElement {
   const [executedTx, setExecutedTx] = React.useState('')
   const [disputeNotes, setDisputeNotes] = React.useState('')
 
-  const handleSliderChange = (val: number) => {
+  const handleSliderChange = (val: number): void => {
     setTenantShare(val)
     setLandlordShare(100 - val)
   }
 
-  const handleResolve = (id: string) => {
+  const handleResolve = (id: string): void => {
     setIsExecuting(true)
     
     // Simulate transaction execution on smart contract
@@ -85,7 +85,7 @@ export function DisputesView(): React.ReactElement {
     }, 2500)
   }
 
-  const resetForm = () => {
+  const resetForm = (): void => {
     setSelectedDisp(null)
     setExecutedTx('')
     setDisputeNotes('')
@@ -127,11 +127,11 @@ export function DisputesView(): React.ReactElement {
             <div className="border-t border-line/50 pt-3 space-y-2.5 text-xs">
               <div className="bg-accent/5 border border-accent/10 p-2.5 rounded-lg">
                 <span className="font-semibold text-accent block font-body">Khách thuê ({disp.tenantName}):</span>
-                <p className="text-[11px] text-muted mt-0.5 italic">"{disp.tenantClaim}"</p>
+                <p className="text-[11px] text-muted mt-0.5 italic">&ldquo;{disp.tenantClaim}&rdquo;</p>
               </div>
               <div className="bg-fg/5 border border-line/40 p-2.5 rounded-lg">
                 <span className="font-semibold text-fg block font-body">Chủ nhà ({disp.landlordName}):</span>
-                <p className="text-[11px] text-muted mt-0.5 italic">"{disp.landlordClaim}"</p>
+                <p className="text-[11px] text-muted mt-0.5 italic">&ldquo;{disp.landlordClaim}&rdquo;</p>
               </div>
             </div>
 

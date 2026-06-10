@@ -13,7 +13,7 @@ interface StatCardProps {
   icon: React.ReactNode
 }
 
-function StatCard({ title, value, subtext, trend, icon }: StatCardProps) {
+function StatCard({ title, value, subtext, trend, icon }: StatCardProps): React.ReactElement {
   return (
     <div className="bg-surface border border-line rounded-xl p-5 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
       <div className="flex items-center justify-between">
