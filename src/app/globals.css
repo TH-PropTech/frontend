@@ -2,25 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════
+   TH-PropTech Design Tokens — Earthy Trust PropTech (Light only)
+   ═══════════════════════════════════════════════════════════════ */
+
 :root {
-  --background: 38 44% 97%;
-  --foreground: 14 18% 14%;
-  --surface: 40 100% 99%;
-  --border: 25 25% 85%;
-  --primary: 14 55% 50%;
-  --primary-hover: 11 58% 39%;
-  --primary-foreground: 40 100% 99%;
-  --control: 11 58% 39%;
-  --control-hover: 11 59% 32%;
-  --control-foreground: 40 100% 99%;
-  --accent: 33 84% 69%;
-  --muted: 32 37% 93%;
-  --muted-foreground: 22 11% 43%;
-  --success: 93 29% 43%;
-  --warning: 36 80% 57%;
-  --danger: 0 64% 56%;
+  /* ── Backgrounds ── */
+  --bg: #faf7f2;
+  --surface: #fffdf9;
+  --surface-muted: #f4eee7;
+  --surface-raised: #fffdf9;
+
+  /* ── Foregrounds ── */
+  --fg: #2b211e;
+  --muted: #7a6a61;
+  --subtle: #a49389;
+  --border: #e3d8d0;
+  --border-strong: #c9b8ae;
+
+  /* ── Primary (Cam đất) ── */
+  --primary: #c65a3a;
+  --primary-hover: #9f3f2a;
+  --primary-soft: #f5e3dc;
+  --control: #9f3f2a;
+  --on-control: #fffdf9;
+
+  /* ── Accent (Vàng cát) ── */
+  --accent: #f2b66d;
+  --accent-soft: #fcebd4;
+
+  /* ── Semantic ── */
+  --success: #6b8e4e;
+  --success-soft: #e8f0df;
+  --warning: #e9a23b;
+  --warning-soft: #fbedcf;
+  --danger: #d64545;
+  --danger-soft: #f8dfdf;
+  --info: #7a6a61;
+  --info-soft: #eee8e4;
+
+  /* ── Radii ── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px rgba(43, 33, 30, 0.06);
+  --shadow-md: 0 12px 32px rgba(43, 33, 30, 0.08);
+  --shadow-lg: 0 20px 48px rgba(43, 33, 30, 0.12);
+
+  /* ── Spacing ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
 }
 
+/* ── Reset ── */
 * {
   box-sizing: border-box;
 }
@@ -32,18 +75,53 @@ body {
 
 body {
   margin: 0;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: var(--bg);
+  color: var(--fg);
   font-family:
     'Be Vietnam Pro',
+    'Space Grotesk',
+    'Segoe UI',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
-    'Segoe UI',
     sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* ── Utilities ── */
+@layer utilities {
+  .font-display {
+    font-family: 'Space Grotesk', 'Be Vietnam Pro', 'Segoe UI', sans-serif;
+  }
+
+  .font-marketing {
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.985);
+    opacity: 0.92;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 6s ease-in-out infinite;
 }
