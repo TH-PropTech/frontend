@@ -448,7 +448,7 @@ export function OverviewView(): React.ReactElement {
                 strokeLinejoin="round"
               />
 
-              {hoveredPoint !== null && (
+              {hoveredPoint !== null && lineChartData[hoveredPoint] && (
                 <line
                   x1={lineChartData[hoveredPoint].x}
                   y1="20"
@@ -497,7 +497,7 @@ export function OverviewView(): React.ReactElement {
                 </text>
               ))}
 
-              {hoveredPoint !== null && (
+              {hoveredPoint !== null && lineChartData[hoveredPoint] && (
                 <g
                   transform={`translate(${lineChartData[hoveredPoint].x > 250 ? lineChartData[hoveredPoint].x - 105 : lineChartData[hoveredPoint].x + 10}, ${lineChartData[hoveredPoint].y - 30})`}
                 >
@@ -653,7 +653,7 @@ export function OverviewView(): React.ReactElement {
               })}
 
               {/* Tooltip */}
-              {hoveredBar !== null && (
+              {hoveredBar !== null && barChartData[hoveredBar] && (
                 <g
                   transform={`translate(${barChartData[hoveredBar].transactions > 20 ? 110 : 160}, 15)`}
                 >
