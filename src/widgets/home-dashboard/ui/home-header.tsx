@@ -62,10 +62,10 @@ export function HomeHeader(): React.ReactElement {
                 className={`transition-all duration-200 relative py-1 ${
                   isActive
                     ? isLightHeader
-                      ? 'text-[#c65a3a] font-bold border-b-2 border-[#c65a3a]'
+                      ? 'text-primary font-bold border-b-2 border-primary'
                       : 'text-white font-bold border-b-2 border-white'
                     : isLightHeader
-                      ? 'text-muted hover:text-[#c65a3a]'
+                      ? 'text-muted hover:text-primary'
                       : 'text-white/75 hover:text-white'
                 }`}
               >

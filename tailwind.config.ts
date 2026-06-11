@@ -27,7 +27,7 @@ const config: Config = {
           foreground: 'var(--fg)',
         },
         accent: {
-          DEFAULT: 'var(--accent-soft)',
+          DEFAULT: 'var(--accent)',
           foreground: 'var(--fg)',
           soft: 'var(--accent-soft)',
         },
