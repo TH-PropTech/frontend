@@ -1,6 +1,8 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
+import type { Route } from 'next'
 import { Logo } from '@/shared/ui/logo'
 
 type Theme = 'dark' | 'light'
@@ -684,7 +686,12 @@ export function AuthBrandingPanel(): React.ReactElement {
       <div className="relative z-10 flex h-full flex-col justify-between p-6 lg:p-8 xl:p-10">
         {/* Logo */}
         <div className="flex items-center justify-between">
-          <Logo size="lg" variant={isDark ? 'white' : 'default'} />
+          <Link
+            href={'/' as Route}
+            className="hover:opacity-85 transition-opacity"
+          >
+            <Logo size="lg" variant={isDark ? 'white' : 'default'} />
+          </Link>
 
           {/* Background style toggle (Layers icon) */}
           <button
