@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Be_Vietnam_Pro, Space_Grotesk, Lora } from 'next/font/google'
 import { Suspense } from 'react'
 import { PageTransition } from '@/shared/ui/page-transition'
+import { Providers } from './providers'
 import './globals.css'
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -45,10 +46,12 @@ export default function RootLayout({
       className={`${beVietnamPro.variable} ${spaceGrotesk.variable} ${lora.variable}`}
     >
       <body className={beVietnamPro.className}>
-        <Suspense fallback={null}>
-          <PageTransition />
-        </Suspense>
-        {children}
+        <Providers>
+          <Suspense fallback={null}>
+            <PageTransition />
+          </Suspense>
+          {children}
+        </Providers>
       </body>
     </html>
   )
