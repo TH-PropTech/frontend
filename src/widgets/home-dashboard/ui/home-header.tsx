@@ -3,15 +3,13 @@
 import * as React from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { Logo } from '@/shared/ui/logo'
 import { Button } from '@/shared/ui/button'
 
 export function HomeHeader(): React.ReactElement {
   const [isScrolled, setIsScrolled] = React.useState(false)
   const pathname = usePathname()
-  const router = useRouter()
-  const [isLoggingIn, setIsLoggingIn] = React.useState(false)
 
   React.useEffect(() => {
     const handleScroll = (): void => {
@@ -77,20 +75,17 @@ export function HomeHeader(): React.ReactElement {
           })}
         </nav>
 
-        <Button
-          loading={isLoggingIn}
-          onClick={() => {
-            setIsLoggingIn(true)
-            router.push('/login' as Route)
-          }}
-          className={`h-[44px] rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_12px_32px_rgba(43,33,30,0.15)] transition-all hover:-translate-y-0.5 active:translate-y-0 ${
-            isLightHeader
-              ? 'bg-control text-on-control hover:bg-primary-hover active:bg-primary-hover'
-              : 'bg-control text-on-control border border-white/15 hover:bg-primary-hover active:bg-primary-hover'
-          }`}
-        >
-          Đăng nhập
-        </Button>
+        <Link href={'/login' as Route}>
+          <Button
+            className={`h-[44px] rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_12px_32px_rgba(43,33,30,0.15)] transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+              isLightHeader
+                ? 'bg-control text-on-control hover:bg-primary-hover active:bg-primary-hover'
+                : 'bg-control text-on-control border border-white/15 hover:bg-primary-hover active:bg-primary-hover'
+            }`}
+          >
+            Đăng nhập
+          </Button>
+        </Link>
       </div>
     </header>
   )
