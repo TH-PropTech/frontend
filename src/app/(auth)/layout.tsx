@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import type { Route } from 'next'
 import { Logo } from '@/shared/ui/logo'
 import { AuthBrandingPanel } from '@/features/auth/ui/auth-branding-panel'
 
@@ -23,7 +25,12 @@ export default function AuthLayout({
       <div className="flex flex-1 flex-col bg-bg">
         {/* Mobile logo */}
         <div className="flex items-center justify-between px-6 pt-6 lg:hidden">
-          <Logo size="md" />
+          <Link
+            href={'/' as Route}
+            className="hover:opacity-85 transition-opacity"
+          >
+            <Logo size="md" />
+          </Link>
         </div>
 
         {/* Form container */}

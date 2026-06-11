@@ -3,8 +3,10 @@
 import * as React from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
+import { useSearchParams } from 'next/navigation'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Button } from '@/shared/ui/button'
+import { Footer } from '@/shared/ui/footer'
 
 interface ApartmentItem {
   id: string
@@ -18,6 +20,69 @@ interface ApartmentItem {
   area: string
   rooms: string
 }
+
+interface ProjectItem {
+  id: string
+  title: string
+  developer: string
+  location: string
+  scale: string
+  priceRange: string
+  tagText: string
+  tag: 'open' | 'handover'
+  description: string
+}
+
+const mockProjects: ProjectItem[] = [
+  {
+    id: 'proj-1',
+    title: 'Vinhomes Central Park',
+    developer: 'Vingroup',
+    location: 'Bình Thạnh, TP.HCM',
+    scale: '18 blocks • 10,000+ căn hộ',
+    priceRange: '15 - 45 triệu/tháng',
+    tagText: 'Đang vận hành',
+    tag: 'handover',
+    description:
+      'Khu đô thị hiện đại bậc nhất bên sông Sài Gòn với công viên 14ha và tháp Landmark 81 cao nhất Việt Nam.',
+  },
+  {
+    id: 'proj-2',
+    title: 'Masteri Thảo Điền',
+    developer: 'Masterise Homes',
+    location: 'Thảo Điền, Quận 2, TP.HCM',
+    scale: '5 blocks • 3,000+ căn hộ',
+    priceRange: '18 - 35 triệu/tháng',
+    tagText: 'Sắp bàn giao block mới',
+    tag: 'open',
+    description:
+      'Dự án căn hộ cao cấp kết nối trực tiếp ga Metro số 7 An Phú, đầy đủ tiện ích ngoại khu sang trọng.',
+  },
+  {
+    id: 'proj-3',
+    title: 'Empire City Thủ Thiêm',
+    developer: 'Keppel Land',
+    location: 'Thủ Thiêm, Quận 2, TP.HCM',
+    scale: '11 blocks • Phân khu Linden',
+    priceRange: '25 - 60 triệu/tháng',
+    tagText: 'Đang bàn giao',
+    tag: 'handover',
+    description:
+      'Khu phức hợp căn hộ hạng sang vị trí vàng Thủ Thiêm nhìn thẳng sang trung tâm Quận 1 qua sông Sài Gòn.',
+  },
+  {
+    id: 'proj-4',
+    title: 'Sunrise City',
+    developer: 'Novaland',
+    location: 'Quận 7, TP.HCM',
+    scale: '12 blocks • 2,200 căn hộ',
+    priceRange: '12 - 30 triệu/tháng',
+    tagText: 'Đang vận hành',
+    tag: 'handover',
+    description:
+      'Dự án căn hộ trung cao cấp trục đường Nguyễn Hữu Thọ đối diện Lotte Mart Quận 7, giao thông thuận tiện.',
+  },
+]
 
 const mockApartments: ApartmentItem[] = [
   {
@@ -62,6 +127,11 @@ const mockApartments: ApartmentItem[] = [
 ]
 
 export default function PropertiesPage(): React.ReactElement {
+  const searchParams = useSearchParams()
+  const tabParam = searchParams?.get('tab')
+  const [activeTab, setActiveTab] = React.useState<'single' | 'project'>(
+    tabParam === 'project' ? 'project' : 'single'
+  )
   const [searchKeyword, setSearchKeyword] = React.useState('')
   const [searchStatus, setSearchStatus] = React.useState('')
   const [selectedArea, setSelectedArea] = React.useState('Toàn quốc')
@@ -78,10 +148,35 @@ export default function PropertiesPage(): React.ReactElement {
     const trimmed = searchKeyword.trim()
     let statusText = 'Đang hiển thị kết quả lọc.'
     if (trimmed) {
-      statusText = `Đang lọc danh sách căn hộ theo "${trimmed}"...`
+      statusText = `Đang lọc theo "${trimmed}"...`
     }
     setSearchStatus(statusText)
   }
+
+  // Filter projects
+  const filteredProjects = mockProjects.filter(proj => {
+    if (searchKeyword.trim()) {
+      const kw = searchKeyword.toLowerCase()
+      const matchTitle = proj.title.toLowerCase().includes(kw)
+      const matchDev = proj.developer.toLowerCase().includes(kw)
+      const matchLoc = proj.location.toLowerCase().includes(kw)
+      if (!matchTitle && !matchDev && !matchLoc) return false
+    }
+
+    if (selectedArea !== 'Toàn quốc') {
+      if (
+        selectedArea === 'Bình Thạnh' &&
+        !proj.location.includes('Bình Thạnh')
+      )
+        return false
+      if (selectedArea === 'Quận 2' && !proj.location.includes('Quận 2'))
+        return false
+      if (selectedArea === 'Đồng Nai' && !proj.location.includes('Đồng Nai'))
+        return false
+    }
+
+    return true
+  })
 
   // Filter apartments
   const filteredApartments = mockApartments.filter(apt => {
@@ -122,9 +217,74 @@ export default function PropertiesPage(): React.ReactElement {
       <HomeHeader />
 
       <main className="w-full">
-        {/* Header Hero Section */}
-        <section className="relative flex flex-col items-center justify-center bg-gradient-to-b from-[#f4eee7]/60 to-[#faf7f2] pb-24 pt-32 text-center rounded-b-[40px] border-b border-border">
-          <div className="mx-auto w-full max-w-6xl px-6 md:px-10 z-10">
+        {/* Header Hero Section (Warm Cream Design with Topography Overlay) */}
+        <section className="relative flex flex-col items-center justify-center bg-gradient-to-b from-[#f5ece2] via-[#faf6f1] to-bg pb-24 pt-32 text-center rounded-b-[40px] border-b border-border">
+          {/* Topography SVG Background (extremely lightweight, vector-rendered) */}
+          <div
+            className="absolute inset-0 opacity-[0.08] pointer-events-none select-none overflow-hidden"
+            style={{
+              willChange: 'transform',
+              transform: 'translate3d(0, 0, 0)',
+              backfaceVisibility: 'hidden',
+            }}
+          >
+            <svg
+              className="w-full h-full min-w-[1440px] min-h-[300px]"
+              viewBox="0 0 1440 300"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M-100 80 C 300 10, 600 150, 1000 60 C 1200 30, 1500 100, 1600 80"
+                stroke="#c65a3a"
+                strokeWidth="1.5"
+                fill="none"
+              />
+              <path
+                d="M-100 110 C 300 40, 600 180, 1000 90 C 1200 60, 1500 130, 1600 110"
+                stroke="#c65a3a"
+                strokeWidth="1.5"
+                fill="none"
+              />
+              <path
+                d="M-100 140 C 300 70, 600 210, 1000 120 C 1200 90, 1500 160, 1600 140"
+                stroke="#c65a3a"
+                strokeWidth="1.5"
+                fill="none"
+              />
+              <path
+                d="M-100 170 C 300 100, 600 240, 1000 150 C 1200 120, 1500 190, 1600 170"
+                stroke="#c65a3a"
+                strokeWidth="1.5"
+                fill="none"
+              />
+              <path
+                d="M-100 200 C 300 130, 600 270, 1000 180 C 1200 150, 1500 220, 1600 200"
+                stroke="#c65a3a"
+                strokeWidth="1.5"
+                fill="none"
+              />
+
+              <path
+                d="M 100 250 C 400 150, 700 290, 1100 210 C 1300 180, 1500 250, 1600 230"
+                stroke="#c65a3a"
+                strokeWidth="1.5"
+                fill="none"
+              />
+              <path
+                d="M 100 280 C 400 180, 700 320, 1100 240 C 1300 210, 1500 280, 1600 260"
+                stroke="#c65a3a"
+                strokeWidth="1.5"
+                fill="none"
+              />
+            </svg>
+          </div>
+
+          <div className="absolute -left-32 -top-32 w-96 h-96 bg-[#c65a3a]/5 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute -right-32 -bottom-32 w-96 h-96 bg-[#f2b66d]/5 rounded-full blur-[100px] pointer-events-none" />
+
+          <div className="mx-auto w-full max-w-6xl px-6 md:px-10 z-10 relative">
             <span className="font-mono text-xs font-bold uppercase tracking-widest text-[#c65a3a] mb-2 block">
               Danh mục bất động sản
             </span>
@@ -382,15 +542,49 @@ export default function PropertiesPage(): React.ReactElement {
           </div>
         </section>
 
-        {/* Apartments Grid Listing Section */}
-        <section className="mx-auto max-w-6xl px-6 py-16 md:px-10">
+        {/* Tab Switcher */}
+        <section className="mx-auto max-w-lg mt-12 px-6">
+          <div className="flex rounded-full bg-surface-muted p-1 border border-border">
+            <button
+              onClick={() => {
+                setActiveTab('single')
+                setSearchStatus('')
+              }}
+              className={`flex-1 rounded-full py-2.5 text-xs font-bold transition-all duration-300 ${
+                activeTab === 'single'
+                  ? 'bg-[#c65a3a] text-white shadow-md'
+                  : 'text-muted hover:text-fg'
+              }`}
+            >
+              Căn hộ thuê lẻ (Chủ nhà cá nhân)
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('project')
+                setSearchStatus('')
+              }}
+              className={`flex-1 rounded-full py-2.5 text-xs font-bold transition-all duration-300 ${
+                activeTab === 'project'
+                  ? 'bg-[#c65a3a] text-white shadow-md'
+                  : 'text-muted hover:text-fg'
+              }`}
+            >
+              Dự án / Tòa nhà (Chủ đầu tư)
+            </button>
+          </div>
+        </section>
+
+        {/* Apartments & Projects Grid Listing Section */}
+        <section className="mx-auto max-w-6xl px-6 py-12 md:px-10">
           <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div className="space-y-2">
               <span className="font-display text-xs font-bold uppercase tracking-widest text-[#c65a3a]">
                 KẾT QUẢ TÌM KIẾM
               </span>
               <h2 className="font-marketing text-3xl font-bold text-fg sm:text-4xl">
-                Căn hộ khả dụng ({filteredApartments.length})
+                {activeTab === 'single'
+                  ? `Căn hộ khả dụng (${filteredApartments.length})`
+                  : `Dự án & Tòa nhà chung cư (${filteredProjects.length})`}
               </h2>
             </div>
             {searchStatus && (
@@ -400,25 +594,112 @@ export default function PropertiesPage(): React.ReactElement {
             )}
           </div>
 
-          {filteredApartments.length === 0 ? (
+          {activeTab === 'single' ? (
+            filteredApartments.length === 0 ? (
+              <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
+                <p className="font-body text-sm text-muted">
+                  Không tìm thấy căn hộ phù hợp với bộ lọc hiện tại.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {filteredApartments.map(apt => (
+                  <article
+                    key={apt.id}
+                    className="flex flex-col justify-between rounded-2xl border border-border bg-white p-5 shadow-sm hover:translate-y-[-4px] hover:border-border-strong hover:shadow-md transition-all duration-300"
+                  >
+                    <div>
+                      {/* Visual Card Top */}
+                      <div className="relative mb-4 flex h-36 flex-col justify-between rounded-xl border border-border bg-surface-muted p-4">
+                        {/* Grid background simulation */}
+                        <div
+                          className="absolute inset-0 opacity-15"
+                          style={{
+                            backgroundImage:
+                              'radial-gradient(circle at 50% 50%, #c65a3a 1.5px, transparent 0)',
+                            backgroundSize: '10px 10px',
+                          }}
+                        />
+                        <div className="relative z-10 flex items-center justify-between">
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                              apt.tag === 'empty'
+                                ? 'bg-success-soft text-success'
+                                : apt.tag === 'pending'
+                                  ? 'bg-accent-soft text-primary'
+                                  : 'bg-info-soft text-info'
+                            }`}
+                          >
+                            {apt.tagText}
+                          </span>
+                          <span className="font-mono text-[9px] font-bold text-muted uppercase">
+                            {apt.id.split('-').pop()}
+                          </span>
+                        </div>
+                        <span className="relative z-10 font-mono text-[10px] font-bold text-muted uppercase">
+                          {apt.category}
+                        </span>
+                      </div>
+
+                      <h3 className="font-marketing text-lg font-bold text-fg">
+                        {apt.title}
+                      </h3>
+                      <p className="mt-2 font-body text-xs text-muted leading-relaxed min-h-[50px]">
+                        {apt.description}
+                      </p>
+
+                      {/* Metadata specs */}
+                      <ul className="mt-4 border-t border-border/60 divide-y divide-border/60 text-xs font-semibold">
+                        <li className="flex justify-between py-2.5">
+                          <span className="text-muted">Vị trí</span>
+                          <span className="text-fg">{apt.location}</span>
+                        </li>
+                        <li className="flex justify-between py-2.5">
+                          <span className="text-muted">Giá thuê</span>
+                          <span className="text-primary font-bold">
+                            {apt.price}
+                          </span>
+                        </li>
+                        <li className="flex justify-between py-2.5">
+                          <span className="text-muted">Thông số</span>
+                          <span className="font-mono text-[11px] text-fg">
+                            {apt.area} ({apt.rooms})
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <Link href={'/contact' as Route} className="w-full mt-5">
+                      <Button
+                        variant="secondary"
+                        className="w-full rounded-xl py-2.5 text-xs font-bold transition-all"
+                      >
+                        Tư vấn căn hộ này
+                      </Button>
+                    </Link>
+                  </article>
+                ))}
+              </div>
+            )
+          ) : filteredProjects.length === 0 ? (
             <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
               <p className="font-body text-sm text-muted">
-                Không tìm thấy căn hộ phù hợp với bộ lọc hiện tại.
+                Không tìm thấy dự án phù hợp với bộ lọc hiện tại.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {filteredApartments.map(apt => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {filteredProjects.map(proj => (
                 <article
-                  key={apt.id}
-                  className="flex flex-col justify-between rounded-2xl border border-border bg-white p-5 shadow-sm hover:translate-y-[-4px] hover:border-border-strong hover:shadow-md transition-all duration-300"
+                  key={proj.id}
+                  className="flex flex-col justify-between rounded-2xl border border-border bg-white p-6 shadow-sm hover:translate-y-[-4px] hover:border-border-strong hover:shadow-md transition-all duration-300"
                 >
                   <div>
                     {/* Visual Card Top */}
-                    <div className="relative mb-4 flex h-36 flex-col justify-between rounded-xl border border-border bg-surface-muted p-4">
+                    <div className="relative mb-5 flex h-40 flex-col justify-between rounded-xl border border-border bg-gradient-to-br from-[#c65a3a]/10 to-[#f2b66d]/10 p-5">
                       {/* Grid background simulation */}
                       <div
-                        className="absolute inset-0 opacity-15"
+                        className="absolute inset-0 opacity-10"
                         style={{
                           backgroundImage:
                             'radial-gradient(circle at 50% 50%, #c65a3a 1.5px, transparent 0)',
@@ -426,62 +707,55 @@ export default function PropertiesPage(): React.ReactElement {
                         }}
                       />
                       <div className="relative z-10 flex items-center justify-between">
-                        <span
-                          className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                            apt.tag === 'empty'
-                              ? 'bg-success-soft text-success'
-                              : apt.tag === 'pending'
-                                ? 'bg-accent-soft text-primary'
-                                : 'bg-info-soft text-info'
-                          }`}
-                        >
-                          {apt.tagText}
+                        <span className="rounded-full bg-primary/15 text-primary px-3 py-0.5 text-[10px] font-bold">
+                          {proj.tagText}
                         </span>
-                        <span className="font-mono text-[9px] font-bold text-muted uppercase">
-                          {apt.id.split('-').pop()}
+                        <span className="font-mono text-[9px] font-bold text-muted uppercase tracking-wider">
+                          DỰ ÁN TÒA NHÀ
                         </span>
                       </div>
-                      <span className="relative z-10 font-mono text-[10px] font-bold text-muted uppercase">
-                        {apt.category}
+                      <span className="relative z-10 font-mono text-[10px] font-bold text-[#c65a3a] uppercase">
+                        Chủ đầu tư: {proj.developer}
                       </span>
                     </div>
 
-                    <h3 className="font-marketing text-lg font-bold text-fg">
-                      {apt.title}
+                    <h3 className="font-marketing text-xl font-bold text-fg">
+                      {proj.title}
                     </h3>
-                    <p className="mt-2 font-body text-xs text-muted leading-relaxed min-h-[50px]">
-                      {apt.description}
+                    <p className="mt-1 font-body text-xs text-muted">
+                      {proj.location}
+                    </p>
+                    <p className="mt-3 font-body text-xs text-fg/80 leading-relaxed">
+                      {proj.description}
                     </p>
 
-                    {/* Metadata specs */}
-                    <ul className="mt-4 border-t border-border/60 divide-y divide-border/60 text-xs font-semibold">
-                      <li className="flex justify-between py-2.5">
-                        <span className="text-muted">Vị trí</span>
-                        <span className="text-fg">{apt.location}</span>
-                      </li>
-                      <li className="flex justify-between py-2.5">
-                        <span className="text-muted">Giá thuê</span>
-                        <span className="text-primary font-bold">
-                          {apt.price}
-                        </span>
-                      </li>
-                      <li className="flex justify-between py-2.5">
-                        <span className="text-muted">Thông số</span>
-                        <span className="font-mono text-[11px] text-fg">
-                          {apt.area} ({apt.rooms})
-                        </span>
-                      </li>
-                    </ul>
+                    <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xs font-semibold text-[#7a6a61]">
+                      <span>Quy mô dự án</span>
+                      <span className="font-mono text-fg font-bold">
+                        {proj.scale}
+                      </span>
+                    </div>
                   </div>
 
-                  <Link href={'/contact' as Route} className="w-full mt-5">
-                    <Button
-                      variant="secondary"
-                      className="w-full rounded-xl py-2.5 text-xs font-bold transition-all"
-                    >
-                      Tư vấn căn hộ này
-                    </Button>
-                  </Link>
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-bold text-muted uppercase tracking-wider">
+                        Khoảng giá thuê dự kiến
+                      </span>
+                      <span className="font-mono text-base font-extrabold text-primary">
+                        {proj.priceRange}
+                      </span>
+                    </div>
+
+                    <Link href={`/projects/${proj.id}` as Route}>
+                      <Button
+                        variant="secondary"
+                        className="rounded-xl px-5 py-2.5 text-xs font-bold transition-all"
+                      >
+                        Chi tiết dự án
+                      </Button>
+                    </Link>
+                  </div>
                 </article>
               ))}
             </div>
@@ -490,21 +764,7 @@ export default function PropertiesPage(): React.ReactElement {
       </main>
 
       {/* Page Footer */}
-      <footer className="border-t border-border bg-surface py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-6 sm:flex-row md:px-10">
-          <div className="flex flex-col items-center gap-1 sm:items-start">
-            <span className="font-display text-sm font-bold text-fg">
-              © TH-PropTech · 2026
-            </span>
-            <span className="font-body text-[11px] text-muted">
-              Khóa luận tốt nghiệp ngành KTPM · Đại học HUTECH
-            </span>
-          </div>
-          <span className="text-center font-mono text-[11px] text-muted sm:text-right">
-            Tư vấn thuê căn hộ · Trạng thái giao dịch · Bằng chứng Blockchain
-          </span>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
