@@ -102,6 +102,29 @@ export function HomeHeader(): React.ReactElement {
             )}
           </Link>
 
+          <Link
+            href={'/profile' as Route}
+            className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 relative ${
+              isLightHeader
+                ? 'border-border bg-white text-primary hover:bg-surface-muted'
+                : 'border-white/25 bg-black/20 text-white hover:bg-black/40'
+            }`}
+            title="Ho so thue nha"
+          >
+            <svg
+              className="h-5 w-5 fill-none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+              />
+            </svg>
+          </Link>
+
           <Link href={'/login' as Route}>
             <Button
               className={`h-[44px] rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_12px_32px_rgba(43,33,30,0.15)] transition-all hover:-translate-y-0.5 active:translate-y-0 ${

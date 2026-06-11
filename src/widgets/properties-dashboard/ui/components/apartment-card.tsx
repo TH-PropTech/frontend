@@ -26,9 +26,17 @@ interface Apartment {
 
 interface ApartmentCardProps {
   apt: Apartment
+  showCompareCheckbox?: boolean
+  isSelected?: boolean
+  onToggleCompare?: () => void
 }
 
-export function ApartmentCard({ apt }: ApartmentCardProps): React.ReactElement {
+export function ApartmentCard({
+  apt,
+  showCompareCheckbox = false,
+  isSelected = false,
+  onToggleCompare,
+}: ApartmentCardProps): React.ReactElement {
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorite = isFavorite(apt.id)
 
@@ -47,17 +55,30 @@ export function ApartmentCard({ apt }: ApartmentCardProps): React.ReactElement {
             }}
           />
           <div className="relative z-10 flex items-center justify-between">
-            <span
-              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                apt.tag === 'empty'
-                  ? 'bg-success-soft text-success'
-                  : apt.tag === 'pending'
-                    ? 'bg-accent-soft text-primary'
-                    : 'bg-info-soft text-info'
-              }`}
-            >
-              {apt.tagText}
-            </span>
+            <div className="flex items-center gap-2">
+              {showCompareCheckbox && (
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={e => {
+                    e.stopPropagation()
+                    onToggleCompare?.()
+                  }}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
+                />
+              )}
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                  apt.tag === 'empty'
+                    ? 'bg-success-soft text-success'
+                    : apt.tag === 'pending'
+                      ? 'bg-accent-soft text-primary'
+                      : 'bg-info-soft text-info'
+                }`}
+              >
+                {apt.tagText}
+              </span>
+            </div>
             <button
               onClick={e => {
                 e.preventDefault()
