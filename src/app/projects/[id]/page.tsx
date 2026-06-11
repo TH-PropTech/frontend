@@ -392,6 +392,15 @@ export default function ProjectDetailPage(): React.ReactElement {
           <div className="absolute -right-32 -bottom-32 w-96 h-96 bg-[#f2b66d]/5 rounded-full blur-[100px] pointer-events-none" />
 
           <div className="mx-auto w-full max-w-6xl px-6 md:px-10 z-10 relative">
+            {/* Back Button */}
+            <div className="mb-6">
+              <Link href={'/properties?tab=project' as Route}>
+                <span className="text-xs font-bold text-primary hover:underline flex items-center gap-1.5 cursor-pointer w-fit">
+                  &larr; Quay lại danh sách dự án
+                </span>
+              </Link>
+            </div>
+
             <div className="flex flex-wrap items-center gap-3 mb-5">
               <span className="font-mono text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 border border-primary/20 px-3.5 py-1 rounded-full backdrop-blur-sm">
                 {project.tagText}
@@ -506,7 +515,7 @@ export default function ProjectDetailPage(): React.ReactElement {
                 DANH SÁCH CĂN HỘ TRỐNG
               </span>
               <h2 className="font-marketing text-2xl font-bold text-fg sm:text-3xl">
-                Cơ cấu giỏ hàng ({project.units.length})
+                Cơ cấu căn hộ khả dụng ({project.units.length})
               </h2>
               <p className="font-body text-xs text-muted">
                 Tích chọn nhanh các căn hộ bạn quan tâm để đăng ký tư vấn sỉ
@@ -624,14 +633,6 @@ export default function ProjectDetailPage(): React.ReactElement {
                 })}
               </tbody>
             </table>
-          </div>
-
-          <div className="mt-8 flex justify-between items-center">
-            <Link href={'/properties?tab=project' as Route}>
-              <span className="text-xs font-bold text-primary hover:underline flex items-center gap-1.5 cursor-pointer">
-                &larr; Quay lại danh sách dự án
-              </span>
-            </Link>
           </div>
         </section>
       </main>
