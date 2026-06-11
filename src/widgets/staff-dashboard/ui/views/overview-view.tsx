@@ -1,6 +1,9 @@
 'use client'
 
 import * as React from 'react'
+import { EscrowLineChart } from './components/escrow-line-chart'
+import { SystemLoadBarChart } from './components/system-load-bar-chart'
+import { TaskDoughnutChart } from './components/task-doughnut-chart'
 
 interface StatCardProps {
   title: string
@@ -50,35 +53,12 @@ function StatCard({
 }
 
 export function OverviewView(): React.ReactElement {
-  // Chart interaction states
-  const [hoveredPoint, setHoveredPoint] = React.useState<number | null>(null)
-  const [hoveredBar, setHoveredBar] = React.useState<number | null>(null)
-
-  const lineChartData = [
-    { label: 'T2', value: '1.20 ETH', x: 40, y: 140, details: '12 giao dịch' },
-    { label: 'T3', value: '1.80 ETH', x: 110, y: 120, details: '18 giao dịch' },
-    { label: 'T4', value: '1.50 ETH', x: 180, y: 130, details: '15 giao dịch' },
-    { label: 'T5', value: '2.90 ETH', x: 250, y: 90, details: '24 giao dịch' },
-    { label: 'T6', value: '3.40 ETH', x: 320, y: 75, details: '30 giao dịch' },
-    { label: 'T7', value: '4.50 ETH', x: 390, y: 45, details: '41 giao dịch' },
-    { label: 'CN', value: '4.85 ETH', x: 460, y: 35, details: '48 giao dịch' },
-  ]
-
-  const barChartData = [
-    { hour: '04h', transactions: 12, height: 35 },
-    { hour: '08h', transactions: 24, height: 70 },
-    { hour: '12h', transactions: 32, height: 95 },
-    { hour: '16h', transactions: 18, height: 55 },
-    { hour: '20h', transactions: 29, height: 85 },
-    { hour: '24h', transactions: 15, height: 45 },
-  ]
-
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {/* Welcome banner with Sticker */}
       <div className="bg-surface border border-line rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden shadow-sm">
         <div className="flex items-center gap-4 relative z-10">
-          {/* Custom Blockchain Network Sticker (aligned to warm brand colors) */}
+          {/* Custom Blockchain Network Sticker */}
           <svg
             width="56"
             height="56"
@@ -104,7 +84,6 @@ export function OverviewView(): React.ReactElement {
               rx="11"
               fill="url(#sticker-bg)"
             />
-            {/* Grid matrix lines */}
             <line
               x1="20"
               y1="20"
@@ -125,12 +104,10 @@ export function OverviewView(): React.ReactElement {
               strokeOpacity="0.15"
               strokeDasharray="3,3"
             />
-            {/* Blockchain nodes */}
             <circle cx="20" cy="20" r="4" fill="#f2b66d" />
             <circle cx="44" cy="20" r="4" fill="#6b8e4e" />
             <circle cx="20" cy="44" r="4" fill="#e37253" />
             <circle cx="44" cy="44" r="4" fill="#c79354" />
-            {/* Core active node with brand ping */}
             <circle
               cx="32"
               cy="32"
@@ -174,9 +151,7 @@ export function OverviewView(): React.ReactElement {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════
-         DETAILED STATISTICS SECTION (8 Cards)
-         ═══════════════════════════════════════ */}
+      {/* DETAILED STATISTICS SECTION */}
       <div className="space-y-3">
         <h3 className="text-xs font-bold text-muted font-body uppercase tracking-wider">
           Thông số Hoạt động Vận hành
@@ -346,453 +321,21 @@ export function OverviewView(): React.ReactElement {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════
-         ANALYTICS CHARTS ROW (3 Charts)
-         ═══════════════════════════════════════ */}
+      {/* ANALYTICS CHARTS ROW */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         {/* Left: Escrow Deposit Line Chart */}
-        <div className="xl:col-span-5 bg-surface border border-line rounded-xl p-5 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-center">
-              <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
-                Xu hướng Quỹ cọc Escrow
-              </h4>
-              <span className="text-[9px] font-bold text-accent-2 bg-accent-2/10 px-2 py-0.5 rounded border border-accent-2/20">
-                +304.2%
-              </span>
-            </div>
-            <p className="text-[11px] text-muted mt-1">
-              Tổng tích lũy cọc ký quỹ qua Smart Contract.
-            </p>
-          </div>
-
-          <div className="relative mt-4 min-h-[160px] flex items-center justify-center">
-            <svg
-              className="w-full h-full max-h-[160px]"
-              viewBox="0 0 500 180"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <linearGradient id="escrow-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor="var(--primary)"
-                    stopOpacity="0.25"
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor="var(--primary)"
-                    stopOpacity="0.00"
-                  />
-                </linearGradient>
-              </defs>
-              <line
-                x1="40"
-                y1="35"
-                x2="460"
-                y2="35"
-                stroke="var(--line)"
-                strokeWidth="0.5"
-                strokeDasharray="4,4"
-              />
-              <line
-                x1="40"
-                y1="85"
-                x2="460"
-                y2="85"
-                stroke="var(--line)"
-                strokeWidth="0.5"
-                strokeDasharray="4,4"
-              />
-              <line
-                x1="40"
-                y1="140"
-                x2="460"
-                y2="140"
-                stroke="var(--line)"
-                strokeWidth="1"
-              />
-
-              <text
-                x="30"
-                y="40"
-                fill="var(--muted)"
-                fontSize="8"
-                textAnchor="end"
-              >
-                5.0 ETH
-              </text>
-              <text
-                x="30"
-                y="90"
-                fill="var(--muted)"
-                fontSize="8"
-                textAnchor="end"
-              >
-                2.5 ETH
-              </text>
-              <text
-                x="30"
-                y="143"
-                fill="var(--muted)"
-                fontSize="8"
-                textAnchor="end"
-              >
-                0 ETH
-              </text>
-
-              <path
-                d="M 40,140 L 40,140 L 110,120 L 180,130 L 250,90 L 320,75 L 390,45 L 460,35 L 460,140 Z"
-                fill="url(#escrow-grad)"
-              />
-              <path
-                d="M 40,140 L 110,120 L 180,130 L 250,90 L 320,75 L 390,45 L 460,35"
-                stroke="var(--primary)"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-
-              {hoveredPoint !== null && lineChartData[hoveredPoint] && (
-                <line
-                  x1={lineChartData[hoveredPoint].x}
-                  y1="20"
-                  x2={lineChartData[hoveredPoint].x}
-                  y2="140"
-                  stroke="var(--primary)"
-                  strokeWidth="1.2"
-                  strokeDasharray="2,2"
-                />
-              )}
-
-              {lineChartData.map((pt, idx) => (
-                <g
-                  key={idx}
-                  className="cursor-pointer"
-                  onMouseEnter={() => setHoveredPoint(idx)}
-                  onMouseLeave={() => setHoveredPoint(null)}
-                >
-                  <circle cx={pt.x} cy={pt.y} r="10" fill="transparent" />
-                  <circle
-                    cx={pt.x}
-                    cy={pt.y}
-                    r={hoveredPoint === idx ? '5' : '3.5'}
-                    fill={
-                      hoveredPoint === idx ? 'var(--primary)' : 'var(--surface)'
-                    }
-                    stroke="var(--primary)"
-                    strokeWidth="2"
-                  />
-                </g>
-              ))}
-
-              {lineChartData.map((pt, idx) => (
-                <text
-                  key={idx}
-                  x={pt.x}
-                  y="156"
-                  fill={
-                    hoveredPoint === idx ? 'var(--primary)' : 'var(--muted)'
-                  }
-                  fontSize="9"
-                  fontWeight={hoveredPoint === idx ? 'bold' : 'normal'}
-                  textAnchor="middle"
-                >
-                  {pt.label}
-                </text>
-              ))}
-
-              {hoveredPoint !== null && lineChartData[hoveredPoint] && (
-                <g
-                  transform={`translate(${lineChartData[hoveredPoint].x > 250 ? lineChartData[hoveredPoint].x - 105 : lineChartData[hoveredPoint].x + 10}, ${lineChartData[hoveredPoint].y - 30})`}
-                >
-                  <rect
-                    width="95"
-                    height="40"
-                    rx="6"
-                    fill="var(--surface)"
-                    stroke="var(--line)"
-                    strokeWidth="1"
-                    filter="drop-shadow(0 2px 4px rgba(0,0,0,0.05))"
-                  />
-                  <text
-                    x="8"
-                    y="15"
-                    fill="var(--muted)"
-                    fontSize="8"
-                    fontWeight="bold"
-                  >
-                    {lineChartData[hoveredPoint].label} (Tích lũy)
-                  </text>
-                  <text
-                    x="8"
-                    y="25"
-                    fill="var(--fg)"
-                    fontSize="10"
-                    fontWeight="bold"
-                  >
-                    {lineChartData[hoveredPoint].value}
-                  </text>
-                  <text
-                    x="8"
-                    y="33"
-                    fill="var(--primary)"
-                    fontSize="7"
-                    fontWeight="semibold"
-                  >
-                    {lineChartData[hoveredPoint].details}
-                  </text>
-                </g>
-              )}
-            </svg>
-          </div>
+        <div className="xl:col-span-5">
+          <EscrowLineChart />
         </div>
 
         {/* Center: System Load Bar Chart */}
-        <div className="xl:col-span-4 bg-surface border border-line rounded-xl p-5 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-center">
-              <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
-                Tải lượng & Giao dịch mạng
-              </h4>
-              <span className="text-[9px] font-bold text-muted bg-fg/5 px-2 py-0.5 rounded border border-line">
-                24 giờ qua
-              </span>
-            </div>
-            <p className="text-[11px] text-muted mt-1">
-              Cường độ giao dịch qua Smart Contract theo giờ.
-            </p>
-          </div>
-
-          <div className="relative mt-4 min-h-[160px] flex items-center justify-center">
-            <svg
-              className="w-full h-full max-h-[160px]"
-              viewBox="0 0 320 180"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <linearGradient id="bar-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" />
-                  <stop offset="100%" stopColor="#e37253" />
-                </linearGradient>
-              </defs>
-              <line
-                x1="30"
-                y1="35"
-                x2="290"
-                y2="35"
-                stroke="var(--line)"
-                strokeWidth="0.5"
-                strokeDasharray="4,4"
-              />
-              <line
-                x1="30"
-                y1="85"
-                x2="290"
-                y2="85"
-                stroke="var(--line)"
-                strokeWidth="0.5"
-                strokeDasharray="4,4"
-              />
-              <line
-                x1="30"
-                y1="135"
-                x2="290"
-                y2="135"
-                stroke="var(--line)"
-                strokeWidth="1"
-              />
-
-              {/* Bars rendering */}
-              {barChartData.map((bar, idx) => {
-                const barWidth = 22
-                const gap = 20
-                const startX = 40 + idx * (barWidth + gap)
-                const y = 135 - bar.height
-                return (
-                  <g
-                    key={idx}
-                    className="cursor-pointer"
-                    onMouseEnter={() => setHoveredBar(idx)}
-                    onMouseLeave={() => setHoveredBar(null)}
-                  >
-                    {/* Background hover guide path */}
-                    {hoveredBar === idx && (
-                      <rect
-                        x={startX - 4}
-                        y="20"
-                        width={barWidth + 8}
-                        height="115"
-                        fill="var(--fg)"
-                        fillOpacity="0.03"
-                        rx="4"
-                      />
-                    )}
-                    {/* The bar */}
-                    <rect
-                      x={startX}
-                      y={y}
-                      width={barWidth}
-                      height={bar.height}
-                      fill="url(#bar-grad)"
-                      fillOpacity={hoveredBar === idx ? '1' : '0.8'}
-                      rx="3"
-                      className="transition-all duration-200"
-                    />
-                    {/* x-axis Label */}
-                    <text
-                      x={startX + barWidth / 2}
-                      y="152"
-                      fill={
-                        hoveredBar === idx ? 'var(--primary)' : 'var(--muted)'
-                      }
-                      fontSize="9"
-                      fontWeight={hoveredBar === idx ? 'bold' : 'normal'}
-                      textAnchor="middle"
-                    >
-                      {bar.hour}
-                    </text>
-                  </g>
-                )
-              })}
-
-              {/* Tooltip */}
-              {hoveredBar !== null && barChartData[hoveredBar] && (
-                <g
-                  transform={`translate(${barChartData[hoveredBar].transactions > 20 ? 110 : 160}, 15)`}
-                >
-                  <rect
-                    width="90"
-                    height="25"
-                    rx="4"
-                    fill="var(--surface)"
-                    stroke="var(--line)"
-                    strokeWidth="1"
-                    filter="drop-shadow(0 2px 4px rgba(0,0,0,0.05))"
-                  />
-                  <text
-                    x="45"
-                    y="16"
-                    fill="var(--fg)"
-                    fontSize="9"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                  >
-                    {barChartData[hoveredBar].transactions} Tx giao dịch
-                  </text>
-                </g>
-              )}
-            </svg>
-          </div>
+        <div className="xl:col-span-4">
+          <SystemLoadBarChart />
         </div>
 
         {/* Right: Task Distribution Doughnut Chart */}
-        <div className="xl:col-span-3 bg-surface border border-line rounded-xl p-5 shadow-sm flex flex-col justify-between">
-          <div>
-            <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
-              Phân bổ Công việc
-            </h4>
-            <p className="text-[11px] text-muted mt-1">
-              Tỉ lệ phần trăm các loại hồ sơ tồn đọng.
-            </p>
-          </div>
-
-          <div className="flex justify-center items-center py-2 relative">
-            <svg width="120" height="120" viewBox="0 0 200 200">
-              <circle
-                cx="100"
-                cy="100"
-                r="75"
-                fill="transparent"
-                stroke="var(--line)"
-                strokeWidth="16"
-              />
-              <circle
-                cx="100"
-                cy="100"
-                r="75"
-                fill="transparent"
-                stroke="#c65a3a"
-                strokeWidth="18"
-                strokeDasharray="235.6 471.2"
-                strokeDashoffset="0"
-                strokeLinecap="round"
-                transform="rotate(-90 100 100)"
-              />
-              <circle
-                cx="100"
-                cy="100"
-                r="75"
-                fill="transparent"
-                stroke="#6b8e4e"
-                strokeWidth="18"
-                strokeDasharray="164.9 471.2"
-                strokeDashoffset="-235.6"
-                strokeLinecap="round"
-                transform="rotate(-90 100 100)"
-              />
-              <circle
-                cx="100"
-                cy="100"
-                r="75"
-                fill="transparent"
-                stroke="#d64545"
-                strokeWidth="18"
-                strokeDasharray="70.7 471.2"
-                strokeDashoffset="-400.5"
-                strokeLinecap="round"
-                transform="rotate(-90 100 100)"
-              />
-              <text
-                x="100"
-                y="96"
-                fill="var(--fg)"
-                fontSize="24"
-                fontWeight="bold"
-                textAnchor="middle"
-                className="font-display"
-              >
-                43
-              </text>
-              <text
-                x="100"
-                y="116"
-                fill="var(--muted)"
-                fontSize="9"
-                fontWeight="bold"
-                textAnchor="middle"
-                className="tracking-wider uppercase"
-              >
-                TÁC VỤ
-              </text>
-            </svg>
-          </div>
-
-          <div className="space-y-1.5 pt-3 border-t border-line">
-            <div className="flex justify-between items-center text-[10px] font-semibold">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#c65a3a]" />
-                <span className="text-muted">Duyệt tin bđs</span>
-              </div>
-              <span className="text-fg">21 căn (50%)</span>
-            </div>
-            <div className="flex justify-between items-center text-[10px] font-semibold">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#6b8e4e]" />
-                <span className="text-muted">Định danh KYC</span>
-              </div>
-              <span className="text-fg">15 hs (35%)</span>
-            </div>
-            <div className="flex justify-between items-center text-[10px] font-semibold">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#d64545]" />
-                <span className="text-muted">Tranh chấp cọc</span>
-              </div>
-              <span className="text-fg">7 hs (15%)</span>
-            </div>
-          </div>
+        <div className="xl:col-span-3">
+          <TaskDoughnutChart />
         </div>
       </div>
 
