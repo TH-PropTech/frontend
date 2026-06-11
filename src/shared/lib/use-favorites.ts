@@ -34,7 +34,10 @@ export function useFavorites(): UseFavoritesResult {
         : [...prev, id]
       if (typeof window !== 'undefined') {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-        window.dispatchEvent(new Event('favorites-updated'))
+        // Dispatch in the next tick to avoid cascading render warnings
+        setTimeout(() => {
+          window.dispatchEvent(new Event('favorites-updated'))
+        }, 0)
       }
       return next
     })
