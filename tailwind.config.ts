@@ -1,10 +1,46 @@
 import type { Config } from 'tailwindcss'
 
 const config: Config = {
+  darkMode: ['class'],
   content: ['./src/**/*.{ts,tsx}', './tests/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
+        background: 'var(--bg)',
+        foreground: 'var(--fg)',
+        card: {
+          DEFAULT: 'var(--surface)',
+          foreground: 'var(--fg)',
+        },
+        popover: {
+          DEFAULT: 'var(--surface)',
+          foreground: 'var(--fg)',
+        },
+        primary: {
+          DEFAULT: 'var(--primary)',
+          foreground: 'var(--on-control)',
+          hover: 'var(--primary-hover)',
+          soft: 'var(--primary-soft)',
+        },
+        secondary: {
+          DEFAULT: 'var(--surface-muted)',
+          foreground: 'var(--fg)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent-soft)',
+          foreground: 'var(--fg)',
+          soft: 'var(--accent-soft)',
+        },
+        destructive: {
+          DEFAULT: 'var(--danger)',
+          foreground: '#fffdf9',
+        },
+        border: {
+          DEFAULT: 'var(--border)',
+          strong: 'var(--border-strong)',
+        },
+        input: 'var(--border)',
+        ring: 'var(--primary)',
         bg: 'var(--bg)',
         surface: {
           DEFAULT: 'var(--surface)',
@@ -17,24 +53,11 @@ const config: Config = {
           foreground: 'var(--subtle)',
         },
         subtle: 'var(--subtle)',
-        border: {
-          DEFAULT: 'var(--border)',
-          strong: 'var(--border-strong)',
-        },
-        primary: {
-          DEFAULT: 'var(--primary)',
-          hover: 'var(--primary-hover)',
-          soft: 'var(--primary-soft)',
-        },
         control: {
           DEFAULT: 'var(--control)',
           text: 'var(--on-control)',
         },
         'on-control': 'var(--on-control)',
-        accent: {
-          DEFAULT: 'var(--accent)',
-          soft: 'var(--accent-soft)',
-        },
         'accent-2': {
           DEFAULT: 'var(--success)',
           soft: 'var(--success-soft)',
@@ -76,6 +99,28 @@ const config: Config = {
         sm: 'var(--shadow-sm)',
         md: 'var(--shadow-md)',
         lg: 'var(--shadow-lg)',
+      },
+      keyframes: {
+        'accordion-down': {
+          from: {
+            height: '0',
+          },
+          to: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+        },
+        'accordion-up': {
+          from: {
+            height: 'var(--radix-accordion-content-height)',
+          },
+          to: {
+            height: '0',
+          },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
       },
     },
   },

@@ -108,6 +108,10 @@ a {
   .font-mono {
     font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
   }
+
+  .bg-muted {
+    background-color: var(--surface-muted);
+  }
 }
 
 @keyframes pulse-subtle {
