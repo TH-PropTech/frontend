@@ -4,6 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { Button } from '@/shared/ui/button'
+import { useFavorites } from '@/shared/lib/use-favorites'
 
 interface Apartment {
   id: string
@@ -25,9 +26,20 @@ interface Apartment {
 
 interface ApartmentCardProps {
   apt: Apartment
+  showCompareCheckbox?: boolean
+  isSelected?: boolean
+  onToggleCompare?: () => void
 }
 
-export function ApartmentCard({ apt }: ApartmentCardProps): React.ReactElement {
+export function ApartmentCard({
+  apt,
+  showCompareCheckbox = false,
+  isSelected = false,
+  onToggleCompare,
+}: ApartmentCardProps): React.ReactElement {
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const favorite = isFavorite(apt.id)
+
   return (
     <article className="flex flex-col justify-between rounded-2xl border border-border bg-white p-5 shadow-sm hover:translate-y-[-4px] hover:border-border-strong hover:shadow-md transition-all duration-300">
       <div>
@@ -43,20 +55,53 @@ export function ApartmentCard({ apt }: ApartmentCardProps): React.ReactElement {
             }}
           />
           <div className="relative z-10 flex items-center justify-between">
-            <span
-              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                apt.tag === 'empty'
-                  ? 'bg-success-soft text-success'
-                  : apt.tag === 'pending'
-                    ? 'bg-accent-soft text-primary'
-                    : 'bg-info-soft text-info'
-              }`}
+            <div className="flex items-center gap-2">
+              {showCompareCheckbox && (
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={e => {
+                    e.stopPropagation()
+                    onToggleCompare?.()
+                  }}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
+                />
+              )}
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                  apt.tag === 'empty'
+                    ? 'bg-success-soft text-success'
+                    : apt.tag === 'pending'
+                      ? 'bg-accent-soft text-primary'
+                      : 'bg-info-soft text-info'
+                }`}
+              >
+                {apt.tagText}
+              </span>
+            </div>
+            <button
+              onClick={e => {
+                e.preventDefault()
+                e.stopPropagation()
+                toggleFavorite(apt.id)
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 hover:bg-black/60 active:scale-95 transition-all text-white border border-white/10"
+              title={favorite ? 'Bỏ lưu' : 'Lưu tin'}
             >
-              {apt.tagText}
-            </span>
-            <span className="font-mono text-[9px] font-bold text-muted uppercase">
-              {apt.id.split('-').pop()}
-            </span>
+              <svg
+                className={`h-4.5 w-4.5 transition-colors ${favorite ? 'fill-danger text-danger' : 'text-white'}`}
+                fill={favorite ? 'currentColor' : 'none'}
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2.2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+                />
+              </svg>
+            </button>
           </div>
           <span className="relative z-10 font-mono text-[10px] font-bold text-muted uppercase">
             {apt.category}

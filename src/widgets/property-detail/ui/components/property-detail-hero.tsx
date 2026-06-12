@@ -4,6 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import type { ApartmentItem } from '@/entities/properties'
+import { useFavorites } from '@/shared/lib/use-favorites'
 
 interface PropertyDetailHeroProps {
   property: ApartmentItem
@@ -12,6 +13,9 @@ interface PropertyDetailHeroProps {
 export function PropertyDetailHero({
   property,
 }: PropertyDetailHeroProps): React.ReactElement {
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const favorite = isFavorite(property.id)
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-[#f5ece2] via-[#faf6f1] to-bg pb-20 pt-36 rounded-b-[40px] border-b border-border">
       {/* Topography SVG Background (extremely lightweight, vector-rendered) */}
@@ -79,13 +83,32 @@ export function PropertyDetailHero({
       <div className="absolute -right-32 -bottom-32 w-96 h-96 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="mx-auto w-full max-w-6xl px-6 md:px-10 z-10 relative">
-        {/* Back Button */}
-        <div className="mb-6">
+        {/* Back Button & Favorite Toggle Row */}
+        <div className="mb-6 flex items-center justify-between">
           <Link href={'/properties?tab=single' as Route}>
             <span className="text-xs font-bold text-primary hover:underline flex items-center gap-1.5 cursor-pointer w-fit">
               &larr; Quay lại danh sách căn hộ
             </span>
           </Link>
+          <button
+            onClick={() => toggleFavorite(property.id)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-white shadow-sm hover:bg-surface-muted active:scale-95 transition-all text-xs font-bold text-fg cursor-pointer"
+          >
+            <svg
+              className={`h-4.5 w-4.5 transition-colors ${favorite ? 'fill-danger text-danger' : 'text-muted'}`}
+              fill={favorite ? 'currentColor' : 'none'}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+              />
+            </svg>
+            <span>{favorite ? 'Đã lưu' : 'Lưu tin'}</span>
+          </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 mb-5">
