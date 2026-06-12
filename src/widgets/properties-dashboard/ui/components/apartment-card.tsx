@@ -29,6 +29,7 @@ interface ApartmentCardProps {
   showCompareCheckbox?: boolean
   isSelected?: boolean
   onToggleCompare?: () => void
+  disableCompare?: boolean
 }
 
 export function ApartmentCard({
@@ -36,6 +37,7 @@ export function ApartmentCard({
   showCompareCheckbox = false,
   isSelected = false,
   onToggleCompare,
+  disableCompare = false,
 }: ApartmentCardProps): React.ReactElement {
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorite = isFavorite(apt.id)
@@ -60,11 +62,12 @@ export function ApartmentCard({
                 <input
                   type="checkbox"
                   checked={isSelected}
+                  disabled={disableCompare && !isSelected}
                   onChange={e => {
                     e.stopPropagation()
                     onToggleCompare?.()
                   }}
-                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary disabled:opacity-40 disabled:cursor-not-allowed"
                 />
               )}
               <span
