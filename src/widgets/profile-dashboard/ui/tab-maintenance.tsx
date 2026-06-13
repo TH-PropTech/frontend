@@ -7,6 +7,8 @@ import { Card } from '@/shared/ui/card'
 import { UseProfileReturn } from '../model/use-profile'
 import { Wrench, UploadCloud, Clock, Hammer } from 'lucide-react'
 
+import { LandlordReviews } from './landlord-reviews'
+
 interface TabMaintenanceProps {
   profile: UseProfileReturn
 }
@@ -26,7 +28,7 @@ export function TabMaintenance({
   } = profile
 
   return (
-    <div className="space-y-8 mt-0 outline-none">
+    <div className="space-y-6 mt-0 outline-none">
       {/* Submit new issue (Only for Tenant) */}
       {role === 'tenant' && (
         <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-5">
@@ -158,6 +160,9 @@ export function TabMaintenance({
           ))}
         </div>
       </Card>
+
+      {/* Tenant reviews card for landlord */}
+      {role === 'landlord' && <LandlordReviews />}
     </div>
   )
 }
