@@ -23,6 +23,11 @@ import {
   Activity,
   Check,
 } from 'lucide-react'
+import { LandlordKpis } from './landlord-kpis'
+import { LandlordAlerts } from './landlord-alerts'
+import { LandlordTenantInfo } from './landlord-tenant-info'
+import { LandlordContractSummary } from './landlord-contract-summary'
+import { LandlordAppointments } from './landlord-appointments'
 
 interface TabProgressProps {
   profile: UseProfileReturn
@@ -48,39 +53,51 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
     setShowHandoverArchiveModal,
     handleTerminateLease,
     damageDeductions,
+    appointments,
+    handleApproveAppointment,
+    handleRejectAppointment,
+    handleViewSignedContract,
   } = profile
 
   return (
-    <div className="space-y-8 mt-0 outline-none">
+    <div className="space-y-6 mt-0 outline-none">
       {/* Property Selector for Landlord (using generic UI Select) */}
       {role === 'landlord' && (
-        <Card className="bg-white border border-border rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="space-y-1 text-left">
-            <span className="text-xs text-muted font-bold uppercase tracking-wider block">
-              Chọn căn hộ quản lý
-            </span>
-            <p className="text-xs text-muted">
-              Chuyển đổi căn hộ để theo dõi tiến trình và dòng tiền tương ứng.
-            </p>
-          </div>
-          <div className="w-full sm:w-64">
-            <Select
-              value={activePropertyId}
-              onValueChange={handlePropertyChange}
-            >
-              <SelectTrigger className="w-full bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-semibold text-fg focus:ring-1 focus:ring-primary">
-                <SelectValue placeholder="Chọn căn hộ" />
-              </SelectTrigger>
-              <SelectContent className="bg-white border border-border">
-                {properties.map(p => (
-                  <SelectItem key={p.id} value={p.id} className="text-xs">
-                    {p.name} ({p.status})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </Card>
+        <>
+          <Card className="bg-white border border-border rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="space-y-1 text-left">
+              <span className="text-xs text-muted font-bold uppercase tracking-wider block">
+                Chọn căn hộ quản lý
+              </span>
+              <p className="text-xs text-muted">
+                Chuyển đổi căn hộ để theo dõi tiến trình và dòng tiền tương ứng.
+              </p>
+            </div>
+            <div className="w-full sm:w-64">
+              <Select
+                value={activePropertyId}
+                onValueChange={handlePropertyChange}
+              >
+                <SelectTrigger className="w-full bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-semibold text-fg focus:ring-1 focus:ring-primary">
+                  <SelectValue placeholder="Chọn căn hộ" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-border">
+                  {properties.map(p => (
+                    <SelectItem key={p.id} value={p.id} className="text-xs">
+                      {p.name} ({p.status})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </Card>
+
+          {/* Landlord KPI cards */}
+          <LandlordKpis />
+
+          {/* Landlord alert notifications */}
+          <LandlordAlerts />
+        </>
       )}
 
       {/* Progress Card */}
@@ -247,6 +264,14 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
             </div>
             <div className="flex flex-wrap gap-2.5 shrink-0 self-start md:self-auto">
               <Button
+                onClick={handleViewSignedContract}
+                variant="secondary"
+                className="h-10 text-xs font-bold rounded-full px-5 border border-primary/30 text-primary bg-primary-soft/20 hover:bg-primary-soft/40"
+              >
+                <FileSignature className="h-3.5 w-3.5 mr-1.5" />
+                Xem hợp đồng đã ký
+              </Button>
+              <Button
                 onClick={() => setShowHandoverArchiveModal(true)}
                 variant="secondary"
                 className="h-10 text-xs font-bold rounded-full px-5 border border-border text-fg"
@@ -388,6 +413,23 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
           </div>
         </div>
       </Card>
+
+      {/* Landlord Additional Management Cards */}
+      {role === 'landlord' && (
+        <>
+          <LandlordTenantInfo
+            propertyId={activePropertyId}
+            status={activeProperty.status}
+            price={activeProperty.price}
+          />
+          {activeProperty.status === 'Đang thuê' && <LandlordContractSummary />}
+          <LandlordAppointments
+            appointments={appointments}
+            onApprove={handleApproveAppointment}
+            onReject={handleRejectAppointment}
+          />
+        </>
+      )}
     </div>
   )
 }
