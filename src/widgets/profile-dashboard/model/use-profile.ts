@@ -8,6 +8,7 @@ import type {
   RentalBill,
   MaintenanceTicket,
   Appointment,
+  EventType,
 } from './types'
 import {
   DEMO_PROPERTIES,
@@ -232,7 +233,7 @@ export function useProfile(): UseProfileReturn {
     [properties, activePropertyId]
   )
 
-  const addBlockchainLog = (event: string, hash: string): void => {
+  const addBlockchainLog = (event: EventType, hash: string): void => {
     const log: BlockchainLog = {
       id: `LOG-${Date.now()}`,
       event,
