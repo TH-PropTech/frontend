@@ -12,7 +12,7 @@ import {
   AlertCircle,
   TrendingUp,
   Copy,
-  Wallet,
+  CreditCard,
 } from 'lucide-react'
 
 interface ProfileHeaderProps {
@@ -169,30 +169,54 @@ export function ProfileHeader({
                   type="button"
                   onClick={() => handleCopyText(walletAddress)}
                   className="text-subtle hover:text-fg transition-colors"
-                  title="Sao chép địa chỉ ví"
+                  title="Sao chép số tài khoản"
                 >
                   <Copy className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <div className="border-t border-border/50 pt-1.5 flex justify-between text-[10px] text-muted">
-                <span>
-                  Số dư:{' '}
-                  <strong className="text-fg">
-                    {usdtBalance.toLocaleString()} USDT
-                  </strong>
-                </span>
-                <span>
-                  {role === 'tenant' ? 'Ký quỹ: ' : 'Nhận ký quỹ: '}
-                  <strong className="text-primary">
-                    {escrowBalance.toLocaleString()} VND
-                  </strong>
-                </span>
+              <div className="border-t border-border/50 pt-1.5 flex flex-col gap-1 text-[10px] text-muted">
+                <div className="flex justify-between">
+                  <span>
+                    Số dư:{' '}
+                    <strong className="text-fg">
+                      {usdtBalance.toLocaleString()} VND
+                    </strong>
+                  </span>
+                  <span>
+                    {role === 'tenant' ? 'Ký quỹ: ' : 'Nhận ký quỹ: '}
+                    <strong className="text-primary">
+                      {escrowBalance.toLocaleString()} VND
+                    </strong>
+                  </span>
+                </div>
+                {isKycVerified && (
+                  <div className="border-t border-border/30 pt-1 flex justify-between items-center text-[9px] text-success font-medium">
+                    <span>Fabric CA:</span>
+                    <span className="font-mono text-right truncate max-w-[150px]">
+                      {role === 'tenant'
+                        ? 'org1.tenant.nguyen_van_a'
+                        : 'org1.landlord.le_hoang_minh'}{' '}
+                      (X.509)
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-xs text-muted">
-              <Wallet className="h-4 w-4 text-subtle" />
-              <span>Ví Web3 chưa kết nối</span>
+            <div className="flex flex-col md:items-end gap-1">
+              <div className="flex items-center gap-2 text-xs text-muted">
+                <CreditCard className="h-4 w-4 text-subtle" />
+                <span>Chưa liên kết tài khoản ngân hàng</span>
+              </div>
+              {isKycVerified && (
+                <span className="text-[9px] text-success font-mono mt-0.5">
+                  Fabric CA ID:{' '}
+                  {role === 'tenant'
+                    ? 'org1.tenant.nguyen_van_a'
+                    : 'org1.landlord.le_hoang_minh'}{' '}
+                  (X.509)
+                </span>
+              )}
             </div>
           )}
           <Button
@@ -200,8 +224,10 @@ export function ProfileHeader({
             variant={isWalletConnected ? 'secondary' : 'primary'}
             className="h-9 text-xs rounded-full px-5 font-bold shadow-sm transition-all flex items-center gap-1.5 self-start md:self-end"
           >
-            <Wallet className="h-3.5 w-3.5" />
-            {isWalletConnected ? 'Ngắt kết nối ví' : 'Kết nối ví Web3'}
+            <CreditCard className="h-3.5 w-3.5" />
+            {isWalletConnected
+              ? 'Hủy liên kết ngân hàng'
+              : 'Liên kết ngân hàng (PayOS)'}
           </Button>
         </div>
       </Card>
