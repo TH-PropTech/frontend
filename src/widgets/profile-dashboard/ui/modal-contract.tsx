@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -10,7 +11,13 @@ import {
   DialogDescription,
 } from '@/shared/ui/dialog'
 import { UseProfileReturn } from '../model/use-profile'
-import { FileText, ShieldCheck, FileSignature } from 'lucide-react'
+import {
+  FileText,
+  ShieldCheck,
+  FileSignature,
+  Download,
+  CheckCircle2,
+} from 'lucide-react'
 
 interface ModalContractProps {
   profile: UseProfileReturn
@@ -25,7 +32,12 @@ export function ModalContract({
     role,
     activeProperty,
     handleSignContract,
+    contractViewOnly,
   } = profile
+
+  const handleClose = (): void => {
+    setShowContractModal(false)
+  }
 
   return (
     <Dialog open={showContractModal} onOpenChange={setShowContractModal}>
@@ -33,13 +45,32 @@ export function ModalContract({
         <DialogHeader className="border-b border-border pb-3 text-left shrink-0">
           <DialogTitle className="font-marketing text-lg font-bold text-fg flex items-center gap-2">
             <FileText className="h-5.5 w-5.5 text-primary" />
-            Chi tiết Điều khoản Hợp đồng Thuê nhà Điện tử
+            {contractViewOnly
+              ? 'Hợp đồng thuê nhà đã ký'
+              : 'Chi tiết Điều khoản Hợp đồng Thuê nhà Điện tử'}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted mt-1">
             Mã số hợp đồng:{' '}
             {role === 'tenant' ? 'CTR-2026-0048' : activeProperty.code}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Signed status banner (only in view mode) */}
+        {contractViewOnly && (
+          <div className="bg-success-soft/30 border border-success/30 rounded-xl p-3 flex items-center gap-2.5 shrink-0">
+            <CheckCircle2 className="h-4.5 w-4.5 text-success shrink-0" />
+            <div className="text-left">
+              <p className="text-[11px] font-bold text-success">
+                Hợp đồng đã được ký số bởi cả hai bên
+              </p>
+              <p className="text-[10px] text-muted">
+                Ký bằng chứng chỉ Fabric CA X.509 (ECDSA P-256) • Ngày ký:
+                10/06/2026 16:30 • Băm SHA-256 đã ghi nhận lên sổ cái
+                Hyperledger Fabric
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Scrollable Document Text */}
         <div className="flex-1 overflow-y-auto pr-2 border border-border/80 rounded-xl p-4 bg-surface/30 text-xs text-fg space-y-4 leading-relaxed font-body scrollbar-thin text-left">
@@ -118,8 +149,9 @@ export function ModalContract({
                   ? '18.000.000đ'
                   : activeProperty.price.toLocaleString() + 'đ'}
               </strong>
-              , khoản tiền này được khóa ký quỹ thông qua Smart Contract trên hệ
-              thống Blockchain.
+              , khoản tiền này được khóa ký quỹ bảo chứng tại ngân hàng đối tác
+              (Techcombank/TPBank) dưới sự giám sát của sổ cái Hyperledger
+              Fabric.
             </p>
           </div>
 
@@ -148,36 +180,105 @@ export function ModalContract({
               được sử dụng làm bằng chứng số đối chiếu pháp lý.
             </p>
           </div>
+
+          {/* Signed signatures section (only in view mode) */}
+          {contractViewOnly && (
+            <div className="border-t border-border/60 pt-4 mt-4 space-y-4">
+              <p className="font-bold text-center">CHỮ KÝ SỐ CÁC BÊN</p>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2 text-center">
+                  <p className="font-bold text-xs">BÊN CHO THUÊ (BÊN A)</p>
+                  <div className="border border-success/30 bg-success-soft/20 rounded-lg p-3 space-y-1">
+                    <p className="text-primary font-bold italic text-sm">
+                      Lê Hoàng Minh
+                    </p>
+                    <p className="text-[9px] text-muted font-mono">
+                      Fabric CA: org1.landlord.le_hoang_minh
+                    </p>
+                    <div className="flex items-center justify-center gap-1 text-success">
+                      <CheckCircle2 className="h-3 w-3" />
+                      <span className="text-[9px] font-bold">
+                        Đã ký số X.509
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2 text-center">
+                  <p className="font-bold text-xs">BÊN THUÊ (BÊN B)</p>
+                  <div className="border border-success/30 bg-success-soft/20 rounded-lg p-3 space-y-1">
+                    <p className="text-primary font-bold italic text-sm">
+                      Nguyễn Văn A
+                    </p>
+                    <p className="text-[9px] text-muted font-mono">
+                      Fabric CA: org1.tenant.nguyen_van_a
+                    </p>
+                    <div className="flex items-center justify-center gap-1 text-success">
+                      <CheckCircle2 className="h-3 w-3" />
+                      <span className="text-[9px] font-bold">
+                        Đã ký số X.509
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="bg-primary-soft/30 border border-primary/20 rounded-2xl p-4 text-[10px] text-muted leading-relaxed flex gap-2 shrink-0 text-left">
-          <ShieldCheck className="h-4.5 w-4.5 text-primary shrink-0 mt-0.5" />
-          <span>
-            Khi bấm nút &quot;Xác nhận ký số&quot;, hệ thống sẽ tiến hành gửi
-            giao dịch băm mã hóa của các điều khoản trên lên Smart Contract mạng
-            Sepolia.
-          </span>
-        </div>
+        {contractViewOnly ? (
+          /* View-only mode: download + close buttons */
+          <div className="flex gap-3 pt-2 shrink-0">
+            <Button
+              onClick={() => {
+                toast.success('Đã tải file hợp đồng PDF về thiết bị.')
+              }}
+              variant="secondary"
+              className="flex-1 h-10 text-xs rounded-full font-bold flex items-center justify-center gap-1.5"
+            >
+              <Download className="h-4 w-4" />
+              Tải về PDF
+            </Button>
+            <Button
+              onClick={handleClose}
+              className="flex-1 h-10 text-xs bg-primary hover:bg-primary-hover text-white rounded-full font-bold shadow-md border-none"
+            >
+              Đóng
+            </Button>
+          </div>
+        ) : (
+          /* Signing mode: cancel + sign buttons */
+          <>
+            <div className="bg-primary-soft/30 border border-primary/20 rounded-2xl p-4 text-[10px] text-muted leading-relaxed flex gap-2 shrink-0 text-left">
+              <ShieldCheck className="h-4.5 w-4.5 text-primary shrink-0 mt-0.5" />
+              <span>
+                Khi bấm nút &quot;Xác nhận ký số&quot;, hệ thống sẽ tiến hành
+                gửi giao dịch băm mã hóa của các điều khoản trên lên Smart
+                Contract (Chaincode) mạng Hyperledger Fabric thông qua danh tính
+                chứng chỉ số X.509 của bạn.
+              </span>
+            </div>
 
-        <div className="flex gap-3 pt-2 shrink-0">
-          <Button
-            onClick={() => setShowContractModal(false)}
-            variant="secondary"
-            className="flex-1 h-10 text-xs rounded-full font-bold"
-          >
-            Hủy bỏ
-          </Button>
-          <Button
-            onClick={() => {
-              setShowContractModal(false)
-              handleSignContract()
-            }}
-            className="flex-1 h-10 text-xs bg-primary hover:bg-primary-hover text-white rounded-full font-bold shadow-md flex items-center justify-center gap-1.5 border-none"
-          >
-            <FileSignature className="h-4 w-4" />
-            Xác nhận ký số bằng Ví Web3
-          </Button>
-        </div>
+            <div className="flex gap-3 pt-2 shrink-0">
+              <Button
+                onClick={handleClose}
+                variant="secondary"
+                className="flex-1 h-10 text-xs rounded-full font-bold"
+              >
+                Hủy bỏ
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowContractModal(false)
+                  handleSignContract()
+                }}
+                className="flex-1 h-10 text-xs bg-primary hover:bg-primary-hover text-white rounded-full font-bold shadow-md flex items-center justify-center gap-1.5 border-none"
+              >
+                <FileSignature className="h-4 w-4" />
+                Ký số bằng chứng chỉ Fabric
+              </Button>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )
