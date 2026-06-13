@@ -16,6 +16,9 @@ import { UseProfileReturn } from '../model/use-profile'
 import { toast } from 'sonner'
 import { TrendingUp, Download, FileText, Copy } from 'lucide-react'
 
+import { LandlordEscrow } from './landlord-escrow'
+import { LandlordProfit } from './landlord-profit'
+
 interface TabBillsProps {
   profile: UseProfileReturn
 }
@@ -24,7 +27,15 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
   const { role, bills, firstMonthPaid, handleCopyText } = profile
 
   return (
-    <div className="space-y-8 mt-0 outline-none">
+    <div className="space-y-6 mt-0 outline-none">
+      {/* Landlord Financial Overviews */}
+      {role === 'landlord' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <LandlordEscrow />
+          <LandlordProfit />
+        </div>
+      )}
+
       {/* Visual Financial Chart Card */}
       <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-left">
