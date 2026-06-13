@@ -67,7 +67,7 @@ export function ProfileWidget(): React.ReactElement {
             className="pb-3 rounded-none border-b-2 border-transparent bg-transparent px-0 font-semibold text-muted hover:text-fg data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-bold data-[state=active]:bg-transparent shadow-none"
           >
             <Database className="h-4 w-4 mr-1.5" />
-            Sổ cái Blockchain
+            Nhật ký giao dịch
           </TabsTrigger>
           <TabsTrigger
             value="security"
