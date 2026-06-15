@@ -124,8 +124,8 @@ export function PropertyComparison({
               },
               {
                 label: 'Độ tin cậy Blockchain',
-                v1: '98% Score',
-                v2: compareApt.isVerified ? '96% Score' : 'Chưa xác thực',
+                v1: '98% Điểm',
+                v2: compareApt.isVerified ? '96% Điểm' : 'Chưa xác thực',
                 better: 1,
               },
               {

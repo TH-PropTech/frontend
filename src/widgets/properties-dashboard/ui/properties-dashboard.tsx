@@ -371,12 +371,12 @@ export function PropertiesDashboard(): React.ReactElement {
           <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div className="space-y-2">
               <span className="font-display text-xs font-bold uppercase tracking-widest text-primary">
-                KET QUA TIM KIEM
+                KẾT QUẢ TÌM KIẾM
               </span>
               <h2 className="font-marketing text-3xl font-bold text-fg sm:text-4xl">
                 {activeTab === 'single'
-                  ? `Can ho kha dung (${filteredApartments.length})`
-                  : `Du an & Toa nha chung cu (${filteredProjects.length})`}
+                  ? `Căn hộ khả dụng (${filteredApartments.length})`
+                  : `Dự án & Tòa nhà chung cư (${filteredProjects.length})`}
               </h2>
             </div>
             <div className="flex items-center gap-3">
@@ -395,7 +395,7 @@ export function PropertiesDashboard(): React.ReactElement {
                       : 'text-muted hover:text-fg'
                   }`}
                 >
-                  Danh sach
+                  Danh sách
                 </button>
                 <button
                   type="button"
@@ -406,7 +406,7 @@ export function PropertiesDashboard(): React.ReactElement {
                       : 'text-muted hover:text-fg'
                   }`}
                 >
-                  Ban do
+                  Bản đồ
                 </button>
               </div>
             </div>
@@ -508,7 +508,7 @@ export function PropertiesDashboard(): React.ReactElement {
                   <div className="flex justify-between items-start gap-4">
                     <div>
                       <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
-                        {selectedMapApt.category || 'Du an'}
+                        {selectedMapApt.category || 'Dự án'}
                       </span>
                       <h4 className="font-marketing text-sm font-bold text-fg line-clamp-1">
                         {selectedMapApt.title}
@@ -521,7 +521,7 @@ export function PropertiesDashboard(): React.ReactElement {
                       onClick={() => setSelectedMapApt(null)}
                       className="text-muted hover:text-fg text-xs font-bold p-1 cursor-pointer"
                     >
-                      Dong
+                      Đóng
                     </button>
                   </div>
                   <div className="flex gap-2">
@@ -530,7 +530,7 @@ export function PropertiesDashboard(): React.ReactElement {
                       className="flex-1"
                     >
                       <button className="w-full bg-primary text-white text-[10px] font-bold rounded-lg py-1.5 hover:bg-primary-hover transition-colors cursor-pointer">
-                        Xem chi tiet
+                        Xem chi tiết
                       </button>
                     </Link>
                   </div>
@@ -541,7 +541,7 @@ export function PropertiesDashboard(): React.ReactElement {
             filteredApartments.length === 0 ? (
               <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
                 <p className="font-body text-sm text-muted">
-                  Khong tim thay can ho phu hop voi bo loc hien tai.
+                  Không tìm thấy căn hộ phù hợp với bộ lọc hiện tại.
                 </p>
               </div>
             ) : (
@@ -554,7 +554,7 @@ export function PropertiesDashboard(): React.ReactElement {
           ) : filteredProjects.length === 0 ? (
             <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
               <p className="font-body text-sm text-muted">
-                Khong tim thay du an phu hop voi bo loc hien tai.
+                Không tìm thấy dự án phù hợp với bộ lọc hiện tại.
               </p>
             </div>
           ) : (
