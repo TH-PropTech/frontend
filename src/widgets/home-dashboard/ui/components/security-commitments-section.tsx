@@ -28,7 +28,7 @@ export function SecurityCommitmentsSection(): React.ReactElement {
             },
             {
               title: 'Blockchain bất biến',
-              desc: 'Mọi giao dịch tài chính đều được ghi nhận hash trên sổ cái phân tán. Không ai có thể sửa đổi, xóa bỏ hay phủ nhận lịch sử giao dịch.',
+              desc: 'Mọi giao dịch tài chính đều được ghi nhận hash trên hệ thống phân tán. Không ai có thể sửa đổi, xóa bỏ hay phủ nhận lịch sử giao dịch.',
               icon: 'M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244',
             },
             {
