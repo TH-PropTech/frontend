@@ -19,6 +19,25 @@ const TOPIC_TABS = [
 
 export function CommunityDashboard(): React.ReactElement {
   const state = useWebCommunity()
+  const [activeTab, setActiveTab] = React.useState<
+    'public' | 'my-posts' | 'moderation'
+  >('public')
+
+  React.useEffect(() => {
+    if (state.showMyPosts && activeTab !== 'my-posts') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveTab('my-posts')
+    } else if (!state.showMyPosts && activeTab === 'my-posts') {
+      setActiveTab('public')
+    }
+  }, [state.showMyPosts, activeTab])
+
+  React.useEffect(() => {
+    if (!state.isStaffDemo && activeTab === 'moderation') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveTab('public')
+    }
+  }, [state.isStaffDemo, activeTab])
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-bg text-fg selection:bg-primary/20 selection:text-primary">
@@ -148,34 +167,139 @@ export function CommunityDashboard(): React.ReactElement {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
             {/* LEFT: Feed */}
             <div className="space-y-6">
-              {/* Active Filter Title */}
-              <div className="flex items-center justify-between pb-2 border-b border-border/40">
-                <div className="space-y-1">
-                  <h2 className="font-marketing text-xl font-bold text-fg">
-                    {state.showMyPosts
-                      ? 'Bài viết của tôi'
-                      : 'Bài viết cộng đồng'}{' '}
-                    ({state.approvedPosts.length})
-                  </h2>
-                  <p className="text-xs text-muted">
-                    {state.showMyPosts
-                      ? 'Danh sách thảo luận do bạn đăng tải'
-                      : 'Các cuộc thảo luận, phản hồi thực tế từ cư dân'}
-                  </p>
-                </div>
+              {/* Tab Menu Header */}
+              <div className="flex border-b border-border/60 gap-6 mb-6">
+                <button
+                  onClick={() => {
+                    setActiveTab('public')
+                    state.setShowMyPosts(false)
+                  }}
+                  className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
+                    activeTab === 'public'
+                      ? 'text-primary'
+                      : 'text-muted hover:text-fg'
+                  }`}
+                >
+                  Bài viết cộng đồng
+                  {activeTab === 'public' && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('my-posts')
+                    state.setShowMyPosts(true)
+                  }}
+                  className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
+                    activeTab === 'my-posts'
+                      ? 'text-primary'
+                      : 'text-muted hover:text-fg'
+                  }`}
+                >
+                  Bài viết của tôi
+                  {activeTab === 'my-posts' && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                  )}
+                </button>
+                {state.isStaffDemo && (
+                  <button
+                    onClick={() => {
+                      setActiveTab('moderation')
+                    }}
+                    className={`pb-3 text-sm font-bold transition-all relative flex items-center gap-1.5 cursor-pointer ${
+                      activeTab === 'moderation'
+                        ? 'text-danger'
+                        : 'text-muted hover:text-fg'
+                    }`}
+                  >
+                    Quản lý duyệt bài
+                    {state.pendingPosts.length > 0 && (
+                      <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[10px] font-bold text-danger">
+                        {state.pendingPosts.length}
+                      </span>
+                    )}
+                    {activeTab === 'moderation' && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-danger rounded-full" />
+                    )}
+                  </button>
+                )}
               </div>
 
-              {/* Staff moderation panel (only when demo toggle is on) */}
-              {state.isStaffDemo && state.pendingPosts.length > 0 && (
-                <StaffModerationPanel
-                  posts={state.pendingPosts}
-                  onApprove={state.handleApprove}
-                  onReject={state.handleReject}
-                />
-              )}
+              {/* Staff moderation Banner Alert (only when demo toggle is on but not on the moderation tab) */}
+              {state.isStaffDemo &&
+                state.pendingPosts.length > 0 &&
+                activeTab !== 'moderation' && (
+                  <div className="rounded-2xl border border-dashed border-danger/30 bg-danger/[0.02] p-4 flex items-center justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-danger/10">
+                        <svg
+                          className="h-4 w-4 text-danger"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
+                          />
+                        </svg>
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-bold text-danger">
+                          Có bài viết chờ phê duyệt
+                        </p>
+                        <p className="text-[11px] text-muted">
+                          Có {state.pendingPosts.length} bài viết đang chờ nhân
+                          viên kiểm duyệt trong hệ thống.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('moderation')}
+                      className="shrink-0 rounded-xl bg-danger px-4 py-2 text-xs font-bold text-white hover:bg-danger/90 active:scale-95 transition-all cursor-pointer shadow-sm"
+                    >
+                      Duyệt ngay
+                    </button>
+                  </div>
+                )}
 
-              {/* Post Feed */}
-              {state.approvedPosts.length === 0 ? (
+              {/* Feed Content rendering */}
+              {activeTab === 'moderation' ? (
+                state.pendingPosts.length === 0 ? (
+                  <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
+                    <div className="mx-auto h-12 w-12 rounded-full bg-success/10 flex items-center justify-center mb-3">
+                      <svg
+                        className="h-6 w-6 text-success"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="m4.5 12.75 6 6 9-13.5"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="font-marketing text-sm font-bold text-fg">
+                      Đã hoàn thành kiểm duyệt
+                    </h3>
+                    <p className="font-body text-xs text-muted mt-1">
+                      Không còn bài viết nào đang chờ phê duyệt. Hệ thống đang
+                      hoạt động ổn định.
+                    </p>
+                  </div>
+                ) : (
+                  <StaffModerationPanel
+                    posts={state.pendingPosts}
+                    onApprove={state.handleApprove}
+                    onReject={state.handleReject}
+                  />
+                )
+              ) : state.approvedPosts.length === 0 ? (
                 <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
                   <svg
                     className="mx-auto h-10 w-10 text-muted/60 mb-3"
