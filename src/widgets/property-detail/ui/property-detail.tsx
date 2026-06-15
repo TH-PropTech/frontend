@@ -268,7 +268,7 @@ export function PropertyDetail(): React.ReactElement {
                   Tín nhiệm chủ nhà:
                 </span>
                 <span className="bg-success/15 text-success px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[11px] border border-success/20">
-                  98% Trust (Blockchain Verified)
+                  98% Tín nhiệm (Xác thực Blockchain)
                 </span>
               </div>
             </div>

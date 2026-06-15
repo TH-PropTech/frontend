@@ -345,7 +345,7 @@ export function PropertyAnalytics({
                   Chỉ số Trust Score
                 </span>
                 <span className="text-4xl font-display font-black text-success">
-                  98% Verified
+                  98% Điểm Tín nhiệm
                 </span>
               </div>
               <div className="h-14 w-14 rounded-2xl bg-success-soft border border-success/30 items-center justify-center flex">
