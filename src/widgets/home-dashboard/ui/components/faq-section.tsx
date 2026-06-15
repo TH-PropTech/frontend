@@ -25,7 +25,7 @@ export function FaqSection(): React.ReactElement {
           {[
             {
               q: 'Công nghệ Blockchain bảo mật đặt cọc và hợp đồng như thế nào?',
-              a: 'Khi bạn thực hiện đặt cọc hoặc ký hợp đồng thuê, hệ thống sẽ tự động tạo một giao dịch tương ứng và lưu trữ mã hash (dấu bản quyền số) lên sổ cái Blockchain. Mã hash này đóng vai trò như một bằng chứng pháp lý bất biến — thông tin hợp đồng và số tiền giao dịch không bao giờ có thể bị sửa đổi, xóa bỏ hay giả mạo bởi bất kỳ bên nào.',
+              a: 'Khi bạn thực hiện đặt cọc hoặc ký hợp đồng thuê, hệ thống sẽ tự động tạo một giao dịch tương ứng và lưu trữ mã hash (dấu bản quyền số) lên mạng lưới Blockchain. Mã hash này đóng vai trò như một bằng chứng pháp lý bất biến — thông tin hợp đồng và số tiền giao dịch không bao giờ có thể bị sửa đổi, xóa bỏ hay giả mạo bởi bất kỳ bên nào.',
             },
             {
               q: 'Xem nhà qua VR Tour 360° có phản ánh chính xác thực tế không?',

@@ -67,6 +67,28 @@ function IconBot(): React.ReactElement {
   )
 }
 
+function IconBank(): React.ReactElement {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 21h18" />
+      <path d="M19 21v-8" />
+      <path d="M5 21v-8" />
+      <path d="M9 21v-8" />
+      <path d="M15 21v-8" />
+      <path d="M3 13h18L12 3z" />
+    </svg>
+  )
+}
+
 const FEATURES = [
   {
     icon: <IconBuilding />,
@@ -74,6 +96,7 @@ const FEATURES = [
   },
   { icon: <IconShield />, text: 'Hợp đồng ghi nhận Blockchain' },
   { icon: <IconBot />, text: 'Trợ lý AI tư vấn 24/7' },
+  { icon: <IconBank />, text: 'Đối tác liên kết với ngân hàng Techcombank' },
 ]
 
 export function AuthBrandingPanel(): React.ReactElement {
@@ -345,26 +368,28 @@ export function AuthBrandingPanel(): React.ReactElement {
           </div>
 
           {/* Trust line */}
-          <div className="flex items-center gap-2 px-1">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--success)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-            <span
-              className={`text-xs transition-colors duration-500 ${isDark ? 'text-white/50' : 'text-muted'}`}
-            >
-              Được tin dùng bởi hàng nghìn khách thuê tại TP.HCM
-            </span>
+          <div className="flex flex-col gap-1.5 px-1">
+            <div className="flex items-center gap-2">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--success)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <span
+                className={`text-xs transition-colors duration-500 ${isDark ? 'text-white/50' : 'text-muted'}`}
+              >
+                Được tin dùng bởi hàng nghìn khách thuê tại TP.HCM
+              </span>
+            </div>
           </div>
         </div>
       </div>

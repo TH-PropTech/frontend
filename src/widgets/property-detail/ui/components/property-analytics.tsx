@@ -369,7 +369,8 @@ export function PropertyAnalytics({
               {[
                 { label: 'Chủ hộ đã xác minh định danh (KYC Landlord)' },
                 {
-                  label: 'Sổ hồng căn hộ đã băm mã hóa trên sổ cái Blockchain',
+                  label:
+                    'Sổ hồng căn hộ đã băm mã hóa trên hệ thống Blockchain',
                 },
                 { label: 'Hợp đồng liên kết Smart Contract ký quỹ tự động' },
               ].map((item, idx) => (
