@@ -28,8 +28,8 @@ export function HomeHeader(): React.ReactElement {
   const navItems = [
     { name: 'Trang chủ', href: '/' },
     { name: 'Căn hộ', href: '/properties' },
-    { name: 'Không gian 3D', href: '/vr' },
-    { name: 'Quy trình', href: '/process' },
+    { name: 'Cộng đồng', href: '/community' },
+    { name: 'Cẩm nang', href: '/process' },
     { name: 'Liên hệ', href: '/contact' },
   ]
 

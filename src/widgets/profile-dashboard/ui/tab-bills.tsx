@@ -466,16 +466,19 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
 
       {/* Table section (using generic Table UI components) */}
       <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
-        <div className="flex justify-between items-center text-left">
-          <h3 className="font-marketing text-base font-bold text-fg flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            {role === 'tenant'
-              ? 'Danh sách hóa đơn thanh toán'
-              : 'Quản lý dòng tiền & Doanh thu'}
-          </h3>
-          <span className="text-xs text-muted">
-            Cập nhật theo Smart Contract
-          </span>
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-left">
+          <div className="space-y-1">
+            <h3 className="font-marketing text-base font-bold text-fg flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              {role === 'tenant'
+                ? 'Danh sách hóa đơn thanh toán'
+                : 'Quản lý dòng tiền & Doanh thu'}
+            </h3>
+            <p className="text-xs text-muted">
+              Cập nhật theo Smart Contract • Giao dịch được xử lý tự động qua
+              cổng ngân hàng liên kết Techcombank
+            </p>
+          </div>
         </div>
 
         <div className="overflow-x-auto -mx-2 px-2 scrollbar-thin">
@@ -593,7 +596,7 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                   <TableRow className="hover:bg-surface-muted/10 transition-colors">
                     <TableCell className="p-4 font-semibold text-fg flex items-center gap-1.5 border-none h-12">
                       <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                      Tiền thuê nhà tháng 6/2026 (Giải tỏa về ví)
+                      Tiền thuê nhà tháng 6/2026 (Giải tỏa về tài khoản)
                     </TableCell>
                     <TableCell className="p-4 text-muted border-none">
                       {firstMonthPaid ? 'Vừa xong' : '05/07/2026'}
@@ -613,7 +616,9 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                         <span
                           className={`h-1.5 w-1.5 rounded-full ${firstMonthPaid ? 'bg-success' : 'bg-destructive'}`}
                         />
-                        {firstMonthPaid ? 'Đã thu về ví' : 'Chờ khách đóng'}
+                        {firstMonthPaid
+                          ? 'Đã nhận tài khoản'
+                          : 'Chờ khách đóng'}
                       </Badge>
                     </TableCell>
                     <TableCell className="p-4 border-none">
