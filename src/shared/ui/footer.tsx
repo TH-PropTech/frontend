@@ -227,6 +227,18 @@ export function Footer(): React.ReactElement {
                 </span>
               ))}
             </div>
+
+            {/* Payment & Escrow Partner */}
+            <div className="mt-6 border-t border-border/60 pt-4">
+              <span className="font-display text-[10px] font-bold uppercase tracking-wider text-muted block mb-2">
+                Đối tác liên kết giữ tiền &amp; ký quỹ
+              </span>
+              <div className="flex items-center gap-2">
+                <div className="inline-flex items-center justify-center rounded-md bg-[#E01E26] px-2 py-0.5 text-white font-display font-black text-[11px] tracking-tight uppercase">
+                  Techcombank
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Product Links */}

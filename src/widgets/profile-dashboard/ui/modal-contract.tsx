@@ -65,7 +65,7 @@ export function ModalContract({
               </p>
               <p className="text-[10px] text-muted">
                 Ký bằng chứng chỉ Fabric CA X.509 (ECDSA P-256) • Ngày ký:
-                10/06/2026 16:30 • Băm SHA-256 đã ghi nhận lên sổ cái
+                10/06/2026 16:30 • Băm SHA-256 đã ghi nhận lên hệ thống
                 Hyperledger Fabric
               </p>
             </div>
@@ -149,9 +149,8 @@ export function ModalContract({
                   ? '18.000.000đ'
                   : activeProperty.price.toLocaleString() + 'đ'}
               </strong>
-              , khoản tiền này được khóa ký quỹ bảo chứng tại ngân hàng đối tác
-              (Techcombank/TPBank) dưới sự giám sát của sổ cái Hyperledger
-              Fabric.
+              , khoản tiền này được khóa ký quỹ bảo chứng tại ngân hàng
+              Techcombank dưới sự giám sát của hệ thống Fabric.
             </p>
           </div>
 
@@ -176,8 +175,8 @@ export function ModalContract({
             <p>
               Mọi tranh chấp phát sinh sẽ được ưu tiên giải quyết thông qua
               thương lượng. Trong trường hợp không thể thỏa thuận, dữ liệu hành
-              trình băm mã hóa trên Sổ cái Ledger của hệ thống TH-PropTech sẽ
-              được sử dụng làm bằng chứng số đối chiếu pháp lý.
+              trình băm mã hóa trên Hệ thống hợp đồng của TH-PropTech sẽ được sử
+              dụng làm bằng chứng số đối chiếu pháp lý.
             </p>
           </div>
 

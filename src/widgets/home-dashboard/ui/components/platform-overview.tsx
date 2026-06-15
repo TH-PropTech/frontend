@@ -145,8 +145,8 @@ export function PlatformOverview(): React.ReactElement {
             </h3>
             <p className="font-body text-xs text-muted leading-relaxed">
               Bảo mật thông tin hợp đồng và đặt cọc bằng công nghệ Blockchain.
-              Ghi nhận vĩnh viễn hóa đơn thanh toán và nhật ký thuê trên sổ cái
-              chống sửa đổi.
+              Ghi nhận vĩnh viễn hóa đơn thanh toán và nhật ký thuê trên hệ
+              thống chống sửa đổi.
             </p>
           </div>
           <div className="pt-6">

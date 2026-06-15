@@ -1,0 +1,192 @@
+'use client'
+
+import * as React from 'react'
+
+interface CommunitySidebarProps {
+  isStaffDemo: boolean
+  setIsStaffDemo: (v: boolean) => void
+  pendingCount: number
+  showMyPosts: boolean
+  setShowMyPosts: (v: boolean) => void
+  myTotalCount: number
+  myPendingCount: number
+  myApprovedCount: number
+}
+
+export function CommunitySidebar({
+  isStaffDemo,
+  setIsStaffDemo,
+  pendingCount,
+  showMyPosts,
+  setShowMyPosts,
+  myTotalCount,
+  myPendingCount,
+  myApprovedCount,
+}: CommunitySidebarProps): React.ReactElement {
+  return (
+    <div className="space-y-6">
+      {/* My Posts Tracker widget */}
+      <div className="rounded-2xl border border-border bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-border/60">
+          <h3 className="font-display text-xs font-bold text-fg uppercase tracking-wider">
+            Bài viết của tôi
+          </h3>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+            {myTotalCount} bài
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />
+              Đã hiển thị
+            </span>
+            <span className="font-bold text-fg">{myApprovedCount}</span>
+          </div>
+
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+              Đang chờ duyệt
+            </span>
+            <span className="font-bold text-fg">{myPendingCount}</span>
+          </div>
+
+          <button
+            onClick={() => setShowMyPosts(!showMyPosts)}
+            className={`w-full mt-2 rounded-xl py-2 px-3 text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
+              showMyPosts
+                ? 'bg-primary text-white border-primary shadow-sm'
+                : 'bg-white border-border text-muted hover:border-primary/30 hover:text-fg'
+            }`}
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+              />
+            </svg>
+            {showMyPosts ? 'Hiển thị tất cả' : 'Chỉ xem bài của tôi'}
+          </button>
+        </div>
+      </div>
+
+      {/* Trending Projects widget */}
+      <div className="rounded-2xl border border-border bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <h3 className="font-display text-xs font-bold text-fg uppercase tracking-wider mb-4 flex items-center gap-2">
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+            />
+          </svg>
+          Dự án nổi bật
+        </h3>
+        <div className="space-y-3">
+          {[
+            { name: 'Vinhomes Central Park', posts: 34 },
+            { name: 'Masteri Thảo Điền', posts: 21 },
+            { name: 'Sunrise City', posts: 18 },
+            { name: 'The Sun Avenue', posts: 12 },
+          ].map(proj => (
+            <div
+              key={proj.name}
+              className="flex items-center justify-between group cursor-pointer"
+            >
+              <span className="text-xs font-semibold text-fg group-hover:text-primary transition-colors">
+                {proj.name}
+              </span>
+              <span className="text-[10px] font-bold text-muted bg-surface-muted/60 px-2 py-0.5 rounded-full">
+                {proj.posts} bài
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Community Guidelines */}
+      <div className="rounded-2xl border border-border bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <h3 className="font-display text-xs font-bold text-fg uppercase tracking-wider mb-3 flex items-center gap-2">
+          <svg
+            className="h-4 w-4 text-primary"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+            />
+          </svg>
+          Quy tắc cộng đồng
+        </h3>
+        <ul className="space-y-2.5 text-xs text-muted leading-relaxed">
+          <li className="flex gap-2">
+            <span className="text-primary font-bold shrink-0">01</span>
+            Mỗi bài viết phải gắn kèm tên dự án/chung cư cụ thể.
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary font-bold shrink-0">02</span>
+            Nội dung phải liên quan đến lĩnh vực thuê căn hộ.
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary font-bold shrink-0">03</span>
+            Bài viết được kiểm duyệt trước khi hiển thị công khai.
+          </li>
+          <li className="flex gap-2">
+            <span className="text-primary font-bold shrink-0">04</span>
+            Tối đa 5 hình ảnh, dung lượng mỗi ảnh không quá 5MB.
+          </li>
+        </ul>
+      </div>
+
+      {/* Staff Demo Toggle */}
+      <div className="rounded-xl border border-dashed border-border bg-surface-muted/30 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-muted uppercase tracking-wider">
+              Demo Nhân viên
+            </span>
+            {pendingCount > 0 && (
+              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
+                {pendingCount}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => setIsStaffDemo(!isStaffDemo)}
+            className={`relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer ${
+              isStaffDemo ? 'bg-primary' : 'bg-border'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                isStaffDemo ? 'left-[18px]' : 'left-0.5'
+              }`}
+            />
+          </button>
+        </div>
+        <p className="text-[10px] text-subtle mt-1.5">
+          Bật để xem giao diện kiểm duyệt bài viết chờ phê duyệt.
+        </p>
+      </div>
+    </div>
+  )
+}
