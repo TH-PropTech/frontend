@@ -4,7 +4,9 @@ import * as React from 'react'
 import { IsometricBuilding } from './components/isometric-building'
 
 interface HomeViewProps {
-  onNavigateTab: (tab: 'properties' | 'kyc' | 'disputes' | 'schedules') => void
+  onNavigateTab: (
+    tab: 'properties' | 'kyc' | 'disputes' | 'schedules' | 'community'
+  ) => void
 }
 
 export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
@@ -184,6 +186,33 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
                   </span>
                   <span className="text-[10px] text-muted block mt-0.5">
                     2 hợp đồng đang có khiếu nại cọc
+                  </span>
+                </div>
+              </button>
+
+              {/* Task 4 */}
+              <button
+                onClick={() => onNavigateTab('community')}
+                className="w-full p-3 bg-bg/40 border border-line hover:border-primary hover:bg-primary-soft/30 rounded-xl text-left transition-all duration-200 flex items-center gap-3 group"
+              >
+                <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <div className="flex-grow overflow-hidden">
+                  <span className="text-xs font-bold text-fg block group-hover:text-primary transition-colors leading-tight">
+                    Duyệt bài viết cộng đồng
+                  </span>
+                  <span className="text-[10px] text-muted block mt-0.5">
+                    Kiểm duyệt nội dung đăng của cư dân
                   </span>
                 </div>
               </button>
