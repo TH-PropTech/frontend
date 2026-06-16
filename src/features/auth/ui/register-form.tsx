@@ -3,30 +3,231 @@
 import * as React from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
+import { useRouter } from 'next/navigation'
 import { Input } from '@/shared/ui/input'
 import { Button } from '@/shared/ui/button'
-import { Modal } from '@/shared/ui/modal'
+import { apiClient } from '@/shared/api/api-client'
+import { TermsModal, PrivacyModal } from './auth-modals'
 
 export function RegisterForm(): React.ReactElement {
+  const router = useRouter()
   const [isLoading, setIsLoading] = React.useState(false)
   const [showTerms, setShowTerms] = React.useState(false)
   const [showPrivacy, setShowPrivacy] = React.useState(false)
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
+  // Controlled states for register inputs
+  const [fullName, setFullName] = React.useState('')
+  const [phone, setPhone] = React.useState('')
+  const [email, setEmail] = React.useState('')
+  const [cccd, setCccd] = React.useState('')
+  const [password, setPassword] = React.useState('')
+  const [confirmPassword, setConfirmPassword] = React.useState('')
+  const [errorMsg, setErrorMsg] = React.useState('')
+  const [successMsg, setSuccessMsg] = React.useState('')
+
+  // OTP state
+  const [isOtpSent, setIsOtpSent] = React.useState(false)
+  const [otp, setOtp] = React.useState('')
+
+  // Gửi OTP đăng ký
+  async function handleSubmit(
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> {
     e.preventDefault()
+    setErrorMsg('')
+    setSuccessMsg('')
+
+    if (password !== confirmPassword) {
+      setErrorMsg('Mật khẩu xác nhận không khớp.')
+      return
+    }
+
     setIsLoading(true)
-    setTimeout(() => setIsLoading(false), 2000)
+
+    try {
+      await apiClient.post('/auth/signup/request-otp', {
+        email,
+        phone,
+      })
+      setSuccessMsg('Mã OTP xác thực đăng ký đã được gửi đến email của bạn.')
+      setIsOtpSent(true)
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Yêu cầu gửi OTP đăng ký thất bại.'
+      setErrorMsg(msg)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Xác nhận OTP để hoàn tất đăng ký
+  async function handleRegister(
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> {
+    e.preventDefault()
+    setErrorMsg('')
+    setSuccessMsg('')
+    setIsLoading(true)
+
+    try {
+      await apiClient.post('/auth/signup', {
+        email,
+        phone,
+        password,
+        fullName,
+        role,
+        otp,
+      })
+
+      setSuccessMsg('Đăng ký tài khoản thành công! Đang chuyển hướng...')
+      localStorage.setItem('showWelcomeModal', 'true')
+      setTimeout(() => {
+        router.push('/login' as Route)
+      }, 2000)
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : 'Xác thực OTP đăng ký thất bại. Vui lòng kiểm tra lại.'
+      setErrorMsg(msg)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Gửi lại mã OTP
+  async function handleResendOtp(): Promise<void> {
+    setErrorMsg('')
+    setSuccessMsg('')
+    setIsLoading(true)
+
+    try {
+      await apiClient.post('/auth/signup/request-otp', {
+        email,
+        phone,
+      })
+      setSuccessMsg('Mã OTP mới đã được gửi lại vào email của bạn.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gửi lại OTP thất bại.'
+      setErrorMsg(msg)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isOtpSent) {
+    return (
+      <form
+        onSubmit={handleRegister}
+        className="flex flex-col gap-5 animate-in fade-in duration-300"
+      >
+        <div className="flex flex-col gap-2">
+          <h3 className="font-display text-lg font-bold text-fg">
+            Xác thực Đăng ký Tài khoản
+          </h3>
+          <p className="text-sm text-muted leading-relaxed">
+            Mã OTP xác thực đã được gửi đến email{' '}
+            <strong className="text-fg">{email}</strong>. Vui lòng nhập mã OTP
+            để kích hoạt tài khoản của bạn.
+          </p>
+        </div>
+
+        {errorMsg && (
+          <div className="bg-accent/10 border border-accent/20 text-accent text-xs p-3 rounded-lg font-semibold">
+            {errorMsg}
+          </div>
+        )}
+        {successMsg && (
+          <div className="bg-accent-2/10 border border-accent-2/20 text-accent-2 text-xs p-3 rounded-lg font-semibold">
+            {successMsg}
+          </div>
+        )}
+
+        <Input
+          label="Mã xác thực OTP (6 chữ số)"
+          type="text"
+          placeholder="000000"
+          maxLength={6}
+          value={otp}
+          onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+          required
+          className="text-center tracking-widest text-lg font-bold"
+          icon={
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          }
+        />
+
+        <Button
+          type="submit"
+          size="lg"
+          loading={isLoading}
+          className="w-full mt-1"
+        >
+          Xác nhận & Hoàn tất
+        </Button>
+
+        <div className="flex flex-col gap-2 text-center text-sm">
+          <button
+            type="button"
+            onClick={handleResendOtp}
+            disabled={isLoading}
+            className="font-semibold text-primary hover:text-primary-hover underline transition-colors disabled:opacity-50"
+          >
+            Gửi lại mã OTP
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsOtpSent(false)
+              setOtp('')
+              setErrorMsg('')
+              setSuccessMsg('')
+            }}
+            className="text-muted hover:text-fg underline transition-colors"
+          >
+            Quay lại sửa thông tin
+          </button>
+        </div>
+      </form>
+    )
   }
 
   return (
     <>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* Error / Success messages */}
+        {errorMsg && (
+          <div className="bg-accent/10 border border-accent/20 text-accent text-xs p-3 rounded-lg font-semibold">
+            {errorMsg}
+          </div>
+        )}
+        {successMsg && (
+          <div className="bg-accent-2/10 border border-accent-2/20 text-accent-2 text-xs p-3 rounded-lg font-semibold">
+            {successMsg}
+          </div>
+        )}
+
         {/* Name row */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
             label="Họ và tên"
             type="text"
             placeholder="Nguyễn Văn A"
+            value={fullName}
+            onChange={e => setFullName(e.target.value)}
             required
             autoComplete="name"
             icon={
@@ -49,6 +250,8 @@ export function RegisterForm(): React.ReactElement {
             label="Số điện thoại"
             type="tel"
             placeholder="0912 345 678"
+            value={phone}
+            onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
             required
             autoComplete="tel"
             icon={
@@ -72,6 +275,8 @@ export function RegisterForm(): React.ReactElement {
           label="Email"
           type="email"
           placeholder="email@example.com"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
           required
           autoComplete="email"
           icon={
@@ -95,6 +300,8 @@ export function RegisterForm(): React.ReactElement {
           label="CCCD / CMND"
           type="text"
           placeholder="0012345678901"
+          value={cccd}
+          onChange={e => setCccd(e.target.value.replace(/\D/g, ''))}
           required
           autoComplete="off"
           maxLength={12}
@@ -120,6 +327,8 @@ export function RegisterForm(): React.ReactElement {
             label="Mật khẩu"
             type="password"
             placeholder="Tối thiểu 8 ký tự"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
             required
             autoComplete="new-password"
             minLength={8}
@@ -143,6 +352,8 @@ export function RegisterForm(): React.ReactElement {
             label="Xác nhận mật khẩu"
             type="password"
             placeholder="Nhập lại mật khẩu"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
             required
             autoComplete="new-password"
             minLength={8}
@@ -241,133 +452,13 @@ export function RegisterForm(): React.ReactElement {
       </form>
 
       {/* ── Terms of Service Modal ── */}
-      <Modal
-        isOpen={showTerms}
-        onClose={() => setShowTerms(false)}
-        title="Điều khoản sử dụng — TH-PropTech"
-      >
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-bold text-fg mb-1">1. Giới thiệu dịch vụ</h3>
-            <p>
-              TH-PropTech là nền tảng quản lý thuê căn hộ thông minh tích hợp
-              công nghệ thực tế ảo VR 360° và hợp đồng thông minh Blockchain,
-              mang lại trải nghiệm thuê nhà minh bạch, chính xác và an toàn
-              tuyệt đối.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-bold text-fg mb-1">
-              2. Đăng ký và Xác thực tài khoản (KYC)
-            </h3>
-            <p>
-              Để tham gia ký kết hợp đồng, người dùng có trách nhiệm cung cấp
-              thông tin cá nhân chính xác và thực hiện định danh tài khoản (KYC)
-              thông qua căn cước công dân (CCCD). Mọi thông tin sai lệch có thể
-              dẫn đến việc vô hiệu hóa tài khoản và hủy hợp đồng.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-bold text-fg mb-1">
-              3. Cơ chế giao dịch Blockchain
-            </h3>
-            <p>
-              Các giao dịch đặt cọc và ký hợp đồng thuê nhà điện tử được mã hóa
-              và lưu trữ vĩnh viễn trên chuỗi Blockchain. Các dữ liệu này có
-              tính chất phi tập trung, không thể sửa đổi hoặc xóa bỏ đơn phương,
-              bảo vệ quyền lợi pháp lý tối đa cho cả chủ nhà và khách thuê.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-bold text-fg mb-1">
-              4. Trách nhiệm người dùng
-            </h3>
-            <p>
-              Khách thuê và chủ nhà phải tự bảo quản thông tin đăng nhập và ví
-              liên kết Blockchain cá nhân. TH-PropTech không chịu trách nhiệm
-              đối với bất kỳ tổn thất nào phát sinh do lỗi bảo mật từ phía người
-              dùng.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-bold text-fg mb-1">5. Giải quyết tranh chấp</h3>
-            <p>
-              Khi xảy ra tranh chấp, các biên bản ký kết ghi nhận trên
-              Blockchain và thông tin hình ảnh căn hộ VR 360° đã quét tại thời
-              điểm ký kết sẽ được sử dụng làm bằng chứng pháp lý đối chiếu chính
-              thức.
-            </p>
-          </div>
-        </div>
-      </Modal>
+      <TermsModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
 
       {/* ── Privacy Policy Modal ── */}
-      <Modal
+      <PrivacyModal
         isOpen={showPrivacy}
         onClose={() => setShowPrivacy(false)}
-        title="Chính sách bảo mật — TH-PropTech"
-      >
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-bold text-fg mb-1">
-              1. Thu thập dữ liệu cá nhân
-            </h3>
-            <p>
-              Chúng tôi thu thập các thông tin bao gồm: Họ tên, Số điện thoại,
-              Email, thông tin Căn cước công dân (CCCD) và hình ảnh chân dung
-              nhằm mục đích xác thực danh tính khách hàng (KYC) bắt buộc trước
-              khi giao dịch.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-bold text-fg mb-1">
-              2. Mục đích sử dụng dữ liệu
-            </h3>
-            <p>
-              Dữ liệu cá nhân được dùng để xác minh tài khoản, lập hợp đồng thuê
-              nhà điện tử chính xác, gửi thông báo cập nhật trạng thái căn hộ và
-              hỗ trợ xử lý kỹ thuật / tranh chấp phát sinh trong thời gian thuê
-              nhà.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-bold text-fg mb-1">
-              3. Phương thức lưu trữ và Bảo mật Blockchain
-            </h3>
-            <ul className="list-disc pl-5 mt-1 space-y-1">
-              <li>
-                Thông tin định danh cá nhân nhạy cảm (như CCCD) được mã hóa bằng
-                thuật toán tiên tiến (AES-256) và lưu trữ biệt lập trên máy chủ
-                an toàn.
-              </li>
-              <li>
-                Mã hash của các giao dịch, chữ ký điện tử và trạng thái hợp đồng
-                sẽ được lưu trực tiếp trên Blockchain công khai nhằm đối chiếu
-                tính toàn vẹn nhưng hoàn toàn không làm lộ thông tin cá nhân
-                trần của người dùng.
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-bold text-fg mb-1">4. Chia sẻ thông tin</h3>
-            <p>
-              Chúng tôi cam kết tuyệt đối không bán hoặc cung cấp thông tin cá
-              nhân của người dùng cho bất kỳ bên thứ ba nào vì mục đích thương
-              mại, ngoại trừ trường hợp có yêu cầu chính thức bằng văn bản của
-              cơ quan pháp luật có thẩm quyền.
-            </p>
-          </div>
-          <div>
-            <h3 className="font-bold text-fg mb-1">5. Quyền của người dùng</h3>
-            <p>
-              Bạn có quyền truy cập, hiệu chỉnh thông tin cá nhân trong phần cài
-              đặt tài khoản, hoặc gửi yêu cầu xóa dữ liệu KYC trong trường hợp
-              không còn bất kỳ hợp đồng thuê nhà nào đang hoạt động trên hệ
-              thống.
-            </p>
-          </div>
-        </div>
-      </Modal>
+      />
     </>
   )
 }
