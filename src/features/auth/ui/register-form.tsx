@@ -75,7 +75,7 @@ export function RegisterForm(): React.ReactElement {
         phone,
         password,
         fullName,
-        role,
+        role: 'tenant',
         otp,
       })
 
