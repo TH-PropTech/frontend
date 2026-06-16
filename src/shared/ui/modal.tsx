@@ -7,6 +7,7 @@ interface ModalProps {
   onClose: () => void
   title: string
   children: React.ReactNode
+  hideFooter?: boolean
 }
 
 export function Modal({
@@ -14,6 +15,7 @@ export function Modal({
   onClose,
   title,
   children,
+  hideFooter = false,
 }: ModalProps): React.ReactElement | null {
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -81,15 +83,17 @@ export function Modal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end px-6 py-3.5 border-t border-border bg-surface-muted/20">
-          <button
-            type="button"
-            className="px-4 py-2 bg-primary hover:bg-primary-hover text-on-control rounded-lg text-xs font-semibold shadow-sm transition-all"
-            onClick={onClose}
-          >
-            Đồng ý và Đóng
-          </button>
-        </div>
+        {!hideFooter && (
+          <div className="flex items-center justify-end px-6 py-3.5 border-t border-border bg-surface-muted/20">
+            <button
+              type="button"
+              className="px-4 py-2 bg-primary hover:bg-primary-hover text-on-control rounded-lg text-xs font-semibold shadow-sm transition-all"
+              onClick={onClose}
+            >
+              Đồng ý và Đóng
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

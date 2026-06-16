@@ -87,4 +87,11 @@ export function createApiUrl(baseUrl: string, path: string): string {
   return new URL(normalizedPath, normalizedBase).toString()
 }
 
-export const apiClient = new ApiClient()
+export const apiClient = new ApiClient({
+  getAccessToken: () => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('accessToken')
+    }
+    return null
+  },
+})
