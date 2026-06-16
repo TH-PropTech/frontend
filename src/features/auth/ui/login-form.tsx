@@ -6,8 +6,20 @@ import type { Route } from 'next'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/shared/ui/input'
 import { Button } from '@/shared/ui/button'
+import { apiClient } from '@/shared/api/api-client'
 
 type LoginMode = 'password' | 'passwordless-email' | 'passwordless-otp'
+
+interface LoginResponse {
+  accessToken: string
+  refreshToken: string
+  user: {
+    _id: string
+    email: string
+    name: string
+    roles: string[]
+  }
+}
 
 export function LoginForm(): React.ReactElement {
   const router = useRouter()
@@ -19,50 +31,95 @@ export function LoginForm(): React.ReactElement {
   const [errorMsg, setErrorMsg] = React.useState('')
   const [successMsg, setSuccessMsg] = React.useState('')
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> {
     e.preventDefault()
     setErrorMsg('')
     setSuccessMsg('')
     setIsLoading(true)
 
     if (loginMode === 'password') {
-      // Standard password login simulation
-      setTimeout(() => {
+      try {
+        const response = await apiClient.post<LoginResponse>('/auth/login', {
+          emailOrPhone: email,
+          password,
+        })
+
+        // Save authentication token
+        localStorage.setItem('accessToken', response.accessToken)
+        localStorage.setItem('user', JSON.stringify(response.user))
+
+        setSuccessMsg('Đăng nhập thành công! Đang chuyển hướng...')
+
+        setTimeout(() => {
+          if (
+            response.user.roles.includes('staff') ||
+            response.user.roles.includes('admin')
+          ) {
+            router.push('/staff' as Route)
+          } else {
+            router.push('/' as Route)
+          }
+        }, 1000)
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error
+            ? err.message
+            : 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
+        setErrorMsg(msg)
+      } finally {
         setIsLoading(false)
-        // Redirect to staff panel if it's the operator email, else generic redirect
-        if (email.includes('operator') || email === 'admin@th-proptech.vn') {
-          router.push('/staff')
-        } else {
-          router.push('/')
-        }
-      }, 1500)
+      }
     } else if (loginMode === 'passwordless-email') {
-      // Step 1: Request account and check if it exists (mock)
-      setTimeout(() => {
+      if (!email) {
+        setErrorMsg('Vui lòng nhập Email.')
         setIsLoading(false)
-        if (!email) {
-          setErrorMsg('Vui lòng nhập Email / Tên tài khoản.')
-          return
-        }
-        setSuccessMsg('Tài khoản hợp lệ. Vui lòng nhập mã OTP để tiếp tục.')
+        return
+      }
+
+      try {
+        await apiClient.post('/auth/login-otp/request', { email })
+        setSuccessMsg('Mã OTP đăng nhập đã được gửi tới email của bạn.')
         setLoginMode('passwordless-otp')
-      }, 1000)
-    } else if (loginMode === 'passwordless-otp') {
-      // Step 2: Validate 2FA TOTP code
-      setTimeout(() => {
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error ? err.message : 'Yêu cầu mã OTP thất bại.'
+        setErrorMsg(msg)
+      } finally {
         setIsLoading(false)
-        if (otp === '123456') {
-          setSuccessMsg('Xác thực 2FA thành công! Đang chuyển hướng...')
-          setTimeout(() => {
-            // Redirect to staff panel for demo
-            router.push('/staff')
-          }, 1000)
-        } else {
-          setErrorMsg(
-            'Mã OTP không chính xác. Nhập 123456 để thử nghiệm thành công!'
-          )
-        }
-      }, 1200)
+      }
+    } else if (loginMode === 'passwordless-otp') {
+      try {
+        const response = await apiClient.post<LoginResponse>(
+          '/auth/login-otp/verify',
+          {
+            email,
+            otp,
+          }
+        )
+
+        localStorage.setItem('accessToken', response.accessToken)
+        localStorage.setItem('user', JSON.stringify(response.user))
+
+        setSuccessMsg('Xác thực thành công! Đang chuyển hướng...')
+        setTimeout(() => {
+          if (
+            response.user.roles.includes('staff') ||
+            response.user.roles.includes('admin')
+          ) {
+            router.push('/staff' as Route)
+          } else {
+            router.push('/' as Route)
+          }
+        }, 1000)
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error ? err.message : 'Xác thực OTP thất bại.'
+        setErrorMsg(msg)
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
