@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import type {
   Property,
   BlockchainLog,
-  MaintenanceTicket,
   EventType,
   UseProfileReturn,
 } from './types'
@@ -119,20 +118,22 @@ export function useProfile(): UseProfileReturn {
     React.useState(DEMO_BLOCKCHAIN_LOGS)
   const [bills, setBills] = React.useState(DEMO_BILLS)
 
-  const addBlockchainLog = React.useCallback((event: EventType, hash: string): void => {
-    const log: BlockchainLog = {
-      id: `LOG-${Date.now()}`,
-      event,
-      timestamp: 'Vừa xong',
-      hash,
-      status: 'verified',
-    }
-    setBlockchainLogs(prev => [log, ...prev])
-  }, [])
+  const addBlockchainLog = React.useCallback(
+    (event: EventType, hash: string): void => {
+      const log: BlockchainLog = {
+        id: `LOG-${Date.now()}`,
+        event,
+        timestamp: 'Vừa xong',
+        hash,
+        status: 'verified',
+      }
+      setBlockchainLogs(prev => [log, ...prev])
+    },
+    []
+  )
 
   const {
     maintenanceTickets,
-    setMaintenanceTickets,
     newTicketTitle,
     setNewTicketTitle,
     newTicketDesc,
@@ -148,12 +149,8 @@ export function useProfile(): UseProfileReturn {
   const [contractSigned, setContractSigned] = React.useState(false)
   const [firstMonthPaid, setFirstMonthPaid] = React.useState(false)
 
-  const {
-    appointments,
-    setAppointments,
-    handleApproveAppointment,
-    handleRejectAppointment,
-  } = useProfileAppointments()
+  const { appointments, handleApproveAppointment, handleRejectAppointment } =
+    useProfileAppointments()
 
   const activeProperty = React.useMemo(
     () =>
@@ -289,7 +286,6 @@ export function useProfile(): UseProfileReturn {
     )
   }
 
-
   const handleTerminateLease = (): void => {
     setLeaseTerminated(true)
     setEscrowBalance(0)
@@ -367,8 +363,6 @@ export function useProfile(): UseProfileReturn {
       `Đã chuyển sang vai trò: ${newRole === 'tenant' ? 'Khách thuê' : 'Chủ nhà'}`
     )
   }
-
-
 
   const handleViewSignedContract = (): void => {
     setContractViewOnly(true)
