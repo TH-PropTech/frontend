@@ -65,8 +65,64 @@ export class ApiClient {
       init.body = JSON.stringify(body)
     }
 
-    const response = await fetch(createApiUrl(this.baseUrl, path), init)
-    const payload = (await response.json()) as ApiResponse<TData>
+    const url = createApiUrl(this.baseUrl, path)
+    let response = await fetch(url, init)
+    let payload = (await response.json()) as ApiResponse<TData>
+
+    // Auto-refresh token on 401 unauthorized
+    if (
+      response.status === 401 &&
+      !path.includes('/auth/refresh') &&
+      typeof window !== 'undefined'
+    ) {
+      const refreshToken = localStorage.getItem('refreshToken')
+      if (refreshToken) {
+        try {
+          if (!refreshTokenPromise) {
+            refreshTokenPromise = (async () => {
+              const refreshRes = await fetch(
+                createApiUrl(this.baseUrl, '/auth/refresh'),
+                {
+                  method: 'POST',
+                  headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ refreshToken }),
+                }
+              )
+              if (refreshRes.ok) {
+                const refreshPayload = await refreshRes.json()
+                if (refreshPayload.success && refreshPayload.data) {
+                  const data = refreshPayload.data
+                  localStorage.setItem('accessToken', data.accessToken)
+                  localStorage.setItem('refreshToken', data.refreshToken)
+                  return data
+                }
+              }
+              // Clear session if refresh failed
+              localStorage.removeItem('accessToken')
+              localStorage.removeItem('refreshToken')
+              localStorage.removeItem('user')
+              return null
+            })()
+          }
+
+          const newTokens = await refreshTokenPromise
+          refreshTokenPromise = null
+
+          if (newTokens && newTokens.accessToken) {
+            const newHeaders = new Headers(init.headers)
+            newHeaders.set('Authorization', `Bearer ${newTokens.accessToken}`)
+            init.headers = newHeaders
+            response = await fetch(url, init)
+            payload = (await response.json()) as ApiResponse<TData>
+          }
+        } catch {
+          refreshTokenPromise = null
+        }
+      }
+    }
 
     if (!response.ok || !payload.success) {
       throw new ApiClientError(
@@ -79,6 +135,11 @@ export class ApiClient {
     return payload.data
   }
 }
+
+let refreshTokenPromise: Promise<{
+  accessToken: string
+  refreshToken: string
+} | null> | null = null
 
 export function createApiUrl(baseUrl: string, path: string): string {
   const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`

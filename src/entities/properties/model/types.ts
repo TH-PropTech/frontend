@@ -18,6 +18,8 @@ export interface ApartmentItem {
   ward: string
   street: string
   projectName: string // empty string if not in a project
+  buildingId?: string
+  buildingName?: string
 
   // Advanced Filter Specs
   bedrooms: number
@@ -35,6 +37,14 @@ export interface ApartmentItem {
   image?: string
   gallery?: string[]
   images360?: string[]
+  landlord?: {
+    id: string
+    fullName: string
+    email: string
+    phone: string
+    avatar: string
+    kycStatus: string
+  } | null
 }
 
 export interface ProjectUnit {
@@ -91,4 +101,37 @@ export interface LocationHierarchy {
       projects: string[]
     }
   }
+}
+
+/** Backend API response shape for a Project */
+export interface ApiProjectItem {
+  id: string
+  name: string
+  description: string
+  location: string
+  city: string
+  district: string
+  investor: string
+  amenities: string[]
+  images: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+/** Backend API response shape for a Building */
+export interface ApiBuildingItem {
+  id: string
+  name: string
+  projectId: string | null
+  projectName: string | null
+  description?: string
+  floorsCount?: number
+  location?: string
+  city?: string
+  district?: string
+  amenities: string[]
+  images: string[]
+  images360: string[]
+  createdAt: string
+  updatedAt: string
 }
