@@ -2,45 +2,15 @@
 
 import * as React from 'react'
 import * as THREE from 'three'
-import { X, RotateCw, Compass } from 'lucide-react'
+import { X, RotateCw, Compass, Maximize2, Minimize2 } from 'lucide-react'
+import { ROOM_LABELS, ROOM_HOTSPOTS } from './property-360-config'
+import { use360Narrator } from './use-360-narrator'
+import { Property360Robot } from './property-360-robot'
 
 interface Property360ModalProps {
   isOpen: boolean
   onClose: () => void
   images360: string[]
-}
-
-const ROOM_LABELS = [
-  'Phòng khách',
-  'Phòng ngủ',
-  'Phòng vệ sinh',
-  'Phòng bếp',
-  'Ban công',
-]
-
-interface HotspotConfig {
-  targetIndex: number
-  label: string
-  yaw: number
-  pitch: number
-}
-
-// Hotspots mapping for each room index
-const ROOM_HOTSPOTS: Record<number, HotspotConfig[]> = {
-  0: [
-    { targetIndex: 1, label: 'Đi tới Phòng ngủ', yaw: 45, pitch: -5 },
-    { targetIndex: 3, label: 'Đi tới Phòng bếp', yaw: -60, pitch: -5 },
-  ],
-  1: [
-    { targetIndex: 0, label: 'Đi tới Phòng khách', yaw: 230, pitch: -5 },
-    { targetIndex: 2, label: 'Đi tới Phòng vệ sinh', yaw: 120, pitch: -10 },
-  ],
-  2: [{ targetIndex: 1, label: 'Đi tới Phòng ngủ', yaw: 300, pitch: -5 }],
-  3: [
-    { targetIndex: 0, label: 'Đi tới Phòng khách', yaw: 120, pitch: -5 },
-    { targetIndex: 4, label: 'Đi ra Ban công', yaw: -80, pitch: -5 },
-  ],
-  4: [{ targetIndex: 3, label: 'Đi vào Phòng bếp', yaw: 100, pitch: -5 }],
 }
 
 export function Property360Modal({
@@ -51,16 +21,15 @@ export function Property360Modal({
   const [currentRoomIndex, setCurrentRoomIndex] = React.useState(0)
   const [loading, setLoading] = React.useState(false)
   const [showLoadingOverlay, setShowLoadingOverlay] = React.useState(false)
-  const [hotspotPositions, setHotspotPositions] = React.useState<
-    {
-      targetIndex: number
-      label: string
-      x: number
-      y: number
-      visible: boolean
-    }[]
-  >([])
+  const [isFullscreen, setIsFullscreen] = React.useState(false)
+  const [isAutoRotate, setIsAutoRotate] = React.useState(true)
+  const isAutoRotateRef = React.useRef(true)
 
+  React.useEffect(() => {
+    isAutoRotateRef.current = isAutoRotate
+  }, [isAutoRotate])
+
+  const modalRef = React.useRef<HTMLDivElement>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
   const sceneRef = React.useRef<THREE.Scene | null>(null)
   const cameraRef = React.useRef<THREE.PerspectiveCamera | null>(null)
@@ -78,7 +47,43 @@ export function Property360Modal({
   const phi = React.useRef(0)
   const theta = React.useRef(0)
 
-  // Cleanup effect
+  // Hook handles all speech synthesis logic
+  const { isAiEnabled, setIsAiEnabled, isSpeaking, speechText } =
+    use360Narrator(currentRoomIndex, isOpen)
+
+  // Fullscreen support
+  const toggleFullscreen = React.useCallback((): void => {
+    if (!modalRef.current) return
+    if (!document.fullscreenElement) {
+      modalRef.current.requestFullscreen()
+        .then(() => setIsFullscreen(true))
+        .catch(err => {
+          // eslint-disable-next-line no-console
+          console.error('Không thể bật toàn màn hình:', err)
+        })
+    } else {
+      document.exitFullscreen()
+        .then(() => setIsFullscreen(false))
+        .catch(err => {
+          // eslint-disable-next-line no-console
+          console.error('Không thể tắt toàn màn hình:', err)
+        })
+    }
+  }, [])
+
+  React.useEffect(() => {
+    const handleFullscreenChange = (): void => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    }
+  }, [])
+
+
+
+  // Cleanup WebGL resources on unmount
   React.useEffect(() => {
     return () => {
       if (rendererRef.current) {
@@ -93,7 +98,7 @@ export function Property360Modal({
     }
   }, [])
 
-  // Update hotspot coordinates on the HTML overlay
+  // Update hotspot coordinates directly in the DOM for high performance (zero React re-renders)
   const updateHotspots2D = React.useCallback((): void => {
     if (!cameraRef.current || !containerRef.current) return
 
@@ -101,7 +106,10 @@ export function Property360Modal({
     const height = containerRef.current.clientHeight
     const hotspots = ROOM_HOTSPOTS[currentRoomIndex] || []
 
-    const coords = hotspots.map(spot => {
+    hotspots.forEach((spot, idx) => {
+      const el = document.getElementById(`hotspot-${idx}`)
+      if (!el) return
+
       // Calculate 3D position from yaw and pitch
       const phiRad = THREE.MathUtils.degToRad(90 - spot.pitch)
       const thetaRad = THREE.MathUtils.degToRad(spot.yaw)
@@ -122,16 +130,16 @@ export function Property360Modal({
       const x = (vector.x * 0.5 + 0.5) * width
       const y = (-vector.y * 0.5 + 0.5) * height
 
-      return {
-        targetIndex: spot.targetIndex,
-        label: spot.label,
-        x,
-        y,
-        visible: dot > 0.35 && x >= 0 && x <= width && y >= 0 && y <= height,
+      const visible = dot > 0.35 && x >= 0 && x <= width && y >= 0 && y <= height
+
+      if (visible) {
+        el.style.left = `${x}px`
+        el.style.top = `${y}px`
+        el.style.display = 'block'
+      } else {
+        el.style.display = 'none'
       }
     })
-
-    setHotspotPositions(coords)
   }, [currentRoomIndex])
 
   // Initializing Three.js Scene
@@ -149,9 +157,9 @@ export function Property360Modal({
     const camera = new THREE.PerspectiveCamera(70, width / height, 1, 1100)
     cameraRef.current = camera
 
-    // 2. Setup WebGL Renderer
+    // 2. Setup WebGL Renderer (optimized pixel ratio)
     const renderer = new THREE.WebGLRenderer({ antialias: true })
-    renderer.setPixelRatio(window.devicePixelRatio)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(width, height)
     renderer.outputColorSpace = THREE.SRGBColorSpace
     containerRef.current.innerHTML = ''
@@ -169,15 +177,18 @@ export function Property360Modal({
     textureLoader.load(
       images360[currentRoomIndex] || '',
       texture => {
-        // Quality settings to make image look less blurry
         texture.minFilter = THREE.LinearFilter
         texture.magFilter = THREE.LinearFilter
         texture.generateMipmaps = false
         texture.colorSpace = THREE.SRGBColorSpace
         const maxAnisotropy = renderer.capabilities.getMaxAnisotropy()
-        texture.anisotropy = Math.min(maxAnisotropy, 16)
+        texture.anisotropy = Math.min(maxAnisotropy, 8) // capped for performance
 
-        const material = new THREE.MeshBasicMaterial({ map: texture })
+        const material = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          opacity: 1.0,
+        })
         const sphere = new THREE.Mesh(geometry, material)
         scene.add(sphere)
         sphereRef.current = sphere
@@ -214,9 +225,11 @@ export function Property360Modal({
       if (!cameraRef.current || !rendererRef.current || !sceneRef.current)
         return
 
+
+
       // Smooth camera rotation
-      if (!isUserInteracting.current) {
-        lon.current += 0.05 // auto slow rotation when idle
+      if (!isUserInteracting.current && isAutoRotateRef.current) {
+        lon.current += 0.05 // auto slow rotation when idle (slower and smoother)
       }
 
       lat.current = Math.max(-85, Math.min(85, lat.current))
@@ -231,7 +244,7 @@ export function Property360Modal({
 
       rendererRef.current.render(sceneRef.current, cameraRef.current)
 
-      // Project hotspots from 3D to 2D
+      // Project hotspots directly in DOM (no React state updates in render loop)
       updateHotspots2D()
     }
 
@@ -245,24 +258,39 @@ export function Property360Modal({
 
   React.useEffect(() => {
     if (!isOpen) return
+    
+    // Reset interaction state on open to ensure immediate rotation
+    isUserInteracting.current = false
+    lon.current = 0
+    lat.current = 0
+
     const cleanup = initThree()
     return cleanup
   }, [isOpen, initThree])
 
   // Load a new room panorama texture
   const switchRoom = React.useCallback(
-    (index: number): void => {
-      if (index === currentRoomIndex || loading || !sphereRef.current) return
+    (index: number, yaw?: number, pitch?: number): void => {
+      if (index === currentRoomIndex || loading || !sphereRef.current || !cameraRef.current) return
 
       setLoading(true)
-      setShowLoadingOverlay(true)
-      const startTime = Date.now()
+
+      // Calculate direction vector if yaw and pitch are provided (simulate movement forward)
+      let dir: THREE.Vector3 | null = null
+      if (yaw !== undefined && pitch !== undefined) {
+        const phiRad = THREE.MathUtils.degToRad(90 - pitch)
+        const thetaRad = THREE.MathUtils.degToRad(yaw)
+        dir = new THREE.Vector3(
+          Math.sin(phiRad) * Math.cos(thetaRad),
+          Math.cos(phiRad),
+          Math.sin(phiRad) * Math.sin(thetaRad)
+        ).normalize()
+      }
 
       const textureLoader = new THREE.TextureLoader()
       textureLoader.load(
         images360[index] || '',
         texture => {
-          // Quality settings to make image look less blurry
           texture.minFilter = THREE.LinearFilter
           texture.magFilter = THREE.LinearFilter
           texture.generateMipmaps = false
@@ -270,38 +298,103 @@ export function Property360Modal({
           if (rendererRef.current) {
             const maxAnisotropy =
               rendererRef.current.capabilities.getMaxAnisotropy()
-            texture.anisotropy = Math.min(maxAnisotropy, 16)
+            texture.anisotropy = Math.min(maxAnisotropy, 8)
             rendererRef.current.initTexture(texture)
           }
 
           const sphere = sphereRef.current
-          if (sphere) {
+          const camera = cameraRef.current
+          if (sphere && camera) {
             const material = sphere.material as THREE.MeshBasicMaterial
-            const oldTexture = material.map
-            material.map = texture
-            material.needsUpdate = true
-            if (oldTexture) oldTexture.dispose()
-          }
+            material.transparent = true
 
-          setCurrentRoomIndex(index)
-          // Reset camera orientation slightly towards center
-          lon.current = 0
-          lat.current = 0
+            // Phase 1: Smooth Fade Out + Move Camera Forward + Zoom (FOV decrease)
+            let step = 0
+            const maxSteps = 12
+            const initialFov = camera.fov
 
-          // Keep loading screen for at least 2.5s to fully mask the shader bind/compilation
-          const elapsed = Date.now() - startTime
-          const delay = Math.max(0, 2500 - elapsed)
-          setTimeout(() => {
+            const fadeOutInterval = setInterval(() => {
+              step++
+              const progress = step / maxSteps
+
+              // Fade out material opacity
+              material.opacity = Math.max(0, 1.0 - progress)
+
+              if (dir) {
+                // Translate camera forward along direction vector (up to 120 units)
+                camera.position.copy(dir).multiplyScalar(progress * 120)
+                // Zoom in (decrease FOV)
+                camera.fov = initialFov - progress * 25
+                camera.updateProjectionMatrix()
+              }
+
+              material.needsUpdate = true
+
+              if (step >= maxSteps) {
+                clearInterval(fadeOutInterval)
+
+                // Phase 2: Swap texture & orientation when invisible
+                const oldTexture = material.map
+                material.map = texture
+                material.needsUpdate = true
+                if (oldTexture) oldTexture.dispose()
+
+                setCurrentRoomIndex(index)
+                lon.current = 0
+                lat.current = 0
+
+                // Phase 3: Arriving transition (Smooth Fade In + Move Camera to center + Reset FOV)
+                let arriveStep = 0
+                const maxArriveSteps = 12
+
+                // Start camera slightly back on the opposite side to simulate arriving
+                if (dir) {
+                  camera.position.copy(dir).multiplyScalar(-60)
+                  camera.fov = 95 // start wide-angle
+                  camera.updateProjectionMatrix()
+                } else {
+                  camera.position.set(0, 0, 0)
+                }
+
+                const fadeInInterval = setInterval(() => {
+                  arriveStep++
+                  const arriveProgress = arriveStep / maxArriveSteps
+
+                  // Fade in material opacity
+                  material.opacity = Math.min(1.0, arriveProgress)
+
+                  if (dir) {
+                    // Smoothly slide camera back to (0, 0, 0)
+                    camera.position.copy(dir).multiplyScalar(-60 * (1.0 - arriveProgress))
+                    // Restore FOV back to 70
+                    camera.fov = 95 - arriveProgress * 25
+                    camera.updateProjectionMatrix()
+                  }
+
+                  material.needsUpdate = true
+
+                  if (arriveStep >= maxArriveSteps) {
+                    clearInterval(fadeInInterval)
+
+                    // Final reset
+                    camera.position.set(0, 0, 0)
+                    camera.fov = 70
+                    camera.updateProjectionMatrix()
+
+                    setLoading(false)
+                  }
+                }, 16)
+              }
+            }, 16)
+          } else {
             setLoading(false)
-            setShowLoadingOverlay(false)
-          }, delay)
+          }
         },
         undefined,
         err => {
           // eslint-disable-next-line no-console
           console.error('Failed to load room texture:', err)
           setLoading(false)
-          setShowLoadingOverlay(false)
         }
       )
     },
@@ -332,8 +425,32 @@ export function Property360Modal({
 
   if (!isOpen) return null
 
+  const hotspots = ROOM_HOTSPOTS[currentRoomIndex] || []
+
   return (
-    <div className="fixed inset-0 z-[100] bg-black select-none flex flex-col font-sans">
+    <div
+      ref={modalRef}
+      className="fixed inset-0 z-[100] bg-black select-none flex flex-col font-sans"
+    >
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes floatBar {
+          0%, 100% { transform: scaleY(0.4); }
+          50% { transform: scaleY(1.2); }
+        }
+        .animate-bar-1 {
+          animation: floatBar 0.8s ease-in-out infinite;
+          transform-origin: bottom;
+        }
+        .animate-bar-2 {
+          animation: floatBar 0.6s ease-in-out infinite 0.15s;
+          transform-origin: bottom;
+        }
+        .animate-bar-3 {
+          animation: floatBar 0.7s ease-in-out infinite 0.3s;
+          transform-origin: bottom;
+        }
+      ` }} />
+
       {/* 360 Viewport Container */}
       <div
         ref={containerRef}
@@ -353,37 +470,42 @@ export function Property360Modal({
 
       {/* Hotspots Overlay */}
       <div className="absolute inset-0 pointer-events-none">
-        {hotspotPositions.map((hotspot, idx) => {
-          if (!hotspot.visible) return null
-          return (
-            <div
-              key={idx}
-              className="absolute pointer-events-auto"
-              style={{
-                left: `${hotspot.x}px`,
-                top: `${hotspot.y}px`,
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              {/* Tooltip on top */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-black/80 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg whitespace-nowrap border border-white/10 shadow-lg pointer-events-none transition-all duration-200">
-                {hotspot.label}
-              </div>
-
-              {/* Glowing Pulse Circle */}
-              <button
-                onClick={() => switchRoom(hotspot.targetIndex)}
-                className="h-10 w-10 flex items-center justify-center relative group active:scale-90 transition-transform duration-150"
-              >
-                <div className="absolute inset-0 rounded-full bg-[#c65a3a]/40 animate-ping" />
-                <div className="h-6 w-6 rounded-full bg-[#c65a3a] border-2 border-white flex items-center justify-center shadow-lg group-hover:bg-[#c65a3a]/90 transition-colors">
-                  <Compass className="h-3.5 w-3.5 text-white animate-spin-[20s]" />
-                </div>
-              </button>
+        {hotspots.map((spot, idx) => (
+          <div
+            key={idx}
+            id={`hotspot-${idx}`}
+            className="absolute pointer-events-auto"
+            style={{
+              transform: 'translate(-50%, -50%)',
+              display: 'none',
+            }}
+          >
+            {/* Tooltip on top */}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-black/85 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg whitespace-nowrap border border-white/10 shadow-lg pointer-events-none transition-all duration-200">
+              {spot.label}
             </div>
-          )
-        })}
+
+            {/* Glowing Pulse Circle */}
+            <button
+              onClick={() => switchRoom(spot.targetIndex, spot.yaw, spot.pitch)}
+              className="h-10 w-10 flex items-center justify-center relative group active:scale-90 transition-transform duration-150"
+            >
+              <div className="absolute inset-0 rounded-full bg-[#c65a3a]/40 animate-ping" />
+              <div className="h-6 w-6 rounded-full bg-[#c65a3a] border-2 border-white flex items-center justify-center shadow-lg group-hover:bg-[#c65a3a]/90 transition-colors">
+                <Compass className="h-3.5 w-3.5 text-white" />
+              </div>
+            </button>
+          </div>
+        ))}
       </div>
+
+      {/* Floating AI Narrator Widget */}
+      <Property360Robot
+        isAiEnabled={isAiEnabled}
+        setIsAiEnabled={setIsAiEnabled}
+        isSpeaking={isSpeaking}
+        speechText={speechText}
+      />
 
       {/* Header Info & Actions */}
       <div className="absolute top-0 left-0 right-0 p-5 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex items-center justify-between pointer-events-none z-10">
@@ -399,15 +521,45 @@ export function Property360Modal({
           </h2>
         </div>
 
-        <button
-          onClick={onClose}
-          className="pointer-events-auto h-11 w-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all duration-200 active:scale-95 shadow-md"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-3 pointer-events-auto">
+          {/* Auto Rotate Button */}
+          <button
+            onClick={() => setIsAutoRotate(prev => !prev)}
+            className={`h-11 w-11 flex items-center justify-center rounded-full border border-white/10 transition-all duration-200 active:scale-95 shadow-md ${
+              isAutoRotate
+                ? 'bg-[#c65a3a] text-white shadow-lg shadow-[#c65a3a]/20'
+                : 'bg-white/10 text-white hover:bg-white/20'
+            }`}
+            title={isAutoRotate ? 'Tắt tự động xoay' : 'Bật tự động xoay'}
+          >
+            <RotateCw className={`h-5 w-5 ${isAutoRotate ? 'animate-spin' : ''}`} style={{ animationDuration: '8s' }} />
+          </button>
+
+          {/* Fullscreen Button */}
+          <button
+            onClick={toggleFullscreen}
+            className="h-11 w-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all duration-200 active:scale-95 shadow-md"
+            title={isFullscreen ? 'Thu nhỏ' : 'Toàn màn hình'}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-5 w-5" />
+            ) : (
+              <Maximize2 className="h-5 w-5" />
+            )}
+          </button>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="h-11 w-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white transition-all duration-200 active:scale-95 shadow-md"
+            title="Đóng"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
-      {/* Center Loader Overlay */}
+      {/* Center Loader Overlay (Only for initial load) */}
       {showLoadingOverlay && (
         <div className="absolute inset-0 bg-[#0a0a0a] flex items-center justify-center z-20 transition-all duration-300">
           <div className="bg-white/10 border border-white/15 p-6 rounded-3xl flex flex-col items-center gap-3.5 shadow-2xl">
@@ -415,6 +567,16 @@ export function Property360Modal({
             <span className="text-white font-bold text-xs uppercase tracking-wider">
               Đang tải không gian 3D...
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Subtle loader for room switching */}
+      {loading && !showLoadingOverlay && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+          <div className="bg-black/60 border border-white/10 p-4 rounded-2xl flex items-center gap-3 shadow-xl backdrop-blur-sm">
+            <RotateCw className="h-5 w-5 text-[#c65a3a] animate-spin" />
+            <span className="text-white text-[10px] uppercase font-bold tracking-wider">Đang chuyển phòng...</span>
           </div>
         </div>
       )}

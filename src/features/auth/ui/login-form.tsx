@@ -50,6 +50,7 @@ export function LoginForm(): React.ReactElement {
 
         // Save authentication token
         localStorage.setItem('accessToken', response.accessToken)
+        localStorage.setItem('refreshToken', response.refreshToken)
         localStorage.setItem('user', JSON.stringify(response.user))
 
         setSuccessMsg('Đăng nhập thành công! Đang chuyển hướng...')
@@ -102,6 +103,7 @@ export function LoginForm(): React.ReactElement {
         )
 
         localStorage.setItem('accessToken', response.accessToken)
+        localStorage.setItem('refreshToken', response.refreshToken)
         localStorage.setItem('user', JSON.stringify(response.user))
 
         setSuccessMsg('Xác thực thành công! Đang chuyển hướng...')
