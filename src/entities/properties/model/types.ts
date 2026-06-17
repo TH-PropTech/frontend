@@ -32,6 +32,9 @@ export interface ApartmentItem {
   amenities: string[] // e.g., ['pool', 'gym', 'parking', 'elevator', 'security', 'pets', 'park']
   isVerified: boolean
   hasMedia: boolean // has photos/video
+  image?: string
+  gallery?: string[]
+  images360?: string[]
 }
 
 export interface ProjectUnit {

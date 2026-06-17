@@ -17,7 +17,9 @@ interface LoginResponse {
     _id: string
     email: string
     name: string
+    phone: string
     roles: string[]
+    kycStatus: string
   }
 }
 

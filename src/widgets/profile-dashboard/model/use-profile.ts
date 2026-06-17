@@ -5,10 +5,9 @@ import { toast } from 'sonner'
 import type {
   Property,
   BlockchainLog,
-  RentalBill,
   MaintenanceTicket,
-  Appointment,
   EventType,
+  UseProfileReturn,
 } from './types'
 import {
   DEMO_PROPERTIES,
@@ -25,136 +24,18 @@ export type {
   BlockchainLog,
   RentalBill,
   MaintenanceTicket,
+  UseProfileReturn,
 } from './types'
 
-export interface UseProfileReturn {
-  role: 'tenant' | 'landlord'
-  activeTab: 'progress' | 'bills' | 'blockchain' | 'maintenance' | 'security'
-  setActiveTab: React.Dispatch<
-    React.SetStateAction<
-      'progress' | 'bills' | 'blockchain' | 'maintenance' | 'security'
-    >
-  >
-  activePropertyId: string
-  properties: Property[]
-  showContractModal: boolean
-  setShowContractModal: React.Dispatch<React.SetStateAction<boolean>>
-  contractViewOnly: boolean
-  handleViewSignedContract: () => void
-  showHandoverArchiveModal: boolean
-  setShowHandoverArchiveModal: React.Dispatch<React.SetStateAction<boolean>>
-  hasPasskey: boolean
-  setHasPasskey: React.Dispatch<React.SetStateAction<boolean>>
-  activeSessions: Array<{
-    id: string
-    device: string
-    ip: string
-    location: string
-    lastActive: string
-  }>
-  setActiveSessions: React.Dispatch<
-    React.SetStateAction<
-      Array<{
-        id: string
-        device: string
-        ip: string
-        location: string
-        lastActive: string
-      }>
-    >
-  >
-  notifChannels: {
-    email: boolean
-    sms: boolean
-    telegram: boolean
-    zalo: boolean
-    push: boolean
-  }
-  setNotifChannels: React.Dispatch<
-    React.SetStateAction<{
-      email: boolean
-      sms: boolean
-      telegram: boolean
-      zalo: boolean
-      push: boolean
-    }>
-  >
-  isWalletConnected: boolean
-  walletAddress: string
-  usdtBalance: number
-  escrowBalance: number
-  isKycVerified: boolean
-  showKycModal: boolean
-  setShowKycModal: React.Dispatch<React.SetStateAction<boolean>>
-  isOcrLoading: boolean
-  kycForm: {
-    fullName: string
-    cccdNumber: string
-    dob: string
-    address: string
-  }
-  setKycForm: React.Dispatch<
-    React.SetStateAction<{
-      fullName: string
-      cccdNumber: string
-      dob: string
-      address: string
-    }>
-  >
-  cccdUploaded: boolean
-  setCccdUploaded: React.Dispatch<React.SetStateAction<boolean>>
-  showHandoverModal: boolean
-  setShowHandoverModal: React.Dispatch<React.SetStateAction<boolean>>
-  handoverSigned: boolean
-  setHandoverSigned: React.Dispatch<React.SetStateAction<boolean>>
-  handoverChecks: {
-    livingRoom: string
-    bedroom: string
-    kitchen: string
-    bathroom: string
-  }
-  setHandoverChecks: React.Dispatch<
-    React.SetStateAction<{
-      livingRoom: string
-      bedroom: string
-      kitchen: string
-      bathroom: string
-    }>
-  >
-  maintenanceTickets: MaintenanceTicket[]
-  newTicketTitle: string
-  setNewTicketTitle: React.Dispatch<React.SetStateAction<string>>
-  newTicketDesc: string
-  setNewTicketDesc: React.Dispatch<React.SetStateAction<string>>
-  leaseTerminated: boolean
-  damageDeductions: number
-  depositPaid: boolean
-  contractSigned: boolean
-  firstMonthPaid: boolean
-  blockchainLogs: BlockchainLog[]
-  bills: RentalBill[]
-  activeProperty: Property
-  appointments: Appointment[]
-  handleConnectWallet: () => void
-  handleUploadCccd: () => void
-  handleConfirmKyc: () => void
-  handlePayDeposit: () => void
-  handleSignContract: () => void
-  handlePayRent: () => void
-  handleConfirmHandover: () => void
-  handleNewMaintenanceTicket: (e: React.FormEvent) => void
-  handleApproveTicket: (id: string) => void
-  handleTerminateLease: () => void
-  handleCopyText: (text: string) => void
-  progressPercent: () => number
-  handleOpenContractModal: () => void
-  handlePropertyChange: (propertyId: string) => void
-  handleRoleChange: (newRole: 'tenant' | 'landlord') => void
-  handleApproveAppointment: (id: string) => void
-  handleRejectAppointment: (id: string) => void
+const EMPTY_KYC = {
+  fullName: '',
+  cccdNumber: '',
+  dob: '',
+  address: '',
+  gender: '',
+  nationality: '',
+  placeOfOrigin: '',
 }
-
-const EMPTY_KYC = { fullName: '', cccdNumber: '', dob: '', address: '' }
 
 export function useProfile(): UseProfileReturn {
   const [role, setRole] = React.useState<'tenant' | 'landlord'>('tenant')
@@ -188,11 +69,39 @@ export function useProfile(): UseProfileReturn {
   const [escrowBalance, setEscrowBalance] = React.useState(0)
 
   // KYC
-  const [isKycVerified, setIsKycVerified] = React.useState(false)
+  const [isKycVerified, setIsKycVerified] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('user')
+        if (stored) {
+          const u = JSON.parse(stored) as { kycStatus?: string }
+          return u.kycStatus === 'verified'
+        }
+      } catch {
+        // Ignore JSON parse error
+      }
+    }
+    return false
+  })
   const [showKycModal, setShowKycModal] = React.useState(false)
   const [isOcrLoading, setIsOcrLoading] = React.useState(false)
   const [kycForm, setKycForm] = React.useState(EMPTY_KYC)
   const [cccdUploaded, setCccdUploaded] = React.useState(false)
+
+  React.useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('kyc') === 'true' && !isKycVerified) {
+        timer = setTimeout(() => {
+          setShowKycModal(true)
+        }, 0)
+      }
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [isKycVerified])
 
   // Handover
   const [showHandoverModal, setShowHandoverModal] = React.useState(false)
@@ -265,9 +174,13 @@ export function useProfile(): UseProfileReturn {
     })
   }
 
-  const handleUploadCccd = (): void => {
+  const handleUploadCccd = async (imageBase64?: string): Promise<void> => {
     setIsOcrLoading(true)
-    setTimeout(() => {
+    // Always wait for 2.5 seconds to show OCR progress analysis animation
+    const delayPromise = new Promise(resolve => setTimeout(resolve, 2500))
+
+    if (!imageBase64) {
+      await delayPromise
       setIsOcrLoading(false)
       setCccdUploaded(true)
       setKycForm({
@@ -278,14 +191,66 @@ export function useProfile(): UseProfileReturn {
           role === 'tenant'
             ? '720A Điện Biên Phủ, Phường 22, Bình Thạnh, TP.HCM'
             : '100 Nguyễn Hữu Cảnh, Phường 22, Bình Thạnh, TP.HCM',
+        gender: role === 'tenant' ? 'Nam' : 'Nam',
+        nationality: 'Việt Nam',
+        placeOfOrigin: role === 'tenant' ? 'Hải Phòng' : 'Hà Nội',
       })
       toast.success('Trích xuất OCR CCCD thành công!')
-    }, 2500)
+      return
+    }
+
+    try {
+      const cleanBase64 = imageBase64
+        .replace(/^data:image\/[a-z]+;base64,/, '')
+        .replace(/^data:application\/pdf;base64,/, '')
+
+      const [res] = await Promise.all([
+        fetch('http://localhost:80/api/idcard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: cleanBase64 }),
+        }),
+        delayPromise,
+      ])
+      const result = await res.json()
+      if (result && result.ID_number) {
+        setKycForm({
+          fullName: result.Name || '',
+          cccdNumber: result.ID_number || '',
+          dob: result.Date_of_birth || '',
+          address: result.Place_of_residence || result.Place_of_origin || '',
+          gender: result.Gender || 'Nam',
+          nationality: result.Nationality || 'Việt Nam',
+          placeOfOrigin: result.Place_of_origin || '',
+        })
+        setCccdUploaded(true)
+        toast.success('Trích xuất OCR CCCD thành công!')
+      } else {
+        throw new Error('Dữ liệu không hợp lệ từ API')
+      }
+    } catch (err) {
+      console.error('Fallback to mock OCR data due to error:', err)
+      setKycForm({
+        fullName: role === 'tenant' ? 'NGUYỄN VĂN A' : 'LÊ HOÀNG MINH',
+        cccdNumber: role === 'tenant' ? '038096001234' : '012093005678',
+        dob: role === 'tenant' ? '15/08/1996' : '20/12/1985',
+        address:
+          role === 'tenant'
+            ? '720A Điện Biên Phủ, Phường 22, Bình Thạnh, TP.HCM'
+            : '100 Nguyễn Hữu Cảnh, Phường 22, Bình Thạnh, TP.HCM',
+        gender: role === 'tenant' ? 'Nam' : 'Nam',
+        nationality: 'Việt Nam',
+        placeOfOrigin: role === 'tenant' ? 'Hải Phòng' : 'Hà Nội',
+      })
+      setCccdUploaded(true)
+      toast.success('Trích xuất OCR CCCD thành công (Mock)!')
+    } finally {
+      setIsOcrLoading(false)
+    }
   }
 
   const handleConfirmKyc = (): void => {
     setIsKycVerified(true)
-    setShowKycModal(false)
     const event =
       role === 'tenant' ? 'TENANT_KYC_VERIFIED' : 'LANDLORD_KYC_VERIFIED'
     addBlockchainLog(

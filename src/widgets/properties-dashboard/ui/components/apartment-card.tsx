@@ -22,6 +22,8 @@ interface Apartment {
   isVerified: boolean
   hasMedia: boolean
   amenities: string[]
+  image?: string
+  gallery?: string[]
 }
 
 interface ApartmentCardProps {
@@ -46,16 +48,27 @@ export function ApartmentCard({
     <article className="flex flex-col justify-between rounded-2xl border border-border bg-white p-5 shadow-sm hover:translate-y-[-4px] hover:border-border-strong hover:shadow-md transition-all duration-300">
       <div>
         {/* Visual Card Top */}
-        <div className="relative mb-4 flex h-36 flex-col justify-between rounded-xl border border-border bg-surface-muted p-4">
-          {/* Grid background simulation */}
-          <div
-            className="absolute inset-0 opacity-15"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 50% 50%, var(--primary) 1.5px, transparent 0)',
-              backgroundSize: '10px 10px',
-            }}
-          />
+        <div className="relative mb-4 flex h-36 flex-col justify-between rounded-xl border border-border bg-surface-muted p-4 overflow-hidden">
+          {apt.image ? (
+            <img
+              src={apt.image}
+              alt={apt.title}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+            />
+          ) : (
+            /* Grid background simulation */
+            <div
+              className="absolute inset-0 opacity-15"
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle at 50% 50%, var(--primary) 1.5px, transparent 0)',
+                backgroundSize: '10px 10px',
+              }}
+            />
+          )}
+          {/* Overlay gradient to keep text/buttons readable */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-2">
               {showCompareCheckbox && (
@@ -106,7 +119,7 @@ export function ApartmentCard({
               </svg>
             </button>
           </div>
-          <span className="relative z-10 font-mono text-[10px] font-bold text-muted uppercase">
+          <span className="relative z-10 font-mono text-[10px] font-bold text-white uppercase drop-shadow-md">
             {apt.category}
           </span>
         </div>

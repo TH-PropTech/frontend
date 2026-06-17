@@ -1,3 +1,5 @@
+import * as React from 'react'
+
 export interface Property {
   id: string
   name: string
@@ -12,6 +14,139 @@ export interface BlockchainLog {
   timestamp: string
   hash: string
   status: 'verified' | 'pending'
+}
+
+export interface UseProfileReturn {
+  role: 'tenant' | 'landlord'
+  activeTab: 'progress' | 'bills' | 'blockchain' | 'maintenance' | 'security'
+  setActiveTab: React.Dispatch<
+    React.SetStateAction<
+      'progress' | 'bills' | 'blockchain' | 'maintenance' | 'security'
+    >
+  >
+  activePropertyId: string
+  properties: Property[]
+  showContractModal: boolean
+  setShowContractModal: React.Dispatch<React.SetStateAction<boolean>>
+  contractViewOnly: boolean
+  handleViewSignedContract: () => void
+  showHandoverArchiveModal: boolean
+  setShowHandoverArchiveModal: React.Dispatch<React.SetStateAction<boolean>>
+  hasPasskey: boolean
+  setHasPasskey: React.Dispatch<React.SetStateAction<boolean>>
+  activeSessions: Array<{
+    id: string
+    device: string
+    ip: string
+    location: string
+    lastActive: string
+  }>
+  setActiveSessions: React.Dispatch<
+    React.SetStateAction<
+      Array<{
+        id: string
+        device: string
+        ip: string
+        location: string
+        lastActive: string
+      }>
+    >
+  >
+  notifChannels: {
+    email: boolean
+    sms: boolean
+    telegram: boolean
+    zalo: boolean
+    push: boolean
+  }
+  setNotifChannels: React.Dispatch<
+    React.SetStateAction<{
+      email: boolean
+      sms: boolean
+      telegram: boolean
+      zalo: boolean
+      push: boolean
+    }>
+  >
+  isWalletConnected: boolean
+  walletAddress: string
+  usdtBalance: number
+  escrowBalance: number
+  isKycVerified: boolean
+  showKycModal: boolean
+  setShowKycModal: React.Dispatch<React.SetStateAction<boolean>>
+  isOcrLoading: boolean
+  kycForm: {
+    fullName: string
+    cccdNumber: string
+    dob: string
+    address: string
+    gender: string
+    nationality: string
+    placeOfOrigin: string
+  }
+  setKycForm: React.Dispatch<
+    React.SetStateAction<{
+      fullName: string
+      cccdNumber: string
+      dob: string
+      address: string
+      gender: string
+      nationality: string
+      placeOfOrigin: string
+    }>
+  >
+  cccdUploaded: boolean
+  setCccdUploaded: React.Dispatch<React.SetStateAction<boolean>>
+  showHandoverModal: boolean
+  setShowHandoverModal: React.Dispatch<React.SetStateAction<boolean>>
+  handoverSigned: boolean
+  setHandoverSigned: React.Dispatch<React.SetStateAction<boolean>>
+  handoverChecks: {
+    livingRoom: string
+    bedroom: string
+    kitchen: string
+    bathroom: string
+  }
+  setHandoverChecks: React.Dispatch<
+    React.SetStateAction<{
+      livingRoom: string
+      bedroom: string
+      kitchen: string
+      bathroom: string
+    }>
+  >
+  maintenanceTickets: MaintenanceTicket[]
+  newTicketTitle: string
+  setNewTicketTitle: React.Dispatch<React.SetStateAction<string>>
+  newTicketDesc: string
+  setNewTicketDesc: React.Dispatch<React.SetStateAction<string>>
+  leaseTerminated: boolean
+  damageDeductions: number
+  depositPaid: boolean
+  contractSigned: boolean
+  firstMonthPaid: boolean
+  blockchainLogs: BlockchainLog[]
+  bills: RentalBill[]
+  activeProperty: Property
+  appointments: Appointment[]
+  handleConnectWallet: () => void
+  handleUploadCccd: (imageBase64?: string) => Promise<void> | void
+  handleConfirmKyc: () => void
+  handlePayDeposit: () => void
+  handleSignContract: () => void
+  handlePayRent: () => void
+  handleConfirmHandover: () => void
+  handleNewMaintenanceTicket: (e: React.FormEvent) => void
+  handleApproveTicket: (id: string) => void
+  handleTerminateLease: () => void
+  handleCopyText: (text: string) => void
+  progressPercent: () => number
+  handleOpenContractModal: () => void
+  handlePropertyChange: (propertyId: string) => void
+  handleRoleChange: (newRole: 'tenant' | 'landlord') => void
+  handleApproveAppointment: (id: string) => void
+  handleRejectAppointment: (id: string) => void
 }
 
 export type EventType =
