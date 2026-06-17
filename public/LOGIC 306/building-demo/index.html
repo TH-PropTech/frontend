@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Floor Selector - Tòa M7</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Bai Jamjuree -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Bai Jamjuree', sans-serif;
+            user-select: none;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1b263b 0%, #0d1b2a 100%);
+        }
+        /* Glassmorphism effects */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        .glass-btn:active {
+            transform: translateY(1px);
+        }
+        
+        /* Custom scrollbar for floor ledger */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Tooltip style */
+        #tooltip-3d {
+            pointer-events: none;
+            transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+            transform: translate(-50%, -100%) scale(0.95);
+        }
+        #tooltip-3d.active {
+            transform: translate(-50%, -100%) scale(1);
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative text-slate-100">
+
+    <!-- Three.js Canvas Container -->
+    <div id="canvas-container" class="absolute inset-0 z-0"></div>
+
+    <!-- Header Panel -->
+    <header class="absolute top-0 left-0 w-full p-4 md:p-6 z-10 flex items-center justify-between pointer-events-none">
+        <div class="flex items-center gap-4 pointer-events-auto">
+            <button class="glass-btn flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-medium">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
+                <span>Quay lại</span>
+            </button>
+            <h1 class="text-xl md:text-2xl font-bold tracking-wide drop-shadow-md">Tòa M7 - Chọn Tầng</h1>
+        </div>
+        
+        <!-- Top Status Indicator / User Info -->
+        <div class="hidden md:flex items-center gap-3 glass-panel px-4 py-2 rounded-full pointer-events-auto text-xs">
+            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span class="text-slate-400">Hệ thống Trực Tuyến</span>
+        </div>
+    </header>
+
+    <!-- Legend Status Box (Top-Left) -->
+    <div class="absolute top-20 left-4 md:top-24 md:left-6 z-10 glass-panel p-4 rounded-2xl flex flex-col gap-3 min-w-[200px]">
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Trạng thái căn hộ</div>
+        <div class="flex items-center gap-3">
+            <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 border border-emerald-400/30 shadow-lg shadow-emerald-500/20"></span>
+            <span class="text-sm font-medium">Trống</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="w-3.5 h-3.5 rounded-full bg-amber-500 border border-amber-400/30 shadow-lg shadow-amber-500/20"></span>
+            <span class="text-sm font-medium">Giữ chỗ</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="w-3.5 h-3.5 rounded-full bg-slate-500 border border-slate-400/30 shadow-lg shadow-slate-500/20"></span>
+            <span class="text-sm font-medium">Đã có cọc / chốt</span>
+        </div>
+    </div>
+
+    <!-- Right Sidebar: Ledger Tầng -->
+    <aside class="absolute top-20 right-4 bottom-24 w-80 md:top-24 md:right-6 md:bottom-28 z-10 glass-panel rounded-3xl flex flex-col p-5 overflow-hidden">
+        <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-3">
+            <h2 class="text-base font-bold tracking-wider uppercase text-slate-300">
+                <i class="fa-solid fa-list-ul mr-2 text-sky-400"></i>Ledger Tầng
+            </h2>
+            <span class="text-xs text-slate-400 bg-white/5 px-2 py-0.5 rounded" id="total-rooms-label">15 Tầng</span>
+        </div>
+
+        <!-- Ledger Columns Header -->
+        <div class="grid grid-cols-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">
+            <div class="text-left">Tầng</div>
+            <div class="text-emerald-400">Trống</div>
+            <div class="text-amber-400">Chờ</div>
+            <div class="text-slate-400">Bán</div>
+        </div>
+
+        <!-- Scrollable Floors List -->
+        <div id="floors-ledger-list" class="flex-1 overflow-y-auto custom-scrollbar pr-1 flex flex-col gap-1.5">
+            <!-- Dynamic items will be generated here -->
+        </div>
+    </aside>
+
+    <!-- Bottom Controls: Camera Views -->
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 md:gap-3 glass-panel px-4 py-3 rounded-full shadow-2xl">
+        <button onclick="window.setCameraView('front')" class="camera-btn active-view glass-btn flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold">
+            <i class="fa-solid fa-camera"></i>
+            <span>Mặt trước</span>
+        </button>
+        <button onclick="window.setCameraView('back')" class="camera-btn glass-btn flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold">
+            <i class="fa-solid fa-cube"></i>
+            <span>Mặt sau</span>
+        </button>
+        <button onclick="window.setCameraView('side')" class="camera-btn glass-btn flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold">
+            <i class="fa-solid fa-table-columns"></i>
+            <span>Mặt bên</span>
+        </button>
+        <button onclick="window.setCameraView('top')" class="camera-btn glass-btn flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold">
+            <i class="fa-solid fa-plane-departure"></i>
+            <span>Nhìn từ trên</span>
+        </button>
+    </div>
+
+    <!-- Hover 3D Tooltip Overlay -->
+    <div id="tooltip-3d" class="absolute hidden z-20 glass-panel p-4 rounded-2xl min-w-[160px] opacity-0 flex flex-col gap-2 shadow-2xl pointer-events-none">
+        <div class="text-xs font-bold text-sky-400 border-b border-white/10 pb-1 uppercase tracking-wider" id="tooltip-floor-title">TẦNG --</div>
+        <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-400">Trống:</span>
+            <span class="font-bold text-emerald-400" id="tooltip-vacant">--</span>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-400">Giữ chỗ:</span>
+            <span class="font-bold text-amber-400" id="tooltip-reserved">--</span>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+            <span class="text-slate-400">Đã bán:</span>
+            <span class="font-bold text-slate-300" id="tooltip-sold">--</span>
+        </div>
+    </div>
+
+    <!-- UI Overlay for interaction instructions -->
+    <div class="absolute bottom-6 left-6 z-10 hidden sm:flex items-center gap-2 text-slate-400 text-xs bg-slate-950/30 px-3 py-1.5 rounded-full border border-white/5 pointer-events-none">
+        <i class="fa-solid fa-circle-info text-sky-400 animate-bounce"></i>
+        <span>Cuộn chuột để thu phóng • Giữ chuột trái để xoay tòa nhà</span>
+    </div>
+
+    <!-- Load CDN Libraries (Three.js, OrbitControls, GSAP) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- GSAP for smooth animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- App Logic Script -->
+    <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Master Plan - Khu Đô Thị Vinhomes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            overflow: hidden;
+            background: #f0f4f8;
+            margin: 0;
+        }
+
+        /* ── Light Glassmorphism ─────────────────────────── */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        #sidebar-container {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #sidebar-container.sidebar-collapsed {
+            transform: translate(calc(100% + 20px), -50%) !important;
+        }
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(2, 132, 199, 0.3);
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.1);
+        }
+        .glass-btn.active-view {
+            background: rgba(2, 132, 199, 0.1);
+            border-color: rgba(2, 132, 199, 0.4);
+            color: #0284c7;
+        }
+
+        /* ── Custom Scrollbar ────────────────────────────── */
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+
+        /* ── Building Cards (Overview) ───────────────────── */
+        .building-card {
+            display: flex; flex-direction: column; gap: 8px;
+            padding: 12px 14px; border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            background: rgba(248, 250, 252, 0.6);
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .building-card:hover {
+            background: rgba(2, 132, 199, 0.06);
+            border-color: rgba(2, 132, 199, 0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
+        }
+        .card-header { display: flex; align-items: center; gap: 10px; }
+        .card-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+            display: flex; align-items: center; justify-content: center;
+            color: #0284c7; font-size: 13px; flex-shrink: 0;
+        }
+        .card-info { flex: 1; }
+        .card-id { font-size: 12px; font-weight: 700; color: #1e293b; }
+        .card-meta { font-size: 10px; color: #64748b; margin-top: 1px; }
+        .card-stats { display: flex; gap: 8px; }
+        .stat-vacant {
+            font-size: 10px; font-weight: 600; color: #059669;
+            background: rgba(5, 150, 105, 0.08); padding: 2px 8px; border-radius: 6px;
+        }
+
+        /* ── Floor Rows ──────────────────────────────────── */
+        .floor-row {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            align-items: center; text-align: center;
+            padding: 7px 10px; border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: pointer; transition: all 0.15s ease;
+            font-size: 11px; font-weight: 600;
+        }
+        .floor-row:hover { background: rgba(2, 132, 199, 0.04); border-color: rgba(2, 132, 199, 0.12); }
+        .floor-row.row-active {
+            background: rgba(2, 132, 199, 0.08);
+            border-color: rgba(2, 132, 199, 0.25);
+            transform: scale(1.01);
+        }
+        .floor-num { text-align: left; font-weight: 700; color: #0284c7; }
+        .floor-vacant { color: #059669; font-weight: 700; }
+        .floor-reserved { color: #d97706; font-weight: 700; }
+        .floor-sold { color: #94a3b8; }
+
+        /* ── Floating Building Labels ────────────────────── */
+        .building-label {
+            position: absolute; pointer-events: auto; cursor: pointer;
+            left: 0; top: 0;
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            will-change: transform;
+        }
+        .building-label:hover { transform: scale(1.08); }
+        .label-id {
+            font-size: 11px; font-weight: 800; color: #fff;
+            background: #0284c7; padding: 2px 10px; border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+            letter-spacing: 0.5px;
+        }
+        .label-name {
+            font-size: 9px; font-weight: 600; color: #475569;
+            background: rgba(255,255,255,0.85); padding: 1px 6px; border-radius: 4px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* ── Tooltip ─────────────────────────────────────── */
+        #tooltip-3d {
+            pointer-events: none;
+            left: 0; top: 0;
+            transition: opacity 0.15s ease;
+            will-change: transform;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative">
+
+    <!-- Three.js Canvas -->
+    <div id="canvas-container" class="absolute inset-0 z-0"></div>
+
+    <!-- Floating Building Labels Container -->
+    <div id="building-labels" class="absolute inset-0 z-5 pointer-events-none"></div>
+
+    <!-- Top-Left Header -->
+    <header class="absolute top-5 left-5 z-10 flex items-center gap-3">
+        <button onclick="window.showMasterPlan()" class="glass-btn flex items-center justify-center w-9 h-9 rounded-full text-slate-500 hover:text-sky-600" title="Xem tổng quan">
+            <i class="fa-solid fa-layer-group text-sm"></i>
+        </button>
+        <button id="toggle-walk-btn" onclick="window.toggleWalkMode()" class="glass-btn flex items-center justify-center w-9 h-9 rounded-full text-slate-500 hover:text-sky-600" title="Chế độ đi bộ (WASD)">
+            <i class="fa-solid fa-person-walking text-sm"></i>
+        </button>
+        <button id="fullscreen-btn" onclick="window.toggleFullscreen()" class="glass-btn flex items-center justify-center w-9 h-9 rounded-full text-slate-500 hover:text-sky-600" title="Toàn màn hình">
+            <i class="fa-solid fa-expand text-sm"></i>
+        </button>
+        <div class="flex flex-col">
+            <h1 class="text-sm font-bold tracking-wide text-slate-700 uppercase" id="page-title">Khu Đô Thị Vinhomes</h1>
+            <div class="flex items-center gap-3 mt-0.5 text-[10px] text-slate-400">
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Trống</span>
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Giữ chỗ</span>
+                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Đã bán</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Right Sidebar -->
+    <aside id="sidebar-container" class="absolute top-1/2 -translate-y-1/2 right-5 w-72 max-h-[70vh] z-10 glass-panel rounded-2xl flex flex-col">
+        <!-- Sidebar Toggle Button -->
+        <button onclick="window.toggleSidebar()" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full w-6 h-12 bg-white/90 backdrop-blur-md hover:bg-white border border-r-0 border-slate-200/50 rounded-l-xl flex items-center justify-center text-slate-500 hover:text-sky-600 transition-all cursor-pointer shadow-md z-20" id="sidebar-toggle-btn" title="Thu nhỏ/Mở rộng">
+            <i class="fa-solid fa-chevron-right" id="sidebar-toggle-icon"></i>
+        </button>
+        
+        <div class="w-full h-full flex flex-col overflow-hidden rounded-2xl">
+            <!-- Sidebar Header -->
+            <div class="flex items-center justify-between p-4 pb-2 border-b border-slate-200/50">
+                <div class="flex flex-col">
+                    <h2 class="text-xs font-bold tracking-wider uppercase text-slate-600" id="sidebar-title">KHU ĐÔ THỊ</h2>
+                    <span class="text-[10px] text-slate-400 mt-0.5" id="sidebar-subtitle">Vinhomes Grand Park</span>
+                </div>
+                <span class="text-[10px] text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-semibold" id="sidebar-badge">4 Tòa</span>
+            </div>
+
+            <!-- Floor Header (hidden in overview) -->
+            <div id="floor-header" class="grid grid-cols-4 text-center text-[9px] font-bold text-slate-400 uppercase tracking-wider px-5 py-2 border-b border-slate-200/30" style="display:none;">
+                <div class="text-left">Tầng</div>
+                <div class="text-emerald-600">Trống</div>
+                <div class="text-amber-600">Chờ</div>
+                <div class="text-slate-400">Bán</div>
+            </div>
+
+            <!-- Overview Panel (building cards) -->
+            <div id="overview-panel" class="flex-1 overflow-y-auto custom-scroll p-3 flex flex-col gap-2" style="display:flex;"></div>
+
+            <!-- Floor Detail Panel -->
+            <div id="floor-panel" class="flex-1 overflow-y-auto custom-scroll px-3 py-2 flex flex-col gap-1" style="display:none;">
+                <div id="floors-ledger-list"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Bottom Camera Controls -->
+    <div id="camera-controls-box" class="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 glass-panel px-3 py-2 rounded-full">
+        <button onclick="window.showMasterPlan()" class="camera-btn glass-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium text-slate-500">
+            <i class="fa-solid fa-earth-asia text-[10px]"></i>
+            <span>Tổng quan</span>
+        </button>
+        <div class="w-px h-4 bg-slate-200 mx-1"></div>
+        <button id="btn-front" onclick="window.setCameraView('front')" class="camera-btn glass-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium text-slate-500">
+            <i class="fa-solid fa-camera text-[10px]"></i>
+            <span>Trước</span>
+        </button>
+        <button id="btn-back" onclick="window.setCameraView('back')" class="camera-btn glass-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium text-slate-500">
+            <i class="fa-solid fa-cube text-[10px]"></i>
+            <span>Sau</span>
+        </button>
+        <button id="btn-side" onclick="window.setCameraView('side')" class="camera-btn glass-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium text-slate-500">
+            <i class="fa-solid fa-table-columns text-[10px]"></i>
+            <span>Bên</span>
+        </button>
+        <button id="btn-top" onclick="window.setCameraView('top')" class="camera-btn glass-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium text-slate-500">
+            <i class="fa-solid fa-plane-departure text-[10px]"></i>
+            <span>Trên</span>
+        </button>
+    </div>
+
+    <!-- Floating Tooltip -->
+    <div id="tooltip-3d" class="absolute hidden z-20 glass-panel p-3 rounded-xl min-w-[130px] opacity-0 flex flex-col gap-1.5 pointer-events-none">
+        <div class="text-[11px] font-bold text-sky-700 border-b border-slate-200/50 pb-1 uppercase tracking-wider" id="tooltip-floor-title">TẦNG --</div>
+        <div class="flex justify-between text-[10px]">
+            <span class="text-slate-400">Trống:</span>
+            <span class="font-bold text-emerald-600" id="tooltip-vacant">--</span>
+        </div>
+        <div class="flex justify-between text-[10px]">
+            <span class="text-slate-400">Giữ chỗ:</span>
+            <span class="font-bold text-amber-600" id="tooltip-reserved">--</span>
+        </div>
+        <div class="flex justify-between text-[10px]">
+            <span class="text-slate-400">Đã bán:</span>
+            <span class="font-bold text-slate-500" id="tooltip-sold">--</span>
+        </div>
+    </div>
+
+    <!-- VR Tour 360° Overlay -->
+    <div id="vr-overlay" class="fixed inset-0 z-50 flex items-center justify-center" style="display:none; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);">
+        <!-- Header bar -->
+        <div class="absolute top-0 left-0 right-0 flex items-center justify-between px-5 py-3 z-10" style="background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center">
+                    <i class="fa-solid fa-vr-cardboard text-sky-400 text-sm"></i>
+                </div>
+                <div>
+                    <div class="text-white font-bold text-sm tracking-wide" id="vr-title">VR TOUR 360°</div>
+                    <div class="text-sky-300/70 text-[10px] font-medium" id="vr-subtitle">Tầng -- • Tòa --</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] text-white/50 bg-white/10 px-2.5 py-1 rounded-full">
+                    <i class="fa-solid fa-hand-pointer mr-1"></i>Kéo để xoay 360°
+                </span>
+                <button onclick="window.closeVRTour()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all hover:scale-110 border border-white/10">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+        </div>
+        <!-- VR iframe container -->
+        <div class="relative w-full h-full">
+            <iframe id="vr-iframe" src="" class="w-full h-full border-0" allow="gyroscope; accelerometer; xr-spatial-tracking" allowfullscreen></iframe>
+        </div>
+        <!-- Bottom info -->
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+            <button onclick="window.closeVRTour()" class="flex items-center gap-1.5 text-white/80 hover:text-white text-[11px] font-medium transition-all">
+                <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                <span>Quay lại Mô hình 3D</span>
+            </button>
+            <div class="w-px h-3 bg-white/20"></div>
+            <span class="text-sky-400 text-[11px] font-semibold" id="vr-floor-badge">Tầng --</span>
+        </div>
+    </div>
+
+    <!-- Walk Mode HUD -->
+    <div id="tour-hud" class="absolute bottom-16 left-5 z-20 glass-panel p-4 rounded-2xl flex flex-col gap-3 min-w-[280px] shadow-lg transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-none">
+        <div class="flex items-center justify-between border-b border-slate-200/50 pb-2">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse"></span>
+                <span class="text-xs font-bold text-slate-700 tracking-wide">THAM QUAN 3D (AVATAR)</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button onclick="window.toggleWalkViewMode()" id="view-mode-btn" class="text-[10px] bg-sky-50 text-sky-600 px-2 py-0.5 rounded-full font-semibold border border-sky-100 hover:bg-sky-100 transition-all flex items-center gap-1">
+                    <i class="fa-solid fa-camera"></i> <span id="view-mode-text">Góc nhìn: T3</span>
+                </button>
+                <button onclick="window.toggleHUD()" class="text-slate-400 hover:text-sky-600 transition-all w-5 h-5 flex items-center justify-center rounded-full hover:bg-slate-100 cursor-pointer" id="hud-toggle-btn" title="Thu nhỏ/Mở rộng">
+                    <i class="fa-solid fa-chevron-down" id="hud-toggle-icon"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Wrap content of HUD so we can toggle its display state -->
+        <div id="hud-content" class="flex flex-col gap-3">
+            <!-- Controls Help -->
+            <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-500 border-b border-slate-200/30 pb-2">
+                <div><span class="font-semibold text-slate-700">Di chuyển:</span> W/A/S/D hoặc ➔</div>
+                <div><span class="font-semibold text-slate-700">Chạy:</span> Giữ Shift</div>
+                <div><span class="font-semibold text-slate-700">Nhìn quanh:</span> Rê chuột</div>
+                <div><span class="font-semibold text-slate-700">Nhảy:</span> Space</div>
+            </div>
+
+            <!-- Teleport / Elevator -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Chọn tầng tham quan (Thang máy)</label>
+                <div class="flex gap-1">
+                    <select id="teleport-floor-select" class="flex-1 text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-600 font-semibold focus:outline-none focus:border-sky-400">
+                        <option value="ground">Plaza mặt đất (Tầng 1)</option>
+                        <option value="podium">Vườn mái Podium (Tầng 3)</option>
+                        <option value="bridge6">Cầu đi bộ (Tầng 6)</option>
+                        <option value="pool7">Hồ bơi Tháp Trái (Tầng 7)</option>
+                        <option value="roof">Sân thượng (Tầng 10)</option>
+                    </select>
+                    <button onclick="window.teleportAvatar()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs px-3 rounded-lg transition-all flex items-center justify-center gap-1 active:scale-95">
+                        <i class="fa-solid fa-elevator"></i> Đi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom-left hint -->
+    <div id="hint-box" class="absolute bottom-16 left-5 z-10 hidden sm:flex items-center gap-2 text-slate-400 text-[10px] bg-white/50 px-3 py-1 rounded-full border border-slate-200/30 pointer-events-none backdrop-blur-sm">
+        <i class="fa-solid fa-circle-info text-sky-500"></i>
+        <span id="hint-text">Click chọn tòa nhà • Cuộn để thu phóng • Kéo để xoay • Click tầng để xem 360°</span>
+    </div>
+
+    <!-- Scripts (load order matters!) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script src="./shared-materials.js"></script>
+    <script src="./building-generator.js"></script>
+    <script src="./terrain-generator.js"></script>
+    <script src="./app.js"></script>
+</body>
+</html>
