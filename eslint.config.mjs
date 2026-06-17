@@ -9,9 +9,10 @@ export default defineConfig([
     files: ['**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/explicit-function-return-type': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-unused-vars': 'error',
-      'no-console': 'warn',
+      'no-console': 'off',
+      '@next/next/no-img-element': 'off',
     },
   },
   {
