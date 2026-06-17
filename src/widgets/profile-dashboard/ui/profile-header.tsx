@@ -36,6 +36,21 @@ export function ProfileHeader({
     handleRoleChange,
   } = profile
 
+  // Lấy thông tin user từ localStorage (đã lưu khi login)
+  const storedUser = React.useMemo(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const raw = localStorage.getItem('user')
+      return raw ? (JSON.parse(raw) as { name?: string; email?: string }) : null
+    } catch {
+      return null
+    }
+  }, [])
+
+  const userName =
+    storedUser?.name || (role === 'tenant' ? 'Khách thuê' : 'Chủ nhà')
+  const userEmail = storedUser?.email || ''
+
   return (
     <>
       {/* Role Switcher */}
@@ -84,7 +99,7 @@ export function ProfileHeader({
           <div className="space-y-1.5 text-left">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="font-marketing text-xl font-bold text-fg">
-                {role === 'tenant' ? 'Nguyễn Văn A' : 'Lê Hoàng Minh'}
+                {userName}
               </h2>
               <Badge
                 variant="outline"
@@ -124,12 +139,7 @@ export function ProfileHeader({
               </Badge>
             </div>
             <p className="font-body text-xs text-muted">
-              Email:{' '}
-              <span className="text-fg font-medium">
-                {role === 'tenant'
-                  ? 'tenant@th-proptech.vn'
-                  : 'landlord@th-proptech.vn'}
-              </span>
+              Email: <span className="text-fg font-medium">{userEmail}</span>
             </p>
             {isKycVerified ? (
               <div className="flex items-center gap-1.5 font-body text-xs text-muted">

@@ -70,7 +70,7 @@ export function ProjectDetail(): React.ReactElement {
   }, [project.units, selectedUnits])
 
   return (
-    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative pb-28">
+    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative">
       <HomeHeader />
 
       <main className="w-full">

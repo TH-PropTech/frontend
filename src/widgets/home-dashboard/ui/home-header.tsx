@@ -13,6 +13,7 @@ interface UserStored {
   name: string
   email: string
   roles?: string[]
+  kycStatus?: string
 }
 
 export function HomeHeader(): React.ReactElement {
@@ -64,6 +65,8 @@ export function HomeHeader(): React.ReactElement {
   ]
 
   const isLightHeader = pathname !== '/' || isScrolled
+
+  const hasKycWarning = user && user.kycStatus !== 'verified'
 
   return (
     <header
@@ -144,7 +147,7 @@ export function HomeHeader(): React.ReactElement {
                 title="Hồ sơ thuê nhà"
               >
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 relative ${
                     isLightHeader
                       ? 'border-border bg-white text-primary hover:bg-surface-muted'
                       : 'border-white/25 bg-black/20 text-white hover:bg-black/40'
@@ -162,6 +165,9 @@ export function HomeHeader(): React.ReactElement {
                       d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
                     />
                   </svg>
+                  {hasKycWarning && (
+                    <span className="absolute right-0.5 top-0.5 flex h-2.5 w-2.5 rounded-full bg-danger ring-2 ring-white" />
+                  )}
                 </div>
                 <span className="hidden md:inline-block">
                   Chào, {user.name}

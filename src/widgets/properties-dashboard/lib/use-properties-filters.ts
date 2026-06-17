@@ -2,7 +2,12 @@
 
 import * as React from 'react'
 import { useSearchParams } from 'next/navigation'
-import { mockProjects, mockApartments } from '@/entities/properties'
+import {
+  mockProjects,
+  mockApartments,
+  ApartmentItem,
+} from '@/entities/properties'
+import { apiClient } from '@/shared/api/api-client'
 
 export function usePropertiesFilters() {
   const searchParams = useSearchParams()
@@ -14,6 +19,31 @@ export function usePropertiesFilters() {
   const [searchKeyword, setSearchKeyword] = React.useState('')
   const [searchStatus, setSearchStatus] = React.useState('')
   const [selectedType, setSelectedType] = React.useState('Tất cả')
+
+  // State for fetched apartments
+  const [apartments, setApartments] =
+    React.useState<ApartmentItem[]>(mockApartments)
+
+  React.useEffect(() => {
+    let active = true
+    apiClient
+      .get<ApartmentItem[]>('/apartments?format=web')
+      .then(data => {
+        if (active && data && Array.isArray(data) && data.length > 0) {
+          setApartments(data)
+        }
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.error(
+          'Failed to fetch apartments from backend, falling back to mock data:',
+          err
+        )
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Detailed Cascade Location States
   const [selectedCity, setSelectedCity] = React.useState('')
@@ -171,7 +201,7 @@ export function usePropertiesFilters() {
 
   // Filter apartments
   const filteredApartments = React.useMemo(() => {
-    return mockApartments.filter(apt => {
+    return apartments.filter(apt => {
       if (searchKeyword.trim()) {
         const kw = searchKeyword.toLowerCase()
         const matchTitle = apt.title.toLowerCase().includes(kw)
@@ -265,6 +295,7 @@ export function usePropertiesFilters() {
     isVerifiedOnly,
     hasMediaOnly,
     selectedAmenities,
+    apartments,
   ])
 
   const locationLabel = React.useMemo(() => {

@@ -8,6 +8,10 @@ import { mockApartments, type ApartmentItem } from '@/entities/properties'
 import { PropertyDetailHero } from './components/property-detail-hero'
 import { BookingWidget } from './components/booking-widget'
 import { PropertyAnalytics } from './components/property-analytics'
+import { PropertyGallery } from './components/property-gallery'
+import { Property360Modal } from './components/property-360-modal'
+import { apiClient } from '@/shared/api/api-client'
+import { Compass } from 'lucide-react'
 
 // Map amenities keys to Vietnamese labels
 const AMENITY_LABELS: Record<string, string> = {
@@ -22,12 +26,41 @@ const AMENITY_LABELS: Record<string, string> = {
 
 export function PropertyDetail(): React.ReactElement {
   const params = useParams()
-  const propertyId = (params?.id as string) || 'PROP-CAR-101'
+  const propertyId = (params?.id as string) || ''
 
-  // Retrieve matching property item from mock data
-  const property = React.useMemo(() => {
-    return (mockApartments.find(apt => apt.id === propertyId) ||
-      mockApartments[0]) as ApartmentItem
+  const [property, setProperty] = React.useState<ApartmentItem | null>(null)
+  const [loading, setLoading] = React.useState(true)
+  const [isOpen360, setIsOpen360] = React.useState(false)
+
+  React.useEffect(() => {
+    let active = true
+    if (!propertyId) {
+      const timer = setTimeout(() => {
+        setProperty(mockApartments[0] || null)
+        setLoading(false)
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+    apiClient
+      .get<ApartmentItem>(`/apartments/${propertyId}?format=web`)
+      .then(data => {
+        if (active && data) {
+          setProperty(data)
+        }
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch property details:', err)
+        const fallback =
+          mockApartments.find(apt => apt.id === propertyId) || mockApartments[0]
+        if (active) setProperty(fallback || null)
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
   }, [propertyId])
 
   // Direct Chat states & handlers
@@ -56,13 +89,62 @@ export function PropertyDetail(): React.ReactElement {
     }, 1000)
   }
 
+  if (loading || !property) {
+    return (
+      <div className="min-h-screen bg-bg text-fg flex flex-col justify-between">
+        <HomeHeader />
+        <main className="flex-1 flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <span className="text-sm font-bold text-muted">
+              Đang tải thông tin căn hộ...
+            </span>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative pb-28">
+    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative">
       <HomeHeader />
 
       <main className="w-full">
         {/* Premium Banner Hero Section (Warm Cream Design with Topography Overlay) */}
         <PropertyDetailHero property={property} />
+
+        {/* Real Premium Gallery */}
+        <section className="mx-auto max-w-6xl px-6 pt-10 md:px-10">
+          <PropertyGallery gallery={property.gallery || []} />
+        </section>
+
+        {/* 360 Tour Interactive CTA Banner */}
+        {property.images360 && property.images360.length > 0 && (
+          <section className="mx-auto max-w-6xl px-6 pt-6 md:px-10">
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+              <div className="space-y-1.5 text-center md:text-left">
+                <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full text-[10px] font-bold text-[#c65a3a] uppercase tracking-wider animate-pulse">
+                  Tính năng mới
+                </div>
+                <h4 className="font-marketing text-base font-bold text-fg">
+                  Tham quan thực tế ảo 360° VR Tour
+                </h4>
+                <p className="font-body text-xs text-muted">
+                  Trải nghiệm góc nhìn panorama toàn cảnh các phòng khách, phòng
+                  ngủ, WC, bếp và ban công của căn hộ.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsOpen360(true)}
+                className="w-full md:w-auto px-6 py-3.5 bg-primary hover:bg-[#b04a2d] text-white rounded-2xl font-semibold text-xs transition-all duration-300 shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group active:scale-[0.98]"
+              >
+                <Compass className="h-4 w-4 text-white group-hover:rotate-45 transition-transform duration-300" />
+                Trải nghiệm 360° ngay
+              </button>
+            </div>
+          </section>
+        )}
 
         {/* Details and Bento Info Section */}
         <section className="mx-auto max-w-6xl px-6 py-12 md:px-10 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
@@ -409,6 +491,12 @@ export function PropertyDetail(): React.ReactElement {
           </form>
         </div>
       )}
+
+      <Property360Modal
+        isOpen={isOpen360}
+        onClose={() => setIsOpen360(false)}
+        images360={property.images360 || []}
+      />
 
       <Footer />
     </div>
