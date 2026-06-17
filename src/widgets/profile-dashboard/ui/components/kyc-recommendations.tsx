@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Brain, MapPin, ThumbsUp, ThumbsDown, Shield } from 'lucide-react'
+import { Brain, MapPin, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 

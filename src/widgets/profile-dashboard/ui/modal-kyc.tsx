@@ -1,23 +1,9 @@
 'use client'
 
 import * as React from 'react'
-import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { UseProfileReturn } from '../model/use-profile'
-import {
-  ShieldCheck,
-  Upload,
-  Brain,
-  ThumbsUp,
-  ThumbsDown,
-  MapPin,
-  Loader2,
-  Camera,
-  RefreshCw,
-  Shield,
-  CheckCircle,
-  ChevronLeft,
-} from 'lucide-react'
+import { ShieldCheck, CheckCircle, ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { KycRecommendations } from './components/kyc-recommendations'
 import { KycDetailsPanel } from './components/kyc-details-panel'

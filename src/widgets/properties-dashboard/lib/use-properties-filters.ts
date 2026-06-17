@@ -24,17 +24,18 @@ export function usePropertiesFilters() {
   const [selectedType, setSelectedType] = React.useState('Tất cả')
 
   // Building filter state
-  const [selectedBuildingId, setSelectedBuildingId] = React.useState<string | null>(
-    buildingParam || null
-  )
+  const [selectedBuildingId, setSelectedBuildingId] = React.useState<
+    string | null
+  >(buildingParam || null)
 
   React.useEffect(() => {
     if (buildingParam) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedBuildingId(buildingParam)
+
       setActiveTab('single')
     }
   }, [buildingParam])
-
 
   // State for fetched apartments
   const [apartments, setApartments] =
@@ -67,11 +68,13 @@ export function usePropertiesFilters() {
 
   React.useEffect(() => {
     let active = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoadingProjects(true)
     apiClient
       .get<ApiProjectItem[]>('/projects')
       .then(data => {
         if (active && data && Array.isArray(data)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const mapped = data.map((item: any) => ({
             ...item,
             id: item.id || item._id?.toString() || item._id,
@@ -103,6 +106,7 @@ export function usePropertiesFilters() {
 
   React.useEffect(() => {
     if (!selectedApiProjectId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setApiBuildings([])
       return
     }
@@ -112,6 +116,7 @@ export function usePropertiesFilters() {
       .get<ApiBuildingItem[]>(`/buildings?projectId=${selectedApiProjectId}`)
       .then(data => {
         if (active && data && Array.isArray(data)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const mapped = data.map((item: any) => ({
             ...item,
             id: item.id || item._id?.toString() || item._id,

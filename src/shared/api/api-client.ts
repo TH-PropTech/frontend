@@ -118,7 +118,7 @@ export class ApiClient {
             response = await fetch(url, init)
             payload = (await response.json()) as ApiResponse<TData>
           }
-        } catch (err) {
+        } catch {
           refreshTokenPromise = null
         }
       }
