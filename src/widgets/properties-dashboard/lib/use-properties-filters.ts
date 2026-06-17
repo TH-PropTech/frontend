@@ -51,7 +51,6 @@ export function usePropertiesFilters() {
         }
       })
       .catch(err => {
-        // eslint-disable-next-line no-console
         console.error(
           'Failed to fetch apartments from backend, falling back to mock data:',
           err
@@ -83,7 +82,6 @@ export function usePropertiesFilters() {
         }
       })
       .catch(err => {
-        // eslint-disable-next-line no-console
         console.error(
           'Failed to fetch projects from backend, falling back to mock data:',
           err
@@ -125,7 +123,6 @@ export function usePropertiesFilters() {
         }
       })
       .catch(err => {
-        // eslint-disable-next-line no-console
         console.error('Failed to fetch buildings for project:', err)
       })
       .finally(() => {

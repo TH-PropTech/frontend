@@ -1,9 +1,12 @@
+import * as React from 'react'
 import type { WebCommunityPost } from '../../lib/use-web-community'
+import { CommentsSection } from './comments-section'
 
 const ROLE_CONFIG = {
   tenant: { label: 'Khách thuê', className: 'bg-primary/10 text-primary' },
   landlord: { label: 'Chủ nhà', className: 'bg-accent/10 text-accent-DEFAULT' },
   staff: { label: 'Đội ngũ TH', className: 'bg-danger/10 text-danger' },
+  admin: { label: 'Quản trị viên', className: 'bg-danger/10 text-danger' },
 } as const
 
 const TOPIC_CONFIG = {
@@ -24,12 +27,15 @@ const TOPIC_CONFIG = {
 interface PostCardProps {
   post: WebCommunityPost
   onUpvote: (id: string) => void
+  onCommentAdded?: (id: string) => void
 }
 
 export function PostCard({
   post,
   onUpvote,
+  onCommentAdded,
 }: PostCardProps): React.ReactElement {
+  const [showComments, setShowComments] = React.useState(false)
   const role = ROLE_CONFIG[post.authorRole]
   const topic = TOPIC_CONFIG[post.topic]
 
@@ -131,7 +137,14 @@ export function PostCard({
             {post.upvotes} Hữu ích
           </button>
 
-          <span className="flex items-center gap-1.5 text-xs font-semibold text-muted">
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className={`flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer rounded-lg px-3 py-1.5 ${
+              showComments
+                ? 'text-primary bg-primary/10'
+                : 'text-muted hover:text-primary hover:bg-primary/5'
+            }`}
+          >
             <svg
               className="h-4 w-4"
               fill="none"
@@ -145,10 +158,17 @@ export function PostCard({
                 d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z"
               />
             </svg>
-            {post.commentsCount}
-          </span>
+            {post.commentsCount} Bình luận
+          </button>
         </div>
       </div>
+
+      {showComments && (
+        <CommentsSection
+          postId={post.id}
+          onCommentAdded={() => onCommentAdded?.(post.id)}
+        />
+      )}
     </article>
   )
 }

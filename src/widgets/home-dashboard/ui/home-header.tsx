@@ -50,7 +50,6 @@ export function HomeHeader(): React.ReactElement {
           localStorage.removeItem('showWelcomeModal')
         }
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.error(e)
       }
     }
