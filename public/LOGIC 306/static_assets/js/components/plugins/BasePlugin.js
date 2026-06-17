@@ -25,61 +25,61 @@
  */
 
 class BasePlugin {
-	// Payload sẽ truyền khi plugin được gọi
-	payload = null;
-	// Overlay: Element để nội dung hiển thị (Đọc property ở trên)
-	overlay = null;
+  // Payload sẽ truyền khi plugin được gọi
+  payload = null
+  // Overlay: Element để nội dung hiển thị (Đọc property ở trên)
+  overlay = null
 
-	constructor(payload = {}) {
-		this.payload = payload; // tuỳ ý
-	}
+  constructor(payload = {}) {
+    this.payload = payload // tuỳ ý
+  }
 
-	/**
-	 * Được gọi khi plugin được mount.
-	 * Plugin khi được giao diện gọi sẽ vào đây
-	 */
-	mount(overlay) {
-		// Dòng này để giữ overlay khi cần!!!!!!
-		this.overlay = overlay;
-		// Your logic here
-	}
+  /**
+   * Được gọi khi plugin được mount.
+   * Plugin khi được giao diện gọi sẽ vào đây
+   */
+  mount(overlay) {
+    // Dòng này để giữ overlay khi cần!!!!!!
+    this.overlay = overlay
+    // Your logic here
+  }
 
-	// Default
-	render(htmlOrString) {
-		try {
-			// Tự động mở model khi render
-			this.overlay?.setContentAndOpen(htmlOrString);
-		} catch (e) {
-			ttbl_logger.error(`[${this.name}] Fail to render`);
-		}
-	}
+  // Default
+  render(htmlOrString) {
+    try {
+      // Tự động mở model khi render
+      this.overlay?.setContentAndOpen(htmlOrString)
+    } catch (e) {
+      ttbl_logger.error(`[${this.name}] Fail to render`)
+    }
+  }
 
-	updateVisibility(status) {
-		// Plugin sẽ trả trạng thái hidden/visible khi đóng - nếu cần xử lý khi modal được đóng thì thêm cái này
-		if (status === "hidden") {
-			// Tắt nhạc, reset modal hay gì đó tuỳ!!
-		}
-	}
-	/**
-	 * Update plugin với payload mới.
-	 * Optional
-	 */
-	update(payload) {
-		// Nếu có trigger update plugin, cái này plugin tự xử
-		// Gọi trigger update: window.ManagePlugins.actionOnPlugin("BasePlugin", payload, "update");
-	}
+  updateVisibility(status) {
+    // Plugin sẽ trả trạng thái hidden/visible khi đóng - nếu cần xử lý khi modal được đóng thì thêm cái này
+    if (status === 'hidden') {
+      // Tắt nhạc, reset modal hay gì đó tuỳ!!
+    }
+  }
+  /**
+   * Update plugin với payload mới.
+   * Optional
+   */
+  update(payload) {
+    // Nếu có trigger update plugin, cái này plugin tự xử
+    // Gọi trigger update: window.ManagePlugins.actionOnPlugin("BasePlugin", payload, "update");
+  }
 
-	/**
-	 * Cleanup plugin.
-	 * Optional
-	 */
-	unmount() {
-		// Your logic here
-		// Event này chỉ chạy khi bị ghi đè lên instance (Ví dụ 2 lần gọi plugin gallery cùng lúc)
-		// Không hoạt động nếu chỉ bị ẩn hoặc gỡ khỏi DOM thông thường, chỉ hoạt động khi được gọi event
-		// Trigger nếu muốn: window.ManagePlugins.actionOnPlugin("BasePlugin", payload, "unmount");
-	}
+  /**
+   * Cleanup plugin.
+   * Optional
+   */
+  unmount() {
+    // Your logic here
+    // Event này chỉ chạy khi bị ghi đè lên instance (Ví dụ 2 lần gọi plugin gallery cùng lúc)
+    // Không hoạt động nếu chỉ bị ẩn hoặc gỡ khỏi DOM thông thường, chỉ hoạt động khi được gọi event
+    // Trigger nếu muốn: window.ManagePlugins.actionOnPlugin("BasePlugin", payload, "unmount");
+  }
 }
 
 // Bắt buộc
-window.ManagePlugins.addPlugin(BasePlugin);
+window.ManagePlugins.addPlugin(BasePlugin)
