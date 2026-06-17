@@ -8,9 +8,9 @@ import { Input } from '@/shared/ui/input'
 import { Button } from '@/shared/ui/button'
 import { apiClient } from '@/shared/api/api-client'
 
-type LoginMode = 'password' | 'passwordless-email' | 'passwordless-otp'
+type LoginMode = 'password' | 'passwordless-email' | 'two-factor'
 
-interface LoginResponse {
+interface LoginSuccessResponse {
   accessToken: string
   refreshToken: string
   user: {
@@ -23,15 +23,27 @@ interface LoginResponse {
   }
 }
 
+interface Login2faResponse {
+  is2faRequired: true
+  twoFactorTempToken: string
+  user: {
+    _id: string
+    email: string
+  }
+}
+
+type LoginResult = LoginSuccessResponse | Login2faResponse
+
 export function LoginForm(): React.ReactElement {
   const router = useRouter()
   const [loginMode, setLoginMode] = React.useState<LoginMode>('password')
   const [isLoading, setIsLoading] = React.useState(false)
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
-  const [otp, setOtp] = React.useState('')
   const [errorMsg, setErrorMsg] = React.useState('')
   const [successMsg, setSuccessMsg] = React.useState('')
+  const [twoFactorTempToken, setTwoFactorTempToken] = React.useState('')
+  const [twoFactorCode, setTwoFactorCode] = React.useState('')
 
   async function handleSubmit(
     e: React.FormEvent<HTMLFormElement>
@@ -43,22 +55,32 @@ export function LoginForm(): React.ReactElement {
 
     if (loginMode === 'password') {
       try {
-        const response = await apiClient.post<LoginResponse>('/auth/login', {
+        const response = await apiClient.post<LoginResult>('/auth/login', {
           emailOrPhone: email,
           password,
         })
 
+        if ('is2faRequired' in response && response.is2faRequired) {
+          setTwoFactorTempToken(response.twoFactorTempToken)
+          setLoginMode('two-factor')
+          setTwoFactorCode('')
+          setIsLoading(false)
+          return
+        }
+
+        const successResp = response as LoginSuccessResponse
+
         // Save authentication token
-        localStorage.setItem('accessToken', response.accessToken)
-        localStorage.setItem('refreshToken', response.refreshToken)
-        localStorage.setItem('user', JSON.stringify(response.user))
+        localStorage.setItem('accessToken', successResp.accessToken)
+        localStorage.setItem('refreshToken', successResp.refreshToken)
+        localStorage.setItem('user', JSON.stringify(successResp.user))
 
         setSuccessMsg('Đăng nhập thành công! Đang chuyển hướng...')
 
         setTimeout(() => {
           if (
-            response.user.roles.includes('staff') ||
-            response.user.roles.includes('admin')
+            successResp.user.roles.includes('staff') ||
+            successResp.user.roles.includes('admin')
           ) {
             router.push('/staff' as Route)
           } else {
@@ -82,23 +104,34 @@ export function LoginForm(): React.ReactElement {
       }
 
       try {
-        await apiClient.post('/auth/login-otp/request', { email })
-        setSuccessMsg('Mã OTP đăng nhập đã được gửi tới email của bạn.')
-        setLoginMode('passwordless-otp')
+        const response = await apiClient.post<LoginResult>(
+          '/auth/login-otp/request',
+          {
+            email,
+          }
+        )
+
+        if ('is2faRequired' in response && response.is2faRequired) {
+          setTwoFactorTempToken(response.twoFactorTempToken)
+          setLoginMode('two-factor')
+          setTwoFactorCode('')
+          setIsLoading(false)
+          return
+        }
       } catch (err: unknown) {
         const msg =
-          err instanceof Error ? err.message : 'Yêu cầu mã OTP thất bại.'
+          err instanceof Error ? err.message : 'Yêu cầu đăng nhập thất bại.'
         setErrorMsg(msg)
       } finally {
         setIsLoading(false)
       }
-    } else if (loginMode === 'passwordless-otp') {
+    } else if (loginMode === 'two-factor') {
       try {
-        const response = await apiClient.post<LoginResponse>(
-          '/auth/login-otp/verify',
+        const response = await apiClient.post<LoginSuccessResponse>(
+          '/auth/2fa/authenticate',
           {
-            email,
-            otp,
+            twoFactorTempToken,
+            code: twoFactorCode,
           }
         )
 
@@ -106,7 +139,7 @@ export function LoginForm(): React.ReactElement {
         localStorage.setItem('refreshToken', response.refreshToken)
         localStorage.setItem('user', JSON.stringify(response.user))
 
-        setSuccessMsg('Xác thực thành công! Đang chuyển hướng...')
+        setSuccessMsg('Xác thực 2FA thành công! Đang chuyển hướng...')
         setTimeout(() => {
           if (
             response.user.roles.includes('staff') ||
@@ -119,7 +152,9 @@ export function LoginForm(): React.ReactElement {
         }, 1000)
       } catch (err: unknown) {
         const msg =
-          err instanceof Error ? err.message : 'Xác thực OTP thất bại.'
+          err instanceof Error
+            ? err.message
+            : 'Xác thực 2FA thất bại. Vui lòng kiểm tra lại mã.'
         setErrorMsg(msg)
       } finally {
         setIsLoading(false)
@@ -240,23 +275,23 @@ export function LoginForm(): React.ReactElement {
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               <circle cx="12" cy="16" r="1.5" />
             </svg>
-            Đăng nhập không cần mật khẩu (TOTP 2FA)
+            Đăng nhập không mật khẩu
           </button>
         </>
       )}
 
       {/* ═══════════════════════════════════════
-         MODE 2: PASSWORDLESS - ENTER ACCOUNT
+         MODE 2: PASSWORDLESS - ENTER EMAIL
          ═══════════════════════════════════════ */}
       {loginMode === 'passwordless-email' && (
         <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
           <div>
             <h3 className="text-sm font-bold text-fg font-marketing">
-              Xác thực không mật khẩu
+              Xác thực không mật khẩu (bằng 2FA)
             </h3>
             <p className="text-xs text-muted mt-1">
-              Nhập email hoặc tên tài khoản của bạn. Nếu bạn đã kích hoạt bảo
-              mật Google Authenticator, hệ thống sẽ yêu cầu nhập mã OTP.
+              Nhập email của bạn để tiến hành đăng nhập trực tiếp bằng mã xác
+              thực 2FA.
             </p>
           </div>
 
@@ -308,9 +343,9 @@ export function LoginForm(): React.ReactElement {
       )}
 
       {/* ═══════════════════════════════════════
-         MODE 3: PASSWORDLESS - ENTER TOTP OTP
+         MODE 3: TWO-FACTOR AUTHENTICATION INPUT
          ═══════════════════════════════════════ */}
-      {loginMode === 'passwordless-otp' && (
+      {loginMode === 'two-factor' && (
         <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
           <div className="text-center">
             <div className="inline-flex p-3 bg-primary/5 text-primary rounded-full mb-3">
@@ -331,24 +366,18 @@ export function LoginForm(): React.ReactElement {
               Nhập mã xác thực 2FA
             </h3>
             <p className="text-xs text-muted mt-1">
-              Tài khoản <strong className="text-fg">{email}</strong> đã kích
-              hoạt Google Authenticator.
+              Nhập mã OTP 6 chữ số từ ứng dụng xác thực của bạn (hoặc mã dự
+              phòng) để đăng nhập.
             </p>
           </div>
 
-          <div className="bg-surface-muted/30 border border-line rounded-lg p-3 text-center text-[10px] text-muted">
-            💡 Thử nghiệm: Nhập mã{' '}
-            <strong className="text-primary">123456</strong> để đăng nhập thành
-            công.
-          </div>
-
           <Input
-            label="Mã xác thực OTP (6 chữ số)"
+            label="Mã OTP 2FA hoặc Mã dự phòng"
             type="text"
             placeholder="000000"
-            maxLength={6}
-            value={otp}
-            onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+            maxLength={9}
+            value={twoFactorCode}
+            onChange={e => setTwoFactorCode(e.target.value)}
             required
             className="text-center tracking-widest text-lg font-bold"
             icon={
@@ -382,12 +411,12 @@ export function LoginForm(): React.ReactElement {
             onClick={() => {
               setErrorMsg('')
               setSuccessMsg('')
-              setOtp('')
-              setLoginMode('passwordless-email')
+              setTwoFactorCode('')
+              setLoginMode('password')
             }}
             className="w-full text-center text-xs font-semibold text-muted hover:text-fg transition-colors mt-2"
           >
-            Quay lại nhập tài khoản
+            Quay lại nhập mật khẩu
           </button>
         </div>
       )}
