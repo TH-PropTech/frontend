@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import type {
   Property,
   BlockchainLog,
-  MaintenanceTicket,
   EventType,
   UseProfileReturn,
 } from './types'
@@ -13,10 +12,11 @@ import {
   DEMO_PROPERTIES,
   DEMO_BLOCKCHAIN_LOGS,
   DEMO_BILLS,
-  DEMO_MAINTENANCE_TICKETS,
   DEMO_SESSIONS,
-  DEMO_APPOINTMENTS,
 } from './mock-data'
+import { useProfileMaintenance } from './use-profile-maintenance'
+import { useProfileAppointments } from './use-profile-appointments'
+import { uploadAndProcessCccd } from './ocr-utils'
 
 // Re-export types for convenience
 export type {
@@ -113,12 +113,34 @@ export function useProfile(): UseProfileReturn {
     bathroom: 'good',
   })
 
-  // Maintenance
-  const [maintenanceTickets, setMaintenanceTickets] = React.useState(
-    DEMO_MAINTENANCE_TICKETS
+  // Blockchain & Bills
+  const [blockchainLogs, setBlockchainLogs] =
+    React.useState(DEMO_BLOCKCHAIN_LOGS)
+  const [bills, setBills] = React.useState(DEMO_BILLS)
+
+  const addBlockchainLog = React.useCallback(
+    (event: EventType, hash: string): void => {
+      const log: BlockchainLog = {
+        id: `LOG-${Date.now()}`,
+        event,
+        timestamp: 'Vừa xong',
+        hash,
+        status: 'verified',
+      }
+      setBlockchainLogs(prev => [log, ...prev])
+    },
+    []
   )
-  const [newTicketTitle, setNewTicketTitle] = React.useState('')
-  const [newTicketDesc, setNewTicketDesc] = React.useState('')
+
+  const {
+    maintenanceTickets,
+    newTicketTitle,
+    setNewTicketTitle,
+    newTicketDesc,
+    setNewTicketDesc,
+    handleNewMaintenanceTicket,
+    handleApproveTicket,
+  } = useProfileMaintenance(addBlockchainLog)
 
   // Lease
   const [leaseTerminated, setLeaseTerminated] = React.useState(false)
@@ -127,13 +149,8 @@ export function useProfile(): UseProfileReturn {
   const [contractSigned, setContractSigned] = React.useState(false)
   const [firstMonthPaid, setFirstMonthPaid] = React.useState(false)
 
-  // Blockchain & Bills
-  const [blockchainLogs, setBlockchainLogs] =
-    React.useState(DEMO_BLOCKCHAIN_LOGS)
-  const [bills, setBills] = React.useState(DEMO_BILLS)
-
-  // Landlord: Appointments
-  const [appointments, setAppointments] = React.useState(DEMO_APPOINTMENTS)
+  const { appointments, handleApproveAppointment, handleRejectAppointment } =
+    useProfileAppointments()
 
   const activeProperty = React.useMemo(
     () =>
@@ -141,17 +158,6 @@ export function useProfile(): UseProfileReturn {
         properties[0]) as Property,
     [properties, activePropertyId]
   )
-
-  const addBlockchainLog = (event: EventType, hash: string): void => {
-    const log: BlockchainLog = {
-      id: `LOG-${Date.now()}`,
-      event,
-      timestamp: 'Vừa xong',
-      hash,
-      status: 'verified',
-    }
-    setBlockchainLogs(prev => [log, ...prev])
-  }
 
   const handleConnectWallet = (): void => {
     if (isWalletConnected) {
@@ -176,74 +182,10 @@ export function useProfile(): UseProfileReturn {
 
   const handleUploadCccd = async (imageBase64?: string): Promise<void> => {
     setIsOcrLoading(true)
-    // Always wait for 2.5 seconds to show OCR progress analysis animation
-    const delayPromise = new Promise(resolve => setTimeout(resolve, 2500))
-
-    if (!imageBase64) {
-      await delayPromise
-      setIsOcrLoading(false)
-      setCccdUploaded(true)
-      setKycForm({
-        fullName: role === 'tenant' ? 'NGUYỄN VĂN A' : 'LÊ HOÀNG MINH',
-        cccdNumber: role === 'tenant' ? '038096001234' : '012093005678',
-        dob: role === 'tenant' ? '15/08/1996' : '20/12/1985',
-        address:
-          role === 'tenant'
-            ? '720A Điện Biên Phủ, Phường 22, Bình Thạnh, TP.HCM'
-            : '100 Nguyễn Hữu Cảnh, Phường 22, Bình Thạnh, TP.HCM',
-        gender: role === 'tenant' ? 'Nam' : 'Nam',
-        nationality: 'Việt Nam',
-        placeOfOrigin: role === 'tenant' ? 'Hải Phòng' : 'Hà Nội',
-      })
-      toast.success('Trích xuất OCR CCCD thành công!')
-      return
-    }
-
     try {
-      const cleanBase64 = imageBase64
-        .replace(/^data:image\/[a-z]+;base64,/, '')
-        .replace(/^data:application\/pdf;base64,/, '')
-
-      const [res] = await Promise.all([
-        fetch('http://localhost:80/api/idcard', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: cleanBase64 }),
-        }),
-        delayPromise,
-      ])
-      const result = await res.json()
-      if (result && result.ID_number) {
-        setKycForm({
-          fullName: result.Name || '',
-          cccdNumber: result.ID_number || '',
-          dob: result.Date_of_birth || '',
-          address: result.Place_of_residence || result.Place_of_origin || '',
-          gender: result.Gender || 'Nam',
-          nationality: result.Nationality || 'Việt Nam',
-          placeOfOrigin: result.Place_of_origin || '',
-        })
-        setCccdUploaded(true)
-        toast.success('Trích xuất OCR CCCD thành công!')
-      } else {
-        throw new Error('Dữ liệu không hợp lệ từ API')
-      }
-    } catch (err) {
-      console.error('Fallback to mock OCR data due to error:', err)
-      setKycForm({
-        fullName: role === 'tenant' ? 'NGUYỄN VĂN A' : 'LÊ HOÀNG MINH',
-        cccdNumber: role === 'tenant' ? '038096001234' : '012093005678',
-        dob: role === 'tenant' ? '15/08/1996' : '20/12/1985',
-        address:
-          role === 'tenant'
-            ? '720A Điện Biên Phủ, Phường 22, Bình Thạnh, TP.HCM'
-            : '100 Nguyễn Hữu Cảnh, Phường 22, Bình Thạnh, TP.HCM',
-        gender: role === 'tenant' ? 'Nam' : 'Nam',
-        nationality: 'Việt Nam',
-        placeOfOrigin: role === 'tenant' ? 'Hải Phòng' : 'Hà Nội',
-      })
+      const data = await uploadAndProcessCccd(imageBase64, role)
+      setKycForm(data)
       setCccdUploaded(true)
-      toast.success('Trích xuất OCR CCCD thành công (Mock)!')
     } finally {
       setIsOcrLoading(false)
     }
@@ -344,41 +286,6 @@ export function useProfile(): UseProfileReturn {
     )
   }
 
-  const handleNewMaintenanceTicket = (e: React.FormEvent): void => {
-    e.preventDefault()
-    if (!newTicketTitle.trim() || !newTicketDesc.trim()) return
-    const ticket: MaintenanceTicket = {
-      id: `TCK-${Date.now()}`,
-      title: newTicketTitle,
-      description: newTicketDesc,
-      status: 'pending',
-      createdAt: 'Vừa xong',
-    }
-    setMaintenanceTickets(prev => [ticket, ...prev])
-    setNewTicketTitle('')
-    setNewTicketDesc('')
-    toast.success('Đã gửi yêu cầu bảo trì sự cố thiết bị!', {
-      description:
-        'Chủ nhà và đội ngũ kỹ thuật sẽ được thông báo ngay lập tức.',
-    })
-  }
-
-  const handleApproveTicket = (id: string): void => {
-    setMaintenanceTickets(prev =>
-      prev.map(t =>
-        t.id === id ? { ...t, status: 'processing', cost: t.cost || 350000 } : t
-      )
-    )
-    const hash =
-      Math.random().toString(16).substring(2, 10) +
-      '27e3d09a25b18920138d89f2c1e8aa2206b7d8e9f0a1b2c3d4e5f6g7h8i9'
-    addBlockchainLog('MAINTENANCE_APPROVED_BY_LANDLORD', hash)
-    toast.success('Đã phê duyệt yêu cầu sửa chữa!', {
-      description:
-        'Hệ thống đã tự động liên hệ kỹ thuật viên đến bảo trì thiết bị.',
-    })
-  }
-
   const handleTerminateLease = (): void => {
     setLeaseTerminated(true)
     setEscrowBalance(0)
@@ -455,20 +362,6 @@ export function useProfile(): UseProfileReturn {
     toast.info(
       `Đã chuyển sang vai trò: ${newRole === 'tenant' ? 'Khách thuê' : 'Chủ nhà'}`
     )
-  }
-
-  const handleApproveAppointment = (id: string): void => {
-    setAppointments(prev =>
-      prev.map(a => (a.id === id ? { ...a, status: 'confirmed' } : a))
-    )
-    toast.success('Đã xác nhận lịch hẹn xem nhà!')
-  }
-
-  const handleRejectAppointment = (id: string): void => {
-    setAppointments(prev =>
-      prev.map(a => (a.id === id ? { ...a, status: 'rejected' } : a))
-    )
-    toast.info('Đã từ chối lịch hẹn xem nhà.')
   }
 
   const handleViewSignedContract = (): void => {

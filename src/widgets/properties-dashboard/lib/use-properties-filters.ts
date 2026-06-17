@@ -6,12 +6,15 @@ import {
   mockProjects,
   mockApartments,
   ApartmentItem,
+  type ApiProjectItem,
+  type ApiBuildingItem,
 } from '@/entities/properties'
 import { apiClient } from '@/shared/api/api-client'
 
 export function usePropertiesFilters() {
   const searchParams = useSearchParams()
   const tabParam = searchParams?.get('tab')
+  const buildingParam = searchParams?.get('building')
 
   const [activeTab, setActiveTab] = React.useState<'single' | 'project'>(
     tabParam === 'project' ? 'project' : 'single'
@@ -19,6 +22,20 @@ export function usePropertiesFilters() {
   const [searchKeyword, setSearchKeyword] = React.useState('')
   const [searchStatus, setSearchStatus] = React.useState('')
   const [selectedType, setSelectedType] = React.useState('Tất cả')
+
+  // Building filter state
+  const [selectedBuildingId, setSelectedBuildingId] = React.useState<
+    string | null
+  >(buildingParam || null)
+
+  React.useEffect(() => {
+    if (buildingParam) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedBuildingId(buildingParam)
+
+      setActiveTab('single')
+    }
+  }, [buildingParam])
 
   // State for fetched apartments
   const [apartments, setApartments] =
@@ -44,6 +61,80 @@ export function usePropertiesFilters() {
       active = false
     }
   }, [])
+
+  // ── State for fetched projects from backend ──
+  const [apiProjects, setApiProjects] = React.useState<ApiProjectItem[]>([])
+  const [isLoadingProjects, setIsLoadingProjects] = React.useState(false)
+
+  React.useEffect(() => {
+    let active = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsLoadingProjects(true)
+    apiClient
+      .get<ApiProjectItem[]>('/projects')
+      .then(data => {
+        if (active && data && Array.isArray(data)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const mapped = data.map((item: any) => ({
+            ...item,
+            id: item.id || item._id?.toString() || item._id,
+          }))
+          setApiProjects(mapped)
+        }
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.error(
+          'Failed to fetch projects from backend, falling back to mock data:',
+          err
+        )
+      })
+      .finally(() => {
+        if (active) setIsLoadingProjects(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  // ── State for fetched buildings (loaded when a project is selected) ──
+  const [selectedApiProjectId, setSelectedApiProjectId] = React.useState<
+    string | null
+  >(null)
+  const [apiBuildings, setApiBuildings] = React.useState<ApiBuildingItem[]>([])
+  const [isLoadingBuildings, setIsLoadingBuildings] = React.useState(false)
+
+  React.useEffect(() => {
+    if (!selectedApiProjectId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setApiBuildings([])
+      return
+    }
+    let active = true
+    setIsLoadingBuildings(true)
+    apiClient
+      .get<ApiBuildingItem[]>(`/buildings?projectId=${selectedApiProjectId}`)
+      .then(data => {
+        if (active && data && Array.isArray(data)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const mapped = data.map((item: any) => ({
+            ...item,
+            id: item.id || item._id?.toString() || item._id,
+          }))
+          setApiBuildings(mapped)
+        }
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch buildings for project:', err)
+      })
+      .finally(() => {
+        if (active) setIsLoadingBuildings(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [selectedApiProjectId])
 
   // Detailed Cascade Location States
   const [selectedCity, setSelectedCity] = React.useState('')
@@ -105,6 +196,7 @@ export function usePropertiesFilters() {
     setSelectedType('Tất cả')
     setSearchKeyword('')
     setSearchStatus('')
+    setSelectedBuildingId(null)
   }
 
   // Active filters count
@@ -202,6 +294,10 @@ export function usePropertiesFilters() {
   // Filter apartments
   const filteredApartments = React.useMemo(() => {
     return apartments.filter(apt => {
+      if (selectedBuildingId && apt.buildingId !== selectedBuildingId) {
+        return false
+      }
+
       if (searchKeyword.trim()) {
         const kw = searchKeyword.toLowerCase()
         const matchTitle = apt.title.toLowerCase().includes(kw)
@@ -296,6 +392,7 @@ export function usePropertiesFilters() {
     hasMediaOnly,
     selectedAmenities,
     apartments,
+    selectedBuildingId,
   ])
 
   const locationLabel = React.useMemo(() => {
@@ -386,5 +483,14 @@ export function usePropertiesFilters() {
     locationLabel,
     priceLabel,
     areaLabel,
+    // Backend API data for projects/buildings
+    apiProjects,
+    isLoadingProjects,
+    apiBuildings,
+    isLoadingBuildings,
+    selectedApiProjectId,
+    setSelectedApiProjectId,
+    selectedBuildingId,
+    setSelectedBuildingId,
   }
 }
