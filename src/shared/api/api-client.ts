@@ -38,6 +38,10 @@ export class ApiClient {
     return this.request<TData>(path, { method: 'POST', body })
   }
 
+  async patch<TData>(path: string, body: unknown): Promise<TData> {
+    return this.request<TData>(path, { method: 'PATCH', body })
+  }
+
   private async request<TData>(
     path: string,
     options: RequestOptions
@@ -79,7 +83,10 @@ export class ApiClient {
       if (refreshToken) {
         try {
           if (!refreshTokenPromise) {
-            refreshTokenPromise = (async () => {
+            refreshTokenPromise = (async (): Promise<{
+              accessToken: string
+              refreshToken: string
+            } | null> => {
               const refreshRes = await fetch(
                 createApiUrl(this.baseUrl, '/auth/refresh'),
                 {
@@ -149,7 +156,7 @@ export function createApiUrl(baseUrl: string, path: string): string {
 }
 
 export const apiClient = new ApiClient({
-  getAccessToken: () => {
+  getAccessToken: (): string | null => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('accessToken')
     }

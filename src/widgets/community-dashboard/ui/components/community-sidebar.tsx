@@ -3,9 +3,6 @@
 import * as React from 'react'
 
 interface CommunitySidebarProps {
-  isStaffDemo: boolean
-  setIsStaffDemo: (v: boolean) => void
-  pendingCount: number
   showMyPosts: boolean
   setShowMyPosts: (v: boolean) => void
   myTotalCount: number
@@ -14,9 +11,6 @@ interface CommunitySidebarProps {
 }
 
 export function CommunitySidebar({
-  isStaffDemo,
-  setIsStaffDemo,
-  pendingCount,
   showMyPosts,
   setShowMyPosts,
   myTotalCount,
@@ -155,37 +149,6 @@ export function CommunitySidebar({
             Tối đa 5 hình ảnh, dung lượng mỗi ảnh không quá 5MB.
           </li>
         </ul>
-      </div>
-
-      {/* Staff Demo Toggle */}
-      <div className="rounded-xl border border-dashed border-border bg-surface-muted/30 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-muted uppercase tracking-wider">
-              Demo Nhân viên
-            </span>
-            {pendingCount > 0 && (
-              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-bold text-white">
-                {pendingCount}
-              </span>
-            )}
-          </div>
-          <button
-            onClick={() => setIsStaffDemo(!isStaffDemo)}
-            className={`relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer ${
-              isStaffDemo ? 'bg-primary' : 'bg-border'
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                isStaffDemo ? 'left-[18px]' : 'left-0.5'
-              }`}
-            />
-          </button>
-        </div>
-        <p className="text-[10px] text-subtle mt-1.5">
-          Bật để xem giao diện kiểm duyệt bài viết chờ phê duyệt.
-        </p>
       </div>
     </div>
   )

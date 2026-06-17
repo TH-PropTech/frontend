@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
+import { apiClient } from '@/shared/api/api-client'
 
 export interface WebCommunityPost {
   id: string
   authorName: string
-  authorRole: 'tenant' | 'landlord' | 'staff'
+  authorRole: 'tenant' | 'landlord' | 'staff' | 'admin'
   authorAvatar: string
   title: string
   content: string
@@ -18,6 +19,25 @@ export interface WebCommunityPost {
   status: 'pending' | 'approved' | 'rejected'
   createdAt: string
   isOwn: boolean
+}
+
+interface BackendPostResponse {
+  _id?: string
+  id?: string
+  authorId?: string
+  authorName: string
+  authorRole?: 'tenant' | 'landlord' | 'staff' | 'admin'
+  authorAvatar?: string
+  title: string
+  content: string
+  projectName: string
+  topic: 'qa' | 'review' | 'roommate'
+  upvotes?: string[] | number
+  hasUpvoted?: boolean
+  commentsCount?: number
+  images?: string[]
+  status?: 'pending' | 'approved' | 'rejected'
+  createdAt?: string
 }
 
 const SEED_POSTS: WebCommunityPost[] = [
@@ -80,58 +100,31 @@ const SEED_POSTS: WebCommunityPost[] = [
     createdAt: '2 ngày trước',
     isOwn: false,
   },
-  {
-    id: 'wpost-own-1',
-    authorName: 'Nguyễn Thạch (Bạn)',
-    authorRole: 'tenant',
-    authorAvatar:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
-    title: 'Phí gửi xe ô tô tại Vinhomes Central Park bao nhiêu?',
-    content:
-      'Khách thuê hỏi phí gửi ô tô hầm là bao nhiêu/tháng? Có ai biết bảng giá mới nhất không ạ?',
-    projectName: 'Vinhomes Central Park',
-    topic: 'qa',
-    upvotes: 11,
-    hasUpvoted: false,
-    commentsCount: 7,
-    images: [],
-    status: 'approved',
-    createdAt: '3 ngày trước',
-    isOwn: true,
-  },
 ]
 
-const SEED_PENDING: WebCommunityPost[] = [
-  {
-    id: 'wpost-own-pending',
-    authorName: 'Nguyễn Thạch (Bạn)',
-    authorRole: 'tenant',
-    authorAvatar:
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
-    title: 'Có ai biết giá điện nước ở The Sun Avenue không?',
-    content:
-      'Mình mới ký hợp đồng thuê ở The Sun Avenue Q2. Giá điện nước BQL tính theo giá nhà nước hay riêng ạ?',
-    projectName: 'The Sun Avenue',
-    topic: 'qa',
-    upvotes: 0,
-    hasUpvoted: false,
-    commentsCount: 0,
-    images: [],
-    status: 'pending',
-    createdAt: 'Vừa xong',
-    isOwn: true,
-  },
-]
+function formatTimeAgo(dateStr: string): string {
+  try {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    if (diffMs < 0) return 'Vừa xong'
+    const diffMins = Math.floor(diffMs / (1000 * 60))
+    if (diffMins < 1) return 'Vừa xong'
+    if (diffMins < 60) return `${diffMins} phút trước`
+    const diffHours = Math.floor(diffMins / 60)
+    if (diffHours < 24) return `${diffHours} giờ trước`
+    const diffDays = Math.floor(diffHours / 24)
+    return `${diffDays} ngày trước`
+  } catch {
+    return 'Vừa xong'
+  }
+}
 
 export function useWebCommunity() {
-  const [posts, setPosts] = useState<WebCommunityPost[]>([
-    ...SEED_PENDING,
-    ...SEED_POSTS,
-  ])
+  const [posts, setPosts] = useState<WebCommunityPost[]>([])
   const [topicFilter, setTopicFilter] = useState<
     'all' | 'qa' | 'review' | 'roommate'
   >('all')
-  const [isStaffDemo, setIsStaffDemo] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showMyPosts, setShowMyPosts] = useState(false)
 
@@ -144,12 +137,123 @@ export function useWebCommunity() {
   const [errorMsg, setErrorMsg] = useState('')
   const [successMsg, setSuccessMsg] = useState('')
 
+  // Get current user from localStorage
+  const currentUser = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    const stored = localStorage.getItem('user')
+    if (!stored) return null
+    try {
+      return JSON.parse(stored)
+    } catch {
+      return null
+    }
+  }, [])
+
+  const userId = currentUser?._id || currentUser?.id || ''
+
+  const mapPost = useCallback(
+    (p: BackendPostResponse): WebCommunityPost => {
+      const authorRoleVal = p.authorRole || 'tenant'
+      return {
+        id: p._id || p.id || '',
+        authorName: p.authorName,
+        authorRole: authorRoleVal === 'admin' ? 'staff' : authorRoleVal,
+        authorAvatar:
+          p.authorAvatar ||
+          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
+        title: p.title,
+        content: p.content,
+        projectName: p.projectName,
+        topic: p.topic,
+        upvotes: Array.isArray(p.upvotes) ? p.upvotes.length : p.upvotes || 0,
+        hasUpvoted: Array.isArray(p.upvotes)
+          ? p.upvotes.includes(userId)
+          : !!p.hasUpvoted,
+        commentsCount: p.commentsCount || 0,
+        images: p.images || [],
+        status: p.status || 'approved',
+        createdAt: p.createdAt ? formatTimeAgo(p.createdAt) : 'Vừa xong',
+        isOwn: p.authorId === userId,
+      }
+    },
+    [userId]
+  )
+
+  // Load posts from API
+  const loadPosts = useCallback(async () => {
+    try {
+      const path =
+        topicFilter === 'all'
+          ? '/community/posts'
+          : `/community/posts?topic=${topicFilter}`
+      const fetched: BackendPostResponse[] = await apiClient.get(path)
+
+      let mapped = fetched.map(mapPost)
+
+      // Fetch own posts to get their latest statuses
+      if (userId) {
+        try {
+          const own: BackendPostResponse[] = await apiClient.get(
+            '/community/posts/my'
+          )
+          const mappedOwn = own.map(mapPost)
+          // Add own posts that are not approved yet to feed
+          mapped = [
+            ...mappedOwn.filter(p => p.status !== 'approved'),
+            ...mapped,
+          ]
+        } catch (e) {
+          console.warn('Failed to fetch own posts from API:', e)
+        }
+      }
+
+      setPosts(mapped)
+    } catch (error) {
+      console.warn(
+        'Failed to fetch community posts from API, falling back to mock state:',
+        error
+      )
+      // Fallback to seeds
+      const initialOwnPost: WebCommunityPost = {
+        id: 'wpost-own-pending',
+        authorName: currentUser?.fullName || 'Nguyễn Thạch (Bạn)',
+        authorRole: currentUser?.role || 'tenant',
+        authorAvatar:
+          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
+        title: 'Có ai biết giá điện nước ở The Sun Avenue không?',
+        content:
+          'Mình mới ký hợp đồng thuê ở The Sun Avenue Q2. Giá điện nước BQL tính theo giá nhà nước hay riêng ạ?',
+        projectName: 'The Sun Avenue',
+        topic: 'qa',
+        upvotes: 0,
+        hasUpvoted: false,
+        commentsCount: 0,
+        images: [],
+        status: 'pending',
+        createdAt: 'Vừa xong',
+        isOwn: true,
+      }
+      setPosts([initialOwnPost, ...SEED_POSTS])
+    }
+  }, [topicFilter, userId, currentUser, mapPost])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadPosts()
+  }, [loadPosts])
+
   const approvedPosts = useMemo(() => {
-    let filtered = posts.filter(p => p.status === 'approved')
-    if (showMyPosts) filtered = filtered.filter(p => p.isOwn)
-    if (topicFilter !== 'all')
-      filtered = filtered.filter(p => p.topic === topicFilter)
-    return filtered
+    if (showMyPosts) {
+      let filtered = posts.filter(p => p.isOwn)
+      if (topicFilter !== 'all')
+        filtered = filtered.filter(p => p.topic === topicFilter)
+      return filtered
+    } else {
+      let filtered = posts.filter(p => p.status === 'approved')
+      if (topicFilter !== 'all')
+        filtered = filtered.filter(p => p.topic === topicFilter)
+      return filtered
+    }
   }, [posts, topicFilter, showMyPosts])
 
   const pendingPosts = useMemo(
@@ -196,7 +300,7 @@ export function useWebCommunity() {
   }, [])
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault()
       setErrorMsg('')
       setSuccessMsg('')
@@ -208,56 +312,94 @@ export function useWebCommunity() {
         setErrorMsg('Vui lòng gắn thẻ tên dự án/chung cư.')
         return
       }
-      const newPost: WebCommunityPost = {
-        id: `wpost-${Date.now()}`,
-        authorName: 'Nguyễn Thạch (Bạn)',
-        authorRole: 'tenant',
-        authorAvatar:
-          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
-        title,
-        content,
-        projectName: projectName.trim(),
-        topic,
-        upvotes: 0,
-        hasUpvoted: false,
-        commentsCount: 0,
-        images,
-        status: 'pending',
-        createdAt: 'Vừa xong',
-        isOwn: true,
+
+      try {
+        const payload = {
+          title,
+          content,
+          projectName: projectName.trim(),
+          topic,
+          images,
+          tags: [],
+        }
+        const createdPost = await apiClient.post<BackendPostResponse>(
+          '/community/posts',
+          payload
+        )
+        const mapped = mapPost(createdPost)
+        setPosts(prev => [mapped, ...prev])
+        setSuccessMsg('Bài viết đã gửi thành công! Đang chờ kiểm duyệt.')
+      } catch (error) {
+        console.warn(
+          'API submission failed, using local state fallback:',
+          error
+        )
+        // Fallback
+        const newPost: WebCommunityPost = {
+          id: `wpost-${Date.now()}`,
+          authorName: currentUser?.fullName || 'Nguyễn Thạch (Bạn)',
+          authorRole: currentUser?.role || 'tenant',
+          authorAvatar:
+            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
+          title,
+          content,
+          projectName: projectName.trim(),
+          topic,
+          upvotes: 0,
+          hasUpvoted: false,
+          commentsCount: 0,
+          images,
+          status: 'pending',
+          createdAt: 'Vừa xong',
+          isOwn: true,
+        }
+        setPosts(prev => [newPost, ...prev])
+        setSuccessMsg(
+          'Bài viết đã gửi thành công! Đang chờ kiểm duyệt (Fallback).'
+        )
       }
-      setPosts(prev => [newPost, ...prev])
+
       setTitle('')
       setContent('')
       setProjectName('')
       setImages([])
       setShowCreateModal(false)
-      setSuccessMsg('Bài viết đã gửi thành công! Đang chờ kiểm duyệt.')
       setTimeout(() => setSuccessMsg(''), 5000)
     },
-    [title, content, topic, projectName, images]
+    [title, content, topic, projectName, images, currentUser, mapPost]
   )
 
-  const handleApprove = useCallback((id: string) => {
-    setPosts(prev =>
-      prev.map(p => (p.id === id ? { ...p, status: 'approved' as const } : p))
-    )
-  }, [])
+  const handleUpvote = useCallback(
+    async (id: string) => {
+      try {
+        const updatedPost = await apiClient.patch<BackendPostResponse>(
+          `/community/posts/${id}/upvote`,
+          {}
+        )
+        const mapped = mapPost(updatedPost)
+        setPosts(prev => prev.map(p => (p.id === id ? mapped : p)))
+      } catch (error) {
+        console.warn('API Upvote failed, fallback to local state:', error)
+        setPosts(prev =>
+          prev.map(p => {
+            if (p.id !== id) return p
+            return p.hasUpvoted
+              ? { ...p, upvotes: p.upvotes - 1, hasUpvoted: false }
+              : { ...p, upvotes: p.upvotes + 1, hasUpvoted: true }
+          })
+        )
+      }
+    },
+    [mapPost]
+  )
 
-  const handleReject = useCallback((id: string) => {
+  const handleCommentAdded = useCallback((postId: string) => {
     setPosts(prev =>
-      prev.map(p => (p.id === id ? { ...p, status: 'rejected' as const } : p))
-    )
-  }, [])
-
-  const handleUpvote = useCallback((id: string) => {
-    setPosts(prev =>
-      prev.map(p => {
-        if (p.id !== id) return p
-        return p.hasUpvoted
-          ? { ...p, upvotes: p.upvotes - 1, hasUpvoted: false }
-          : { ...p, upvotes: p.upvotes + 1, hasUpvoted: true }
-      })
+      prev.map(p =>
+        p.id === postId
+          ? { ...p, commentsCount: (p.commentsCount || 0) + 1 }
+          : p
+      )
     )
   }, [])
 
@@ -266,8 +408,6 @@ export function useWebCommunity() {
     pendingPosts,
     topicFilter,
     setTopicFilter,
-    isStaffDemo,
-    setIsStaffDemo,
     showCreateModal,
     setShowCreateModal,
     showMyPosts,
@@ -289,8 +429,7 @@ export function useWebCommunity() {
     handleAddImage,
     handleRemoveImage,
     handleSubmit,
-    handleApprove,
-    handleReject,
     handleUpvote,
+    handleCommentAdded,
   }
 }

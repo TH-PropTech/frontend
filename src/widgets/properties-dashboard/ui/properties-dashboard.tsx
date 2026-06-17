@@ -12,6 +12,7 @@ import { PropertiesSearchConsole } from './components/properties-search-console'
 import { ApiProjectCard } from './components/api-project-card'
 import { AdvancedDrawer } from './components/advanced-drawer'
 import { PropertiesMap } from './components/properties-map'
+import { SelectedProjectHeader } from './components/selected-project-header'
 
 export function PropertiesDashboard(): React.ReactElement {
   const {
@@ -315,57 +316,10 @@ export function PropertiesDashboard(): React.ReactElement {
             /* ── Drill-down: Show buildings for the selected project ── */
             <div>
               {/* Selected Project Header */}
-              {(() => {
-                const selectedProj = apiProjects.find(
-                  p => p.id === selectedApiProjectId
-                )
-                if (!selectedProj) return null
-                return (
-                  <div className="mb-8 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5 p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                      <div>
-                        <h3 className="font-marketing text-xl font-bold text-fg">
-                          {selectedProj.name}
-                        </h3>
-                        <p className="mt-1 font-body text-xs text-muted flex items-center gap-1.5">
-                          <svg
-                            className="h-3.5 w-3.5 shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z"
-                            />
-                          </svg>
-                          {selectedProj.location}
-                        </p>
-                        <p className="mt-1 text-[11px] font-semibold text-primary">
-                          Chủ đầu tư: {selectedProj.investor}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedProj.amenities.slice(0, 4).map(a => (
-                          <span
-                            key={a}
-                            className="rounded-full bg-white/80 border border-border text-muted px-3 py-1 text-[10px] font-semibold"
-                          >
-                            {a}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })()}
+              <SelectedProjectHeader
+                selectedApiProjectId={selectedApiProjectId}
+                apiProjects={apiProjects}
+              />
 
               {isLoadingBuildings ? (
                 <div className="text-center py-20">
