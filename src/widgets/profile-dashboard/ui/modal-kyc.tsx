@@ -94,6 +94,7 @@ export function ModalKyc({
       .replace('₫', 'đ')
 
   React.useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
     if (cccdUploaded && kycForm.address) {
       const addr = kycForm.address.toLowerCase()
       let district = 'Bình Thạnh'
@@ -109,10 +110,12 @@ export function ModalKyc({
       else if (addr.includes('quận 7') || addr.includes('q.7'))
         district = 'Quận 7'
 
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setPreferredDistrict(district)
       }, 0)
-      return () => clearTimeout(timer)
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
     }
   }, [cccdUploaded, kycForm.address])
 
