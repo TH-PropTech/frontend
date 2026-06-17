@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { apiClient } from '@/shared/api/api-client'
 import { VrPreviewPanel } from './components/vr-preview-panel'
 
 interface Property {
@@ -15,44 +16,26 @@ interface Property {
   vrUrl: string
 }
 
-const mockProperties: Property[] = [
-  {
-    id: 'PROP-101',
-    title: 'Căn hộ Studio Vinhomes Grand Park',
-    address: 'Phân khu Rainbow, Quận 9, TP.HCM',
-    price: '6.5 triệu / tháng',
-    landlord: 'Nguyễn Văn Hoàng',
-    phone: '0912 345 678',
-    documents: ['Sổ hồng số 129038/SH', 'Giấy tờ sở hữu căn hộ chính chủ'],
-    status: 'pending',
-    vrUrl: 'https://panoramas.example.com/grandpark-studio',
-  },
-  {
-    id: 'PROP-102',
-    title: 'Căn hộ 2PN Landmark 81 Luxury',
-    address: 'Tầng 42, Vinhomes Central Park, Bình Thạnh, TP.HCM',
-    price: '35 triệu / tháng',
-    landlord: 'Lê Đình Quốc Khánh',
-    phone: '0988 777 666',
-    documents: ['Hợp đồng mua bán căn hộ LH-8102', 'Ủy quyền quản lý tài sản'],
-    status: 'pending',
-    vrUrl: 'https://panoramas.example.com/lm81-luxury',
-  },
-  {
-    id: 'PROP-103',
-    title: 'Căn hộ Horizon Sunshine 1PN',
-    address: 'Số 10 Mai Chí Thọ, Quận 2, TP.HCM',
-    price: '11 triệu / tháng',
-    landlord: 'Trần Minh Quân',
-    phone: '0909 123 456',
-    documents: ['Sổ hồng chung cư Horizon'],
-    status: 'approved',
-    vrUrl: 'https://panoramas.example.com/horizon-1pn',
-  },
-]
+interface BackendApartmentResponse {
+  id: string
+  title: string
+  category: string
+  location: string
+  price: string
+  status: string
+  isVerified: boolean
+  images360?: string[]
+  gallery?: string[]
+  vrUrl?: string
+  landlord?: {
+    fullName: string
+    phone: string
+  } | null
+}
 
 export function PropertyApprovalsView(): React.ReactElement {
-  const [properties, setProperties] = React.useState<Property[]>(mockProperties)
+  const [properties, setProperties] = React.useState<Property[]>([])
+  const [loading, setLoading] = React.useState(true)
   const [selectedProp, setSelectedProp] = React.useState<Property | null>(null)
   const [rejectReason, setRejectReason] = React.useState('')
   const [showRejectDialog, setShowRejectDialog] = React.useState(false)
@@ -60,25 +43,99 @@ export function PropertyApprovalsView(): React.ReactElement {
     'all' | 'pending' | 'approved' | 'rejected'
   >('pending')
 
+  const mapProperty = React.useCallback(
+    (apt: BackendApartmentResponse): Property => {
+      let mappedStatus: 'pending' | 'approved' | 'rejected' = 'pending'
+      if (apt.status === 'available') {
+        mappedStatus = 'approved'
+      } else if (apt.status === 'unavailable') {
+        mappedStatus = 'rejected'
+      }
+
+      return {
+        id: apt.id || '',
+        title: apt.title || '',
+        address: apt.location || '',
+        price: apt.price || 'Chưa cập nhật',
+        landlord: apt.landlord?.fullName || 'Chủ nhà TH PropTech',
+        phone: apt.landlord?.phone || 'Chưa cung cấp',
+        documents: [
+          'Giấy chứng nhận quyền sở hữu nhà ở',
+          'Bản quét hồ sơ pháp lý căn hộ',
+        ],
+        status: mappedStatus,
+        vrUrl: apt.vrUrl || 'https://panoramas.example.com/tour',
+      }
+    },
+    []
+  )
+
+  const loadProperties = React.useCallback(async () => {
+    setLoading(true)
+    try {
+      const data =
+        await apiClient.get<BackendApartmentResponse[]>('/apartments')
+      setProperties(data.map(mapProperty))
+    } catch (err) {
+      console.error('Failed to load apartments for moderation:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [mapProperty])
+
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadProperties()
+  }, [loadProperties])
+
+  const handleApprove = async (id: string): Promise<void> => {
+    try {
+      await apiClient.patch(`/apartments/${id}/status`, {
+        status: 'available',
+        isVerified: true,
+      })
+      setProperties(prev =>
+        prev.map(p => (p.id === id ? { ...p, status: 'approved' } : p))
+      )
+      setSelectedProp(null)
+    } catch (err) {
+      console.error('Failed to approve apartment:', err)
+      if (typeof window !== 'undefined') {
+        window.alert('Không thể phê duyệt căn hộ. Vui lòng thử lại.')
+      }
+    }
+  }
+
+  const handleReject = async (id: string): Promise<void> => {
+    try {
+      await apiClient.patch(`/apartments/${id}/status`, {
+        status: 'unavailable',
+        isVerified: false,
+      })
+      setProperties(prev =>
+        prev.map(p => (p.id === id ? { ...p, status: 'rejected' } : p))
+      )
+      setShowRejectDialog(false)
+      setSelectedProp(null)
+      setRejectReason('')
+    } catch (err) {
+      console.error('Failed to reject apartment:', err)
+      if (typeof window !== 'undefined') {
+        window.alert('Không thể từ chối căn hộ. Vui lòng thử lại.')
+      }
+    }
+  }
+
   const filteredProps = properties.filter(
     p => filter === 'all' || p.status === filter
   )
 
-  const handleApprove = (id: string): void => {
-    setProperties(prev =>
-      prev.map(p => (p.id === id ? { ...p, status: 'approved' } : p))
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
     )
-    setSelectedProp(null)
-  }
-
-  const handleReject = (id: string): void => {
-    if (!rejectReason.trim()) return
-    setProperties(prev =>
-      prev.map(p => (p.id === id ? { ...p, status: 'rejected' } : p))
-    )
-    setShowRejectDialog(false)
-    setSelectedProp(null)
-    setRejectReason('')
   }
 
   return (

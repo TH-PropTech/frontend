@@ -52,7 +52,6 @@ export function PropertyDetail(): React.ReactElement {
         }
       })
       .catch(err => {
-        // eslint-disable-next-line no-console
         console.error('Failed to fetch property details:', err)
         const fallback =
           mockApartments.find(apt => apt.id === propertyId) || mockApartments[0]
