@@ -1,19 +1,19 @@
 'use client'
- 
+
 import * as React from 'react'
 import type { ApiProjectItem } from '@/entities/properties'
- 
+
 export interface ApiProjectCardProps {
   project: ApiProjectItem
   onSelect: () => void
 }
- 
+
 export function ApiProjectCard({
   project,
   onSelect,
 }: ApiProjectCardProps): React.ReactElement {
   const imageUrl = project.images[0] ?? null
- 
+
   return (
     <article
       className="group cursor-pointer rounded-2xl border border-border bg-white overflow-hidden shadow-sm hover:translate-y-[-4px] hover:border-primary/40 hover:shadow-lg transition-all duration-300"
@@ -52,24 +52,24 @@ export function ApiProjectCard({
             </svg>
           </div>
         )}
- 
+
         {/* Tag */}
         <span className="absolute top-3 left-3 rounded-full bg-primary/90 text-white px-3 py-1 text-[10px] font-bold shadow-sm">
           Dự án
         </span>
- 
+
         {/* Investor badge */}
         <span className="absolute bottom-3 left-3 rounded-full bg-white/90 backdrop-blur-sm text-fg px-3 py-1 text-[10px] font-bold shadow-sm">
           {project.investor}
         </span>
       </div>
- 
+
       {/* Content Section */}
       <div className="p-5">
         <h3 className="font-marketing text-lg font-bold text-fg leading-tight group-hover:text-primary transition-colors">
           {project.name}
         </h3>
- 
+
         <p className="mt-1.5 font-body text-xs text-muted flex items-center gap-1.5">
           <svg
             className="h-3.5 w-3.5 text-muted shrink-0"
@@ -91,13 +91,13 @@ export function ApiProjectCard({
           </svg>
           {project.location}
         </p>
- 
+
         {project.description && (
           <p className="mt-2.5 font-body text-xs text-fg/70 leading-relaxed line-clamp-2">
             {project.description}
           </p>
         )}
- 
+
         {/* Amenities */}
         {project.amenities.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -116,7 +116,7 @@ export function ApiProjectCard({
             )}
           </div>
         )}
- 
+
         {/* Footer */}
         <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
           <span className="text-[10px] font-bold text-muted uppercase tracking-wider">
