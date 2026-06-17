@@ -42,6 +42,13 @@ export class ApiClient {
     return this.request<TData>(path, { method: 'PATCH', body })
   }
 
+  async delete<TData>(
+    path: string,
+    options: RequestOptions = {}
+  ): Promise<TData> {
+    return this.request<TData>(path, { ...options, method: 'DELETE' })
+  }
+
   private async request<TData>(
     path: string,
     options: RequestOptions

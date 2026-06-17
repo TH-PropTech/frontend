@@ -28,16 +28,29 @@ interface PostCardProps {
   post: WebCommunityPost
   onUpvote: (id: string) => void
   onCommentAdded?: (id: string) => void
+  onDeletePost?: (id: string) => void
+  onCommentRemoved?: (id: string) => void
+  currentUser?: { roles?: string[] } | null
 }
 
 export function PostCard({
   post,
   onUpvote,
   onCommentAdded,
+  onDeletePost,
+  onCommentRemoved,
+  currentUser,
 }: PostCardProps): React.ReactElement {
   const [showComments, setShowComments] = React.useState(false)
   const role = ROLE_CONFIG[post.authorRole]
   const topic = TOPIC_CONFIG[post.topic]
+
+  const isStaffOrAdmin = React.useMemo(() => {
+    if (!currentUser?.roles) return false
+    return currentUser.roles.some(
+      r => r.toLowerCase() === 'staff' || r.toLowerCase() === 'admin'
+    )
+  }, [currentUser])
 
   return (
     <article className="group rounded-2xl border border-border bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:border-primary/15 transition-all duration-300">
@@ -64,11 +77,25 @@ export function PostCard({
           </div>
         </div>
 
-        <span
-          className={`rounded-full border px-3 py-1 text-[10px] font-bold ${topic.className}`}
-        >
-          {topic.label}
-        </span>
+        <div className="flex items-center gap-2.5">
+          {isStaffOrAdmin && (
+            <button
+              onClick={() => {
+                if (window.confirm('Bạn có chắc chắn muốn gỡ bài viết này?')) {
+                  onDeletePost?.(post.id)
+                }
+              }}
+              className="rounded-lg bg-danger/10 border border-danger/20 hover:bg-danger/20 text-danger px-2.5 py-1 text-[10px] font-bold transition-all cursor-pointer"
+            >
+              Gỡ bài
+            </button>
+          )}
+          <span
+            className={`rounded-full border px-3 py-1 text-[10px] font-bold ${topic.className}`}
+          >
+            {topic.label}
+          </span>
+        </div>
       </div>
 
       {/* Content */}
@@ -167,6 +194,8 @@ export function PostCard({
         <CommentsSection
           postId={post.id}
           onCommentAdded={() => onCommentAdded?.(post.id)}
+          onCommentRemoved={() => onCommentRemoved?.(post.id)}
+          currentUser={currentUser}
         />
       )}
     </article>
