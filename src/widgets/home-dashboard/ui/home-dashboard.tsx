@@ -1,6 +1,8 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
+import type { Route } from 'next'
 import { HomeHeader } from './home-header'
 import { Footer } from '@/shared/ui/footer'
 import { HeroSection } from './components/hero-section'
@@ -22,6 +24,27 @@ import { NewsletterSection } from './components/newsletter-section'
 import { FinalCtaBanner } from './components/final-cta-banner'
 
 export function HomeDashboard(): React.ReactElement {
+  const [user, setUser] = React.useState<{
+    name: string
+    kycStatus: string
+  } | null>(null)
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('user')
+        if (stored) {
+          const timer = setTimeout(() => {
+            setUser(JSON.parse(stored))
+          }, 0)
+          return () => clearTimeout(timer)
+        }
+      } catch {
+        // Ignore JSON parse error
+      }
+    }
+  }, [])
+
   return (
     <div className="relative min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary">
       {/* Topography SVG Background (fixed background overlay, extremely lightweight & hardware accelerated) */}
@@ -124,6 +147,47 @@ export function HomeDashboard(): React.ReactElement {
       {/* Main Content Areas */}
       <main className="w-full">
         <HeroSection />
+        {user && user.kycStatus !== 'verified' && (
+          <div className="w-full bg-[#faf7f2] py-8 border-b border-[#e3d8d0]/60 relative z-20">
+            <div className="max-w-6xl mx-auto px-6 md:px-10">
+              <div className="bg-[#fffdf9] border border-[#e3d8d0] rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-[#f5e3dc] rounded-xl text-[#c65a3a] shrink-0">
+                    <svg
+                      className="h-6 w-6"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-base font-bold text-[#2b211e] font-display">
+                      Yêu cầu xác minh danh tính (KYC)
+                    </h3>
+                    <p className="text-sm text-[#7a6a61] font-body mt-1 leading-relaxed">
+                      Tài khoản của bạn chưa được xác minh danh tính. Vui lòng
+                      hoàn tất xác thực CCCD để mở khóa toàn bộ tính năng và
+                      tham gia giao dịch ký kết hợp đồng thuê nhà.
+                    </p>
+                  </div>
+                </div>
+                <Link href={'/profile?kyc=true' as Route} className="shrink-0">
+                  <button
+                    type="button"
+                    className="bg-[#c65a3a] hover:bg-[#9f3f2a] text-white font-bold rounded-full px-6 py-2.5 transition-all text-xs cursor-pointer shadow-md shadow-[#c65a3a]/15 hover:shadow-lg active:scale-95"
+                  >
+                    Xác minh ngay
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
         <PlatformOverview />
         <FeaturedApartments />
         <ComparisonSection />
