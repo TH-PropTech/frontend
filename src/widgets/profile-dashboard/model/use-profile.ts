@@ -89,14 +89,17 @@ export function useProfile(): UseProfileReturn {
   const [cccdUploaded, setCccdUploaded] = React.useState(false)
 
   React.useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       if (params.get('kyc') === 'true' && !isKycVerified) {
-        const timer = setTimeout(() => {
+        timer = setTimeout(() => {
           setShowKycModal(true)
         }, 0)
-        return () => clearTimeout(timer)
       }
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
     }
   }, [isKycVerified])
 

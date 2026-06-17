@@ -30,18 +30,21 @@ export function HomeDashboard(): React.ReactElement {
   } | null>(null)
 
   React.useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('user')
         if (stored) {
-          const timer = setTimeout(() => {
+          timer = setTimeout(() => {
             setUser(JSON.parse(stored))
           }, 0)
-          return () => clearTimeout(timer)
         }
       } catch {
         // Ignore JSON parse error
       }
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
     }
   }, [])
 
