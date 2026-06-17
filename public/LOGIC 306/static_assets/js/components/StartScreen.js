@@ -1,11 +1,11 @@
 export class StartScreen extends HTMLElement {
-	constructor() {
-		super();
+  constructor() {
+    super()
 
-		this.dataset.startScreen = "";
-		this.className =
-			"fixed inset-0 background-start-screen z-[99] flex flex-row justify-center items-center text-white transition-opacity duration-500";
-		this.innerHTML = `
+    this.dataset.startScreen = ''
+    this.className =
+      'fixed inset-0 background-start-screen z-[99] flex flex-row justify-center items-center text-white transition-opacity duration-500'
+    this.innerHTML = `
             <div class="flex flex-col justify-center items-center pb-12">
                 <div id="img_logo">
                     <img data-logo='secondaryLogo' src="./static_assets/logo/full-white.png" alt="" style="height: 150px; width: 300px; object-fit: contain;" />
@@ -19,32 +19,38 @@ export class StartScreen extends HTMLElement {
                     <p class="text description">Nhấn chuột trái vào nút khởi hành để bắt đầu </p>
                 </div>
             </div>
-        `;
+        `
 
-		this.querySelector("[data-controller='startButton']").addEventListener("click", () => {
-			const event = new CustomEvent("start-screen-click", { bubbles: true, composed: true });
-			this.dispatchEvent(event);
-			this.classList.toggle("opacity-0", true);
-			setTimeout(() => {
-				this.remove();
-			}, 501);
-		});
-	}
+    this.querySelector("[data-controller='startButton']").addEventListener(
+      'click',
+      () => {
+        const event = new CustomEvent('start-screen-click', {
+          bubbles: true,
+          composed: true,
+        })
+        this.dispatchEvent(event)
+        this.classList.toggle('opacity-0', true)
+        setTimeout(() => {
+          this.remove()
+        }, 501)
+      }
+    )
+  }
 
-	static show() {
-		const startScreen = document.querySelector("start-screen");
-		if (!startScreen) {
-			const newStartScreen = document.createElement("start-screen");
-			document.body.appendChild(newStartScreen);
-		}
-	}
+  static show() {
+    const startScreen = document.querySelector('start-screen')
+    if (!startScreen) {
+      const newStartScreen = document.createElement('start-screen')
+      document.body.appendChild(newStartScreen)
+    }
+  }
 
-	static remove() {
-		const startScreen = document.querySelector("start-screen");
-		if (startScreen) {
-			startScreen.remove();
-		}
-	}
+  static remove() {
+    const startScreen = document.querySelector('start-screen')
+    if (startScreen) {
+      startScreen.remove()
+    }
+  }
 }
 
-customElements.define("start-screen", StartScreen);
+customElements.define('start-screen', StartScreen)

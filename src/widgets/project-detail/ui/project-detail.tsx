@@ -181,7 +181,7 @@ export function ProjectDetail(): React.ReactElement {
             </ul>
           </div>
         </section>
- 
+
         {/* 3D Building Overview Section */}
         <section className="mx-auto max-w-6xl px-6 py-8 md:px-10">
           <div className="space-y-2 text-left mb-6">
@@ -192,7 +192,8 @@ export function ProjectDetail(): React.ReactElement {
               Sa bàn 3D Dự án & Tòa nhà
             </h2>
             <p className="font-body text-xs text-muted">
-              Xoay và tương tác với cấu trúc 3D mô phỏng quy hoạch tổng thể của tòa nhà để có góc nhìn chân thực nhất.
+              Xoay và tương tác với cấu trúc 3D mô phỏng quy hoạch tổng thể của
+              tòa nhà để có góc nhìn chân thực nhất.
             </p>
           </div>
           <div className="rounded-3xl border border-border bg-white p-4 shadow-sm overflow-hidden h-[600px] relative">
@@ -234,9 +235,22 @@ export function ProjectDetail(): React.ReactElement {
                     }}
                     className="rounded-full bg-primary/10 border border-primary/25 px-3 py-1 text-[11px] font-bold text-primary hover:bg-primary/20 transition-all flex items-center gap-1"
                   >
-                    <span>Lọc: {selectedBlock ? `${selectedBlock} - ` : ''}Tầng {selectedFloor}</span>
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    <span>
+                      Lọc: {selectedBlock ? `${selectedBlock} - ` : ''}Tầng{' '}
+                      {selectedFloor}
+                    </span>
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 )}
