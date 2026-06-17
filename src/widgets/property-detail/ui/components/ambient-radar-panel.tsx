@@ -64,8 +64,8 @@ export function AmbientRadarPanel({
         </button>
       </h3>
       <p className="font-body text-sm text-muted-foreground font-medium leading-relaxed text-left">
-        Các chỉ số được đo lường thực tế dựa trên vị trí địa lý của căn hộ
-        trong tòa nhà chung cư.
+        Các chỉ số được đo lường thực tế dựa trên vị trí địa lý của căn hộ trong
+        tòa nhà chung cư.
       </p>
 
       <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 border border-border rounded-2xl p-6 bg-surface-muted/20">

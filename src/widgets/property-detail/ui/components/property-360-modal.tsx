@@ -55,14 +55,16 @@ export function Property360Modal({
   const toggleFullscreen = React.useCallback((): void => {
     if (!modalRef.current) return
     if (!document.fullscreenElement) {
-      modalRef.current.requestFullscreen()
+      modalRef.current
+        .requestFullscreen()
         .then(() => setIsFullscreen(true))
         .catch(err => {
           // eslint-disable-next-line no-console
           console.error('Không thể bật toàn màn hình:', err)
         })
     } else {
-      document.exitFullscreen()
+      document
+        .exitFullscreen()
         .then(() => setIsFullscreen(false))
         .catch(err => {
           // eslint-disable-next-line no-console
@@ -80,8 +82,6 @@ export function Property360Modal({
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
     }
   }, [])
-
-
 
   // Cleanup WebGL resources on unmount
   React.useEffect(() => {
@@ -130,7 +130,8 @@ export function Property360Modal({
       const x = (vector.x * 0.5 + 0.5) * width
       const y = (-vector.y * 0.5 + 0.5) * height
 
-      const visible = dot > 0.35 && x >= 0 && x <= width && y >= 0 && y <= height
+      const visible =
+        dot > 0.35 && x >= 0 && x <= width && y >= 0 && y <= height
 
       if (visible) {
         el.style.left = `${x}px`
@@ -225,8 +226,6 @@ export function Property360Modal({
       if (!cameraRef.current || !rendererRef.current || !sceneRef.current)
         return
 
-
-
       // Smooth camera rotation
       if (!isUserInteracting.current && isAutoRotateRef.current) {
         lon.current += 0.05 // auto slow rotation when idle (slower and smoother)
@@ -258,7 +257,7 @@ export function Property360Modal({
 
   React.useEffect(() => {
     if (!isOpen) return
-    
+
     // Reset interaction state on open to ensure immediate rotation
     isUserInteracting.current = false
     lon.current = 0
@@ -271,7 +270,13 @@ export function Property360Modal({
   // Load a new room panorama texture
   const switchRoom = React.useCallback(
     (index: number, yaw?: number, pitch?: number): void => {
-      if (index === currentRoomIndex || loading || !sphereRef.current || !cameraRef.current) return
+      if (
+        index === currentRoomIndex ||
+        loading ||
+        !sphereRef.current ||
+        !cameraRef.current
+      )
+        return
 
       setLoading(true)
 
@@ -365,7 +370,9 @@ export function Property360Modal({
 
                   if (dir) {
                     // Smoothly slide camera back to (0, 0, 0)
-                    camera.position.copy(dir).multiplyScalar(-60 * (1.0 - arriveProgress))
+                    camera.position
+                      .copy(dir)
+                      .multiplyScalar(-60 * (1.0 - arriveProgress))
                     // Restore FOV back to 70
                     camera.fov = 95 - arriveProgress * 25
                     camera.updateProjectionMatrix()
@@ -432,7 +439,9 @@ export function Property360Modal({
       ref={modalRef}
       className="fixed inset-0 z-[100] bg-black select-none flex flex-col font-sans"
     >
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @keyframes floatBar {
           0%, 100% { transform: scaleY(0.4); }
           50% { transform: scaleY(1.2); }
@@ -449,7 +458,9 @@ export function Property360Modal({
           animation: floatBar 0.7s ease-in-out infinite 0.3s;
           transform-origin: bottom;
         }
-      ` }} />
+      `,
+        }}
+      />
 
       {/* 360 Viewport Container */}
       <div
@@ -532,7 +543,10 @@ export function Property360Modal({
             }`}
             title={isAutoRotate ? 'Tắt tự động xoay' : 'Bật tự động xoay'}
           >
-            <RotateCw className={`h-5 w-5 ${isAutoRotate ? 'animate-spin' : ''}`} style={{ animationDuration: '8s' }} />
+            <RotateCw
+              className={`h-5 w-5 ${isAutoRotate ? 'animate-spin' : ''}`}
+              style={{ animationDuration: '8s' }}
+            />
           </button>
 
           {/* Fullscreen Button */}
@@ -576,7 +590,9 @@ export function Property360Modal({
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
           <div className="bg-black/60 border border-white/10 p-4 rounded-2xl flex items-center gap-3 shadow-xl backdrop-blur-sm">
             <RotateCw className="h-5 w-5 text-[#c65a3a] animate-spin" />
-            <span className="text-white text-[10px] uppercase font-bold tracking-wider">Đang chuyển phòng...</span>
+            <span className="text-white text-[10px] uppercase font-bold tracking-wider">
+              Đang chuyển phòng...
+            </span>
           </div>
         </div>
       )}

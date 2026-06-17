@@ -20,7 +20,9 @@ export function Property360Robot({
       {/* Speech Bubble */}
       {isSpeaking && speechText && (
         <div className="pointer-events-auto max-w-[280px] md:max-w-[320px] bg-black/75 backdrop-blur-md border border-white/10 p-3.5 rounded-2xl rounded-tr-none text-white text-xs leading-relaxed shadow-xl animate-fade-in-up">
-          <div className="text-[10px] font-bold text-primary mb-1 uppercase tracking-wider">AI Trợ Lý</div>
+          <div className="text-[10px] font-bold text-primary mb-1 uppercase tracking-wider">
+            AI Trợ Lý
+          </div>
           <p className="font-medium text-white/90">{speechText}</p>
         </div>
       )}
@@ -28,7 +30,9 @@ export function Property360Robot({
       <div className="flex items-center gap-3 pointer-events-auto">
         {/* AI Narrator Control Panel */}
         <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl p-2 px-3 flex items-center gap-2.5 shadow-lg">
-          <span className="text-white text-[10px] font-bold uppercase tracking-wider">Thuyết minh AI</span>
+          <span className="text-white text-[10px] font-bold uppercase tracking-wider">
+            Thuyết minh AI
+          </span>
           <button
             onClick={() => setIsAiEnabled(prev => !prev)}
             className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none ${
@@ -59,8 +63,12 @@ export function Property360Robot({
           {/* Glowing active indicator */}
           {isAiEnabled && (
             <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isSpeaking ? 'bg-[#c65a3a]' : 'bg-primary'}`} />
-              <span className={`relative inline-flex rounded-full h-3.5 w-3.5 ${isSpeaking ? 'bg-[#c65a3a]' : 'bg-primary'}`} />
+              <span
+                className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isSpeaking ? 'bg-[#c65a3a]' : 'bg-primary'}`}
+              />
+              <span
+                className={`relative inline-flex rounded-full h-3.5 w-3.5 ${isSpeaking ? 'bg-[#c65a3a]' : 'bg-primary'}`}
+              />
             </span>
           )}
 
@@ -76,9 +84,19 @@ export function Property360Robot({
             <circle cx="9" cy="11" r="1.5" fill="currentColor" />
             <circle cx="15" cy="11" r="1.5" fill="currentColor" />
             {isSpeaking ? (
-              <path d="M9 15c1 1.5 5 1.5 6 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path
+                d="M9 15c1 1.5 5 1.5 6 0"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             ) : (
-              <path d="M10 15h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path
+                d="M10 15h4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             )}
             <path d="M12 6V3M9 3h6" />
           </svg>

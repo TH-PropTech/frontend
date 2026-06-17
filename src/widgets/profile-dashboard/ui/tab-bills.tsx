@@ -72,11 +72,7 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
 
         {/* SVG Chart Section */}
         <div className="h-64 border border-border/60 bg-surface-muted/10 rounded-2xl flex items-center justify-center p-4">
-          {role === 'tenant' ? (
-            <TenantBillsChart />
-          ) : (
-            <LandlordBillsChart />
-          )}
+          {role === 'tenant' ? <TenantBillsChart /> : <LandlordBillsChart />}
         </div>
       </Card>
 

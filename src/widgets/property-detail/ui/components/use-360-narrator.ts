@@ -33,46 +33,49 @@ export function use360Narrator(
   }, [])
 
   // Speech synthesis narrator callback
-  const speakNarrative = React.useCallback((text: string): void => {
-    if (!window.speechSynthesis) return
+  const speakNarrative = React.useCallback(
+    (text: string): void => {
+      if (!window.speechSynthesis) return
 
-    window.speechSynthesis.cancel()
+      window.speechSynthesis.cancel()
 
-    if (!isAiEnabled) {
-      setIsSpeaking(false)
-      setSpeechText('')
-      return
-    }
+      if (!isAiEnabled) {
+        setIsSpeaking(false)
+        setSpeechText('')
+        return
+      }
 
-    const utterance = new SpeechSynthesisUtterance(text)
-    utteranceRef.current = utterance
+      const utterance = new SpeechSynthesisUtterance(text)
+      utteranceRef.current = utterance
 
-    const voices = window.speechSynthesis.getVoices()
-    const viVoice = voices.find(v => v.lang.startsWith('vi'))
-    if (viVoice) {
-      utterance.voice = viVoice
-    }
-    
-    utterance.lang = 'vi-VN'
-    utterance.rate = 1.25
-    utterance.pitch = 1.15
+      const voices = window.speechSynthesis.getVoices()
+      const viVoice = voices.find(v => v.lang.startsWith('vi'))
+      if (viVoice) {
+        utterance.voice = viVoice
+      }
 
-    utterance.onstart = () => {
-      setIsSpeaking(true)
-      setSpeechText(text)
-    }
+      utterance.lang = 'vi-VN'
+      utterance.rate = 1.25
+      utterance.pitch = 1.15
 
-    utterance.onend = () => {
-      setIsSpeaking(false)
-    }
+      utterance.onstart = () => {
+        setIsSpeaking(true)
+        setSpeechText(text)
+      }
 
-    utterance.onerror = () => {
-      setIsSpeaking(false)
-      setSpeechText('')
-    }
+      utterance.onend = () => {
+        setIsSpeaking(false)
+      }
 
-    window.speechSynthesis.speak(utterance)
-  }, [isAiEnabled])
+      utterance.onerror = () => {
+        setIsSpeaking(false)
+        setSpeechText('')
+      }
+
+      window.speechSynthesis.speak(utterance)
+    },
+    [isAiEnabled]
+  )
 
   // Trigger speech on room entry
   React.useEffect(() => {

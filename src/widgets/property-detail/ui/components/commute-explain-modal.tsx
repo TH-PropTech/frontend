@@ -36,12 +36,12 @@ export function CommuteExplainModal({
               Nguyên lý hoạt động:
             </span>
             <p className="text-xs text-fg-muted font-body leading-relaxed font-semibold">
-              Khoảng cách địa lý đường chim bay được tính toán tức thời bằng công
-              thức toán học bán kính Trái Đất (Haversine) từ tọa độ GPS thực tế
-              của tòa nhà đến điểm bạn kéo thả hoặc chỉ định trên bản đồ Leaflet.
-              Thời gian di chuyển dự kiến được lập trình dựa trên tốc độ di
-              chuyển trung bình thực tế tại khu vực TP.HCM đối với từng loại
-              phương tiện giao thông.
+              Khoảng cách địa lý đường chim bay được tính toán tức thời bằng
+              công thức toán học bán kính Trái Đất (Haversine) từ tọa độ GPS
+              thực tế của tòa nhà đến điểm bạn kéo thả hoặc chỉ định trên bản đồ
+              Leaflet. Thời gian di chuyển dự kiến được lập trình dựa trên tốc
+              độ di chuyển trung bình thực tế tại khu vực TP.HCM đối với từng
+              loại phương tiện giao thông.
             </p>
           </div>
 
@@ -84,14 +84,16 @@ export function CommuteExplainModal({
                 (gấp đôi) do đi chung làn ô tô ùn ứ.
               </li>
               <li>
-                <span className="text-fg font-bold">Tàu điện Metro (Dự kiến):</span>{' '}
+                <span className="text-fg font-bold">
+                  Tàu điện Metro (Dự kiến):
+                </span>{' '}
                 Tốc độ 45km/h cố định hoàn toàn không bị ảnh hưởng bởi ùn tắc
                 mặt đất.
               </li>
               <li>
                 <span className="text-fg font-bold">Xe Bus công cộng:</span> Tốc
-                độ 18km/h, giờ cao điểm tăng 80% thời gian di chuyển do thời gian
-                dừng đón trả khách kéo dài.
+                độ 18km/h, giờ cao điểm tăng 80% thời gian di chuyển do thời
+                gian dừng đón trả khách kéo dài.
               </li>
             </ul>
           </div>

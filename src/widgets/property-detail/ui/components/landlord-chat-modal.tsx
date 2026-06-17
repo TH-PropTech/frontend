@@ -5,14 +5,17 @@ import * as React from 'react'
 interface LandlordChatModalProps {
   isOpen: boolean
   onClose: () => void
-  landlord?: {
-    id: string
-    fullName: string
-    email: string
-    phone: string
-    avatar: string
-    kycStatus: string
-  } | null | undefined
+  landlord?:
+    | {
+        id: string
+        fullName: string
+        email: string
+        phone: string
+        avatar: string
+        kycStatus: string
+      }
+    | null
+    | undefined
 }
 
 export function LandlordChatModal({
@@ -124,4 +127,3 @@ export function LandlordChatModal({
     </div>
   )
 }
-

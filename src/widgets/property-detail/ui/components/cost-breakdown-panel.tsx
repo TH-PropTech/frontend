@@ -73,8 +73,8 @@ export function CostBreakdownPanel({
         </button>
       </h3>
       <p className="font-body text-sm text-muted-foreground font-medium leading-relaxed text-left">
-        Biểu đồ phân bổ nguồn tiền cần chuẩn bị ban đầu bao gồm các khoản cọc
-        ký quỹ (Escrow) được hoàn trả khi chấm dứt hợp đồng.
+        Biểu đồ phân bổ nguồn tiền cần chuẩn bị ban đầu bao gồm các khoản cọc ký
+        quỹ (Escrow) được hoàn trả khi chấm dứt hợp đồng.
       </p>
 
       <div className="border border-border rounded-2xl p-6 bg-surface-muted/20 gap-6 flex flex-col lg:flex-row items-center">

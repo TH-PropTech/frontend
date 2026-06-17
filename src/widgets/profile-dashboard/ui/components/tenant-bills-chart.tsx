@@ -5,14 +5,7 @@ import * as React from 'react'
 export function TenantBillsChart(): React.ReactElement {
   return (
     <svg className="w-full h-full max-w-lg" viewBox="0 0 400 200">
-      <line
-        x1="40"
-        y1="20"
-        x2="40"
-        y2="160"
-        stroke="#E5E9F0"
-        strokeWidth="2"
-      />
+      <line x1="40" y1="20" x2="40" y2="160" stroke="#E5E9F0" strokeWidth="2" />
       <line
         x1="40"
         y1="160"
