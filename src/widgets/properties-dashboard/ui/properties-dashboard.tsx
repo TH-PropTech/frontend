@@ -1,8 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import Link from 'next/link'
-import type { Route } from 'next'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
 import { locationData } from '@/entities/properties'
@@ -14,6 +12,7 @@ import { LocationFilterModal } from './components/location-filter-modal'
 import { PriceFilterModal } from './components/price-filter-modal'
 import { AreaFilterModal } from './components/area-filter-modal'
 import { AdvancedDrawer } from './components/advanced-drawer'
+import { PropertiesMap } from './components/properties-map'
 
 export function PropertiesDashboard(): React.ReactElement {
   const {
@@ -413,130 +412,13 @@ export function PropertiesDashboard(): React.ReactElement {
           </div>
 
           {viewMode === 'map' ? (
-            <div className="relative border border-border rounded-3xl overflow-hidden h-[500px] bg-[#E5E9F0] shadow-sm flex">
-              {/* Map grid simulation */}
-              <div className="absolute inset-0 z-0">
-                <svg
-                  className="w-full h-full"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {/* Grid lines */}
-                  <defs>
-                    <pattern
-                      id="grid"
-                      width="40"
-                      height="40"
-                      patternUnits="userSpaceOnUse"
-                    >
-                      <path
-                        d="M 40 0 L 0 0 0 40"
-                        fill="none"
-                        stroke="#D8DEE9"
-                        strokeWidth="1"
-                      />
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#grid)" />
-                  {/* Rivers / Roads */}
-                  <path
-                    d="M -50 200 C 300 220, 500 120, 1000 180"
-                    fill="none"
-                    stroke="#81A1C1"
-                    strokeWidth="24"
-                    strokeLinecap="round"
-                    opacity="0.6"
-                  />
-                  <path
-                    d="M 300 -50 L 320 600"
-                    fill="none"
-                    stroke="#D8DEE9"
-                    strokeWidth="16"
-                    opacity="0.8"
-                  />
-                  <path
-                    d="M 700 -50 L 680 600"
-                    fill="none"
-                    stroke="#D8DEE9"
-                    strokeWidth="12"
-                    opacity="0.8"
-                  />
-                </svg>
-              </div>
-
-              {/* Map Pins */}
-              <div className="absolute inset-0 z-10">
-                {activeTab === 'single'
-                  ? filteredApartments.map((apt, idx) => {
-                      const x = 150 + ((idx * 220) % 600)
-                      const y = 100 + ((idx * 130) % 350)
-                      return (
-                        <button
-                          key={apt.id}
-                          onClick={() => setSelectedMapApt(apt)}
-                          style={{ left: `${x}px`, top: `${y}px` }}
-                          className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer"
-                        >
-                          <div className="bg-primary text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-md group-hover:scale-110 transition-transform">
-                            {apt.price}
-                          </div>
-                          <div className="h-2 w-2 rounded-full bg-primary border border-white mt-0.5" />
-                        </button>
-                      )
-                    })
-                  : filteredProjects.map((proj, idx) => {
-                      const x = 200 + ((idx * 280) % 550)
-                      const y = 120 + ((idx * 160) % 320)
-                      return (
-                        <button
-                          key={proj.id}
-                          onClick={() => setSelectedMapApt(proj)}
-                          style={{ left: `${x}px`, top: `${y}px` }}
-                          className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer"
-                        >
-                          <div className="bg-accent-2 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md group-hover:scale-110 transition-transform">
-                            {proj.title}
-                          </div>
-                          <div className="h-2 w-2 rounded-full bg-accent-2 border border-white mt-0.5" />
-                        </button>
-                      )
-                    })}
-              </div>
-
-              {/* Pin Detail Popup */}
-              {selectedMapApt && (
-                <div className="absolute bottom-5 left-5 z-20 bg-white border border-border rounded-2xl p-4 shadow-2xl max-w-sm animate-fade-in space-y-3">
-                  <div className="flex justify-between items-start gap-4">
-                    <div>
-                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
-                        {selectedMapApt.category || 'Dự án'}
-                      </span>
-                      <h4 className="font-marketing text-sm font-bold text-fg line-clamp-1">
-                        {selectedMapApt.title}
-                      </h4>
-                      <p className="text-xs text-primary font-extrabold mt-0.5">
-                        {selectedMapApt.price || selectedMapApt.priceRange}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setSelectedMapApt(null)}
-                      className="text-muted hover:text-fg text-xs font-bold p-1 cursor-pointer"
-                    >
-                      Đóng
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link
-                      href={`/properties/${selectedMapApt.id}` as Route}
-                      className="flex-1"
-                    >
-                      <button className="w-full bg-primary text-white text-[10px] font-bold rounded-lg py-1.5 hover:bg-primary-hover transition-colors cursor-pointer">
-                        Xem chi tiết
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+            <PropertiesMap
+              activeTab={activeTab}
+              filteredApartments={filteredApartments}
+              filteredProjects={filteredProjects}
+              selectedMapApt={selectedMapApt}
+              setSelectedMapApt={setSelectedMapApt}
+            />
           ) : activeTab === 'single' ? (
             filteredApartments.length === 0 ? (
               <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
