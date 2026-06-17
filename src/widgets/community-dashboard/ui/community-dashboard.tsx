@@ -223,6 +223,9 @@ export function CommunityDashboard(): React.ReactElement {
                       post={post}
                       onUpvote={state.handleUpvote}
                       onCommentAdded={state.handleCommentAdded}
+                      onDeletePost={state.handleDeletePost}
+                      onCommentRemoved={state.handleCommentRemoved}
+                      currentUser={state.currentUser}
                     />
                   ))}
                 </div>

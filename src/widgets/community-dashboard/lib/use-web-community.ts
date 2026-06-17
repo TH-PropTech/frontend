@@ -403,6 +403,26 @@ export function useWebCommunity() {
     )
   }, [])
 
+  const handleDeletePost = useCallback(async (postId: string) => {
+    try {
+      await apiClient.delete(`/community/posts/${postId}`)
+      setPosts(prev => prev.filter(p => p.id !== postId))
+    } catch (error) {
+      console.warn('API Delete post failed, fallback to local state:', error)
+      setPosts(prev => prev.filter(p => p.id !== postId))
+    }
+  }, [])
+
+  const handleCommentRemoved = useCallback((postId: string) => {
+    setPosts(prev =>
+      prev.map(p =>
+        p.id === postId
+          ? { ...p, commentsCount: Math.max(0, (p.commentsCount || 0) - 1) }
+          : p
+      )
+    )
+  }, [])
+
   return {
     approvedPosts,
     pendingPosts,
@@ -431,5 +451,8 @@ export function useWebCommunity() {
     handleSubmit,
     handleUpvote,
     handleCommentAdded,
+    handleDeletePost,
+    handleCommentRemoved,
+    currentUser,
   }
 }
