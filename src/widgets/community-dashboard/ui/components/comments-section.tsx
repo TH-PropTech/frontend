@@ -25,6 +25,8 @@ interface FrontendComment {
 interface CommentsSectionProps {
   postId: string
   onCommentAdded: () => void
+  onCommentRemoved?: () => void
+  currentUser?: { roles?: string[] } | null | undefined
 }
 
 const ROLE_LABELS = {
@@ -60,6 +62,8 @@ function formatCommentTime(dateStr: string): string {
 export function CommentsSection({
   postId,
   onCommentAdded,
+  onCommentRemoved,
+  currentUser,
 }: CommentsSectionProps): React.ReactElement {
   const [comments, setComments] = React.useState<FrontendComment[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -67,6 +71,31 @@ export function CommentsSection({
   const [replyToId, setReplyToId] = React.useState<string | null>(null)
   const [replyText, setReplyText] = React.useState('')
   const [submitting, setSubmitting] = React.useState(false)
+
+  const isStaffOrAdmin = React.useMemo(() => {
+    if (!currentUser?.roles) return false
+    return currentUser.roles.some(
+      r => r.toLowerCase() === 'staff' || r.toLowerCase() === 'admin'
+    )
+  }, [currentUser])
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn gỡ bình luận này?')) return
+    try {
+      await apiClient.delete(`/community/comments/${commentId}`)
+      setComments(prev =>
+        prev.filter(c => c.id !== commentId && c.parentId !== commentId)
+      )
+      onCommentRemoved?.()
+    } catch (err) {
+      console.error('Failed to delete comment:', err)
+      // Fallback
+      setComments(prev =>
+        prev.filter(c => c.id !== commentId && c.parentId !== commentId)
+      )
+      onCommentRemoved?.()
+    }
+  }
 
   const loadComments = React.useCallback(async () => {
     try {
@@ -198,6 +227,14 @@ export function CommentsSection({
                   >
                     Trả lời
                   </button>
+                  {isStaffOrAdmin && (
+                    <button
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="text-[10px] font-bold text-danger hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      Gỡ
+                    </button>
+                  )}
                 </div>
               </div>
 
