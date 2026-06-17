@@ -1,0 +1,111 @@
+<!--
+  Tất cả những gì bạn nhìn thấy ĐỀU được viết bằng HTML, CSS và JavaScript thuần tuý
+  
+  Chúng tôi mong muốn mang đến trải nghiệm tốt nhất đến cho bạn, vì vậy chúng tôi đã:
+    - Xây dựng lại toàn bộ giao diện người dùng (UI) sử dụng Web Components.
+    - Giao diện render động bằng JavaScript, tối ưu TỪNG dòng render, tránh lãng phí tài nguyên của bạn.
+    - Không import thừa thư viện, chỉ sử dụng những gì cần thiết.
+
+  Nếu bạn tò mò về công nghệ chúng tôi sử dụng, hãy tham khảo tài liệu sau:
+    - Three.js: https://threejs.org/
+    - Web Components: https://developer.mozilla.org/
+    - Tailwind CSS: https://tailwindcss.com/
+    - Socket.IO: https://socket.io/
+    - A-Frame: https://aframe.io/
+
+  Chúc bạn có những trải nghiệm tuyệt vời tại Đại học Công nghiệp TP. Hồ Chí Minh!
+  Từ Đội ngũ phát triển dự án VR Tour IUH.
+-->
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>VR Tour | Đại học Công nghiệp TP. Hồ Chí Minh</title>
+		<meta name="description" content="Test AR" />
+		<meta name="author" content="Industrial University of Ho Chi Minh city" />
+
+		<link
+			rel="stylesheet"
+			type="text/css"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css"
+		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="./static_assets/css/style_main.css" />
+
+		<!-- Backup trong trường hợp thật sự cần cdn (18/11/2025 - Clf lỗi nên đám lib này bị down hết 12 tiếng) -->
+		<!-- <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script> 
+		<script src="https://unpkg.com/aframe-animation-component@^5.0.0/dist/aframe-animation-component.min.js"></script>
+		<script src="https://unpkg.com/aframe-look-at-component@1.0.0/dist/aframe-look-at-component.min.js"></script>
+		<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+		<script src="./static_assets/libs/socket.io/socket.io.min.js"></script> -->
+
+		<script src="./static_assets/css/tailwind.min.js"></script>
+		<script src="./static_assets/js/libs/socket.io/socket.io.min.js"></script>
+		<script type="module" src="./static_assets/js/new-entry.js"></script>
+
+		<!-- <script type="module" src="./dist/bundle.js"></script> -->
+	</head>
+	<body class="relative bg-gray-100 min-h-screen flex items-center justify-center">
+		<loading-screen></loading-screen>
+		<!-- Legacy code -->
+		<!-- Info target -->
+		<div
+			id="target-info"
+			class="hidden absolute z-[30] bg-[--color-primary] py-3 px-4 text-white text-center gap-2 flex flex-col opacity-90 rounded-md items-center"
+			style="pointer-events: none"
+		>
+			<img src="" class="w-32 h-20 md:w-64 md:h-36 object-cover" />
+			<p class="uppercase font-bold text-xs md:text-sm"></p>
+		</div>
+		<!-- Current Location -->
+		<div
+			id="container-label-current-location"
+			class="hidden fixed top-6 left-8 px-3 py-1 z-[8] bg-[--color-primary] rounded-md opacity-90 flex items-center gap-2 text-sm md:text-base"
+		>
+			<p class="text-white"><span class="" id="label-current-location"></span></p>
+		</div>
+
+		<!-- New architecture -->
+		<popup-info-location data-popup-id="location-details"></popup-info-location>
+		<background-dim is-active="true"></background-dim>
+		<start-screen></start-screen>
+
+		<guide-intro data-is-open="false"></guide-intro>
+
+		<school-map data-is-open="false"></school-map>
+		<school-intro data-is-open="false"></school-intro>
+		<left-bar data-is-open="true"></left-bar>
+
+		<bottom-bar data-is-hidden="false"></bottom-bar>
+		<a-frame-stage></a-frame-stage>
+		<overlay-fullscreen id="plugin-overlay" data-is-active="false"></overlay-fullscreen>
+		<mascot-assistant></mascot-assistant>
+	</body>
+
+	<script type="module">
+		import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+		import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+
+		const firebaseConfig = {
+			apiKey: "AIzaSyAGPdC-WP5vOhlbAFGDRhYQALdLwxbDW0Q",
+			authDomain: "vr-tour-iuh.firebaseapp.com",
+			projectId: "vr-tour-iuh",
+			storageBucket: "vr-tour-iuh.firebasestorage.app",
+			messagingSenderId: "589244627744",
+			appId: "1:589244627744:web:995af50753fdb9864f3545",
+			measurementId: "G-34XXN6KRDF",
+		};
+
+		const app = initializeApp(firebaseConfig);
+		const analytics = getAnalytics(app);
+
+		window.firebaseApp = app;
+		window.firebaseAnalytics = analytics;
+		window.firebaseLogEvent = (eventName, data = {}) => logEvent(analytics, eventName, data);
+	</script>
+</html>
