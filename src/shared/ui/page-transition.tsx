@@ -57,6 +57,7 @@ export function PageTransition(): React.ReactElement | null {
 
       // Bỏ qua nếu là liên kết ngoài, mở tab mới, hoặc liên kết dạng hash/javascript/tel/mail
       if (
+        e.defaultPrevented ||
         !href ||
         href.startsWith('#') ||
         href.startsWith('javascript:') ||
