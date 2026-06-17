@@ -2,8 +2,9 @@
 
 import * as React from 'react'
 import { apiClient } from '@/shared/api/api-client'
+import { CommunityPostDetailModal } from './components/community-post-detail-modal'
 
-interface CommunityPost {
+export interface CommunityPost {
   id: string
   authorName: string
   authorRole: 'tenant' | 'landlord' | 'staff' | 'admin'
@@ -65,6 +66,8 @@ export function CommunityView(): React.ReactElement {
   const [filter, setFilter] = React.useState<
     'all' | 'pending' | 'approved' | 'rejected'
   >('pending')
+  const [activeDetailPost, setActiveDetailPost] =
+    React.useState<CommunityPost | null>(null)
 
   const mapPost = React.useCallback((p: BackendPostResponse): CommunityPost => {
     return {
@@ -107,6 +110,25 @@ export function CommunityView(): React.ReactElement {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPosts()
   }, [loadPosts])
+
+  const handleDeletePost = async (postId: string): Promise<void> => {
+    if (
+      typeof window !== 'undefined' &&
+      !window.confirm('Bạn có chắc chắn muốn gỡ bài viết này?')
+    ) {
+      return
+    }
+    try {
+      await apiClient.delete(`/community/posts/${postId}`)
+      setPosts(prev => prev.filter(p => p.id !== postId))
+      setActiveDetailPost(null)
+    } catch (err) {
+      console.error('Failed to delete post:', err)
+      if (typeof window !== 'undefined') {
+        window.alert('Không thể gỡ bài viết. Vui lòng thử lại.')
+      }
+    }
+  }
 
   const handleApprove = async (id: string): Promise<void> => {
     try {
@@ -305,6 +327,23 @@ export function CommunityView(): React.ReactElement {
                   </button>
                 </div>
               )}
+
+              {post.status === 'approved' && (
+                <div className="mt-4 pt-3 border-t border-line/30 flex gap-2">
+                  <button
+                    onClick={() => handleDeletePost(post.id)}
+                    className="flex-1 py-2 border border-accent bg-white hover:bg-accent/5 text-accent text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                  >
+                    Gỡ bài
+                  </button>
+                  <button
+                    onClick={() => setActiveDetailPost(post)}
+                    className="flex-1 py-2 bg-primary hover:bg-primary/90 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                  >
+                    Xem & Gỡ bình luận
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 
@@ -380,6 +419,17 @@ export function CommunityView(): React.ReactElement {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Detail & Comments Modal */}
+      {activeDetailPost && (
+        <CommunityPostDetailModal
+          isOpen={!!activeDetailPost}
+          onClose={() => setActiveDetailPost(null)}
+          post={activeDetailPost}
+          onDeletePost={handleDeletePost}
+          formatTimeAgo={formatTimeAgo}
+        />
       )}
     </div>
   )
