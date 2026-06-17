@@ -65,8 +65,8 @@ export function EnergyEfficiencyPanel({
         </button>
       </h3>
       <p className="font-body text-sm text-muted-foreground font-medium leading-relaxed text-left">
-        Ước tính hiệu quả sử dụng năng lượng và chi phí phụ sinh hoạt trung
-        bình mỗi tháng.
+        Ước tính hiệu quả sử dụng năng lượng và chi phí phụ sinh hoạt trung bình
+        mỗi tháng.
       </p>
 
       <div className="border border-border rounded-2xl p-6 bg-surface-muted/20 grid grid-cols-1 lg:grid-cols-12 gap-6">

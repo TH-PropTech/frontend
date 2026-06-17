@@ -86,7 +86,9 @@ export function PropertiesDashboard(): React.ReactElement {
   // Get selected building name from apartments data
   const selectedBuildingName = React.useMemo(() => {
     if (!selectedBuildingId) return null
-    const found = filteredApartments.find(apt => apt.buildingId === selectedBuildingId)
+    const found = filteredApartments.find(
+      apt => apt.buildingId === selectedBuildingId
+    )
     if (found) return found.buildingName
     const foundApi = apiBuildings.find(b => b.id === selectedBuildingId)
     if (foundApi) return foundApi.name
@@ -221,8 +223,18 @@ export function PropertiesDashboard(): React.ReactElement {
                   onClick={() => setSelectedBuildingId(null)}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-primary/20 bg-primary/5 text-xs font-bold text-primary hover:bg-primary/10 transition-all cursor-pointer shadow-sm"
                 >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18 18 6M6 6l12 12"
+                    />
                   </svg>
                   Xóa lọc theo tòa nhà
                 </button>
@@ -233,8 +245,18 @@ export function PropertiesDashboard(): React.ReactElement {
                   onClick={() => setSelectedApiProjectId(null)}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border bg-white text-xs font-bold text-muted hover:bg-surface-muted hover:text-fg transition-all cursor-pointer"
                 >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+                    />
                   </svg>
                   Quay lại danh sách dự án
                 </button>
@@ -294,7 +316,9 @@ export function PropertiesDashboard(): React.ReactElement {
             <div>
               {/* Selected Project Header */}
               {(() => {
-                const selectedProj = apiProjects.find(p => p.id === selectedApiProjectId)
+                const selectedProj = apiProjects.find(
+                  p => p.id === selectedApiProjectId
+                )
                 if (!selectedProj) return null
                 return (
                   <div className="mb-8 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-accent/5 p-6">
@@ -304,9 +328,23 @@ export function PropertiesDashboard(): React.ReactElement {
                           {selectedProj.name}
                         </h3>
                         <p className="mt-1 font-body text-xs text-muted flex items-center gap-1.5">
-                          <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z" />
+                          <svg
+                            className="h-3.5 w-3.5 shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z"
+                            />
                           </svg>
                           {selectedProj.location}
                         </p>
@@ -316,7 +354,10 @@ export function PropertiesDashboard(): React.ReactElement {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {selectedProj.amenities.slice(0, 4).map(a => (
-                          <span key={a} className="rounded-full bg-white/80 border border-border text-muted px-3 py-1 text-[10px] font-semibold">
+                          <span
+                            key={a}
+                            className="rounded-full bg-white/80 border border-border text-muted px-3 py-1 text-[10px] font-semibold"
+                          >
                             {a}
                           </span>
                         ))}
@@ -329,17 +370,44 @@ export function PropertiesDashboard(): React.ReactElement {
               {isLoadingBuildings ? (
                 <div className="text-center py-20">
                   <div className="inline-flex items-center gap-3 text-primary">
-                    <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    <svg
+                      className="h-5 w-5 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                      />
                     </svg>
-                    <span className="font-body text-sm font-semibold">Đang tải tòa nhà...</span>
+                    <span className="font-body text-sm font-semibold">
+                      Đang tải tòa nhà...
+                    </span>
                   </div>
                 </div>
               ) : apiBuildings.length === 0 ? (
                 <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
-                  <svg className="mx-auto h-12 w-12 text-muted/40 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21" />
+                  <svg
+                    className="mx-auto h-12 w-12 text-muted/40 mb-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21"
+                    />
                   </svg>
                   <p className="font-body text-sm text-muted">
                     Chưa có tòa nhà nào trong dự án này.
@@ -351,7 +419,7 @@ export function PropertiesDashboard(): React.ReactElement {
                     <BuildingCard
                       key={building.id}
                       building={building}
-                      onSelectBuilding={(bId) => {
+                      onSelectBuilding={bId => {
                         setSelectedBuildingId(bId)
                         setActiveTab('single')
                       }}
@@ -364,11 +432,28 @@ export function PropertiesDashboard(): React.ReactElement {
           isLoadingProjects ? (
             <div className="text-center py-20">
               <div className="inline-flex items-center gap-3 text-primary">
-                <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <svg
+                  className="h-5 w-5 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
                 </svg>
-                <span className="font-body text-sm font-semibold">Đang tải dự án...</span>
+                <span className="font-body text-sm font-semibold">
+                  Đang tải dự án...
+                </span>
               </div>
             </div>
           ) : apiProjects.length > 0 ? (
@@ -434,4 +519,3 @@ export function PropertiesDashboard(): React.ReactElement {
     </div>
   )
 }
-

@@ -8,7 +8,10 @@ export interface ApiProjectCardProps {
   onSelect: () => void
 }
 
-export function ApiProjectCard({ project, onSelect }: ApiProjectCardProps): React.ReactElement {
+export function ApiProjectCard({
+  project,
+  onSelect,
+}: ApiProjectCardProps): React.ReactElement {
   const imageUrl = project.images[0] ?? null
 
   return (
@@ -68,9 +71,23 @@ export function ApiProjectCard({ project, onSelect }: ApiProjectCardProps): Reac
         </h3>
 
         <p className="mt-1.5 font-body text-xs text-muted flex items-center gap-1.5">
-          <svg className="h-3.5 w-3.5 text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z" />
+          <svg
+            className="h-3.5 w-3.5 text-muted shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z"
+            />
           </svg>
           {project.location}
         </p>
@@ -107,8 +124,18 @@ export function ApiProjectCard({ project, onSelect }: ApiProjectCardProps): Reac
           </span>
           <span className="text-xs font-bold text-primary group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
             Xem tòa nhà
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+            <svg
+              className="h-3.5 w-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+              />
             </svg>
           </span>
         </div>

@@ -1,7 +1,14 @@
 'use client'
 
 import * as React from 'react'
-import { Upload, Camera, RefreshCw, Shield, ShieldCheck, Loader2 } from 'lucide-react'
+import {
+  Upload,
+  Camera,
+  RefreshCw,
+  Shield,
+  ShieldCheck,
+  Loader2,
+} from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 
 interface KycUploadPanelProps {
@@ -21,7 +28,10 @@ interface KycUploadPanelProps {
   fileInputRef2: React.RefObject<HTMLInputElement | null>
   startWebcam: (card: 1 | 2) => void
   takePicture: (card: 1 | 2) => void
-  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>, card: 1 | 2) => void
+  handleFileChange: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    card: 1 | 2
+  ) => void
   handleExtractOcr: () => void
   isOcrLoading: boolean
   cccdUploaded: boolean
