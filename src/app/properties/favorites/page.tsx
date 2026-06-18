@@ -5,7 +5,8 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
-import { mockApartments } from '@/entities/properties'
+import { mockApartments, ApartmentItem } from '@/entities/properties'
+import { apiClient } from '@/shared/api/api-client'
 import { ApartmentCard } from '@/widgets/properties-dashboard/ui/components/apartment-card'
 import { useFavorites } from '@/shared/lib/use-favorites'
 import { Button } from '@/shared/ui/button'
@@ -23,7 +24,6 @@ import {
   Sparkles,
   ArrowRight,
   Eye,
-  MessageSquare,
   Info,
 } from 'lucide-react'
 
@@ -31,11 +31,30 @@ export default function FavoritesPage(): React.ReactElement {
   const { favorites } = useFavorites()
   const [compareIds, setCompareIds] = React.useState<string[]>([])
   const [showCompareModal, setShowCompareModal] = React.useState(false)
+  const [apartments, setApartments] =
+    React.useState<ApartmentItem[]>(mockApartments)
+
+  React.useEffect(() => {
+    let active = true
+    apiClient
+      .get<ApartmentItem[]>('/apartments?format=web')
+      .then(data => {
+        if (active && data && Array.isArray(data) && data.length > 0) {
+          setApartments(data)
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch apartments on favorites page:', err)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Filter apartments matching current favorites
   const favoriteApartments = React.useMemo(() => {
-    return mockApartments.filter(apt => favorites.includes(apt.id))
-  }, [favorites])
+    return apartments.filter(apt => favorites.includes(apt.id))
+  }, [favorites, apartments])
 
   // Filter compareIds to only include active favorites
   const activeCompareIds = React.useMemo(() => {
@@ -44,8 +63,8 @@ export default function FavoritesPage(): React.ReactElement {
 
   // Get selected apartments for comparison
   const compareApartments = React.useMemo(() => {
-    return mockApartments.filter(apt => activeCompareIds.includes(apt.id))
-  }, [activeCompareIds])
+    return apartments.filter(apt => activeCompareIds.includes(apt.id))
+  }, [activeCompareIds, apartments])
 
   const handleToggleCompare = (id: string): void => {
     setCompareIds(prev => {
@@ -397,23 +416,14 @@ export default function FavoritesPage(): React.ReactElement {
                         <div className="flex gap-2">
                           <Link
                             href={`/properties/${apt.id}` as Route}
-                            className="flex-1"
+                            className="w-full"
                           >
                             <Button
                               variant="primary"
                               className="w-full py-2 px-3 text-[10px] font-bold rounded-lg flex items-center justify-center gap-1"
                             >
                               <Eye className="h-3 w-3" />
-                              Xem
-                            </Button>
-                          </Link>
-                          <Link href="/contact" className="flex-1">
-                            <Button
-                              variant="secondary"
-                              className="w-full py-2 px-3 text-[10px] font-bold rounded-lg flex items-center justify-center gap-1"
-                            >
-                              <MessageSquare className="h-3 w-3" />
-                              Tư vấn
+                              Xem chi tiết
                             </Button>
                           </Link>
                         </div>

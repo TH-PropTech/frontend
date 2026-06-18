@@ -91,7 +91,7 @@ export function PropertyDetailHero({
             </span>
           </Link>
           <button
-            onClick={() => toggleFavorite(property.id)}
+            onClick={() => toggleFavorite(property.id, property.title)}
             className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-white shadow-sm hover:bg-surface-muted active:scale-95 transition-all text-xs font-bold text-fg cursor-pointer"
           >
             <svg
