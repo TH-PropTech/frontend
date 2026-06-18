@@ -3,7 +3,6 @@
 import * as React from 'react'
 
 interface PriceFilterModalProps {
-  isOpen: boolean
   onClose: () => void
   minPrice: number | ''
   setMinPrice: (val: number | '') => void
@@ -12,20 +11,14 @@ interface PriceFilterModalProps {
 }
 
 export function PriceFilterModal({
-  isOpen,
   onClose,
   minPrice,
   setMinPrice,
   maxPrice,
   setMaxPrice,
-}: PriceFilterModalProps): React.ReactElement | null {
-  if (!isOpen) return null
-
+}: PriceFilterModalProps): React.ReactElement {
   return (
-    <div
-      className="absolute left-0 lg:left-auto lg:right-0 top-[100%] mt-2 z-50 w-72 rounded-2xl border border-border bg-white p-4 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150 space-y-4"
-      onClick={e => e.stopPropagation()}
-    >
+    <div className="space-y-4">
       <div className="flex items-center justify-between border-b border-border pb-2">
         <span className="font-bold text-sm text-fg">Chọn khoảng giá</span>
         <button
@@ -107,14 +100,6 @@ export function PriceFilterModal({
           </button>
         ))}
       </div>
-
-      <button
-        type="button"
-        onClick={onClose}
-        className="px-4 py-2.5 text-xs font-bold text-white bg-primary hover:bg-primary-hover rounded-xl transition-colors w-full text-center cursor-pointer shadow-sm"
-      >
-        Xác nhận
-      </button>
     </div>
   )
 }
