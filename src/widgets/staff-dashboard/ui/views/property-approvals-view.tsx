@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { apiClient } from '@/shared/api/api-client'
 import { VrPreviewPanel } from './components/vr-preview-panel'
+import { toast } from 'sonner'
 
 interface Property {
   id: string
@@ -98,11 +99,14 @@ export function PropertyApprovalsView(): React.ReactElement {
         prev.map(p => (p.id === id ? { ...p, status: 'approved' } : p))
       )
       setSelectedProp(null)
+      toast.success('Đã phê duyệt tin đăng căn hộ thành công!')
     } catch (err) {
       console.error('Failed to approve apartment:', err)
-      if (typeof window !== 'undefined') {
-        window.alert('Không thể phê duyệt căn hộ. Vui lòng thử lại.')
-      }
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Không thể phê duyệt căn hộ. Vui lòng thử lại.'
+      toast.error(message)
     }
   }
 
@@ -118,11 +122,14 @@ export function PropertyApprovalsView(): React.ReactElement {
       setShowRejectDialog(false)
       setSelectedProp(null)
       setRejectReason('')
+      toast.info('Đã từ chối tin đăng căn hộ.')
     } catch (err) {
       console.error('Failed to reject apartment:', err)
-      if (typeof window !== 'undefined') {
-        window.alert('Không thể từ chối căn hộ. Vui lòng thử lại.')
-      }
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Không thể từ chối căn hộ. Vui lòng thử lại.'
+      toast.error(message)
     }
   }
 
