@@ -174,7 +174,6 @@ const NAV_PRODUCT = [
   { label: 'Tìm căn hộ', href: '/properties' },
   { label: 'Không gian VR 3D', href: '/vr' },
   { label: 'Quy trình thuê', href: '/process' },
-  { label: 'Liên hệ tư vấn', href: '/contact' },
 ] as const
 
 const NAV_ABOUT = [

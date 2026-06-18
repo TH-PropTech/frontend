@@ -4,6 +4,7 @@ import * as React from 'react'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
 import { categories } from '../model/articles-data'
+import { AiGuideBot } from './components/ai-guide-bot'
 
 export function ProcessTimeline(): React.ReactElement {
   const [viewMode, setViewMode] = React.useState<'dashboard' | 'detail'>(
@@ -11,6 +12,8 @@ export function ProcessTimeline(): React.ReactElement {
   )
   const [searchQuery, setSearchQuery] = React.useState('')
   const [activeArticleId, setActiveArticleId] = React.useState('post-desktop')
+  const [showAiGuide, setShowAiGuide] = React.useState(true)
+
   const [expandedCats, setExpandedCats] = React.useState<
     Record<string, boolean>
   >({
@@ -45,6 +48,10 @@ export function ProcessTimeline(): React.ReactElement {
   const handleBackToDashboard = (): void => {
     setViewMode('dashboard')
     setSearchQuery('')
+  }
+
+  const handleToggleAiGuide = (): void => {
+    setShowAiGuide(prev => !prev)
   }
 
   // Get active article safely
@@ -396,6 +403,29 @@ export function ProcessTimeline(): React.ReactElement {
 
                     {/* Actions row */}
                     <div className="flex items-center gap-3 self-start md:self-center">
+                      <button
+                        onClick={handleToggleAiGuide}
+                        className={`py-2 px-4 rounded-xl text-[11px] font-bold flex items-center gap-1.5 cursor-pointer border transition-all duration-300 ${
+                          showAiGuide
+                            ? 'bg-primary/10 border-primary/25 text-primary hover:bg-primary/15 shadow-sm'
+                            : 'bg-surface border-border hover:bg-surface-muted text-muted'
+                        }`}
+                      >
+                        <svg
+                          className={`h-3.5 w-3.5 ${showAiGuide ? 'animate-pulse' : ''}`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Trợ lý AI: {showAiGuide ? 'Bật' : 'Tắt'}
+                      </button>
                       <button className="bg-surface border border-border hover:bg-surface-muted py-2 px-4 rounded-xl text-[11px] font-bold text-fg flex items-center gap-1.5 cursor-pointer">
                         <svg
                           className="h-3.5 w-3.5 text-muted"
@@ -431,7 +461,13 @@ export function ProcessTimeline(): React.ReactElement {
                   </div>
 
                   {/* Rich Content View */}
-                  <div className="py-2">{activeArticle.content}</div>
+                  <div className="py-2">
+                    <AiGuideBot
+                      articleId={activeArticle.id}
+                      isVisible={showAiGuide}
+                    />
+                    {activeArticle.content}
+                  </div>
                 </article>
               </div>
             </section>

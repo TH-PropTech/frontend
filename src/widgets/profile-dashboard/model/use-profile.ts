@@ -150,7 +150,7 @@ export function useProfile(): UseProfileReturn {
   const [firstMonthPaid, setFirstMonthPaid] = React.useState(false)
 
   const { appointments, handleApproveAppointment, handleRejectAppointment } =
-    useProfileAppointments()
+    useProfileAppointments(role)
 
   const activeProperty = React.useMemo(
     () =>

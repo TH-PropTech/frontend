@@ -296,7 +296,7 @@ export function PropertyDetail(): React.ReactElement {
             </div>
 
             {/* Visit Booking Widget */}
-            <BookingWidget />
+            <BookingWidget propertyId={property.id} />
 
             {/* Landlord Info Card */}
             {property.landlord && (

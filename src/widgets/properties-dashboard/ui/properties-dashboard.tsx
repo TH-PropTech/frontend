@@ -13,6 +13,7 @@ import { ApiProjectCard } from './components/api-project-card'
 import { AdvancedDrawer } from './components/advanced-drawer'
 import { PropertiesMap } from './components/properties-map'
 import { SelectedProjectHeader } from './components/selected-project-header'
+import { toast } from 'sonner'
 
 export function PropertiesDashboard(): React.ReactElement {
   const {
@@ -111,6 +112,11 @@ export function PropertiesDashboard(): React.ReactElement {
     let statusText = 'Đang hiển thị kết quả lọc.'
     if (trimmed) {
       statusText = `Đang lọc theo "${trimmed}"...`
+      toast.info(`Tìm kiếm: "${trimmed}"`, {
+        description: 'Đã cập nhật danh sách căn hộ theo từ khóa tìm kiếm.',
+      })
+    } else {
+      toast.info('Đã tải lại toàn bộ danh sách căn hộ.')
     }
     setSearchStatus(statusText)
   }
