@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { apiClient } from '@/shared/api/api-client'
 
 interface CreatePostModalProps {
   isOpen: boolean
@@ -39,6 +40,49 @@ export function CreatePostModal({
   onRemoveImage,
   onSubmit,
 }: CreatePostModalProps): React.ReactElement | null {
+  const [projectsList, setProjectsList] = React.useState<string[]>([])
+  const [showDropdown, setShowDropdown] = React.useState(false)
+
+  React.useEffect(() => {
+    let active = true
+    if (isOpen) {
+      apiClient
+        .get<{ name: string }[]>('/projects')
+        .then(data => {
+          if (active && data && Array.isArray(data)) {
+            const names = data.map(p => p.name).filter(Boolean)
+            if (names.length > 0) {
+              setProjectsList(names)
+            }
+          }
+        })
+        .catch(err => {
+          console.warn('Failed to fetch projects, using fallback list', err)
+        })
+    }
+    return () => {
+      active = false
+    }
+  }, [isOpen])
+
+  const FALLBACK_PROJECTS = React.useMemo(
+    () => [
+      'Vinhomes Central Park',
+      'Masteri Thảo Điền',
+      'Sunrise City',
+      'Discovery Complex',
+      'Vinhomes Smart City',
+      'The Sun Avenue',
+    ],
+    []
+  )
+
+  const filteredProjects = React.useMemo(() => {
+    const list = projectsList.length > 0 ? projectsList : FALLBACK_PROJECTS
+    if (!projectName.trim()) return list
+    return list.filter(p => p.toLowerCase().includes(projectName.toLowerCase()))
+  }, [projectName, projectsList, FALLBACK_PROJECTS])
+
   React.useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -190,17 +234,39 @@ export function CreatePostModal({
               </div>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 relative">
               <label className="text-[11px] font-bold text-muted uppercase tracking-wider">
                 Tên dự án / Chung cư
               </label>
               <input
                 type="text"
                 value={projectName}
-                onChange={e => setProjectName(e.target.value)}
+                onChange={e => {
+                  setProjectName(e.target.value)
+                  setShowDropdown(true)
+                }}
+                onFocus={() => setShowDropdown(true)}
+                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                 placeholder="Ví dụ: Landmark 81..."
                 className="w-full rounded-xl border border-border bg-surface-muted/30 px-4 py-2.5 text-xs text-fg font-semibold placeholder-subtle focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/10 transition-all"
               />
+              {showDropdown && filteredProjects.length > 0 && (
+                <div className="absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-xl border border-border bg-white p-1 shadow-lg animate-in fade-in slide-in-from-top-1 duration-150">
+                  {filteredProjects.map((proj, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onMouseDown={() => {
+                        setProjectName(proj)
+                        setShowDropdown(false)
+                      }}
+                      className="w-full rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-surface-muted transition-colors text-fg"
+                    >
+                      {proj}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
