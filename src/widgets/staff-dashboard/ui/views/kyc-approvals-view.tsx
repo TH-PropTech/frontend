@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { CccdMockupCard } from './components/cccd-mockup-card'
+import { apiClient } from '@/shared/api/api-client'
 
 interface KycRecord {
   id: string
@@ -15,52 +16,43 @@ interface KycRecord {
   ocrScore: number
   submittedAt: string
   status: 'pending' | 'approved' | 'rejected'
+  frontCardUrl?: string
+  backCardUrl?: string
+  selfieUrl?: string
 }
 
-const mockKycRecords: KycRecord[] = [
-  {
-    id: 'KYC-801',
-    name: 'NGUYỄN VĂN A',
-    email: 'nguyenvana@gmail.com',
-    cccdNumber: '001202008745',
-    dob: '15/08/2002',
-    gender: 'Nam',
-    hometown: 'Hoài Đức, Hà Nội',
-    address: '22 Bis Điện Biên Phủ, Phường 22, Bình Thạnh, TP.HCM',
-    ocrScore: 98.6,
-    submittedAt: '10/06/2026 14:22',
-    status: 'pending',
-  },
-  {
-    id: 'KYC-802',
-    name: 'TRẦN THỊ B',
-    email: 'tranthib@yahoo.com',
-    cccdNumber: '079199008273',
-    dob: '02/11/1999',
-    gender: 'Nữ',
-    hometown: 'Thủ Dầu Một, Bình Dương',
-    address: 'Chung cư Masteri Thảo Điền, Quận 2, TP.HCM',
-    ocrScore: 95.4,
-    submittedAt: '10/06/2026 13:05',
-    status: 'pending',
-  },
-  {
-    id: 'KYC-803',
-    name: 'LÊ HOÀNG PHÚC',
-    email: 'phucle1990@gmail.com',
-    cccdNumber: '048090001827',
-    dob: '24/04/1990',
-    gender: 'Nam',
-    hometown: 'Sông Cầu, Phú Yên',
-    address: '45 Trần Hưng Đạo, Quận 1, TP.HCM',
-    ocrScore: 100,
-    submittedAt: '09/06/2026 18:40',
-    status: 'approved',
-  },
-]
+interface BackendKycResponse {
+  _id: string
+  userId: string
+  idCardNumber: string
+  frontCardUrl: string
+  backCardUrl: string
+  selfieUrl: string
+  fullName?: string
+  dateOfBirth?: string
+  gender?: string
+  placeOfOrigin?: string
+  placeOfResidence?: string
+  ocrMatchRate?: number
+  status: 'pending' | 'verified' | 'rejected'
+  createdAt: string
+  user?: {
+    email: string
+    phone: string
+  } | null
+}
+
+interface BackendKycListResult {
+  items: BackendKycResponse[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
 
 export function KycApprovalsView(): React.ReactElement {
-  const [records, setRecords] = React.useState<KycRecord[]>(mockKycRecords)
+  const [records, setRecords] = React.useState<KycRecord[]>([])
+  const [loading, setLoading] = React.useState(true)
   const [selectedRecord, setSelectedRecord] = React.useState<KycRecord | null>(
     null
   )
@@ -70,25 +62,98 @@ export function KycApprovalsView(): React.ReactElement {
     'all' | 'pending' | 'approved' | 'rejected'
   >('pending')
 
+  const mapKycRecord = React.useCallback((k: BackendKycResponse): KycRecord => {
+    let mappedStatus: 'pending' | 'approved' | 'rejected' = 'pending'
+    if (k.status === 'verified') {
+      mappedStatus = 'approved'
+    } else if (k.status === 'rejected') {
+      mappedStatus = 'rejected'
+    }
+
+    return {
+      id: k._id || '',
+      name: k.fullName || 'Chưa cập nhật',
+      email: k.user?.email || 'N/A',
+      cccdNumber: k.idCardNumber || '',
+      dob: k.dateOfBirth || '',
+      gender: k.gender || '',
+      hometown: k.placeOfOrigin || '',
+      address: k.placeOfResidence || '',
+      ocrScore: k.ocrMatchRate || 0,
+      submittedAt: k.createdAt
+        ? new Date(k.createdAt).toLocaleString('vi-VN')
+        : '',
+      status: mappedStatus,
+      frontCardUrl: k.frontCardUrl,
+      backCardUrl: k.backCardUrl,
+      selfieUrl: k.selfieUrl,
+    }
+  }, [])
+
+  const loadRecords = React.useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await apiClient.get<BackendKycListResult>('/kyc?limit=100')
+      if (data && data.items) {
+        setRecords(data.items.map(mapKycRecord))
+      }
+    } catch (err) {
+      console.error('Failed to load KYC records:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [mapKycRecord])
+
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadRecords()
+  }, [loadRecords])
+
+  const handleVerify = async (id: string): Promise<void> => {
+    try {
+      await apiClient.patch(`/kyc/${id}/review`, { status: 'verified' })
+      setRecords(prev =>
+        prev.map(r => (r.id === id ? { ...r, status: 'approved' } : r))
+      )
+      setSelectedRecord(null)
+    } catch (err) {
+      console.error('Failed to verify KYC:', err)
+      if (typeof window !== 'undefined') {
+        window.alert('Không thể xác nhận KYC. Vui lòng thử lại.')
+      }
+    }
+  }
+
+  const handleReject = async (id: string): Promise<void> => {
+    if (!rejectReason.trim()) return
+    try {
+      await apiClient.patch(`/kyc/${id}/review`, {
+        status: 'rejected',
+        rejectedReason: rejectReason,
+      })
+      setRecords(prev =>
+        prev.map(r => (r.id === id ? { ...r, status: 'rejected' } : r))
+      )
+      setShowRejectDialog(false)
+      setSelectedRecord(null)
+      setRejectReason('')
+    } catch (err) {
+      console.error('Failed to reject KYC:', err)
+      if (typeof window !== 'undefined') {
+        window.alert('Không thể từ chối KYC. Vui lòng thử lại.')
+      }
+    }
+  }
   const filteredRecords = records.filter(
     r => filter === 'all' || r.status === filter
   )
 
-  const handleVerify = (id: string): void => {
-    setRecords(prev =>
-      prev.map(r => (r.id === id ? { ...r, status: 'approved' } : r))
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
     )
-    setSelectedRecord(null)
-  }
-
-  const handleReject = (id: string): void => {
-    if (!rejectReason.trim()) return
-    setRecords(prev =>
-      prev.map(r => (r.id === id ? { ...r, status: 'rejected' } : r))
-    )
-    setShowRejectDialog(false)
-    setSelectedRecord(null)
-    setRejectReason('')
   }
 
   return (
@@ -253,17 +318,63 @@ export function KycApprovalsView(): React.ReactElement {
 
             {/* Split layout content workspace */}
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-              {/* Left Side: Uploaded CCCD Mockup Images */}
+              {/* Left Side: Uploaded CCCD & Selfie Images */}
               <div className="flex-1 bg-bg/50 p-6 overflow-y-auto space-y-6 border-r border-line">
                 <h3 className="text-xs font-bold text-fg uppercase tracking-wider font-body mb-3">
-                  Hình ảnh CCCD do người dùng tải lên
+                  Hình ảnh CCCD & Selfie chân dung
                 </h3>
 
                 {/* Front side of CCCD */}
-                <CccdMockupCard record={selectedRecord} side="front" />
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
+                    Mặt trước CCCD
+                  </span>
+                  {selectedRecord.frontCardUrl ? (
+                    <div className="relative aspect-[1.58/1] w-full max-w-sm mx-auto overflow-hidden rounded-xl border border-line bg-surface shadow-sm hover:border-primary/50 transition-colors">
+                      <img
+                        src={selectedRecord.frontCardUrl}
+                        alt="Mặt trước CCCD"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <CccdMockupCard record={selectedRecord} side="front" />
+                  )}
+                </div>
 
                 {/* Back side of CCCD */}
-                <CccdMockupCard record={selectedRecord} side="back" />
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
+                    Mặt sau CCCD
+                  </span>
+                  {selectedRecord.backCardUrl ? (
+                    <div className="relative aspect-[1.58/1] w-full max-w-sm mx-auto overflow-hidden rounded-xl border border-line bg-surface shadow-sm hover:border-primary/50 transition-colors">
+                      <img
+                        src={selectedRecord.backCardUrl}
+                        alt="Mặt sau CCCD"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <CccdMockupCard record={selectedRecord} side="back" />
+                  )}
+                </div>
+
+                {/* Selfie Image */}
+                {selectedRecord.selfieUrl && (
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
+                      Ảnh chân dung đối chiếu (Selfie)
+                    </span>
+                    <div className="relative aspect-[1/1] w-48 mx-auto overflow-hidden rounded-xl border border-line bg-surface shadow-sm hover:border-primary/50 transition-colors">
+                      <img
+                        src={selectedRecord.selfieUrl}
+                        alt="Ảnh Selfie chân dung"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right Side: OCR Extracted Fields Side-by-side Form */}
