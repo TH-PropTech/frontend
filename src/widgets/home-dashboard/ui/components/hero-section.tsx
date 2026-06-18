@@ -48,15 +48,6 @@ export function HeroSection(): React.ReactElement {
                 Tìm căn hộ ngay
               </Button>
             </Link>
-            <Link href={'/vr' as Route}>
-              <Button
-                variant="secondary"
-                size="lg"
-                className="rounded-full border border-white/45 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 font-bold transition-all hover:-translate-y-0.5"
-              >
-                Khám phá VR 3D
-              </Button>
-            </Link>
           </div>
         </div>
       </div>

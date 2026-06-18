@@ -34,13 +34,13 @@ export function FinalCtaBanner(): React.ReactElement {
                 Tìm căn hộ ngay
               </Button>
             </Link>
-            <Link href={'/contact' as Route}>
+            <Link href={'/vr' as Route}>
               <Button
                 variant="secondary"
                 size="lg"
                 className="rounded-full border border-border bg-white text-muted hover:bg-bg font-bold transition-all hover:-translate-y-0.5"
               >
-                Liên hệ tư vấn
+                Trải nghiệm VR 3D
               </Button>
             </Link>
           </div>
