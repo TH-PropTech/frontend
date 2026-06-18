@@ -12,7 +12,7 @@ interface BookingItem {
   apartmentId?: string
   apartmentTitle?: string
   visitAt?: string
-  status?: string
+  status?: 'pending' | 'confirmed' | 'rejected'
 }
 
 interface BookingResponse {

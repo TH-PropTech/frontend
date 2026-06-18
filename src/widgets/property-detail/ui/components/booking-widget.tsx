@@ -24,23 +24,26 @@ export function BookingWidget({
 
   // Auto-fill tenant info from localStorage user object if available
   React.useEffect(() => {
+    let timer: NodeJS.Timeout | undefined
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('user')
       if (stored) {
         try {
           const u = JSON.parse(stored)
-          const timer = setTimeout(() => {
+          timer = setTimeout(() => {
             setFormData(prev => ({
               ...prev,
               fullName: u.name || '',
               phone: u.phone || '',
             }))
           }, 0)
-          return () => clearTimeout(timer)
         } catch (e) {
           console.error(e)
         }
       }
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
     }
   }, [])
 
