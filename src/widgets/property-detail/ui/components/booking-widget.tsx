@@ -2,8 +2,16 @@
 
 import * as React from 'react'
 import { Button } from '@/shared/ui/button'
+import { apiClient } from '@/shared/api/api-client'
+import { toast } from 'sonner'
 
-export function BookingWidget(): React.ReactElement {
+interface BookingWidgetProps {
+  propertyId: string
+}
+
+export function BookingWidget({
+  propertyId,
+}: BookingWidgetProps): React.ReactElement {
   // Form states for booking/consultation
   const [formData, setFormData] = React.useState({
     fullName: '',
@@ -13,7 +21,28 @@ export function BookingWidget(): React.ReactElement {
     notes: '',
   })
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [showSuccessToast, setShowSuccessToast] = React.useState(false)
+
+  // Auto-fill tenant info from localStorage user object if available
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('user')
+      if (stored) {
+        try {
+          const u = JSON.parse(stored)
+          const timer = setTimeout(() => {
+            setFormData(prev => ({
+              ...prev,
+              fullName: u.name || '',
+              phone: u.phone || '',
+            }))
+          }, 0)
+          return () => clearTimeout(timer)
+        } catch (e) {
+          console.error(e)
+        }
+      }
+    }
+  }, [])
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -24,27 +53,63 @@ export function BookingWidget(): React.ReactElement {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.fullName || !formData.phone) {
-      alert('Vui lòng điền đầy đủ Họ tên và Số điện thoại')
+      toast.error('Vui lòng điền đầy đủ Họ tên và Số điện thoại')
+      return
+    }
+    if (!formData.visitDate) {
+      toast.error('Vui lòng chọn ngày xem phòng')
+      return
+    }
+
+    const token =
+      typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+    if (!token) {
+      toast.warning('Vui lòng đăng nhập trước khi đặt lịch hẹn xem nhà.')
       return
     }
 
     setIsSubmitting(true)
-    setTimeout(() => {
-      setIsSubmitting(false)
-      setShowSuccessToast(true)
-      // Reset form
-      setFormData({
-        fullName: '',
-        phone: '',
+    try {
+      // Map visitTime to exact time segment
+      const timeMap: Record<string, string> = {
+        morning: '09:00',
+        afternoon: '14:00',
+        evening: '19:00',
+      }
+      const timeStr = timeMap[formData.visitTime] || '14:00'
+      const visitAt = `${formData.visitDate}T${timeStr}:00`
+
+      await apiClient.post('/bookings', {
+        apartmentId: propertyId,
+        visitAt: new Date(visitAt).toISOString(),
+        method: 'onsite',
+        note: formData.notes || '',
+      })
+
+      toast.success('Đăng ký xem phòng thành công!', {
+        description:
+          'Yêu cầu đặt lịch của bạn đã được ghi nhận. Chủ nhà sẽ nhận được thông báo ngay lập tức và xác nhận lịch hẹn với bạn.',
+      })
+      // Reset form (keeping full name and phone)
+      setFormData(prev => ({
+        ...prev,
         visitDate: '',
         visitTime: 'morning',
         notes: '',
-      })
-      setTimeout(() => setShowSuccessToast(false), 4000)
-    }, 1200)
+      }))
+    } catch (err) {
+      console.error('Booking failed:', err)
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Không thể đăng ký lịch hẹn. Vui lòng thử lại!'
+      toast.error(message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -92,11 +157,12 @@ export function BookingWidget(): React.ReactElement {
 
           <div>
             <label className="text-[10px] uppercase font-bold text-muted tracking-wider block mb-1">
-              Ngày xem phòng
+              Ngày xem phòng *
             </label>
             <input
               type="date"
               name="visitDate"
+              required
               value={formData.visitDate}
               onChange={handleInputChange}
               className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted/50 focus:outline-none focus:border-primary cursor-pointer"
@@ -140,42 +206,6 @@ export function BookingWidget(): React.ReactElement {
             Đăng ký lịch hẹn ngay
           </Button>
         </form>
-      </div>
-
-      {/* Success Notification Toast */}
-      <div
-        className={`fixed top-24 right-6 z-[100] max-w-md transition-all duration-300 transform will-change-[transform,opacity] ${
-          showSuccessToast
-            ? 'translate-y-0 opacity-100'
-            : '-translate-y-4 opacity-0 pointer-events-none'
-        }`}
-      >
-        <div className="rounded-2xl border border-success-strong bg-success-soft/20 backdrop-blur-md p-4 shadow-lg flex gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success text-white">
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="3"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m4.5 12.75 6 6 9-13.5"
-              />
-            </svg>
-          </div>
-          <div className="text-left">
-            <h4 className="font-marketing text-sm font-bold text-success-strong">
-              Đăng ký xem phòng thành công!
-            </h4>
-            <p className="font-body text-xs text-muted mt-0.5 leading-relaxed">
-              Yêu cầu của bạn đã được ghi nhận. Nhân viên tư vấn căn hộ sẽ gọi
-              điện xác nhận lịch hẹn xem phòng với bạn trong vòng 15 phút tới.
-            </p>
-          </div>
-        </div>
       </div>
     </>
   )
