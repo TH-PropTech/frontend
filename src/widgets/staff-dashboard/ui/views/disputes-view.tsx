@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { toast } from 'sonner'
 
 interface Dispute {
   id: string
@@ -92,6 +93,10 @@ export function DisputesView(): React.ReactElement {
 
       setExecutedTx(generatedTx)
       setIsExecuting(false)
+      toast.success('Phân giải tranh chấp thành công!', {
+        description:
+          'Giao dịch giải phóng Escrow Smart Contract đã được phát sóng lên chuỗi.',
+      })
     }, 2500)
   }
 

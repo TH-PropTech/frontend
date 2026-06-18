@@ -21,7 +21,7 @@ export function PlatformOverview(): React.ReactElement {
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Card 1: Properties Search */}
         <div className="group relative rounded-3xl border border-border bg-white p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between min-h-[260px]">
           <div className="space-y-4">
@@ -155,56 +155,6 @@ export function PlatformOverview(): React.ReactElement {
               className="inline-flex items-center gap-2 text-xs font-bold text-primary group-hover:translate-x-1 transition-transform"
             >
               Tìm hiểu quy trình minh bạch
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-                />
-              </svg>
-            </Link>
-          </div>
-        </div>
-
-        {/* Card 4: Contact Consultation */}
-        <div className="group relative rounded-3xl border border-border bg-white p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between min-h-[260px]">
-          <div className="space-y-4">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-            </div>
-            <h3 className="font-marketing text-xl font-bold text-fg">
-              Đăng ký tư vấn trực tiếp
-            </h3>
-            <p className="font-body text-xs text-muted leading-relaxed">
-              Để lại thông tin và yêu cầu chi tiết về căn hộ mong muốn. Đội ngũ
-              tư vấn chuyên nghiệp của TH-PropTech sẽ lập tức phản hồi và đồng
-              hành cùng bạn.
-            </p>
-          </div>
-          <div className="pt-6">
-            <Link
-              href={'/contact' as Route}
-              className="inline-flex items-center gap-2 text-xs font-bold text-primary group-hover:translate-x-1 transition-transform"
-            >
-              Đăng ký tư vấn ngay
               <svg
                 className="h-4 w-4"
                 fill="none"

@@ -8,6 +8,7 @@ import { Input } from '@/shared/ui/input'
 import { Button } from '@/shared/ui/button'
 import { apiClient } from '@/shared/api/api-client'
 import { TermsModal, PrivacyModal } from './auth-modals'
+import { toast } from 'sonner'
 
 export function RegisterForm(): React.ReactElement {
   const router = useRouter()
@@ -49,11 +50,15 @@ export function RegisterForm(): React.ReactElement {
         phone,
       })
       setSuccessMsg('Mã OTP xác thực đăng ký đã được gửi đến email của bạn.')
+      toast.success('Mã OTP đăng ký đã được gửi!', {
+        description: 'Vui lòng kiểm tra email của bạn để lấy mã OTP xác thực.',
+      })
       setIsOtpSent(true)
     } catch (err: unknown) {
       const msg =
         err instanceof Error ? err.message : 'Yêu cầu gửi OTP đăng ký thất bại.'
       setErrorMsg(msg)
+      toast.error(msg)
     } finally {
       setIsLoading(false)
     }
@@ -79,6 +84,9 @@ export function RegisterForm(): React.ReactElement {
       })
 
       setSuccessMsg('Đăng ký tài khoản thành công! Đang chuyển hướng...')
+      toast.success('Đăng ký tài khoản thành công!', {
+        description: 'Đang chuyển hướng tới trang đăng nhập...',
+      })
       localStorage.setItem('showWelcomeModal', 'true')
       setTimeout(() => {
         router.push('/login' as Route)
@@ -89,6 +97,7 @@ export function RegisterForm(): React.ReactElement {
           ? err.message
           : 'Xác thực OTP đăng ký thất bại. Vui lòng kiểm tra lại.'
       setErrorMsg(msg)
+      toast.error(msg)
     } finally {
       setIsLoading(false)
     }
@@ -106,9 +115,11 @@ export function RegisterForm(): React.ReactElement {
         phone,
       })
       setSuccessMsg('Mã OTP mới đã được gửi lại vào email của bạn.')
+      toast.success('Đã gửi lại mã OTP mới!')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Gửi lại OTP thất bại.'
       setErrorMsg(msg)
+      toast.error(msg)
     } finally {
       setIsLoading(false)
     }

@@ -99,7 +99,7 @@ export function ApartmentCard({
               onClick={e => {
                 e.preventDefault()
                 e.stopPropagation()
-                toggleFavorite(apt.id)
+                toggleFavorite(apt.id, apt.title)
               }}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 hover:bg-black/60 active:scale-95 transition-all text-white border border-white/10"
               title={favorite ? 'Bỏ lưu' : 'Lưu tin'}
@@ -200,21 +200,13 @@ export function ApartmentCard({
         </div>
       </div>
 
-      <div className="mt-5 flex gap-3">
-        <Link href={`/properties/${apt.id}` as Route} className="flex-1">
+      <div className="mt-5 flex">
+        <Link href={`/properties/${apt.id}` as Route} className="w-full">
           <Button
             variant="primary"
             className="w-full rounded-xl py-2.5 text-xs font-bold transition-all"
           >
             Xem chi tiết
-          </Button>
-        </Link>
-        <Link href={'/contact' as Route} className="flex-1">
-          <Button
-            variant="secondary"
-            className="w-full rounded-xl py-2.5 text-xs font-bold transition-all"
-          >
-            Tư vấn
           </Button>
         </Link>
       </div>
