@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 
 const STORAGE_KEY = 'th_favorites'
 
 export interface UseFavoritesResult {
   favorites: string[]
-  toggleFavorite: (id: string) => void
+  toggleFavorite: (id: string, title?: string) => void
   isFavorite: (id: string) => boolean
 }
 
@@ -27,20 +28,33 @@ export function useFavorites(): UseFavoritesResult {
     }
   }, [])
 
-  const toggleFavorite = (id: string): void => {
-    setFavorites(prev => {
-      const next = prev.includes(id)
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-        // Dispatch in the next tick to avoid cascading render warnings
-        setTimeout(() => {
-          window.dispatchEvent(new Event('favorites-updated'))
-        }, 0)
-      }
-      return next
-    })
+  const toggleFavorite = (id: string, title?: string): void => {
+    const isAdding = !favorites.includes(id)
+    const next = isAdding
+      ? [...favorites, id]
+      : favorites.filter(item => item !== id)
+
+    setFavorites(next)
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      window.dispatchEvent(new Event('favorites-updated'))
+    }
+
+    if (isAdding) {
+      toast.success(
+        title ? `Đã lưu: ${title}` : 'Đã lưu căn hộ vào danh sách yêu thích',
+        {
+          description: 'Bạn có thể xem lại trong mục Căn hộ đã lưu.',
+        }
+      )
+    } else {
+      toast.info(
+        title
+          ? `Đã bỏ lưu: ${title}`
+          : 'Đã bỏ lưu căn hộ khỏi danh sách yêu thích'
+      )
+    }
   }
 
   useEffect(() => {
