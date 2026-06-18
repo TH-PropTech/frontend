@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { CccdMockupCard } from './components/cccd-mockup-card'
 import { apiClient } from '@/shared/api/api-client'
+import { toast } from 'sonner'
 
 interface KycRecord {
   id: string
@@ -116,11 +117,14 @@ export function KycApprovalsView(): React.ReactElement {
         prev.map(r => (r.id === id ? { ...r, status: 'approved' } : r))
       )
       setSelectedRecord(null)
+      toast.success('Đã phê duyệt hồ sơ KYC thành công!')
     } catch (err) {
       console.error('Failed to verify KYC:', err)
-      if (typeof window !== 'undefined') {
-        window.alert('Không thể xác nhận KYC. Vui lòng thử lại.')
-      }
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Không thể xác nhận KYC. Vui lòng thử lại.'
+      toast.error(message)
     }
   }
 
@@ -137,11 +141,14 @@ export function KycApprovalsView(): React.ReactElement {
       setShowRejectDialog(false)
       setSelectedRecord(null)
       setRejectReason('')
+      toast.info('Đã từ chối hồ sơ KYC.')
     } catch (err) {
       console.error('Failed to reject KYC:', err)
-      if (typeof window !== 'undefined') {
-        window.alert('Không thể từ chối KYC. Vui lòng thử lại.')
-      }
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Không thể từ chối KYC. Vui lòng thử lại.'
+      toast.error(message)
     }
   }
   const filteredRecords = records.filter(
