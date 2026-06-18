@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Input } from '@/shared/ui/input'
 import { Button } from '@/shared/ui/button'
 import { apiClient } from '@/shared/api/api-client'
+import { toast } from 'sonner'
 
 type LoginMode = 'password' | 'passwordless-email' | 'two-factor'
 
@@ -76,6 +77,9 @@ export function LoginForm(): React.ReactElement {
         localStorage.setItem('user', JSON.stringify(successResp.user))
 
         setSuccessMsg('Đăng nhập thành công! Đang chuyển hướng...')
+        toast.success('Đăng nhập thành công!', {
+          description: `Chào mừng quay trở lại, ${successResp.user.name}!`,
+        })
 
         setTimeout(() => {
           if (
@@ -93,6 +97,7 @@ export function LoginForm(): React.ReactElement {
             ? err.message
             : 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
         setErrorMsg(msg)
+        toast.error(msg)
       } finally {
         setIsLoading(false)
       }
@@ -111,6 +116,13 @@ export function LoginForm(): React.ReactElement {
           }
         )
 
+        setSuccessMsg(
+          'Mã OTP xác thực đăng nhập đã được gửi đến email của bạn.'
+        )
+        toast.success('Đã gửi mã OTP đăng nhập!', {
+          description: 'Vui lòng kiểm tra hòm thư của bạn để lấy mã OTP.',
+        })
+
         if ('is2faRequired' in response && response.is2faRequired) {
           setTwoFactorTempToken(response.twoFactorTempToken)
           setLoginMode('two-factor')
@@ -122,6 +134,7 @@ export function LoginForm(): React.ReactElement {
         const msg =
           err instanceof Error ? err.message : 'Yêu cầu đăng nhập thất bại.'
         setErrorMsg(msg)
+        toast.error(msg)
       } finally {
         setIsLoading(false)
       }
@@ -140,6 +153,7 @@ export function LoginForm(): React.ReactElement {
         localStorage.setItem('user', JSON.stringify(response.user))
 
         setSuccessMsg('Xác thực 2FA thành công! Đang chuyển hướng...')
+        toast.success('Xác thực 2FA thành công!')
         setTimeout(() => {
           if (
             response.user.roles.includes('staff') ||
@@ -156,6 +170,7 @@ export function LoginForm(): React.ReactElement {
             ? err.message
             : 'Xác thực 2FA thất bại. Vui lòng kiểm tra lại mã.'
         setErrorMsg(msg)
+        toast.error(msg)
       } finally {
         setIsLoading(false)
       }
