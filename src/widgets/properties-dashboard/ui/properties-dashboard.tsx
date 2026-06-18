@@ -22,8 +22,6 @@ export function PropertiesDashboard(): React.ReactElement {
     setSearchKeyword,
     searchStatus,
     setSearchStatus,
-    selectedType,
-    setSelectedType,
     selectedCity,
     setSelectedCity,
     selectedDistrict,
@@ -69,6 +67,7 @@ export function PropertiesDashboard(): React.ReactElement {
     resetFilters,
     activeFiltersCount,
     filteredProjects,
+    filteredApiProjects,
     filteredApartments,
     locationLabel,
     priceLabel,
@@ -82,6 +81,13 @@ export function PropertiesDashboard(): React.ReactElement {
     setSelectedApiProjectId,
     selectedBuildingId,
     setSelectedBuildingId,
+    applyAdvancedFilters,
+    revertAdvancedFilters,
+    draftCount,
+    // Applied filter methods
+    applyLocationFilters,
+    revertLocationFilters,
+    triggerSearch,
   } = usePropertiesFilters()
 
   // Get selected building name from apartments data
@@ -107,12 +113,26 @@ export function PropertiesDashboard(): React.ReactElement {
 
   const handleSearchSubmit = (e: React.FormEvent): void => {
     e.preventDefault()
+    triggerSearch()
+    setIsLocationModalOpen(false)
+    setIsPriceModalOpen(false)
+    setIsAreaOpen(false)
     const trimmed = searchKeyword.trim()
     let statusText = 'Đang hiển thị kết quả lọc.'
     if (trimmed) {
       statusText = `Đang lọc theo "${trimmed}"...`
     }
     setSearchStatus(statusText)
+  }
+
+  const handleApplyAdvanced = (): void => {
+    applyAdvancedFilters()
+    setIsAdvancedDrawerOpen(false)
+  }
+
+  const handleCloseAdvanced = (): void => {
+    revertAdvancedFilters()
+    setIsAdvancedDrawerOpen(false)
   }
 
   return (
@@ -124,40 +144,45 @@ export function PropertiesDashboard(): React.ReactElement {
         <PropertiesHero />
 
         {/* Search Console Container */}
-        <PropertiesSearchConsole
-          searchKeyword={searchKeyword}
-          setSearchKeyword={setSearchKeyword}
-          isLocationModalOpen={isLocationModalOpen}
-          setIsLocationModalOpen={setIsLocationModalOpen}
-          isPriceModalOpen={isPriceModalOpen}
-          setIsPriceModalOpen={setIsPriceModalOpen}
-          isAreaModalOpen={isAreaModalOpen}
-          setIsAreaOpen={setIsAreaOpen}
-          locationLabel={locationLabel}
-          priceLabel={priceLabel}
-          areaLabel={areaLabel}
-          activeFiltersCount={activeFiltersCount}
-          setIsAdvancedDrawerOpen={setIsAdvancedDrawerOpen}
-          handleSearchSubmit={handleSearchSubmit}
-          selectedCity={selectedCity}
-          setSelectedCity={setSelectedCity}
-          selectedDistrict={selectedDistrict}
-          setSelectedDistrict={setSelectedDistrict}
-          selectedWard={selectedWard}
-          setSelectedWard={setSelectedWard}
-          selectedStreet={selectedStreet}
-          setSelectedStreet={setSelectedStreet}
-          selectedProject={selectedProject}
-          setSelectedProject={setSelectedProject}
-          minPrice={minPrice}
-          setMinPrice={setMinPrice}
-          maxPrice={maxPrice}
-          setMaxPrice={setMaxPrice}
-          minArea={minArea}
-          setMinArea={setMinArea}
-          maxArea={maxArea}
-          setMaxArea={setMaxArea}
-        />
+        {!selectedApiProjectId && (
+          <PropertiesSearchConsole
+            activeTab={activeTab}
+            searchKeyword={searchKeyword}
+            setSearchKeyword={setSearchKeyword}
+            isLocationModalOpen={isLocationModalOpen}
+            setIsLocationModalOpen={setIsLocationModalOpen}
+            isPriceModalOpen={isPriceModalOpen}
+            setIsPriceModalOpen={setIsPriceModalOpen}
+            isAreaModalOpen={isAreaModalOpen}
+            setIsAreaOpen={setIsAreaOpen}
+            locationLabel={locationLabel}
+            priceLabel={priceLabel}
+            areaLabel={areaLabel}
+            activeFiltersCount={activeFiltersCount}
+            setIsAdvancedDrawerOpen={setIsAdvancedDrawerOpen}
+            handleSearchSubmit={handleSearchSubmit}
+            selectedCity={selectedCity}
+            setSelectedCity={setSelectedCity}
+            selectedDistrict={selectedDistrict}
+            setSelectedDistrict={setSelectedDistrict}
+            selectedWard={selectedWard}
+            setSelectedWard={setSelectedWard}
+            selectedStreet={selectedStreet}
+            setSelectedStreet={setSelectedStreet}
+            selectedProject={selectedProject}
+            setSelectedProject={setSelectedProject}
+            minPrice={minPrice}
+            setMinPrice={setMinPrice}
+            maxPrice={maxPrice}
+            setMaxPrice={setMaxPrice}
+            minArea={minArea}
+            setMinArea={setMinArea}
+            maxArea={maxArea}
+            setMaxArea={setMaxArea}
+            applyLocationFilters={applyLocationFilters}
+            revertLocationFilters={revertLocationFilters}
+          />
+        )}
 
         {/* Tab Switcher */}
         <section className="mx-auto max-w-lg mt-12 px-6">
@@ -411,15 +436,23 @@ export function PropertiesDashboard(): React.ReactElement {
               </div>
             </div>
           ) : apiProjects.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {apiProjects.map(proj => (
-                <ApiProjectCard
-                  key={proj.id}
-                  project={proj}
-                  onSelect={() => setSelectedApiProjectId(proj.id)}
-                />
-              ))}
-            </div>
+            filteredApiProjects.length === 0 ? (
+              <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
+                <p className="font-body text-sm text-muted">
+                  Không tìm thấy dự án phù hợp với bộ lọc hiện tại.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredApiProjects.map(proj => (
+                  <ApiProjectCard
+                    key={proj.id}
+                    project={proj}
+                    onSelect={() => setSelectedApiProjectId(proj.id)}
+                  />
+                ))}
+              </div>
+            )
           ) : filteredProjects.length === 0 ? (
             <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
               <p className="font-body text-sm text-muted">
@@ -439,10 +472,10 @@ export function PropertiesDashboard(): React.ReactElement {
       <Footer />
 
       <AdvancedDrawer
+        activeTab={activeTab}
         isOpen={isAdvancedDrawerOpen}
-        onClose={() => setIsAdvancedDrawerOpen(false)}
-        selectedType={selectedType}
-        setSelectedType={setSelectedType}
+        onClose={handleCloseAdvanced}
+        onApply={handleApplyAdvanced}
         bedroomsFilter={bedroomsFilter}
         setBedroomsFilter={setBedroomsFilter}
         bathroomsFilter={bathroomsFilter}
@@ -468,7 +501,7 @@ export function PropertiesDashboard(): React.ReactElement {
         selectedAmenities={selectedAmenities}
         setSelectedAmenities={setSelectedAmenities}
         resetFilters={resetFilters}
-        totalCount={filteredApartments.length + filteredProjects.length}
+        totalCount={draftCount}
       />
     </div>
   )
