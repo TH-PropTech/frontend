@@ -8,6 +8,8 @@ import { Logo } from '@/shared/ui/logo'
 import { Button } from '@/shared/ui/button'
 import { useFavorites } from '@/shared/lib/use-favorites'
 import { WelcomeModal } from '@/features/auth/ui/auth-modals'
+import { NotificationBell } from './components/notification-bell'
+import { toast } from 'sonner'
 
 interface UserStored {
   name: string
@@ -53,6 +55,13 @@ export function HomeHeader(): React.ReactElement {
         console.error(e)
       }
     }
+
+    // Check if logout toast needs to be shown
+    const showLogout = localStorage.getItem('showLogoutToast')
+    if (showLogout === 'true') {
+      toast.success('Đăng xuất tài khoản thành công!')
+      localStorage.removeItem('showLogoutToast')
+    }
   }, [])
 
   const navItems = [
@@ -60,7 +69,6 @@ export function HomeHeader(): React.ReactElement {
     { name: 'Căn hộ', href: '/properties' },
     { name: 'Cộng đồng', href: '/community' },
     { name: 'Cẩm nang', href: '/process' },
-    { name: 'Liên hệ', href: '/contact' },
   ]
 
   const isLightHeader = pathname !== '/' || isScrolled
@@ -75,7 +83,7 @@ export function HomeHeader(): React.ReactElement {
           : 'bg-gradient-to-b from-black/40 to-transparent py-5 text-white'
       }`}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 md:px-10">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 md:px-10">
         <Link
           href="/"
           className="transition-transform hover:scale-[1.02] active:scale-[0.98]"
@@ -84,7 +92,7 @@ export function HomeHeader(): React.ReactElement {
         </Link>
 
         <nav
-          className="hidden items-center gap-8 text-sm font-semibold md:flex"
+          className="hidden items-center gap-6 text-sm font-semibold lg:flex"
           aria-label="Điều hướng chính"
         >
           {navItems.map(item => {
@@ -134,6 +142,8 @@ export function HomeHeader(): React.ReactElement {
             )}
           </Link>
 
+          {user && <NotificationBell isLightHeader={isLightHeader} />}
+
           {user ? (
             <div className="flex items-center gap-3">
               <Link
@@ -169,13 +179,14 @@ export function HomeHeader(): React.ReactElement {
                   )}
                 </div>
                 <span className="hidden md:inline-block">
-                  Chào, {user.name}
+                  Chào, {user.name ? user.name.trim().split(/\s+/).pop() : ''}
                 </span>
               </Link>
               <Button
                 onClick={() => {
                   localStorage.removeItem('accessToken')
                   localStorage.removeItem('user')
+                  localStorage.setItem('showLogoutToast', 'true')
                   setUser(null)
                   window.location.href = '/'
                 }}
