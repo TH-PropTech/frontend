@@ -2,11 +2,13 @@
 
 import * as React from 'react'
 import { locationData } from '@/entities/properties'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { LocationFilterModal } from './location-filter-modal'
 import { PriceFilterModal } from './price-filter-modal'
 import { AreaFilterModal } from './area-filter-modal'
 
 interface PropertiesSearchConsoleProps {
+  activeTab: 'single' | 'project'
   searchKeyword: string
   setSearchKeyword: (val: string) => void
   isLocationModalOpen: boolean
@@ -42,9 +44,13 @@ interface PropertiesSearchConsoleProps {
   setMinArea: (val: number | '') => void
   maxArea: number | ''
   setMaxArea: (val: number | '') => void
+
+  applyLocationFilters: () => void
+  revertLocationFilters: () => void
 }
 
 export function PropertiesSearchConsole({
+  activeTab,
   searchKeyword,
   setSearchKeyword,
   isLocationModalOpen,
@@ -77,13 +83,19 @@ export function PropertiesSearchConsole({
   setMinArea,
   maxArea,
   setMaxArea,
+  applyLocationFilters,
+  revertLocationFilters,
 }: PropertiesSearchConsoleProps): React.ReactElement {
   return (
     <section className="mx-auto -mt-10 max-w-5xl px-6 relative z-30">
       <div className="rounded-[24px] lg:rounded-full bg-white border border-border shadow-[0_0_0_1px_rgba(var(--primary-rgb),0.08),0_20px_50px_rgba(var(--fg-rgb),0.12)] p-2">
         <form
           onSubmit={handleSearchSubmit}
-          className="grid grid-cols-1 lg:grid-cols-[1.4fr_1.1fr_1fr_1fr_auto_auto] items-center w-full gap-3 lg:gap-0"
+          className={`grid grid-cols-1 items-center w-full gap-3 lg:gap-0 ${
+            activeTab === 'project'
+              ? 'lg:grid-cols-[1.5fr_1.2fr_1.2fr_auto_auto]'
+              : 'lg:grid-cols-[1.4fr_1.1fr_1fr_1fr_auto_auto]'
+          }`}
         >
           {/* Keyword Section */}
           <div className="flex items-center gap-3 rounded-2xl lg:rounded-none lg:rounded-l-full hover:bg-primary/5 px-5 py-2.5 transition-all cursor-text focus-within:bg-primary/5 lg:border-r lg:border-primary/15">
@@ -116,139 +128,151 @@ export function PropertiesSearchConsole({
           </div>
 
           {/* Cascade Location Section */}
-          <div
-            className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15"
-            onClick={() => {
-              setIsLocationModalOpen(!isLocationModalOpen)
-              setIsPriceModalOpen(false)
-              setIsAreaOpen(false)
+          <Popover
+            open={isLocationModalOpen}
+            onOpenChange={open => {
+              if (!open) {
+                revertLocationFilters()
+              }
+              setIsLocationModalOpen(open)
             }}
-            onMouseLeave={() => setIsLocationModalOpen(false)}
           >
-            <svg
-              className="h-5 w-5 text-primary shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2.5"
+            <PopoverTrigger asChild>
+              <div className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
+                <svg
+                  className="h-5 w-5 text-primary shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z"
+                  />
+                </svg>
+                <div className="flex flex-col flex-1 min-w-0 select-none">
+                  <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
+                    Khu vực & Dự án
+                  </span>
+                  <span className="font-semibold text-fg text-xs mt-0.5 truncate">
+                    {locationLabel}
+                  </span>
+                </div>
+              </div>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-80 md:w-96 rounded-2xl border border-border bg-white p-4 shadow-xl outline-none"
+              align="start"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+              <LocationFilterModal
+                activeTab={activeTab}
+                onClose={() => setIsLocationModalOpen(false)}
+                onApply={applyLocationFilters}
+                selectedCity={selectedCity}
+                setSelectedCity={setSelectedCity}
+                selectedDistrict={selectedDistrict}
+                setSelectedDistrict={setSelectedDistrict}
+                selectedWard={selectedWard}
+                setSelectedWard={setSelectedWard}
+                selectedStreet={selectedStreet}
+                setSelectedStreet={setSelectedStreet}
+                selectedProject={selectedProject}
+                setSelectedProject={setSelectedProject}
+                locationData={locationData}
               />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z"
-              />
-            </svg>
-            <div className="flex flex-col flex-1 min-w-0 select-none">
-              <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
-                Khu vực & Dự án
-              </span>
-              <span className="font-semibold text-fg text-xs mt-0.5 truncate">
-                {locationLabel}
-              </span>
-            </div>
-            <LocationFilterModal
-              isOpen={isLocationModalOpen}
-              onClose={() => setIsLocationModalOpen(false)}
-              selectedCity={selectedCity}
-              setSelectedCity={setSelectedCity}
-              selectedDistrict={selectedDistrict}
-              setSelectedDistrict={setSelectedDistrict}
-              selectedWard={selectedWard}
-              setSelectedWard={setSelectedWard}
-              selectedStreet={selectedStreet}
-              setSelectedStreet={setSelectedStreet}
-              selectedProject={selectedProject}
-              setSelectedProject={setSelectedProject}
-              locationData={locationData}
-            />
-          </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Price Range Section */}
-          <div
-            className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15"
-            onClick={() => {
-              setIsPriceModalOpen(!isPriceModalOpen)
-              setIsLocationModalOpen(false)
-              setIsAreaOpen(false)
-            }}
-            onMouseLeave={() => setIsPriceModalOpen(false)}
-          >
-            <svg
-              className="h-5 w-5 text-primary shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2.5"
+          <Popover open={isPriceModalOpen} onOpenChange={setIsPriceModalOpen}>
+            <PopoverTrigger asChild>
+              <div className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
+                <svg
+                  className="h-5 w-5 text-primary shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                  />
+                </svg>
+                <div className="flex flex-col flex-1 min-w-0 select-none">
+                  <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
+                    Mức giá
+                  </span>
+                  <span className="font-semibold text-fg text-xs mt-0.5 truncate">
+                    {priceLabel}
+                  </span>
+                </div>
+              </div>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-72 rounded-2xl border border-border bg-white p-4 shadow-xl outline-none"
+              align="center"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+              <PriceFilterModal
+                onClose={() => setIsPriceModalOpen(false)}
+                minPrice={minPrice}
+                setMinPrice={setMinPrice}
+                maxPrice={maxPrice}
+                setMaxPrice={setMaxPrice}
               />
-            </svg>
-            <div className="flex flex-col flex-1 min-w-0 select-none">
-              <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
-                Mức giá
-              </span>
-              <span className="font-semibold text-fg text-xs mt-0.5 truncate">
-                {priceLabel}
-              </span>
-            </div>
-            <PriceFilterModal
-              isOpen={isPriceModalOpen}
-              onClose={() => setIsPriceModalOpen(false)}
-              minPrice={minPrice}
-              setMinPrice={setMinPrice}
-              maxPrice={maxPrice}
-              setMaxPrice={setMaxPrice}
-            />
-          </div>
+            </PopoverContent>
+          </Popover>
 
           {/* Area Section */}
-          <div
-            className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15"
-            onClick={() => {
-              setIsAreaOpen(!isAreaModalOpen)
-              setIsLocationModalOpen(false)
-              setIsPriceModalOpen(false)
-            }}
-            onMouseLeave={() => setIsAreaOpen(false)}
-          >
-            <svg
-              className="h-5 w-5 text-primary shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 3.75v16.5m0-16.5h16.5m-16.5 0v16.5m16.5-16.5v16.5m0-16.5H3.75m16.5 16.5H3.75m16.5 0V3.75"
-              />
-            </svg>
-            <div className="flex flex-col flex-1 min-w-0 select-none">
-              <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
-                Diện tích
-              </span>
-              <span className="font-semibold text-fg text-xs mt-0.5 truncate">
-                {areaLabel}
-              </span>
-            </div>
-            <AreaFilterModal
-              isOpen={isAreaModalOpen}
-              onClose={() => setIsAreaOpen(false)}
-              minArea={minArea}
-              setMinArea={setMinArea}
-              maxArea={maxArea}
-              setMaxArea={setMaxArea}
-            />
-          </div>
+          {activeTab === 'single' && (
+            <Popover open={isAreaModalOpen} onOpenChange={setIsAreaOpen}>
+              <PopoverTrigger asChild>
+                <div className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
+                  <svg
+                    className="h-5 w-5 text-primary shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3.75 3.75v16.5m0-16.5h16.5m-16.5 0v16.5m16.5-16.5v16.5m0-16.5H3.75m16.5 16.5H3.75m16.5 0V3.75"
+                    />
+                  </svg>
+                  <div className="flex flex-col flex-1 min-w-0 select-none">
+                    <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
+                      Diện tích
+                    </span>
+                    <span className="font-semibold text-fg text-xs mt-0.5 truncate">
+                      {areaLabel}
+                    </span>
+                  </div>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-72 rounded-2xl border border-border bg-white p-4 shadow-xl outline-none"
+                align="end"
+              >
+                <AreaFilterModal
+                  onClose={() => setIsAreaOpen(false)}
+                  minArea={minArea}
+                  setMinArea={setMinArea}
+                  maxArea={maxArea}
+                  setMaxArea={setMaxArea}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
 
           {/* Advanced Filters Button */}
           <div className="px-3 py-1 flex justify-center">
