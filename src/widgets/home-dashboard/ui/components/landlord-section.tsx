@@ -50,12 +50,12 @@ export function LandlordSection(): React.ReactElement {
               ))}
             </div>
             <div className="pt-2">
-              <Link href={'/contact' as Route}>
+              <Link href={'/process' as Route}>
                 <Button
                   variant="primary"
                   className="rounded-full bg-primary hover:bg-primary-hover text-white font-bold"
                 >
-                  Đăng ký ký gửi căn hộ
+                  Tìm hiểu quy trình ký gửi
                 </Button>
               </Link>
             </div>
