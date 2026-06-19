@@ -6,13 +6,11 @@ import { Footer } from '@/shared/ui/footer'
 import { usePropertiesFilters } from '../lib/use-properties-filters'
 import { PropertiesHero } from './components/properties-hero'
 import { ApartmentCard } from './components/apartment-card'
-import { ProjectCard } from './components/project-card'
-import { BuildingCard } from './components/building-card'
 import { PropertiesSearchConsole } from './components/properties-search-console'
-import { ApiProjectCard } from './components/api-project-card'
 import { AdvancedDrawer } from './components/advanced-drawer'
 import { PropertiesMap } from './components/properties-map'
-import { SelectedProjectHeader } from './components/selected-project-header'
+import { CompareModal } from './components/compare-modal'
+import { ProjectGridView } from './components/project-grid-view'
 import { toast } from 'sonner'
 
 export function PropertiesDashboard(): React.ReactElement {
@@ -73,7 +71,6 @@ export function PropertiesDashboard(): React.ReactElement {
     locationLabel,
     priceLabel,
     areaLabel,
-    // Backend API data for projects/buildings
     apiProjects,
     isLoadingProjects,
     apiBuildings,
@@ -85,13 +82,11 @@ export function PropertiesDashboard(): React.ReactElement {
     applyAdvancedFilters,
     revertAdvancedFilters,
     draftCount,
-    // Applied filter methods
     applyLocationFilters,
     revertLocationFilters,
     triggerSearch,
   } = usePropertiesFilters()
 
-  // Get selected building name from apartments data
   const selectedBuildingName = React.useMemo(() => {
     if (!selectedBuildingId) return null
     const found = filteredApartments.find(
@@ -103,7 +98,6 @@ export function PropertiesDashboard(): React.ReactElement {
     return 'Tòa nhà'
   }, [selectedBuildingId, filteredApartments, apiBuildings])
 
-  // Dropdown & Modal UI Open States
   const [isLocationModalOpen, setIsLocationModalOpen] = React.useState(false)
   const [isPriceModalOpen, setIsPriceModalOpen] = React.useState(false)
   const [isAreaModalOpen, setIsAreaOpen] = React.useState(false)
@@ -111,6 +105,28 @@ export function PropertiesDashboard(): React.ReactElement {
   const [viewMode, setViewMode] = React.useState<'list' | 'map'>('list')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedMapApt, setSelectedMapApt] = React.useState<any>(null)
+
+  // Compare states
+  const [compareIds, setCompareIds] = React.useState<string[]>([])
+  const [showCompareModal, setShowCompareModal] = React.useState(false)
+
+  const compareApartments = React.useMemo(() => {
+    return filteredApartments.filter(apt => compareIds.includes(apt.id))
+  }, [compareIds, filteredApartments])
+
+  const handleToggleCompare = (id: string): void => {
+    setCompareIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(item => item !== id)
+      } else {
+        if (prev.length >= 4) {
+          toast.warning('Chỉ có thể chọn tối đa 4 căn hộ để so sánh.')
+          return prev
+        }
+        return [...prev, id]
+      }
+    })
+  }
 
   const handleSearchSubmit = (e: React.FormEvent): void => {
     e.preventDefault()
@@ -131,25 +147,13 @@ export function PropertiesDashboard(): React.ReactElement {
     setSearchStatus(statusText)
   }
 
-  const handleApplyAdvanced = (): void => {
-    applyAdvancedFilters()
-    setIsAdvancedDrawerOpen(false)
-  }
-
-  const handleCloseAdvanced = (): void => {
-    revertAdvancedFilters()
-    setIsAdvancedDrawerOpen(false)
-  }
-
   return (
-    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative overflow-x-hidden">
+    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative overflow-x-hidden pb-20">
       <HomeHeader />
 
       <main className="w-full">
-        {/* Header Hero Section */}
         <PropertiesHero />
 
-        {/* Search Console Container */}
         {!selectedApiProjectId && (
           <PropertiesSearchConsole
             activeTab={activeTab}
@@ -190,7 +194,6 @@ export function PropertiesDashboard(): React.ReactElement {
           />
         )}
 
-        {/* Tab Switcher */}
         <section className="mx-auto max-w-lg mt-12 px-6">
           <div className="flex rounded-full bg-surface-muted p-1 border border-border">
             <button
@@ -226,7 +229,6 @@ export function PropertiesDashboard(): React.ReactElement {
           </div>
         </section>
 
-        {/* Apartments & Projects Grid Listing Section */}
         <section className="mx-auto max-w-6xl px-6 py-12 md:px-10">
           <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div className="space-y-2">
@@ -338,139 +340,30 @@ export function PropertiesDashboard(): React.ReactElement {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {filteredApartments.map(apt => (
-                  <ApartmentCard key={apt.id} apt={apt} />
-                ))}
-              </div>
-            )
-          ) : /* ── Tab Doanh nghiệp (project) ── */
-          selectedApiProjectId ? (
-            /* ── Drill-down: Show buildings for the selected project ── */
-            <div>
-              {/* Selected Project Header */}
-              <SelectedProjectHeader
-                selectedApiProjectId={selectedApiProjectId}
-                apiProjects={apiProjects}
-              />
-
-              {isLoadingBuildings ? (
-                <div className="text-center py-20">
-                  <div className="inline-flex items-center gap-3 text-primary">
-                    <svg
-                      className="h-5 w-5 animate-spin"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    <span className="font-body text-sm font-semibold">
-                      Đang tải tòa nhà...
-                    </span>
-                  </div>
-                </div>
-              ) : apiBuildings.length === 0 ? (
-                <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
-                  <svg
-                    className="mx-auto h-12 w-12 text-muted/40 mb-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21"
-                    />
-                  </svg>
-                  <p className="font-body text-sm text-muted">
-                    Chưa có tòa nhà nào trong dự án này.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {apiBuildings.map(building => (
-                    <BuildingCard
-                      key={building.id}
-                      building={building}
-                      onSelectBuilding={bId => {
-                        setSelectedBuildingId(bId)
-                        setActiveTab('single')
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : /* ── Show project list (API first, fallback to mock) ── */
-          isLoadingProjects ? (
-            <div className="text-center py-20">
-              <div className="inline-flex items-center gap-3 text-primary">
-                <svg
-                  className="h-5 w-5 animate-spin"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-                <span className="font-body text-sm font-semibold">
-                  Đang tải dự án...
-                </span>
-              </div>
-            </div>
-          ) : apiProjects.length > 0 ? (
-            filteredApiProjects.length === 0 ? (
-              <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
-                <p className="font-body text-sm text-muted">
-                  Không tìm thấy dự án phù hợp với bộ lọc hiện tại.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredApiProjects.map(proj => (
-                  <ApiProjectCard
-                    key={proj.id}
-                    project={proj}
-                    onSelect={() => setSelectedApiProjectId(proj.id)}
+                  <ApartmentCard
+                    key={apt.id}
+                    apt={apt}
+                    showCompareCheckbox={true}
+                    isSelected={compareIds.includes(apt.id)}
+                    onToggleCompare={() => handleToggleCompare(apt.id)}
+                    disableCompare={compareIds.length >= 4}
                   />
                 ))}
               </div>
             )
-          ) : filteredProjects.length === 0 ? (
-            <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
-              <p className="font-body text-sm text-muted">
-                Không tìm thấy dự án phù hợp với bộ lọc hiện tại.
-              </p>
-            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {filteredProjects.map(proj => (
-                <ProjectCard key={proj.id} proj={proj} />
-              ))}
-            </div>
+            <ProjectGridView
+              selectedApiProjectId={selectedApiProjectId}
+              setSelectedApiProjectId={setSelectedApiProjectId}
+              apiProjects={apiProjects}
+              filteredApiProjects={filteredApiProjects}
+              isLoadingProjects={isLoadingProjects}
+              apiBuildings={apiBuildings}
+              isLoadingBuildings={isLoadingBuildings}
+              setSelectedBuildingId={setSelectedBuildingId}
+              setActiveTab={setActiveTab}
+              filteredProjects={filteredProjects}
+            />
           )}
         </section>
       </main>
@@ -480,8 +373,14 @@ export function PropertiesDashboard(): React.ReactElement {
       <AdvancedDrawer
         activeTab={activeTab}
         isOpen={isAdvancedDrawerOpen}
-        onClose={handleCloseAdvanced}
-        onApply={handleApplyAdvanced}
+        onClose={() => {
+          revertAdvancedFilters()
+          setIsAdvancedDrawerOpen(false)
+        }}
+        onApply={() => {
+          applyAdvancedFilters()
+          setIsAdvancedDrawerOpen(false)
+        }}
         bedroomsFilter={bedroomsFilter}
         setBedroomsFilter={setBedroomsFilter}
         bathroomsFilter={bathroomsFilter}
@@ -508,6 +407,42 @@ export function PropertiesDashboard(): React.ReactElement {
         setSelectedAmenities={setSelectedAmenities}
         resetFilters={resetFilters}
         totalCount={draftCount}
+      />
+
+      {/* Floating Compare Action Bar for Guest and Authenticated Users */}
+      {compareIds.length >= 2 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-surface/95 backdrop-blur-md border border-border-strong text-fg px-6 py-4 rounded-2xl shadow-2xl flex items-center justify-between gap-8 z-[999] w-[90%] max-w-xl animate-in slide-in-from-bottom duration-300">
+          <div className="space-y-0.5">
+            <p className="font-marketing text-xs font-bold text-fg flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+              Đang chọn so sánh: {compareIds.length}/4 căn hộ
+            </p>
+            <p className="font-body text-[10px] text-fg/70 font-medium">
+              Hỗ trợ cả khách vãng lai chưa cần tài khoản
+            </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => setCompareIds([])}
+              className="px-4 py-2 border border-border-strong rounded-xl text-xs font-bold text-fg/85 hover:text-danger hover:bg-surface-muted transition-all cursor-pointer"
+            >
+              Xóa chọn
+            </button>
+            <button
+              onClick={() => setShowCompareModal(true)}
+              className="px-5 py-2 bg-primary rounded-xl text-xs font-bold text-white hover:bg-primary-hover transition-all cursor-pointer shadow-md shadow-primary/10"
+            >
+              So sánh ngay
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Compare Modal Panel */}
+      <CompareModal
+        show={showCompareModal}
+        onClose={() => setShowCompareModal(false)}
+        compareApartments={compareApartments}
       />
     </div>
   )
