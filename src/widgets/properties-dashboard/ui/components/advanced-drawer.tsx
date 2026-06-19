@@ -4,10 +4,10 @@ import * as React from 'react'
 import { AmenitiesSelector } from './amenities-selector'
 
 interface AdvancedDrawerProps {
+  activeTab?: 'single' | 'project'
   isOpen: boolean
   onClose: () => void
-  selectedType: string
-  setSelectedType: (val: string) => void
+  onApply: () => void
   bedroomsFilter: number | 'all'
   setBedroomsFilter: (val: number | 'all') => void
   bathroomsFilter: number | 'all'
@@ -37,10 +37,10 @@ interface AdvancedDrawerProps {
 }
 
 export function AdvancedDrawer({
+  activeTab = 'single',
   isOpen,
   onClose,
-  selectedType,
-  setSelectedType,
+  onApply,
   bedroomsFilter,
   setBedroomsFilter,
   bathroomsFilter,
@@ -127,35 +127,6 @@ export function AdvancedDrawer({
 
         {/* Content (Scrollable body) */}
         <div className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar text-left">
-          {/* Property Type */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-              Loại bất động sản
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {[
-                'Tất cả',
-                'Căn hộ chung cư',
-                'Chung cư mini, căn hộ dịch vụ',
-                'Nhà riêng',
-                'Nhà biệt thự, liền kề',
-              ].map(type => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setSelectedType(type)}
-                  className={`px-3 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                    selectedType === type
-                      ? 'bg-primary text-white border-primary shadow-sm'
-                      : 'bg-white text-fg border-border hover:bg-surface-muted'
-                  }`}
-                >
-                  {type === 'Tất cả' ? 'Tất cả loại hình' : type}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Rooms configuration */}
           <div className="space-y-3 border-t border-border/60 pt-5">
             <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
@@ -218,211 +189,221 @@ export function AdvancedDrawer({
           </div>
 
           {/* Orientations */}
-          <div className="space-y-3 border-t border-border/60 pt-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-              Hướng nhà & ban công
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-bold text-muted block mb-1.5">
-                  Hướng nhà chính
-                </label>
-                <select
-                  value={directionFilter}
-                  onChange={e => setDirectionFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
-                >
-                  <option value="all">Tất cả hướng</option>
-                  {[
-                    'Đông',
-                    'Tây',
-                    'Nam',
-                    'Bắc',
-                    'Đông Bắc',
-                    'Đông Nam',
-                    'Tây Bắc',
-                    'Tây Nam',
-                  ].map(dir => (
-                    <option key={dir} value={dir}>
-                      {dir}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-bold text-muted block mb-1.5">
-                  Hướng ban công
-                </label>
-                <select
-                  value={balconyDirectionFilter}
-                  onChange={e => setBalconyDirectionFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
-                >
-                  <option value="all">Tất cả hướng</option>
-                  {[
-                    'Đông',
-                    'Tây',
-                    'Nam',
-                    'Bắc',
-                    'Đông Bắc',
-                    'Đông Nam',
-                    'Tây Bắc',
-                    'Tây Nam',
-                  ].map(dir => (
-                    <option key={dir} value={dir}>
-                      {dir}
-                    </option>
-                  ))}
-                </select>
+          {activeTab === 'single' && (
+            <div className="space-y-3 border-t border-border/60 pt-5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+                Hướng nhà & ban công
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-muted block mb-1.5">
+                    Hướng nhà chính
+                  </label>
+                  <select
+                    value={directionFilter}
+                    onChange={e => setDirectionFilter(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">Tất cả hướng</option>
+                    {[
+                      'Đông',
+                      'Tây',
+                      'Nam',
+                      'Bắc',
+                      'Đông Bắc',
+                      'Đông Nam',
+                      'Tây Bắc',
+                      'Tây Nam',
+                    ].map(dir => (
+                      <option key={dir} value={dir}>
+                        {dir}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted block mb-1.5">
+                    Hướng ban công
+                  </label>
+                  <select
+                    value={balconyDirectionFilter}
+                    onChange={e => setBalconyDirectionFilter(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">Tất cả hướng</option>
+                    {[
+                      'Đông',
+                      'Tây',
+                      'Nam',
+                      'Bắc',
+                      'Đông Bắc',
+                      'Đông Nam',
+                      'Tây Bắc',
+                      'Tây Nam',
+                    ].map(dir => (
+                      <option key={dir} value={dir}>
+                        {dir}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Furniture & Timing */}
-          <div className="space-y-3 border-t border-border/60 pt-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-              Nội thất & Bàn giao
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-bold text-muted block mb-1.5">
-                  Nội thất
-                </label>
-                <select
-                  value={furnitureFilter}
-                  onChange={e => setFurnitureFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
-                >
-                  <option value="all">Tất cả trạng thái</option>
-                  {['Đầy đủ', 'Cơ bản', 'Không nội thất', 'Cao cấp'].map(f => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-bold text-muted block mb-1.5">
-                  Thời gian nhận nhà
-                </label>
-                <select
-                  value={moveInTimeFilter}
-                  onChange={e => setMoveInTimeFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
-                >
-                  <option value="all">Linh hoạt</option>
-                  {[
-                    'Ngay lập tức',
-                    'Trong tháng này',
-                    'Tháng sau',
-                    'Linh hoạt',
-                  ].map(t => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
+          {activeTab === 'single' && (
+            <div className="space-y-3 border-t border-border/60 pt-5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+                Nội thất & Bàn giao
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-muted block mb-1.5">
+                    Nội thất
+                  </label>
+                  <select
+                    value={furnitureFilter}
+                    onChange={e => setFurnitureFilter(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">Tất cả trạng thái</option>
+                    {['Đầy đủ', 'Cơ bản', 'Không nội thất', 'Cao cấp'].map(
+                      f => (
+                        <option key={f} value={f}>
+                          {f}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted block mb-1.5">
+                    Thời gian nhận nhà
+                  </label>
+                  <select
+                    value={moveInTimeFilter}
+                    onChange={e => setMoveInTimeFilter(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">Linh hoạt</option>
+                    {[
+                      'Ngay lập tức',
+                      'Trong tháng này',
+                      'Tháng sau',
+                      'Linh hoạt',
+                    ].map(t => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Living Costs (Utility profiles) */}
-          <div className="space-y-3 border-t border-border/60 pt-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-              Biểu phí sinh hoạt
-            </h3>
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between gap-3 text-xs">
-                <span className="font-semibold text-muted">Mức giá điện</span>
-                <select
-                  value={electricityPriceFilter}
-                  onChange={e => setElectricityPriceFilter(e.target.value)}
-                  className="px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
-                >
-                  <option value="all">Tất cả</option>
-                  {['Giá nhà nước', 'Giá kinh doanh', 'Tự thỏa thuận'].map(
-                    t => (
+          {activeTab === 'single' && (
+            <div className="space-y-3 border-t border-border/60 pt-5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+                Biểu phí sinh hoạt
+              </h3>
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="font-semibold text-muted">Mức giá điện</span>
+                  <select
+                    value={electricityPriceFilter}
+                    onChange={e => setElectricityPriceFilter(e.target.value)}
+                    className="px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">Tất cả</option>
+                    {['Giá nhà nước', 'Giá kinh doanh', 'Tự thỏa thuận'].map(
+                      t => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="font-semibold text-muted">Mức giá nước</span>
+                  <select
+                    value={waterPriceFilter}
+                    onChange={e => setWaterPriceFilter(e.target.value)}
+                    className="px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">Tất cả</option>
+                    {['Giá nhà nước', 'Giá kinh doanh', 'Tự thỏa thuận'].map(
+                      t => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="font-semibold text-muted">
+                    Giá thuê Internet
+                  </span>
+                  <select
+                    value={internetPriceFilter}
+                    onChange={e => setInternetPriceFilter(e.target.value)}
+                    className="px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="all">Tất cả</option>
+                    {['Miễn phí', 'Cố định', 'Tự lắp'].map(t => (
                       <option key={t} value={t}>
                         {t}
                       </option>
-                    )
-                  )}
-                </select>
-              </div>
-              <div className="flex items-center justify-between gap-3 text-xs">
-                <span className="font-semibold text-muted">Mức giá nước</span>
-                <select
-                  value={waterPriceFilter}
-                  onChange={e => setWaterPriceFilter(e.target.value)}
-                  className="px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
-                >
-                  <option value="all">Tất cả</option>
-                  {['Giá nhà nước', 'Giá kinh doanh', 'Tự thỏa thuận'].map(
-                    t => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
-              <div className="flex items-center justify-between gap-3 text-xs">
-                <span className="font-semibold text-muted">
-                  Giá thuê Internet
-                </span>
-                <select
-                  value={internetPriceFilter}
-                  onChange={e => setInternetPriceFilter(e.target.value)}
-                  className="px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
-                >
-                  <option value="all">Tất cả</option>
-                  {['Miễn phí', 'Cố định', 'Tự lắp'].map(t => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Verification and Media */}
-          <div className="space-y-3 border-t border-border/60 pt-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-              Thông tin kiểm duyệt
-            </h3>
-            <div className="space-y-2.5">
-              <label className="flex items-center justify-between cursor-pointer">
-                <span className="text-xs font-bold text-muted">
-                  Chỉ hiển thị Tin xác thực
-                </span>
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={isVerifiedOnly}
-                    onChange={e => setIsVerifiedOnly(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-border rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary" />
-                </div>
-              </label>
+          {activeTab === 'single' && (
+            <div className="space-y-3 border-t border-border/60 pt-5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+                Thông tin kiểm duyệt
+              </h3>
+              <div className="space-y-2.5">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-xs font-bold text-muted">
+                    Chỉ hiển thị Tin xác thực
+                  </span>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={isVerifiedOnly}
+                      onChange={e => setIsVerifiedOnly(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-border rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary" />
+                  </div>
+                </label>
 
-              <label className="flex items-center justify-between cursor-pointer">
-                <span className="text-xs font-bold text-muted">
-                  Tin có hình ảnh / video
-                </span>
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={hasMediaOnly}
-                    onChange={e => setHasMediaOnly(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-border rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary" />
-                </div>
-              </label>
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-xs font-bold text-muted">
+                    Tin có hình ảnh / video
+                  </span>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={hasMediaOnly}
+                      onChange={e => setHasMediaOnly(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-border rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary" />
+                  </div>
+                </label>
+              </div>
             </div>
-          </div>
+          )}
 
           <AmenitiesSelector
             selectedAmenities={selectedAmenities}
@@ -441,7 +422,7 @@ export function AdvancedDrawer({
           </button>
           <button
             type="button"
-            onClick={onClose}
+            onClick={onApply}
             className="flex-1 py-3 bg-primary text-white rounded-xl font-bold text-xs hover:bg-primary-hover transition-all active:scale-98 shadow-md cursor-pointer"
           >
             Áp dụng ({totalCount})

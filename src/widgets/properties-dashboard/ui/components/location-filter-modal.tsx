@@ -1,10 +1,18 @@
 'use client'
 
 import * as React from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 
 interface LocationFilterModalProps {
-  isOpen: boolean
+  activeTab?: 'single' | 'project'
   onClose: () => void
+  onApply?: () => void
   selectedCity: string
   setSelectedCity: (val: string) => void
   selectedDistrict: string
@@ -29,8 +37,9 @@ interface LocationFilterModalProps {
 }
 
 export function LocationFilterModal({
-  isOpen,
+  activeTab = 'single',
   onClose,
+  onApply,
   selectedCity,
   setSelectedCity,
   selectedDistrict,
@@ -42,14 +51,9 @@ export function LocationFilterModal({
   selectedProject,
   setSelectedProject,
   locationData,
-}: LocationFilterModalProps): React.ReactElement | null {
-  if (!isOpen) return null
-
+}: LocationFilterModalProps): React.ReactElement {
   return (
-    <div
-      className="absolute left-0 top-[100%] mt-2 z-50 w-80 md:w-96 rounded-2xl border border-border bg-white p-4 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150 space-y-4"
-      onClick={e => e.stopPropagation()}
-    >
+    <div className="space-y-4">
       <div className="flex items-center justify-between border-b border-border pb-2">
         <span className="font-bold text-sm text-fg">Chọn khu vực & dự án</span>
         <button
@@ -73,24 +77,28 @@ export function LocationFilterModal({
           <label className="text-[10px] font-bold text-muted uppercase">
             Tỉnh / Thành phố
           </label>
-          <select
-            value={selectedCity}
-            onChange={e => {
-              setSelectedCity(e.target.value)
+          <Select
+            value={selectedCity || 'all'}
+            onValueChange={val => {
+              setSelectedCity(val === 'all' ? '' : val)
               setSelectedDistrict('')
               setSelectedWard('')
               setSelectedStreet('')
               setSelectedProject('')
             }}
-            className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary cursor-pointer"
           >
-            <option value="">Chọn Tỉnh/Thành phố</option>
-            {Object.keys(locationData).map(city => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary cursor-pointer h-9 shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="max-h-60 overflow-y-auto">
+              <SelectItem value="all">Chọn Tỉnh/Thành phố</SelectItem>
+              {Object.keys(locationData).map(city => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* District */}
@@ -98,115 +106,140 @@ export function LocationFilterModal({
           <label className="text-[10px] font-bold text-muted uppercase">
             Quận / Huyện
           </label>
-          <select
-            value={selectedDistrict}
+          <Select
+            value={selectedDistrict || 'all'}
             disabled={!selectedCity}
-            onChange={e => {
-              setSelectedDistrict(e.target.value)
+            onValueChange={val => {
+              setSelectedDistrict(val === 'all' ? '' : val)
               setSelectedWard('')
               setSelectedStreet('')
               setSelectedProject('')
             }}
-            className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 cursor-pointer"
           >
-            <option value="">Chọn Quận/Huyện</option>
-            {selectedCity &&
-              locationData[selectedCity] &&
-              Object.keys(locationData[selectedCity]).map(dist => (
-                <option key={dist} value={dist}>
-                  {dist}
-                </option>
-              ))}
-          </select>
+            <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="max-h-60 overflow-y-auto">
+              <SelectItem value="all">Chọn Quận/Huyện</SelectItem>
+              {selectedCity &&
+                locationData[selectedCity] &&
+                Object.keys(locationData[selectedCity]).map(dist => (
+                  <SelectItem key={dist} value={dist}>
+                    {dist}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Ward */}
-        <div>
-          <label className="text-[10px] font-bold text-muted uppercase">
-            Phường / Xã
-          </label>
-          <select
-            value={selectedWard}
-            disabled={!selectedDistrict}
-            onChange={e => {
-              setSelectedWard(e.target.value)
-            }}
-            className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 cursor-pointer"
-          >
-            <option value="">Chọn Phường/Xã</option>
-            {selectedCity &&
-              selectedDistrict &&
-              locationData[selectedCity]?.[selectedDistrict] &&
-              locationData[selectedCity][selectedDistrict].wards.map(ward => (
-                <option key={ward} value={ward}>
-                  {ward}
-                </option>
-              ))}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          {/* Street */}
+        {activeTab === 'single' && (
           <div>
             <label className="text-[10px] font-bold text-muted uppercase">
-              Đường / Phố
+              Phường / Xã
             </label>
-            <select
-              value={selectedStreet}
+            <Select
+              value={selectedWard || 'all'}
               disabled={!selectedDistrict}
-              onChange={e => {
-                setSelectedStreet(e.target.value)
-                setSelectedProject('')
+              onValueChange={val => {
+                setSelectedWard(val === 'all' ? '' : val)
               }}
-              className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 cursor-pointer"
             >
-              <option value="">Chọn Đường</option>
-              {selectedCity &&
-                selectedDistrict &&
-                locationData[selectedCity]?.[selectedDistrict] &&
-                locationData[selectedCity][selectedDistrict].streets.map(
-                  street => (
-                    <option key={street} value={street}>
-                      {street}
-                    </option>
-                  )
-                )}
-            </select>
+              <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-60 overflow-y-auto">
+                <SelectItem value="all">Chọn Phường/Xã</SelectItem>
+                {selectedCity &&
+                  selectedDistrict &&
+                  locationData[selectedCity]?.[selectedDistrict] &&
+                  locationData[selectedCity][selectedDistrict].wards.map(
+                    ward => (
+                      <SelectItem key={ward} value={ward}>
+                        {ward}
+                      </SelectItem>
+                    )
+                  )}
+              </SelectContent>
+            </Select>
           </div>
+        )}
 
-          {/* Project */}
-          <div>
-            <label className="text-[10px] font-bold text-muted uppercase">
-              Dự án
-            </label>
-            <select
-              value={selectedProject}
-              disabled={!selectedDistrict}
-              onChange={e => {
-                setSelectedProject(e.target.value)
-                setSelectedStreet('')
-              }}
-              className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 cursor-pointer"
-            >
-              <option value="">Chọn Dự án</option>
-              {selectedCity &&
-                selectedDistrict &&
-                locationData[selectedCity]?.[selectedDistrict] &&
-                locationData[selectedCity][selectedDistrict].projects.map(
-                  project => (
-                    <option key={project} value={project}>
-                      {project}
-                    </option>
-                  )
-                )}
-            </select>
+        {activeTab === 'single' && (
+          <div className="grid grid-cols-2 gap-2">
+            {/* Street */}
+            <div>
+              <label className="text-[10px] font-bold text-muted uppercase">
+                Đường / Phố
+              </label>
+              <Select
+                value={selectedStreet || 'all'}
+                disabled={!selectedDistrict}
+                onValueChange={val => {
+                  setSelectedStreet(val === 'all' ? '' : val)
+                  setSelectedProject('')
+                }}
+              >
+                <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  <SelectItem value="all">Chọn Đường</SelectItem>
+                  {selectedCity &&
+                    selectedDistrict &&
+                    locationData[selectedCity]?.[selectedDistrict] &&
+                    locationData[selectedCity][selectedDistrict].streets.map(
+                      street => (
+                        <SelectItem key={street} value={street}>
+                          {street}
+                        </SelectItem>
+                      )
+                    )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Project */}
+            <div>
+              <label className="text-[10px] font-bold text-muted uppercase">
+                Dự án
+              </label>
+              <Select
+                value={selectedProject || 'all'}
+                disabled={!selectedDistrict}
+                onValueChange={val => {
+                  setSelectedProject(val === 'all' ? '' : val)
+                  setSelectedStreet('')
+                }}
+              >
+                <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  <SelectItem value="all">Chọn Dự án</SelectItem>
+                  {selectedCity &&
+                    selectedDistrict &&
+                    locationData[selectedCity]?.[selectedDistrict] &&
+                    locationData[selectedCity][selectedDistrict].projects.map(
+                      project => (
+                        <SelectItem key={project} value={project}>
+                          {project}
+                        </SelectItem>
+                      )
+                    )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <button
         type="button"
-        onClick={onClose}
+        onClick={() => {
+          onApply?.()
+          onClose()
+        }}
         className="px-4 py-2.5 text-xs font-bold text-white bg-primary hover:bg-primary-hover rounded-xl transition-colors w-full text-center cursor-pointer shadow-sm"
       >
         Xác nhận
