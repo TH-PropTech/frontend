@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { Button } from '@/shared/ui/button'
 import { useFavorites } from '@/shared/lib/use-favorites'
+import { AuthRequiredModal } from '@/widgets/community-dashboard/ui/components/auth-required-modal'
 
 interface Apartment {
   id: string
@@ -42,6 +43,7 @@ export function ApartmentCard({
   disableCompare = false,
 }: ApartmentCardProps): React.ReactElement {
   const { isFavorite, toggleFavorite } = useFavorites()
+  const [showAuthModal, setShowAuthModal] = React.useState(false)
   const favorite = isFavorite(apt.id)
 
   return (
@@ -99,7 +101,10 @@ export function ApartmentCard({
               onClick={e => {
                 e.preventDefault()
                 e.stopPropagation()
-                toggleFavorite(apt.id, apt.title)
+                const success = toggleFavorite(apt.id, apt.title)
+                if (!success) {
+                  setShowAuthModal(true)
+                }
               }}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 hover:bg-black/60 active:scale-95 transition-all text-white border border-white/10"
               title={favorite ? 'Bỏ lưu' : 'Lưu tin'}
@@ -210,6 +215,22 @@ export function ApartmentCard({
           </Button>
         </Link>
       </div>
+
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Yêu cầu đăng nhập"
+        description={
+          <>
+            Vui lòng đăng nhập để lưu căn hộ yêu thích.
+            <br />
+            <span className="text-xs text-subtle">
+              Bạn có thể lưu tin, theo dõi biến động giá và đặt lịch xem nhà sau
+              khi đăng nhập.
+            </span>
+          </>
+        }
+      />
     </article>
   )
 }
