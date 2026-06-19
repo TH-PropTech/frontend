@@ -8,6 +8,7 @@ import { CommunityHero } from './components/community-hero'
 import { PostCard } from './components/post-card'
 import { CreatePostModal } from './components/create-post-modal'
 import { CommunitySidebar } from './components/community-sidebar'
+import { AuthRequiredModal } from './components/auth-required-modal'
 
 const TOPIC_TABS = [
   { id: 'all' as const, label: 'Tất cả' },
@@ -18,9 +19,11 @@ const TOPIC_TABS = [
 
 export function CommunityDashboard(): React.ReactElement {
   const state = useWebCommunity()
+  const isAuthenticated = !!state.currentUser
   const [activeTab, setActiveTab] = React.useState<'public' | 'my-posts'>(
     'public'
   )
+  const [showAuthModal, setShowAuthModal] = React.useState(false)
 
   React.useEffect(() => {
     if (state.showMyPosts && activeTab !== 'my-posts') {
@@ -107,49 +110,73 @@ export function CommunityDashboard(): React.ReactElement {
 
             {/* Right side: Action Buttons */}
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <button
-                onClick={() => state.setShowMyPosts(!state.showMyPosts)}
-                className={`flex-1 md:flex-initial rounded-xl py-3 px-5 text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
-                  state.showMyPosts
-                    ? 'bg-primary text-white border-primary shadow-sm'
-                    : 'bg-white border-border text-muted hover:border-primary/30 hover:text-fg'
-                }`}
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
-                {state.showMyPosts ? 'Hiển thị tất cả' : 'Bài viết của tôi'}
-              </button>
+              {isAuthenticated ? (
+                <>
+                  <button
+                    onClick={() => state.setShowMyPosts(!state.showMyPosts)}
+                    className={`flex-1 md:flex-initial rounded-xl py-3 px-5 text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
+                      state.showMyPosts
+                        ? 'bg-primary text-white border-primary shadow-sm'
+                        : 'bg-white border-border text-muted hover:border-primary/30 hover:text-fg'
+                    }`}
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                      />
+                    </svg>
+                    {state.showMyPosts ? 'Hiển thị tất cả' : 'Bài viết của tôi'}
+                  </button>
 
-              <button
-                onClick={() => state.setShowCreateModal(true)}
-                className="flex-1 md:flex-initial rounded-xl bg-primary py-3 px-5 text-xs font-bold text-white shadow-[0_8px_24px_rgba(198,90,58,0.15)] hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
+                  <button
+                    onClick={() => state.setShowCreateModal(true)}
+                    className="flex-1 md:flex-initial rounded-xl bg-primary py-3 px-5 text-xs font-bold text-white shadow-[0_8px_24px_rgba(198,90,58,0.15)] hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    Đăng bài mới
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="flex-1 md:flex-initial rounded-xl bg-primary py-3 px-5 text-xs font-bold text-white shadow-[0_8px_24px_rgba(198,90,58,0.15)] hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Đăng bài mới
-              </button>
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Đăng bài mới
+                </button>
+              )}
             </div>
           </div>
         </section>
@@ -177,22 +204,24 @@ export function CommunityDashboard(): React.ReactElement {
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
                   )}
                 </button>
-                <button
-                  onClick={() => {
-                    setActiveTab('my-posts')
-                    state.setShowMyPosts(true)
-                  }}
-                  className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
-                    activeTab === 'my-posts'
-                      ? 'text-primary'
-                      : 'text-muted hover:text-fg'
-                  }`}
-                >
-                  Bài viết của tôi
-                  {activeTab === 'my-posts' && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-                  )}
-                </button>
+                {isAuthenticated && (
+                  <button
+                    onClick={() => {
+                      setActiveTab('my-posts')
+                      state.setShowMyPosts(true)
+                    }}
+                    className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
+                      activeTab === 'my-posts'
+                        ? 'text-primary'
+                        : 'text-muted hover:text-fg'
+                    }`}
+                  >
+                    Bài viết của tôi
+                    {activeTab === 'my-posts' && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Feed Content rendering */}
@@ -226,6 +255,8 @@ export function CommunityDashboard(): React.ReactElement {
                       onDeletePost={state.handleDeletePost}
                       onCommentRemoved={state.handleCommentRemoved}
                       currentUser={state.currentUser}
+                      isAuthenticated={isAuthenticated}
+                      onAuthRequired={() => setShowAuthModal(true)}
                     />
                   ))}
                 </div>
@@ -264,6 +295,12 @@ export function CommunityDashboard(): React.ReactElement {
         onAddImage={state.handleAddImage}
         onRemoveImage={state.handleRemoveImage}
         onSubmit={state.handleSubmit}
+      />
+
+      {/* Auth Required Modal for unauthenticated users */}
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
       />
 
       <Footer />

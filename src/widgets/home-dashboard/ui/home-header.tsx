@@ -8,6 +8,7 @@ import { Logo } from '@/shared/ui/logo'
 import { Button } from '@/shared/ui/button'
 import { useFavorites } from '@/shared/lib/use-favorites'
 import { WelcomeModal } from '@/features/auth/ui/auth-modals'
+import { AuthRequiredModal } from '@/widgets/community-dashboard/ui/components/auth-required-modal'
 import { NotificationBell } from './components/notification-bell'
 import { toast } from 'sonner'
 
@@ -22,6 +23,7 @@ export function HomeHeader(): React.ReactElement {
   const [isScrolled, setIsScrolled] = React.useState(false)
   const [user, setUser] = React.useState<UserStored | null>(null)
   const [showWelcome, setShowWelcome] = React.useState(false)
+  const [showAuthModal, setShowAuthModal] = React.useState(false)
   const pathname = usePathname()
   const { favorites } = useFavorites()
 
@@ -118,29 +120,50 @@ export function HomeHeader(): React.ReactElement {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link
-            href={'/properties/favorites' as Route}
-            className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 relative ${
-              isLightHeader
-                ? 'border-border bg-white text-primary hover:bg-surface-muted'
-                : 'border-white/25 bg-black/20 text-white hover:bg-black/40'
-            }`}
-            title="Danh sách yêu thích"
-          >
-            <svg
-              className="h-5 w-5 fill-current"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
+          {user ? (
+            <Link
+              href={'/properties/favorites' as Route}
+              className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 relative ${
+                isLightHeader
+                  ? 'border-border bg-white text-primary hover:bg-surface-muted'
+                  : 'border-white/25 bg-black/20 text-white hover:bg-black/40'
+              }`}
+              title="Danh sách yêu thích"
             >
-              <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-            </svg>
-            {favorites.length > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-white shadow-sm animate-pulse-subtle">
-                {favorites.length}
-              </span>
-            )}
-          </Link>
+              <svg
+                className="h-5 w-5 fill-current"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+              </svg>
+              {favorites.length > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-white shadow-sm animate-pulse-subtle">
+                  {favorites.length}
+                </span>
+              )}
+            </Link>
+          ) : (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 relative ${
+                isLightHeader
+                  ? 'border-border bg-white text-primary hover:bg-surface-muted'
+                  : 'border-white/25 bg-black/20 text-white hover:bg-black/40'
+              }`}
+              title="Danh sách yêu thích"
+            >
+              <svg
+                className="h-5 w-5 fill-current"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+              </svg>
+            </button>
+          )}
 
           {user && <NotificationBell isLightHeader={isLightHeader} />}
 
@@ -218,6 +241,22 @@ export function HomeHeader(): React.ReactElement {
       <WelcomeModal
         isOpen={showWelcome}
         onClose={() => setShowWelcome(false)}
+      />
+
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Yêu cầu đăng nhập"
+        description={
+          <>
+            Vui lòng đăng nhập để xem danh sách căn hộ yêu thích.
+            <br />
+            <span className="text-xs text-subtle">
+              Bạn có thể lưu tin, theo dõi biến động giá và đặt lịch xem nhà sau
+              khi đăng nhập.
+            </span>
+          </>
+        }
       />
     </header>
   )

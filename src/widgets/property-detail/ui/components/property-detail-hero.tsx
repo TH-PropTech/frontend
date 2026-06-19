@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import type { ApartmentItem } from '@/entities/properties'
 import { useFavorites } from '@/shared/lib/use-favorites'
+import { AuthRequiredModal } from '@/widgets/community-dashboard/ui/components/auth-required-modal'
 
 interface PropertyDetailHeroProps {
   property: ApartmentItem
@@ -14,6 +15,7 @@ export function PropertyDetailHero({
   property,
 }: PropertyDetailHeroProps): React.ReactElement {
   const { isFavorite, toggleFavorite } = useFavorites()
+  const [showAuthModal, setShowAuthModal] = React.useState(false)
   const favorite = isFavorite(property.id)
 
   return (
@@ -91,7 +93,12 @@ export function PropertyDetailHero({
             </span>
           </Link>
           <button
-            onClick={() => toggleFavorite(property.id, property.title)}
+            onClick={() => {
+              const success = toggleFavorite(property.id, property.title)
+              if (!success) {
+                setShowAuthModal(true)
+              }
+            }}
             className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-white shadow-sm hover:bg-surface-muted active:scale-95 transition-all text-xs font-bold text-fg cursor-pointer"
           >
             <svg
@@ -199,6 +206,22 @@ export function PropertyDetailHero({
           </div>
         </div>
       </div>
+
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        title="Yêu cầu đăng nhập"
+        description={
+          <>
+            Vui lòng đăng nhập để lưu căn hộ yêu thích.
+            <br />
+            <span className="text-xs text-subtle">
+              Bạn có thể lưu tin, theo dõi biến động giá và đặt lịch xem nhà sau
+              khi đăng nhập.
+            </span>
+          </>
+        }
+      />
     </section>
   )
 }

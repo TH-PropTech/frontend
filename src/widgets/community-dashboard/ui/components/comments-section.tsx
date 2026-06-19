@@ -27,6 +27,8 @@ interface CommentsSectionProps {
   onCommentAdded: () => void
   onCommentRemoved?: () => void
   currentUser?: { roles?: string[] } | null | undefined
+  isAuthenticated?: boolean
+  onAuthRequired?: (() => void) | undefined
 }
 
 const ROLE_LABELS = {
@@ -64,6 +66,8 @@ export function CommentsSection({
   onCommentAdded,
   onCommentRemoved,
   currentUser,
+  isAuthenticated = true,
+  onAuthRequired,
 }: CommentsSectionProps): React.ReactElement {
   const [comments, setComments] = React.useState<FrontendComment[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -214,19 +218,21 @@ export function CommentsSection({
 
                 {/* Comment Actions */}
                 <div className="mt-2 flex items-center gap-4">
-                  <button
-                    onClick={() => {
-                      if (isReplying) {
-                        setReplyToId(null)
-                      } else {
-                        setReplyToId(comment.id)
-                        setReplyText('')
-                      }
-                    }}
-                    className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    Trả lời
-                  </button>
+                  {isAuthenticated && (
+                    <button
+                      onClick={() => {
+                        if (isReplying) {
+                          setReplyToId(null)
+                        } else {
+                          setReplyToId(comment.id)
+                          setReplyText('')
+                        }
+                      }}
+                      className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      Trả lời
+                    </button>
+                  )}
                   {isStaffOrAdmin && (
                     <button
                       onClick={() => handleDeleteComment(comment.id)}
@@ -287,22 +293,54 @@ export function CommentsSection({
       </h4>
 
       {/* Main Comment Input */}
-      <form onSubmit={e => handleSubmitComment(e, null)} className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Viết bình luận công khai..."
-          value={newCommentText}
-          onChange={e => setNewCommentText(e.target.value)}
-          className="flex-1 text-xs rounded-xl border border-border px-4 py-2.5 bg-white focus:outline-none focus:border-primary/50"
-        />
-        <button
-          type="submit"
-          disabled={!newCommentText.trim() || submitting}
-          className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white hover:bg-primary-hover disabled:opacity-50 transition-colors cursor-pointer shadow-sm"
+      {isAuthenticated ? (
+        <form
+          onSubmit={e => handleSubmitComment(e, null)}
+          className="flex gap-2"
         >
-          Bình luận
-        </button>
-      </form>
+          <input
+            type="text"
+            placeholder="Viết bình luận công khai..."
+            value={newCommentText}
+            onChange={e => setNewCommentText(e.target.value)}
+            className="flex-1 text-xs rounded-xl border border-border px-4 py-2.5 bg-white focus:outline-none focus:border-primary/50"
+          />
+          <button
+            type="submit"
+            disabled={!newCommentText.trim() || submitting}
+            className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white hover:bg-primary-hover disabled:opacity-50 transition-colors cursor-pointer shadow-sm"
+          >
+            Bình luận
+          </button>
+        </form>
+      ) : (
+        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-surface-muted/30 px-4 py-3">
+          <svg
+            className="h-4 w-4 text-muted"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+            />
+          </svg>
+          <span className="text-xs text-muted">
+            Vui lòng{' '}
+            <button
+              type="button"
+              onClick={onAuthRequired}
+              className="text-primary font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
+            >
+              đăng nhập
+            </button>{' '}
+            để bình luận.
+          </span>
+        </div>
+      )}
 
       {/* Comments List */}
       {loading ? (

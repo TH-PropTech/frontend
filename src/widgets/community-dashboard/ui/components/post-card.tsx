@@ -31,6 +31,8 @@ interface PostCardProps {
   onDeletePost?: (id: string) => void
   onCommentRemoved?: (id: string) => void
   currentUser?: { roles?: string[] } | null
+  isAuthenticated?: boolean
+  onAuthRequired?: (() => void) | undefined
 }
 
 export function PostCard({
@@ -40,6 +42,8 @@ export function PostCard({
   onDeletePost,
   onCommentRemoved,
   currentUser,
+  isAuthenticated = true,
+  onAuthRequired,
 }: PostCardProps): React.ReactElement {
   const [showComments, setShowComments] = React.useState(false)
   const role = ROLE_CONFIG[post.authorRole]
@@ -141,7 +145,13 @@ export function PostCard({
 
         <div className="flex items-center gap-5">
           <button
-            onClick={() => onUpvote(post.id)}
+            onClick={() => {
+              if (!isAuthenticated) {
+                onAuthRequired?.()
+                return
+              }
+              onUpvote(post.id)
+            }}
             className={`flex items-center gap-1.5 text-xs font-bold transition-all duration-200 cursor-pointer rounded-lg px-3 py-1.5 ${
               post.hasUpvoted
                 ? 'text-primary bg-primary/10'
@@ -196,6 +206,8 @@ export function PostCard({
           onCommentAdded={() => onCommentAdded?.(post.id)}
           onCommentRemoved={() => onCommentRemoved?.(post.id)}
           currentUser={currentUser}
+          isAuthenticated={isAuthenticated}
+          onAuthRequired={onAuthRequired}
         />
       )}
     </article>

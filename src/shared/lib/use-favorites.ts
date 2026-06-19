@@ -7,7 +7,7 @@ const STORAGE_KEY = 'th_favorites'
 
 export interface UseFavoritesResult {
   favorites: string[]
-  toggleFavorite: (id: string, title?: string) => void
+  toggleFavorite: (id: string, title?: string) => boolean
   isFavorite: (id: string) => boolean
 }
 
@@ -28,7 +28,15 @@ export function useFavorites(): UseFavoritesResult {
     }
   }, [])
 
-  const toggleFavorite = (id: string, title?: string): void => {
+  const toggleFavorite = (id: string, title?: string): boolean => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken')
+      const user = localStorage.getItem('user')
+      if (!token || !user) {
+        return false
+      }
+    }
+
     const isAdding = !favorites.includes(id)
     const next = isAdding
       ? [...favorites, id]
@@ -55,6 +63,8 @@ export function useFavorites(): UseFavoritesResult {
           : 'Đã bỏ lưu căn hộ khỏi danh sách yêu thích'
       )
     }
+
+    return true
   }
 
   useEffect(() => {
