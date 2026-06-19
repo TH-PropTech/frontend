@@ -10,6 +10,25 @@ interface HomeViewProps {
 }
 
 export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
+  const [userName, setUserName] = React.useState('Culi Vận Hành #04')
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('user')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (parsed && parsed.name) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setUserName(parsed.name)
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to parse user name from localStorage:', e)
+      }
+    }
+  }, [])
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
       {/* Welcome Hero Banner */}
@@ -28,7 +47,7 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
               BÀN LÀM VIỆC VẬN HÀNH
             </span>
             <h2 className="text-xl sm:text-2xl font-bold font-marketing leading-tight">
-              Chào mừng quay trở lại, Culi Vận Hành #04!
+              Chào mừng quay trở lại, {userName}!
             </h2>
             <p className="text-xs text-white/80 leading-relaxed font-body">
               Tất cả các cổng giao dịch, cổng kết nối VR 360° và các Escrow
