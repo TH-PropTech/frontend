@@ -31,6 +31,28 @@ interface SidebarItem {
 export function StaffDashboard(): React.ReactElement {
   const [activeTab, setActiveTab] = React.useState<TabType>('home')
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false)
+  const [user, setUser] = React.useState<{
+    name: string
+    email: string
+  } | null>(null)
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('user')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (parsed && parsed.name && parsed.email) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setUser({ name: parsed.name, email: parsed.email })
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to parse user from localStorage:', e)
+      }
+    }
+  }, [])
 
   const sidebarItems: SidebarItem[] = [
     {
@@ -265,20 +287,81 @@ export function StaffDashboard(): React.ReactElement {
         </div>
 
         {/* Sidebar Footer info */}
-        <div className="p-4 border-t border-line bg-surface-muted/20">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-accent/10 border border-accent/25 text-accent flex items-center justify-center font-bold text-xs font-display">
-              OP
+        <div className="p-4 border-t border-line bg-surface-muted/20 relative">
+          {isProfileMenuOpen && (
+            <>
+              {/* Click outside overlay to close */}
+              <div
+                className="fixed inset-0 z-40 cursor-default"
+                onClick={() => setIsProfileMenuOpen(false)}
+              />
+              {/* Dropdown Box */}
+              <div className="absolute bottom-full left-4 right-4 mb-2 bg-surface border border-line rounded-lg shadow-lg py-1 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('accessToken')
+                    localStorage.removeItem('user')
+                    localStorage.setItem('showLogoutToast', 'true')
+                    window.location.href = '/'
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-xs font-bold text-danger hover:bg-fg/5 transition-colors flex items-center gap-2"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                  Đăng xuất
+                </button>
+              </div>
+            </>
+          )}
+
+          <button
+            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+            className="w-full flex items-center justify-between gap-3 text-left p-1.5 rounded-lg hover:bg-fg/5 transition-colors group relative z-10"
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="h-9 w-9 rounded-full bg-accent/10 border border-accent/25 text-accent flex items-center justify-center font-bold text-xs font-display shrink-0">
+                {user?.name
+                  ? user.name
+                      .split(' ')
+                      .map(n => n[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase()
+                  : 'OP'}
+              </div>
+              <div className="overflow-hidden">
+                <span className="text-xs font-bold text-fg block font-body leading-none truncate group-hover:text-primary transition-colors">
+                  {user?.name || 'Culi Vận Hành #04'}
+                </span>
+                <span className="text-[10px] text-muted block mt-0.5 truncate">
+                  {user?.email || 'operator@th-proptech.vn'}
+                </span>
+              </div>
             </div>
-            <div className="overflow-hidden">
-              <span className="text-xs font-bold text-fg block font-body leading-none">
-                Culi Vận Hành #04
-              </span>
-              <span className="text-[10px] text-muted block mt-0.5 truncate">
-                operator@th-proptech.vn
-              </span>
-            </div>
-          </div>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              className={`text-muted shrink-0 transition-transform duration-200 ${
+                isProfileMenuOpen ? 'rotate-180' : ''
+              }`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
         </div>
       </aside>
 
