@@ -259,5 +259,40 @@ export function buildCriteria(
         return 'Vui lòng kiểm tra lịch bàn giao để thống nhất ngày ký hợp đồng và dọn vào ở cùng với chủ nhà.'
       },
     },
+    {
+      key: 'projectName',
+      label: 'Dự án',
+      explain:
+        'Tên dự án căn hộ chung cư thuộc về (nếu có) hoặc do chủ nhà cá nhân đăng ký.',
+      getValue: (apt: ApartmentItem) => apt.projectName || 'Cá nhân',
+      getAnalysis: (apts: ApartmentItem[]) => {
+        if (apts.length < 2) return ''
+        const fromProjects = apts.filter(a => a.projectName)
+        if (fromProjects.length === apts.length) {
+          return 'Tất cả các căn hộ đều thuộc các dự án chung cư hiện đại.'
+        }
+        if (fromProjects.length > 0) {
+          return `Có ${fromProjects.length} căn hộ thuộc dự án và các căn còn lại thuộc sở hữu cá nhân lẻ.`
+        }
+        return 'Tất cả căn hộ đều thuộc chủ nhà cá nhân đăng lẻ bên ngoài.'
+      },
+    },
+    {
+      key: 'location',
+      label: 'Địa chỉ',
+      explain: 'Vị trí địa lý chi tiết của căn hộ chung cư.',
+      getValue: (apt: ApartmentItem) => apt.location,
+      getAnalysis: (apts: ApartmentItem[]) => {
+        if (apts.length < 2) return ''
+        const locations = apts.map(
+          a => a.location.split(',').pop()?.trim() || ''
+        )
+        const uniqueLocs = Array.from(new Set(locations))
+        if (uniqueLocs.length === 1) {
+          return `Tất cả căn hộ đều nằm ở khu vực ${uniqueLocs[0]}.`
+        }
+        return `Các căn hộ phân bố ở nhiều khu vực khác nhau: ${uniqueLocs.join(', ')}.`
+      },
+    },
   ]
 }

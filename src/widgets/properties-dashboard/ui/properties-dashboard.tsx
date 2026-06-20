@@ -415,7 +415,8 @@ export function PropertiesDashboard(): React.ReactElement {
           <div className="space-y-0.5">
             <p className="font-marketing text-xs font-bold text-fg flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
-              Đang chọn so sánh: {compareIds.length}/4 căn hộ
+              Đã chọn {compareIds.length}/4 căn hộ. Chọn tối thiểu 2 để đối
+              chiếu.
             </p>
             <p className="font-body text-[10px] text-fg/70 font-medium">
               Hỗ trợ cả khách vãng lai chưa cần tài khoản
