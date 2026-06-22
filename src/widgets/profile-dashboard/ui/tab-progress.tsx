@@ -28,6 +28,8 @@ import { LandlordAlerts } from './landlord-alerts'
 import { LandlordTenantInfo } from './landlord-tenant-info'
 import { LandlordContractSummary } from './landlord-contract-summary'
 import { LandlordAppointments } from './landlord-appointments'
+import { TenantAppointments } from './tenant-appointments'
+import { LandlordAcceptedAppointments } from './landlord-accepted-appointments'
 
 interface TabProgressProps {
   profile: UseProfileReturn
@@ -56,6 +58,8 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
     appointments,
     handleApproveAppointment,
     handleRejectAppointment,
+    handleCancelAppointment,
+    handleCompleteAppointment,
     handleViewSignedContract,
   } = profile
 
@@ -96,7 +100,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
           <LandlordKpis />
 
           {/* Landlord alert notifications */}
-          <LandlordAlerts />
+          <LandlordAlerts appointments={appointments} />
         </>
       )}
 
@@ -428,7 +432,19 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
             onApprove={handleApproveAppointment}
             onReject={handleRejectAppointment}
           />
+          <LandlordAcceptedAppointments
+            appointments={appointments}
+            onComplete={handleCompleteAppointment}
+          />
         </>
+      )}
+
+      {/* Tenant Additional Management Cards */}
+      {role === 'tenant' && (
+        <TenantAppointments
+          appointments={appointments}
+          onCancel={handleCancelAppointment}
+        />
       )}
     </div>
   )
