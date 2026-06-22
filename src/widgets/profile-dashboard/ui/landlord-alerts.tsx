@@ -4,11 +4,38 @@ import * as React from 'react'
 import { Card } from '@/shared/ui/card'
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react'
 import { DEMO_LANDLORD_ALERTS } from '../model/mock-data'
+import { Appointment } from '../model/types'
 
-export function LandlordAlerts(): React.ReactElement {
+interface LandlordAlertsProps {
+  appointments?: Appointment[]
+}
+
+export function LandlordAlerts({
+  appointments = [],
+}: LandlordAlertsProps): React.ReactElement {
+  // Count actual pending appointments
+  const pendingCount = appointments.filter(a => a.status === 'pending').length
+
+  // Construct dynamic alerts list based on DEMO_LANDLORD_ALERTS
+  const activeAlerts = React.useMemo(() => {
+    return DEMO_LANDLORD_ALERTS.map(alert => {
+      if (alert.id === 'alert-3') {
+        // Adjust third alert dynamically
+        if (pendingCount === 0) return null
+        return {
+          ...alert,
+          message: `${pendingCount} lịch hẹn xem nhà mới chờ xác nhận`,
+        }
+      }
+      return alert
+    }).filter(Boolean) as typeof DEMO_LANDLORD_ALERTS
+  }, [pendingCount])
+
+  if (activeAlerts.length === 0) return <></>
+
   return (
     <div className="space-y-3 text-left">
-      {DEMO_LANDLORD_ALERTS.map(alert => (
+      {activeAlerts.map(alert => (
         <Card
           key={alert.id}
           className={`border rounded-2xl p-4 flex items-start gap-3 shadow-sm ${
