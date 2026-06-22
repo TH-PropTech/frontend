@@ -4,6 +4,14 @@ import * as React from 'react'
 import { apiClient } from '@/shared/api/api-client'
 import { toast } from 'sonner'
 import { Bell, Check, X, Clock } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/shared/ui/dialog'
 
 interface NotificationItem {
   _id: string
@@ -34,6 +42,11 @@ export function NotificationBell({
   const [isOpen, setIsOpen] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
+  const [rejectingBooking, setRejectingBooking] = React.useState<{
+    notifId: string
+    bookingId: string
+  } | null>(null)
+  const [rejectReason, setRejectReason] = React.useState('')
 
   const fetchNotifications = React.useCallback(async () => {
     const token =
@@ -136,27 +149,31 @@ export function NotificationBell({
     }
   }
 
-  const handleRejectBooking = async (
+  const handleRejectBookingClick = (
     e: React.MouseEvent,
     notificationId: string,
     bookingId: string
   ) => {
     e.stopPropagation()
-    const reason = prompt('Vui lòng nhập lý do từ chối lịch hẹn:')
-    if (reason === null) return // Cancelled
-    if (!reason.trim()) {
+    setRejectingBooking({ notifId: notificationId, bookingId })
+  }
+
+  const handleConfirmReject = async () => {
+    if (!rejectReason.trim()) {
       toast.error('Vui lòng nhập lý do từ chối!')
       return
     }
+    if (!rejectingBooking) return
 
+    const { notifId, bookingId } = rejectingBooking
     setLoading(true)
     try {
       await apiClient.patch(`/bookings/${bookingId}/status`, {
         status: 'rejected',
-        rejectedReason: reason.trim(),
+        rejectedReason: rejectReason.trim(),
       })
       toast.info('Đã từ chối lịch hẹn xem nhà.')
-      await handleMarkAsRead(notificationId)
+      await handleMarkAsRead(notifId)
       fetchNotifications()
     } catch (err) {
       const message =
@@ -164,6 +181,8 @@ export function NotificationBell({
       toast.error(message)
     } finally {
       setLoading(false)
+      setRejectingBooking(null)
+      setRejectReason('')
     }
   }
 
@@ -256,27 +275,57 @@ export function NotificationBell({
 
                     {/* Pending booking action buttons inside notification */}
                     {isBookingRequest && (
-                      <div className="mt-2.5 flex gap-2">
-                        <button
-                          disabled={loading}
-                          onClick={e =>
-                            handleApproveBooking(e, n._id, n.data!.bookingId!)
-                          }
-                          className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-[9px] font-bold rounded-lg flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                        >
-                          <Check className="h-2.5 w-2.5" />
-                          Đồng ý
-                        </button>
-                        <button
-                          disabled={loading}
-                          onClick={e =>
-                            handleRejectBooking(e, n._id, n.data!.bookingId!)
-                          }
-                          className="px-3 py-1.5 border border-border hover:bg-surface-muted text-fg text-[9px] font-bold rounded-lg flex items-center gap-1 cursor-pointer disabled:opacity-50"
-                        >
-                          <X className="h-2.5 w-2.5" />
-                          Từ chối
-                        </button>
+                      <div className="mt-2.5">
+                        {!n.data?.status || n.data.status === 'pending' ? (
+                          <div className="flex gap-2">
+                            <button
+                              disabled={loading}
+                              onClick={e =>
+                                handleApproveBooking(
+                                  e,
+                                  n._id,
+                                  n.data!.bookingId!
+                                )
+                              }
+                              className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-[9px] font-bold rounded-lg flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            >
+                              <Check className="h-2.5 w-2.5" />
+                              Đồng ý
+                            </button>
+                            <button
+                              disabled={loading}
+                              onClick={e =>
+                                handleRejectBookingClick(
+                                  e,
+                                  n._id,
+                                  n.data!.bookingId!
+                                )
+                              }
+                              className="px-3 py-1.5 border border-border hover:bg-surface-muted text-fg text-[9px] font-bold rounded-lg flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                              Từ chối
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="text-[10px] font-bold flex items-center gap-1 mt-1">
+                            {n.data.status === 'confirmed' && (
+                              <span className="text-success bg-success-soft/20 px-2 py-0.5 rounded-md border border-success/15 flex items-center gap-0.5">
+                                <Check className="h-2.5 w-2.5" /> Đã đồng ý
+                              </span>
+                            )}
+                            {n.data.status === 'rejected' && (
+                              <span className="text-danger bg-danger-soft/20 px-2 py-0.5 rounded-md border border-danger/15 flex items-center gap-0.5">
+                                <X className="h-2.5 w-2.5" /> Đã từ chối
+                              </span>
+                            )}
+                            {n.data.status === 'cancelled' && (
+                              <span className="text-subtle bg-surface-muted px-2 py-0.5 rounded-md border border-border flex items-center gap-0.5 font-normal">
+                                <X className="h-2.5 w-2.5" /> Đã hủy
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -301,6 +350,54 @@ export function NotificationBell({
           </div>
         </div>
       )}
+
+      {/* Reject Reason Dialog */}
+      <Dialog
+        open={!!rejectingBooking}
+        onOpenChange={open => {
+          if (!open) {
+            setRejectingBooking(null)
+            setRejectReason('')
+          }
+        }}
+      >
+        <DialogContent className="bg-white rounded-3xl max-w-md p-6 border border-border shadow-lg text-left">
+          <DialogHeader>
+            <DialogTitle className="font-marketing text-lg font-bold text-fg">
+              Từ chối lịch hẹn
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted font-body">
+              Vui lòng nhập lý do từ chối lịch hẹn xem phòng này.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <textarea
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              placeholder="Lý do từ chối..."
+              className="w-full min-h-24 p-3 border border-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary font-body text-fg bg-white"
+            />
+          </div>
+          <DialogFooter className="flex justify-end gap-2 mt-2">
+            <button
+              onClick={() => {
+                setRejectingBooking(null)
+                setRejectReason('')
+              }}
+              className="border border-border hover:bg-surface-muted text-xs rounded-xl h-9 px-4 cursor-pointer text-fg"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              onClick={handleConfirmReject}
+              disabled={loading}
+              className="bg-primary hover:bg-primary-hover text-white text-xs rounded-xl h-9 px-4 cursor-pointer font-bold disabled:opacity-50"
+            >
+              Xác nhận từ chối
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

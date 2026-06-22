@@ -146,7 +146,9 @@ export interface UseProfileReturn {
   handlePropertyChange: (propertyId: string) => void
   handleRoleChange: (newRole: 'tenant' | 'landlord') => void
   handleApproveAppointment: (id: string) => void
-  handleRejectAppointment: (id: string) => void
+  handleRejectAppointment: (id: string, reason: string) => void
+  handleCancelAppointment: (id: string) => void
+  handleCompleteAppointment: (id: string) => void
 }
 
 export type EventType =
@@ -208,7 +210,7 @@ export interface Appointment {
   propertyName: string
   date: string
   time: string
-  status: 'pending' | 'confirmed' | 'rejected'
+  status: 'pending' | 'confirmed' | 'rejected' | 'cancelled' | 'completed'
 }
 
 export interface EscrowItem {

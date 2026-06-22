@@ -67,13 +67,6 @@ export function BookingWidget({
       return
     }
 
-    const token =
-      typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-    if (!token) {
-      toast.warning('Vui lòng đăng nhập trước khi đặt lịch hẹn xem nhà.')
-      return
-    }
-
     setIsSubmitting(true)
     try {
       // Map visitTime to exact time segment
@@ -90,6 +83,8 @@ export function BookingWidget({
         visitAt: new Date(visitAt).toISOString(),
         method: 'onsite',
         note: formData.notes || '',
+        tenantName: formData.fullName,
+        tenantPhone: formData.phone,
       })
 
       toast.success('Đăng ký xem phòng thành công!', {
