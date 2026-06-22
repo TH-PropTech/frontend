@@ -94,7 +94,10 @@ export function useProfileAppointments(role: 'tenant' | 'landlord' = 'tenant') {
     }
   }
 
-  const handleRejectAppointment = async (id: string): Promise<void> => {
+  const handleRejectAppointment = async (
+    id: string,
+    reason: string
+  ): Promise<void> => {
     const token =
       typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
     if (!token) {
@@ -106,17 +109,10 @@ export function useProfileAppointments(role: 'tenant' | 'landlord' = 'tenant') {
       return
     }
 
-    const reason = prompt('Vui lòng nhập lý do từ chối lịch hẹn:')
-    if (reason === null) return // User clicked Cancel
-    if (!reason.trim()) {
-      toast.error('Vui lòng nhập lý do từ chối!')
-      return
-    }
-
     try {
       await apiClient.patch(`/bookings/${id}/status`, {
         status: 'rejected',
-        rejectedReason: reason.trim(),
+        rejectedReason: reason,
       })
       toast.info('Đã từ chối lịch hẹn xem nhà.')
       fetchAppointments()
@@ -127,12 +123,60 @@ export function useProfileAppointments(role: 'tenant' | 'landlord' = 'tenant') {
     }
   }
 
+  const handleCancelAppointment = async (id: string): Promise<void> => {
+    const token =
+      typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+    if (!token) {
+      // Mock update
+      setAppointments(prev =>
+        prev.map(a => (a.id === id ? { ...a, status: 'cancelled' } : a))
+      )
+      toast.success('Đã hủy lịch hẹn xem nhà! (Chế độ Demo)')
+      return
+    }
+
+    try {
+      await apiClient.patch(`/bookings/${id}/cancel`, {})
+      toast.success('Đã hủy lịch hẹn xem nhà thành công!')
+      fetchAppointments()
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Không thể hủy lịch hẹn'
+      toast.error(message)
+    }
+  }
+
+  const handleCompleteAppointment = async (id: string): Promise<void> => {
+    const token =
+      typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+    if (!token) {
+      // Mock update
+      setAppointments(prev =>
+        prev.map(a => (a.id === id ? { ...a, status: 'completed' } : a))
+      )
+      toast.success('Đã đánh dấu lịch hẹn xem nhà hoàn tất! (Chế độ Demo)')
+      return
+    }
+
+    try {
+      await apiClient.patch(`/bookings/${id}/status`, { status: 'completed' })
+      toast.success('Đã đánh dấu lịch hẹn xem nhà hoàn tất!')
+      fetchAppointments()
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Không thể cập nhật lịch hẹn'
+      toast.error(message)
+    }
+  }
+
   return {
     appointments,
     loading,
     setAppointments,
     handleApproveAppointment,
     handleRejectAppointment,
+    handleCancelAppointment,
+    handleCompleteAppointment,
     refetchAppointments: fetchAppointments,
   }
 }

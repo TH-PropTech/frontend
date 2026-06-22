@@ -6,11 +6,20 @@ import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { Calendar, Clock, User, Phone, Check, X } from 'lucide-react'
 import { Appointment } from '../model/types'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/shared/ui/dialog'
+import { toast } from 'sonner'
 
 interface LandlordAppointmentsProps {
   appointments: Appointment[]
   onApprove: (id: string) => void
-  onReject: (id: string) => void
+  onReject: (id: string, reason: string) => void
 }
 
 export function LandlordAppointments({
@@ -19,6 +28,22 @@ export function LandlordAppointments({
   onReject,
 }: LandlordAppointmentsProps): React.ReactElement {
   const pendingApts = appointments.filter(a => a.status === 'pending')
+  const [rejectingAptId, setRejectingAptId] = React.useState<string | null>(
+    null
+  )
+  const [reason, setReason] = React.useState('')
+
+  const handleConfirmReject = () => {
+    if (!reason.trim()) {
+      toast.error('Vui lòng nhập lý do từ chối!')
+      return
+    }
+    if (rejectingAptId) {
+      onReject(rejectingAptId, reason.trim())
+      setRejectingAptId(null)
+      setReason('')
+    }
+  }
 
   return (
     <Card className="bg-white border border-border rounded-3xl p-6 shadow-sm text-left space-y-5">
@@ -90,7 +115,7 @@ export function LandlordAppointments({
                   Xác nhận
                 </Button>
                 <Button
-                  onClick={() => onReject(apt.id)}
+                  onClick={() => setRejectingAptId(apt.id)}
                   variant="outline"
                   className="border border-border hover:bg-surface-muted text-fg text-[10px] font-bold rounded-full h-8 px-4 flex items-center gap-1 cursor-pointer"
                 >
@@ -102,6 +127,55 @@ export function LandlordAppointments({
           ))}
         </div>
       )}
+
+      {/* Reject Reason Dialog */}
+      <Dialog
+        open={!!rejectingAptId}
+        onOpenChange={open => {
+          if (!open) {
+            setRejectingAptId(null)
+            setReason('')
+          }
+        }}
+      >
+        <DialogContent className="bg-white rounded-3xl max-w-md p-6 border border-border shadow-lg text-left">
+          <DialogHeader>
+            <DialogTitle className="font-marketing text-lg font-bold text-fg">
+              Từ chối lịch hẹn
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted font-body">
+              Vui lòng nhập lý do từ chối lịch hẹn xem phòng này. Lý do sẽ được
+              gửi đến khách thuê.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <textarea
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              placeholder="Ví dụ: Tôi bận việc đột xuất vào giờ này / Phòng hiện không sẵn sàng..."
+              className="w-full min-h-24 p-3 border border-border rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-primary font-body text-fg bg-white"
+            />
+          </div>
+          <DialogFooter className="flex justify-end gap-2 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRejectingAptId(null)
+                setReason('')
+              }}
+              className="border border-border hover:bg-surface-muted text-xs rounded-xl h-9 px-4 cursor-pointer"
+            >
+              Hủy bỏ
+            </Button>
+            <Button
+              onClick={handleConfirmReject}
+              className="bg-primary hover:bg-primary-hover text-white text-xs rounded-xl h-9 px-4 cursor-pointer font-bold"
+            >
+              Xác nhận từ chối
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
