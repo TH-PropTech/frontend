@@ -60,7 +60,11 @@ export class ApiClient {
     headers.set('Accept', 'application/json')
 
     if (body !== undefined) {
-      headers.set('Content-Type', 'application/json')
+      if (typeof FormData !== 'undefined' && body instanceof FormData) {
+        // FormData should let fetch set the Content-Type automatically with boundary
+      } else {
+        headers.set('Content-Type', 'application/json')
+      }
     }
 
     if (token) {
@@ -73,7 +77,11 @@ export class ApiClient {
     }
 
     if (body !== undefined) {
-      init.body = JSON.stringify(body)
+      if (typeof FormData !== 'undefined' && body instanceof FormData) {
+        init.body = body
+      } else {
+        init.body = JSON.stringify(body)
+      }
     }
 
     const url = createApiUrl(this.baseUrl, path)

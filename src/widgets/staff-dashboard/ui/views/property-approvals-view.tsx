@@ -49,7 +49,7 @@ export function PropertyApprovalsView(): React.ReactElement {
       let mappedStatus: 'pending' | 'approved' | 'rejected' = 'pending'
       if (apt.status === 'available') {
         mappedStatus = 'approved'
-      } else if (apt.status === 'unavailable') {
+      } else if (apt.status === 'rejected' || apt.status === 'unavailable') {
         mappedStatus = 'rejected'
       }
 
@@ -91,10 +91,7 @@ export function PropertyApprovalsView(): React.ReactElement {
 
   const handleApprove = async (id: string): Promise<void> => {
     try {
-      await apiClient.patch(`/apartments/${id}/status`, {
-        status: 'available',
-        isVerified: true,
-      })
+      await apiClient.patch(`/apartments/${id}/approve`, {})
       setProperties(prev =>
         prev.map(p => (p.id === id ? { ...p, status: 'approved' } : p))
       )
@@ -112,10 +109,10 @@ export function PropertyApprovalsView(): React.ReactElement {
 
   const handleReject = async (id: string): Promise<void> => {
     try {
-      await apiClient.patch(`/apartments/${id}/status`, {
-        status: 'unavailable',
-        isVerified: false,
+      await apiClient.patch(`/apartments/${id}/reject`, {
+        rejectedReason: rejectReason,
       })
+
       setProperties(prev =>
         prev.map(p => (p.id === id ? { ...p, status: 'rejected' } : p))
       )

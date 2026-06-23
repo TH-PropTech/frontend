@@ -1,0 +1,72 @@
+import { apiClient } from '@/shared/api/api-client'
+import type { ApartmentFormValues, LandlordApartmentItem } from '../model/types'
+import type {
+  ApiProjectItem,
+  ApiBuildingItem,
+} from '@/entities/properties/model/types'
+
+export async function createApartment(
+  values: ApartmentFormValues
+): Promise<LandlordApartmentItem> {
+  // Convert priceMonthly back to absolute VND (e.g. 10 million -> 10,000,000)
+  const payload = {
+    ...values,
+    priceMonthly: values.priceMonthly * 1000000,
+  }
+  return apiClient.post<LandlordApartmentItem>('/apartments', payload)
+}
+
+export async function uploadApartmentImages(files: File[]): Promise<string[]> {
+  const formData = new FormData()
+  files.forEach(file => {
+    formData.append('images', file)
+  })
+  const response = await apiClient.post<{ urls: string[] }>(
+    '/apartments/upload',
+    formData
+  )
+  return response.urls
+}
+
+export async function searchProjects(query: string): Promise<ApiProjectItem[]> {
+  return apiClient.get<ApiProjectItem[]>(
+    `/projects?search=${encodeURIComponent(query)}`
+  )
+}
+
+export async function searchBuildings(
+  query: string,
+  projectId?: string
+): Promise<ApiBuildingItem[]> {
+  let url = `/buildings?search=${encodeURIComponent(query)}`
+  if (projectId) {
+    url += `&projectId=${projectId}`
+  }
+  return apiClient.get<ApiBuildingItem[]>(url)
+}
+
+export async function resubmitApartment(
+  id: string,
+  values: ApartmentFormValues
+): Promise<LandlordApartmentItem> {
+  const payload = {
+    ...values,
+    priceMonthly: values.priceMonthly * 1000000,
+  }
+  return apiClient.patch<LandlordApartmentItem>(
+    `/apartments/${id}/resubmit`,
+    payload
+  )
+}
+
+export async function renewApartment(
+  id: string
+): Promise<LandlordApartmentItem> {
+  return apiClient.patch<LandlordApartmentItem>(`/apartments/${id}/renew`, {})
+}
+
+export async function getMyListings(): Promise<LandlordApartmentItem[]> {
+  return apiClient.get<LandlordApartmentItem[]>(
+    '/apartments/my-listings?format=web'
+  )
+}
