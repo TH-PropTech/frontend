@@ -38,10 +38,40 @@ const EMPTY_KYC = {
 }
 
 export function useProfile(): UseProfileReturn {
-  const [role, setRole] = React.useState<'tenant' | 'landlord'>('tenant')
+  const [role, setRole] = React.useState<'tenant' | 'landlord'>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('tab') === 'listings') {
+        return 'landlord'
+      }
+    }
+    return 'tenant'
+  })
   const [activeTab, setActiveTab] = React.useState<
-    'progress' | 'bills' | 'blockchain' | 'maintenance' | 'security'
-  >('progress')
+    | 'progress'
+    | 'bills'
+    | 'blockchain'
+    | 'maintenance'
+    | 'security'
+    | 'listings'
+  >(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const tab = params.get('tab')
+      if (tab === 'listings') {
+        return 'listings'
+      } else if (
+        tab === 'progress' ||
+        tab === 'bills' ||
+        tab === 'blockchain' ||
+        tab === 'maintenance' ||
+        tab === 'security'
+      ) {
+        return tab
+      }
+    }
+    return 'progress'
+  })
   const [activePropertyId, setActivePropertyId] = React.useState('prop-1')
   const properties = React.useMemo(() => DEMO_PROPERTIES, [])
 
