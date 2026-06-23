@@ -169,6 +169,19 @@ export function HomeHeader(): React.ReactElement {
 
           {user ? (
             <div className="flex items-center gap-3">
+              {user.roles?.includes('landlord') && (
+                <Link href={'/properties/new' as Route}>
+                  <Button
+                    className={`h-[44px] rounded-full px-5 py-2.5 text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+                      isLightHeader
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/95'
+                        : 'bg-white text-primary hover:bg-white/95'
+                    }`}
+                  >
+                    Đăng tin cho thuê
+                  </Button>
+                </Link>
+              )}
               <Link
                 href={'/profile' as Route}
                 className={`flex items-center gap-2 text-sm font-bold ${

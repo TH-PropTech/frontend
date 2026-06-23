@@ -18,10 +18,21 @@ export interface BlockchainLog {
 
 export interface UseProfileReturn {
   role: 'tenant' | 'landlord'
-  activeTab: 'progress' | 'bills' | 'blockchain' | 'maintenance' | 'security'
+  activeTab:
+    | 'progress'
+    | 'bills'
+    | 'blockchain'
+    | 'maintenance'
+    | 'security'
+    | 'listings'
   setActiveTab: React.Dispatch<
     React.SetStateAction<
-      'progress' | 'bills' | 'blockchain' | 'maintenance' | 'security'
+      | 'progress'
+      | 'bills'
+      | 'blockchain'
+      | 'maintenance'
+      | 'security'
+      | 'listings'
     >
   >
   activePropertyId: string

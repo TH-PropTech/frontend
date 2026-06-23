@@ -9,11 +9,19 @@ import { TabBills } from './tab-bills'
 import { TabMaintenance } from './tab-maintenance'
 import { TabBlockchain } from './tab-blockchain'
 import { TabSecurity } from './tab-security'
+import { TabMyListings } from './tab-my-listings'
 import { ModalKyc } from './modal-kyc'
 import { ModalHandover } from './modal-handover'
 import { ModalContract } from './modal-contract'
 import { ModalHandoverArchive } from './modal-handover-archive'
-import { Activity, FileText, Wrench, Database, Settings } from 'lucide-react'
+import {
+  Activity,
+  FileText,
+  Wrench,
+  Database,
+  Settings,
+  Building,
+} from 'lucide-react'
 
 export function ProfileWidget(): React.ReactElement {
   const profile = useProfile()
@@ -34,6 +42,7 @@ export function ProfileWidget(): React.ReactElement {
               | 'blockchain'
               | 'maintenance'
               | 'security'
+              | 'listings'
           )
         }
         className="w-full"
@@ -46,6 +55,15 @@ export function ProfileWidget(): React.ReactElement {
             <Activity className="h-4 w-4 mr-1.5" />
             {role === 'tenant' ? 'Tiến trình thuê nhà' : 'Tiến trình cho thuê'}
           </TabsTrigger>
+          {role === 'landlord' && (
+            <TabsTrigger
+              value="listings"
+              className="pb-3 rounded-none border-b-2 border-transparent bg-transparent px-0 font-semibold text-muted hover:text-fg data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-bold data-[state=active]:bg-transparent shadow-none"
+            >
+              <Building className="h-4 w-4 mr-1.5" />
+              Tin đăng của tôi
+            </TabsTrigger>
+          )}
           <TabsTrigger
             value="bills"
             className="pb-3 rounded-none border-b-2 border-transparent bg-transparent px-0 font-semibold text-muted hover:text-fg data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-bold data-[state=active]:bg-transparent shadow-none"
@@ -97,6 +115,12 @@ export function ProfileWidget(): React.ReactElement {
         <TabsContent value="security" className="outline-none">
           <TabSecurity profile={profile} />
         </TabsContent>
+
+        {role === 'landlord' && (
+          <TabsContent value="listings" className="outline-none">
+            <TabMyListings />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Modals */}
