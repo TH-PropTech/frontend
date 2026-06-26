@@ -112,8 +112,8 @@ export function PropertyComparison({
               },
               {
                 label: 'Diện tích sử dụng',
-                v1: `${property.area} m²`,
-                v2: `${compareApt.area}`,
+                v1: `${property.areaNum} m²`,
+                v2: `${compareApt.areaNum} m²`,
                 better: property.areaNum > compareApt.areaNum ? 1 : 2,
               },
               {
