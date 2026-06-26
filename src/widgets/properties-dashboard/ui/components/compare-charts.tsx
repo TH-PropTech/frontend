@@ -399,6 +399,13 @@ export function CompareCharts({
           Biểu đồ miền: Tương quan so sánh chỉ số tổng hợp (Giá - Diện tích -
           Đơn giá - Độ tin cậy)
         </h4>
+        <p className="text-[11px] text-muted leading-relaxed -mt-2">
+          Biểu đồ bên dưới chuẩn hoá 4 tiêu chí đánh giá quan trọng thành thang
+          điểm 0 – 100, sau đó vẽ đường xu hướng cho từng căn hộ. Đường nào nằm{' '}
+          <strong className="text-fg">càng cao</strong> ở một trục nghĩa là căn
+          hộ đó <strong className="text-fg">càng vượt trội</strong> ở tiêu chí
+          tương ứng.
+        </p>
         <div className="relative">
           <svg
             viewBox="0 0 320 170"
@@ -521,6 +528,48 @@ export function CompareCharts({
                 <span className="font-semibold text-fg">{item.title}</span>
               </div>
             ))}
+          </div>
+
+          {/* Metric Descriptions */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-border/50">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-bold text-fg uppercase tracking-wide flex items-center gap-1">
+                <Crown className="h-3 w-3 text-emerald-500" />
+                Giá rẻ nhất
+              </span>
+              <p className="text-[10px] text-muted leading-snug">
+                Giá thuê hàng tháng (Tr/tháng). Cao = thuê rẻ hơn đối thủ.
+              </p>
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-bold text-fg uppercase tracking-wide flex items-center gap-1">
+                <Maximize2 className="h-3 w-3 text-blue-500" />
+                Rộng nhất
+              </span>
+              <p className="text-[10px] text-muted leading-snug">
+                Diện tích sàn sử dụng (m²). Cao = không gian lớn hơn.
+              </p>
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-bold text-fg uppercase tracking-wide flex items-center gap-1">
+                <Scale className="h-3 w-3 text-amber-500" />
+                Đáng tiền
+              </span>
+              <p className="text-[10px] text-muted leading-snug">
+                Đơn giá thuê trên m² (đ/m²). Cao = mỗi đồng thuê được nhiều diện
+                tích hơn.
+              </p>
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-bold text-fg uppercase tracking-wide flex items-center gap-1">
+                <Shield className="h-3 w-3 text-indigo-500" />
+                Tin cậy
+              </span>
+              <p className="text-[10px] text-muted leading-snug">
+                Điểm xác minh Blockchain (%). Cao = pháp lý minh bạch, rủi ro
+                thấp.
+              </p>
+            </div>
           </div>
         </div>
       </div>
