@@ -31,7 +31,6 @@ export function Logo({
         width={img}
         height={img}
         className={variant === 'white' ? 'brightness-0 invert' : ''}
-        style={{ height: 'auto' }}
         priority
       />
       <span
