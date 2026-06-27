@@ -233,21 +233,55 @@ export function CompareCharts({
             Biểu đồ tròn: Tỷ trọng phân bổ chi phí thuê
           </h4>
           <div className="flex flex-row items-center justify-around gap-4">
-            <svg width="120" height="120" viewBox="0 0 120 120" className="flex-shrink-0">
-              <circle cx="60" cy="60" r="40" fill="transparent" stroke="var(--border)" strokeWidth="12" />
+            <svg
+              width="120"
+              height="120"
+              viewBox="0 0 120 120"
+              className="flex-shrink-0"
+            >
+              <circle
+                cx="60"
+                cy="60"
+                r="40"
+                fill="transparent"
+                stroke="var(--border)"
+                strokeWidth="12"
+              />
               {donutRentData.map((item, idx) => (
-                <circle key={idx} cx="60" cy="60" r="40" fill="transparent" stroke={item.color.fill} strokeWidth="14" strokeDasharray={item.strokeDash} strokeDashoffset={item.strokeOffset} transform="rotate(-90 60 60)" className="transition-all duration-500" />
+                <circle
+                  key={idx}
+                  cx="60"
+                  cy="60"
+                  r="40"
+                  fill="transparent"
+                  stroke={item.color.fill}
+                  strokeWidth="14"
+                  strokeDasharray={item.strokeDash}
+                  strokeDashoffset={item.strokeOffset}
+                  transform="rotate(-90 60 60)"
+                  className="transition-all duration-500"
+                />
               ))}
               <circle cx="60" cy="60" r="30" className="fill-surface-muted" />
             </svg>
             <div className="flex-1 space-y-1.5 max-w-[200px]">
               {donutRentData.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between text-[10px]">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between text-[10px]"
+                >
                   <div className="flex items-center gap-1.5 truncate max-w-[120px]">
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.color.fill }} />
-                    <span className="font-medium text-fg truncate">{item.title}</span>
+                    <div
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: item.color.fill }}
+                    />
+                    <span className="font-medium text-fg truncate">
+                      {item.title}
+                    </span>
                   </div>
-                  <span className="font-bold text-muted">{item.val} ({item.pctText})</span>
+                  <span className="font-bold text-muted">
+                    {item.val} ({item.pctText})
+                  </span>
                 </div>
               ))}
             </div>
@@ -261,21 +295,55 @@ export function CompareCharts({
             Biểu đồ tròn: Tỷ trọng phân bổ tổng diện tích
           </h4>
           <div className="flex flex-row items-center justify-around gap-4">
-            <svg width="120" height="120" viewBox="0 0 120 120" className="flex-shrink-0">
-              <circle cx="60" cy="60" r="40" fill="transparent" stroke="var(--border)" strokeWidth="12" />
+            <svg
+              width="120"
+              height="120"
+              viewBox="0 0 120 120"
+              className="flex-shrink-0"
+            >
+              <circle
+                cx="60"
+                cy="60"
+                r="40"
+                fill="transparent"
+                stroke="var(--border)"
+                strokeWidth="12"
+              />
               {donutAreaData.map((item, idx) => (
-                <circle key={idx} cx="60" cy="60" r="40" fill="transparent" stroke={item.color.fill} strokeWidth="14" strokeDasharray={item.strokeDash} strokeDashoffset={item.strokeOffset} transform="rotate(-90 60 60)" className="transition-all duration-500" />
+                <circle
+                  key={idx}
+                  cx="60"
+                  cy="60"
+                  r="40"
+                  fill="transparent"
+                  stroke={item.color.fill}
+                  strokeWidth="14"
+                  strokeDasharray={item.strokeDash}
+                  strokeDashoffset={item.strokeOffset}
+                  transform="rotate(-90 60 60)"
+                  className="transition-all duration-500"
+                />
               ))}
               <circle cx="60" cy="60" r="30" className="fill-surface-muted" />
             </svg>
             <div className="flex-1 space-y-1.5 max-w-[200px]">
               {donutAreaData.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between text-[10px]">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between text-[10px]"
+                >
                   <div className="flex items-center gap-1.5 truncate max-w-[120px]">
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.color.fill }} />
-                    <span className="font-medium text-fg truncate">{item.title}</span>
+                    <div
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: item.color.fill }}
+                    />
+                    <span className="font-medium text-fg truncate">
+                      {item.title}
+                    </span>
                   </div>
-                  <span className="font-bold text-muted">{item.val} ({item.pctText})</span>
+                  <span className="font-bold text-muted">
+                    {item.val} ({item.pctText})
+                  </span>
                 </div>
               ))}
             </div>
@@ -287,45 +355,125 @@ export function CompareCharts({
       <div className="bg-surface-muted rounded-2xl p-5 border border-border space-y-4 shadow-sm">
         <h4 className="font-display text-xs font-bold text-fg flex items-center gap-1.5 uppercase tracking-wide">
           <Scale className="h-4 w-4 text-primary" />
-          Biểu đồ miền: Tương quan so sánh chỉ số tổng hợp (Giá - Diện tích - Đơn giá - Độ tin cậy)
+          Biểu đồ miền: Tương quan so sánh chỉ số tổng hợp (Giá - Diện tích -
+          Đơn giá - Độ tin cậy)
         </h4>
         <p className="text-[11px] text-muted leading-relaxed -mt-2">
           Biểu đồ bên dưới chuẩn hoá 4 tiêu chí đánh giá quan trọng thành thang
           điểm 0 – 100, sau đó vẽ đường xu hướng cho từng căn hộ. Đường nào nằm{' '}
           <strong className="text-fg">càng cao</strong> ở một trục nghĩa là căn
-          hộ đó <strong className="text-fg">càng vượt trội</strong> ở tiêu chí tương ứng.
+          hộ đó <strong className="text-fg">càng vượt trội</strong> ở tiêu chí
+          tương ứng.
         </p>
         <div className="relative">
-          <svg viewBox="0 0 320 170" width="100%" height="100%" className="bg-surface rounded-xl border border-border p-2">
+          <svg
+            viewBox="0 0 320 170"
+            width="100%"
+            height="100%"
+            className="bg-surface rounded-xl border border-border p-2"
+          >
             {[20, 47.5, 75, 102.5, 130].map((y, i) => (
-              <line key={i} x1="30" y1={y} x2="300" y2={y} stroke="var(--border)" strokeWidth="1" strokeDasharray="2 2" />
+              <line
+                key={i}
+                x1="30"
+                y1={y}
+                x2="300"
+                y2={y}
+                stroke="var(--border)"
+                strokeWidth="1"
+                strokeDasharray="2 2"
+              />
             ))}
             {[45, 125, 205, 285].map((x, i) => (
-              <line key={i} x1={x} y1="20" x2={x} y2="140" stroke="var(--border)" strokeWidth="1" />
+              <line
+                key={i}
+                x1={x}
+                y1="20"
+                x2={x}
+                y2="140"
+                stroke="var(--border)"
+                strokeWidth="1"
+              />
             ))}
             {areaChartData.map((item, idx) => (
               <g key={idx}>
-                <polygon points={item.polygonPoints} fill={item.color.fill} fillOpacity="0.15" className="transition-all duration-500" />
-                <polyline points={item.linePoints} fill="none" stroke={item.color.fill} strokeWidth="2.5" className="transition-all duration-500" />
+                <polygon
+                  points={item.polygonPoints}
+                  fill={item.color.fill}
+                  fillOpacity="0.15"
+                  className="transition-all duration-500"
+                />
+                <polyline
+                  points={item.linePoints}
+                  fill="none"
+                  stroke={item.color.fill}
+                  strokeWidth="2.5"
+                  className="transition-all duration-500"
+                />
                 {item.dots.map((dot, dIdx) => (
                   <g key={dIdx}>
-                    <circle cx={dot.x} cy={dot.y} r="4.5" fill={item.color.fill} stroke="#ffffff" strokeWidth="1.5" />
-                    <text x={dot.x} y={dot.y - 7} textAnchor="middle" className="text-[7.5px] font-extrabold fill-fg/80">{dot.val}</text>
+                    <circle
+                      cx={dot.x}
+                      cy={dot.y}
+                      r="4.5"
+                      fill={item.color.fill}
+                      stroke="#ffffff"
+                      strokeWidth="1.5"
+                    />
+                    <text
+                      x={dot.x}
+                      y={dot.y - 7}
+                      textAnchor="middle"
+                      className="text-[7.5px] font-extrabold fill-fg/80"
+                    >
+                      {dot.val}
+                    </text>
                   </g>
                 ))}
               </g>
             ))}
-            <text x="45" y="152" textAnchor="middle" className="text-[8px] font-bold fill-muted uppercase">Giá rẻ nhất</text>
-            <text x="125" y="152" textAnchor="middle" className="text-[8px] font-bold fill-muted uppercase">Rộng nhất</text>
-            <text x="205" y="152" textAnchor="middle" className="text-[8px] font-bold fill-muted uppercase">Đáng tiền</text>
-            <text x="285" y="152" textAnchor="middle" className="text-[8px] font-bold fill-muted uppercase">Tin cậy</text>
+            <text
+              x="45"
+              y="152"
+              textAnchor="middle"
+              className="text-[8px] font-bold fill-muted uppercase"
+            >
+              Giá rẻ nhất
+            </text>
+            <text
+              x="125"
+              y="152"
+              textAnchor="middle"
+              className="text-[8px] font-bold fill-muted uppercase"
+            >
+              Rộng nhất
+            </text>
+            <text
+              x="205"
+              y="152"
+              textAnchor="middle"
+              className="text-[8px] font-bold fill-muted uppercase"
+            >
+              Đáng tiền
+            </text>
+            <text
+              x="285"
+              y="152"
+              textAnchor="middle"
+              className="text-[8px] font-bold fill-muted uppercase"
+            >
+              Tin cậy
+            </text>
           </svg>
 
           {/* Legend */}
           <div className="flex flex-wrap gap-4 mt-3 justify-center text-[10px]">
             {areaChartData.map((item, idx) => (
               <div key={idx} className="flex items-center gap-1.5">
-                <div className="w-3 h-1.5 rounded" style={{ backgroundColor: item.color.fill }} />
+                <div
+                  className="w-3 h-1.5 rounded"
+                  style={{ backgroundColor: item.color.fill }}
+                />
                 <span className="font-semibold text-fg">{item.title}</span>
               </div>
             ))}
@@ -337,25 +485,35 @@ export function CompareCharts({
               <span className="text-[10px] font-bold text-fg uppercase tracking-wide flex items-center gap-1">
                 <Crown className="h-3 w-3 text-success" /> Giá rẻ nhất
               </span>
-              <p className="text-[10px] text-muted leading-snug">Giá thuê hàng tháng (Tr/tháng). Cao = thuê rẻ hơn đối thủ.</p>
+              <p className="text-[10px] text-muted leading-snug">
+                Giá thuê hàng tháng (Tr/tháng). Cao = thuê rẻ hơn đối thủ.
+              </p>
             </div>
             <div className="space-y-0.5">
               <span className="text-[10px] font-bold text-fg uppercase tracking-wide flex items-center gap-1">
                 <Maximize2 className="h-3 w-3 text-info" /> Rộng nhất
               </span>
-              <p className="text-[10px] text-muted leading-snug">Diện tích sàn sử dụng (m²). Cao = không gian lớn hơn.</p>
+              <p className="text-[10px] text-muted leading-snug">
+                Diện tích sàn sử dụng (m²). Cao = không gian lớn hơn.
+              </p>
             </div>
             <div className="space-y-0.5">
               <span className="text-[10px] font-bold text-fg uppercase tracking-wide flex items-center gap-1">
                 <Scale className="h-3 w-3 text-warning" /> Đáng tiền
               </span>
-              <p className="text-[10px] text-muted leading-snug">Đơn giá thuê trên m² (đ/m²). Cao = mỗi đồng thuê được nhiều diện tích hơn.</p>
+              <p className="text-[10px] text-muted leading-snug">
+                Đơn giá thuê trên m² (đ/m²). Cao = mỗi đồng thuê được nhiều diện
+                tích hơn.
+              </p>
             </div>
             <div className="space-y-0.5">
               <span className="text-[10px] font-bold text-fg uppercase tracking-wide flex items-center gap-1">
                 <Shield className="h-3 w-3 text-primary" /> Tin cậy
               </span>
-              <p className="text-[10px] text-muted leading-snug">Điểm xác minh Blockchain (%). Cao = pháp lý minh bạch, rủi ro thấp.</p>
+              <p className="text-[10px] text-muted leading-snug">
+                Điểm xác minh Blockchain (%). Cao = pháp lý minh bạch, rủi ro
+                thấp.
+              </p>
             </div>
           </div>
         </div>

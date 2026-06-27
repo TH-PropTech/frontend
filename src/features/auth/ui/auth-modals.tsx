@@ -265,9 +265,12 @@ export function FeePolicyModal({
             <line x1="12" x2="12" y1="2" y2="22" />
             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
           </svg>
-          <h3 className="text-lg font-bold text-primary">Biểu phí giao dịch minh bạch</h3>
+          <h3 className="text-lg font-bold text-primary">
+            Biểu phí giao dịch minh bạch
+          </h3>
           <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-            TH-PropTech cam kết cung cấp giải pháp đăng tin và giao dịch cho thuê chung cư với chi phí tối ưu nhất.
+            TH-PropTech cam kết cung cấp giải pháp đăng tin và giao dịch cho
+            thuê chung cư với chi phí tối ưu nhất.
           </p>
         </div>
 
@@ -293,7 +296,9 @@ export function FeePolicyModal({
                 Đăng tin cho thuê — Miễn phí 100%
               </h4>
               <p className="text-xs text-muted mt-1">
-                Chủ nhà (Landlord) được phép đăng tin cho thuê căn hộ, block căn hộ, hình ảnh 360° VR và mô tả chi tiết hoàn toàn miễn phí. Không giới hạn số lượng tin đăng và không phát sinh phí ẩn duy trì.
+                Chủ nhà (Landlord) được phép đăng tin cho thuê căn hộ, block căn
+                hộ, hình ảnh 360° VR và mô tả chi tiết hoàn toàn miễn phí. Không
+                giới hạn số lượng tin đăng và không phát sinh phí ẩn duy trì.
               </p>
             </div>
           </div>
@@ -319,7 +324,10 @@ export function FeePolicyModal({
                 Thu phí dựa trên hợp đồng thuê
               </h4>
               <p className="text-xs text-muted mt-1">
-                Chúng tôi chỉ thực hiện thu phí dịch vụ khi có giao dịch thuê nhà thành công. Phí được tính toán trực tiếp trên giá trị hợp đồng thuê căn hộ chung cư được ký kết chính thức giữa hai bên trên hệ thống.
+                Chúng tôi chỉ thực hiện thu phí dịch vụ khi có giao dịch thuê
+                nhà thành công. Phí được tính toán trực tiếp trên giá trị hợp
+                đồng thuê căn hộ chung cư được ký kết chính thức giữa hai bên
+                trên hệ thống.
               </p>
             </div>
           </div>
@@ -346,17 +354,17 @@ export function FeePolicyModal({
                 Thanh toán qua Smart Contract
               </h4>
               <p className="text-xs text-muted mt-1">
-                Hệ thống thu phí tự động hoặc cấn trừ thông qua giao dịch đặt cọc / ký kết hợp đồng thông minh trên nền tảng Blockchain. Đảm bảo tính an toàn, bảo mật và ghi nhận hóa đơn minh bạch cho cả Chủ nhà và Khách thuê.
+                Hệ thống thu phí tự động hoặc cấn trừ thông qua giao dịch đặt
+                cọc / ký kết hợp đồng thông minh trên nền tảng Blockchain. Đảm
+                bảo tính an toàn, bảo mật và ghi nhận hóa đơn minh bạch cho cả
+                Chủ nhà và Khách thuê.
               </p>
             </div>
           </div>
         </div>
 
         <div className="pt-2">
-          <Button
-            onClick={onClose}
-            className="w-full rounded-full"
-          >
+          <Button onClick={onClose} className="w-full rounded-full">
             Đã hiểu quy định
           </Button>
         </div>
@@ -364,4 +372,3 @@ export function FeePolicyModal({
     </Modal>
   )
 }
-

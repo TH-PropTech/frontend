@@ -62,8 +62,8 @@ export function CompareRecommendations({
             Bảng Phân Tích & Đối Chiếu Khuyến Nghị Tối Ưu
           </h4>
           <p className="text-[10px] text-muted">
-            Tự động đánh giá chi tiết các chỉ số tài chính, không gian và độ
-            tin cậy của các căn hộ được chọn.
+            Tự động đánh giá chi tiết các chỉ số tài chính, không gian và độ tin
+            cậy của các căn hộ được chọn.
           </p>
         </div>
       </div>
@@ -78,10 +78,10 @@ export function CompareRecommendations({
             {recommendations.cheapest.title}
           </p>
           <p className="text-[11px] text-muted leading-relaxed">
-            Căn hộ có giá thuê hợp lý nhất trong danh sách so sánh hiện tại
-            ở mức **{recommendations.cheapest.priceNum} Tr/tháng**. Lựa chọn
-            này giúp giảm bớt gánh nặng tài chính hàng tháng, lý tưởng cho
-            những ai muốn tích lũy thêm ngân sách dự phòng.
+            Căn hộ có giá thuê hợp lý nhất trong danh sách so sánh hiện tại ở
+            mức **{recommendations.cheapest.priceNum} Tr/tháng**. Lựa chọn này
+            giúp giảm bớt gánh nặng tài chính hàng tháng, lý tưởng cho những ai
+            muốn tích lũy thêm ngân sách dự phòng.
           </p>
         </div>
 
@@ -95,10 +95,10 @@ export function CompareRecommendations({
           </p>
           <p className="text-[11px] text-muted leading-relaxed">
             Với diện tích sử dụng lên tới **
-            {recommendations.largest.areaNum} m²**, căn hộ này mang đến
-            không gian sinh hoạt vô cùng thoải mái và rộng rãi. Rất thích
-            hợp cho những hộ gia đình có con nhỏ hoặc những ai mong muốn
-            thiết lập phòng làm việc tại nhà.
+            {recommendations.largest.areaNum} m²**, căn hộ này mang đến không
+            gian sinh hoạt vô cùng thoải mái và rộng rãi. Rất thích hợp cho
+            những hộ gia đình có con nhỏ hoặc những ai mong muốn thiết lập phòng
+            làm việc tại nhà.
           </p>
         </div>
 
@@ -130,9 +130,9 @@ export function CompareRecommendations({
           </p>
           <p className="text-[11px] text-muted leading-relaxed">
             Nổi bật với điểm số xác minh Blockchain cao nhất ở mức **
-            {getTrustScore(recommendations.mostTrusted)}%**. Mọi thông tin
-            hợp đồng, pháp lý của chủ nhà đều đã được mã hóa và lưu trữ an
-            toàn, hạn chế tối đa rủi ro tin ảo.
+            {getTrustScore(recommendations.mostTrusted)}%**. Mọi thông tin hợp
+            đồng, pháp lý của chủ nhà đều đã được mã hóa và lưu trữ an toàn, hạn
+            chế tối đa rủi ro tin ảo.
           </p>
         </div>
       </div>
