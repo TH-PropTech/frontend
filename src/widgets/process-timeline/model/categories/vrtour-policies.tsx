@@ -200,7 +200,8 @@ export const vrtourPoliciesCategories: Category[] = [
         content: (
           <div className="space-y-4 text-xs md:text-sm text-muted leading-relaxed text-left">
             <p>
-              TH PropTech cam kết cung cấp giải pháp đăng tin và giao dịch cho thuê chung cư với chi phí tối ưu nhất.
+              TH PropTech cam kết cung cấp giải pháp đăng tin và giao dịch cho
+              thuê chung cư với chi phí tối ưu nhất.
             </p>
 
             <h3 className="font-bold text-fg text-sm mt-6">
@@ -228,7 +229,8 @@ export const vrtourPoliciesCategories: Category[] = [
                     Đăng tin cho thuê — Miễn phí 100%
                   </h4>
                   <p className="font-body text-xs text-muted mt-1 leading-relaxed">
-                    Chủ nhà được phép đăng tin cho thuê căn hộ, block căn hộ, hình ảnh 360° VR và mô tả chi tiết hoàn toàn miễn phí.
+                    Chủ nhà được phép đăng tin cho thuê căn hộ, block căn hộ,
+                    hình ảnh 360° VR và mô tả chi tiết hoàn toàn miễn phí.
                   </p>
                 </div>
               </div>
@@ -254,7 +256,9 @@ export const vrtourPoliciesCategories: Category[] = [
                     Thu phí dựa trên hợp đồng thuê
                   </h4>
                   <p className="font-body text-xs text-muted mt-1 leading-relaxed">
-                    Chúng tôi chỉ thực hiện thu phí dịch vụ khi có giao dịch thuê nhà thành công. Phí được tính toán dựa trên hợp đồng thuê được ký kết chính thức.
+                    Chúng tôi chỉ thực hiện thu phí dịch vụ khi có giao dịch
+                    thuê nhà thành công. Phí được tính toán dựa trên hợp đồng
+                    thuê được ký kết chính thức.
                   </p>
                 </div>
               </div>
@@ -281,7 +285,9 @@ export const vrtourPoliciesCategories: Category[] = [
                     Thanh toán qua Smart Contract
                   </h4>
                   <p className="font-body text-xs text-muted mt-1 leading-relaxed">
-                    Hệ thống thu phí tự động hoặc cấn trừ qua giao dịch cọc/ký kết hợp đồng thông minh Blockchain, đảm bảo an toàn, bảo mật.
+                    Hệ thống thu phí tự động hoặc cấn trừ qua giao dịch cọc/ký
+                    kết hợp đồng thông minh Blockchain, đảm bảo an toàn, bảo
+                    mật.
                   </p>
                 </div>
               </div>

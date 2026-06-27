@@ -195,8 +195,14 @@ export function ApartmentPostingForm({
   }
 
   return (
-    <div className={noCard ? "w-full max-w-4xl mx-auto bg-transparent" : "w-full max-w-4xl mx-auto shadow-lg border border-border bg-surface rounded-2xl"}>
-      <div className={noCard ? "pb-4" : "pb-4 p-6"}>
+    <div
+      className={
+        noCard
+          ? 'w-full max-w-4xl mx-auto bg-transparent'
+          : 'w-full max-w-4xl mx-auto shadow-lg border border-border bg-surface rounded-2xl'
+      }
+    >
+      <div className={noCard ? 'pb-4' : 'pb-4 p-6'}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="font-display text-2xl font-bold text-fg">
@@ -246,7 +252,13 @@ export function ApartmentPostingForm({
         </div>
       </div>
 
-      <div className={noCard ? "pt-6 border-t border-border" : "pt-6 border-t border-border p-6"}>
+      <div
+        className={
+          noCard
+            ? 'pt-6 border-t border-border'
+            : 'pt-6 border-t border-border p-6'
+        }
+      >
         {/* Render Steps */}
         <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-6">
           {currentStep === 1 && <LocationStep form={form} />}
