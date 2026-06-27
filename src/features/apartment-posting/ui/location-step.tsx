@@ -1,8 +1,8 @@
 import * as React from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import type { ApartmentFormValues } from '../model/types'
-import { locationData } from '@/entities/properties/model/mocks'
 import { searchProjects, searchBuildings } from '../api/apartment-posting-api'
+import { useLocationCascade } from '../model/use-location-cascade'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import {
@@ -13,6 +13,11 @@ import {
   SelectValue,
 } from '@/shared/ui/select'
 import { MapPin, Building, Folder } from 'lucide-react'
+import type {
+  ApiProjectItem,
+  ApiBuildingItem,
+} from '@/entities/properties/model/types'
+
 interface LocationStepProps {
   form: UseFormReturn<ApartmentFormValues, unknown, ApartmentFormValues>
 }
@@ -29,29 +34,26 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
   const projectId = watch('projectId')
   const buildingName = watch('buildingName')
 
-  // Suggestion lists state
+  // Suggestion lists state - now storing the full API item objects
   const [projectSuggestions, setProjectSuggestions] = React.useState<
-    Array<{ id: string; name: string }>
+    ApiProjectItem[]
   >([])
   const [buildingSuggestions, setBuildingSuggestions] = React.useState<
-    Array<{ id: string; name: string }>
+    ApiBuildingItem[]
   >([])
   const [showProjList, setShowProjList] = React.useState(false)
   const [showBuildList, setShowBuildList] = React.useState(false)
   const [isLoadingProj, setIsLoadingProj] = React.useState(false)
   const [isLoadingBuild, setIsLoadingBuild] = React.useState(false)
 
-  const cities = Object.keys(locationData)
-  const districts =
-    city && locationData[city] ? Object.keys(locationData[city]) : []
-  const wards =
-    city && district && locationData[city]?.[district]
-      ? locationData[city][district].wards || []
-      : []
-  const mockStreets =
-    city && district && locationData[city]?.[district]
-      ? locationData[city][district].streets || []
-      : []
+  // Use custom hook to load Vietnamese administrative divisions & handle cascading auto-fill
+  const { cities, districts, wards, autoFillAddress } = useLocationCascade({
+    city,
+    district,
+    setValue,
+  })
+
+  const mockStreets: string[] = []
 
   // Auto-fill address field
   React.useEffect(() => {
@@ -70,7 +72,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
       setIsLoadingProj(true)
       try {
         const results = await searchProjects(projectName)
-        setProjectSuggestions(results.map(r => ({ id: r.id, name: r.name })))
+        setProjectSuggestions(results)
       } catch (err) {
         console.error('Error searching projects:', err)
       } finally {
@@ -95,7 +97,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
           buildingName,
           projectId || undefined
         )
-        setBuildingSuggestions(results.map(r => ({ id: r.id, name: r.name })))
+        setBuildingSuggestions(results)
       } catch (err) {
         console.error('Error searching buildings:', err)
       } finally {
@@ -284,6 +286,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
                     onClick={() => {
                       setValue('projectName', proj.name)
                       setValue('projectId', proj.id)
+                      autoFillAddress(proj.location, proj.city, proj.district)
                       setShowProjList(false)
                     }}
                   >
@@ -339,6 +342,15 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
                     onClick={() => {
                       setValue('buildingName', b.name)
                       setValue('buildingId', b.id)
+
+                      if (b.projectId && !watch('projectId')) {
+                        setValue('projectId', b.projectId)
+                        if (b.projectName) {
+                          setValue('projectName', b.projectName)
+                        }
+                      }
+
+                      autoFillAddress(b.location, b.city, b.district)
                       setShowBuildList(false)
                     }}
                   >

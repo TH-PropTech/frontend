@@ -11,6 +11,7 @@ import { AdvancedDrawer } from './components/advanced-drawer'
 import { PropertiesMap } from './components/properties-map'
 import { CompareModal } from './components/compare-modal'
 import { ProjectGridView } from './components/project-grid-view'
+import { LandlordActionBar } from './components/landlord-action-bar'
 import { toast } from 'sonner'
 
 export function PropertiesDashboard(): React.ReactElement {
@@ -321,6 +322,8 @@ export function PropertiesDashboard(): React.ReactElement {
               </div>
             </div>
           </div>
+
+          <LandlordActionBar />
 
           {viewMode === 'map' ? (
             <PropertiesMap

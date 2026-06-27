@@ -193,6 +193,102 @@ export const vrtourPoliciesCategories: Category[] = [
           </div>
         ),
       },
+      {
+        id: 'policy-fees',
+        title: 'Chính sách biểu phí dịch vụ',
+        breadcrumbs: ['Quy định & Chính sách', 'Chính sách biểu phí dịch vụ'],
+        content: (
+          <div className="space-y-4 text-xs md:text-sm text-muted leading-relaxed text-left">
+            <p>
+              TH PropTech cam kết cung cấp giải pháp đăng tin và giao dịch cho thuê chung cư với chi phí tối ưu nhất.
+            </p>
+
+            <h3 className="font-bold text-fg text-sm mt-6">
+              Chi tiết biểu phí giao dịch:
+            </h3>
+            <div className="space-y-4 mt-3">
+              <div className="flex gap-3 p-4 rounded-xl border border-border bg-[#faf6f1]/20">
+                <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-marketing font-bold text-xs text-emerald-600">
+                    Đăng tin cho thuê — Miễn phí 100%
+                  </h4>
+                  <p className="font-body text-xs text-muted mt-1 leading-relaxed">
+                    Chủ nhà được phép đăng tin cho thuê căn hộ, block căn hộ, hình ảnh 360° VR và mô tả chi tiết hoàn toàn miễn phí.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 p-4 rounded-xl border border-border bg-[#faf6f1]/20">
+                <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-marketing font-bold text-xs text-primary">
+                    Thu phí dựa trên hợp đồng thuê
+                  </h4>
+                  <p className="font-body text-xs text-muted mt-1 leading-relaxed">
+                    Chúng tôi chỉ thực hiện thu phí dịch vụ khi có giao dịch thuê nhà thành công. Phí được tính toán dựa trên hợp đồng thuê được ký kết chính thức.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 p-4 rounded-xl border border-border bg-[#faf6f1]/20">
+                <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/10 text-blue-600">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-marketing font-bold text-xs text-blue-600">
+                    Thanh toán qua Smart Contract
+                  </h4>
+                  <p className="font-body text-xs text-muted mt-1 leading-relaxed">
+                    Hệ thống thu phí tự động hoặc cấn trừ qua giao dịch cọc/ký kết hợp đồng thông minh Blockchain, đảm bảo an toàn, bảo mật.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ),
+      },
     ],
   },
 ]

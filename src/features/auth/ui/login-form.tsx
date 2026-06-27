@@ -8,6 +8,7 @@ import { Input } from '@/shared/ui/input'
 import { Button } from '@/shared/ui/button'
 import { apiClient } from '@/shared/api/api-client'
 import { toast } from 'sonner'
+import { FeePolicyModal } from './auth-modals'
 
 type LoginMode = 'password' | 'passwordless-email' | 'two-factor'
 
@@ -45,6 +46,7 @@ export function LoginForm(): React.ReactElement {
   const [successMsg, setSuccessMsg] = React.useState('')
   const [twoFactorTempToken, setTwoFactorTempToken] = React.useState('')
   const [twoFactorCode, setTwoFactorCode] = React.useState('')
+  const [showFeeModal, setShowFeeModal] = React.useState(false)
 
   async function handleSubmit(
     e: React.FormEvent<HTMLFormElement>
@@ -178,10 +180,11 @@ export function LoginForm(): React.ReactElement {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-5 transition-all duration-300"
-    >
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-5 transition-all duration-300"
+      >
       {/* Alert Messages */}
       {errorMsg && (
         <div className="bg-accent/10 border border-accent/20 text-accent text-xs p-3 rounded-lg font-semibold">
@@ -447,6 +450,36 @@ export function LoginForm(): React.ReactElement {
           </Link>
         </p>
       )}
+
+      <div className="text-center mt-2 border-t border-border pt-4">
+        <button
+          type="button"
+          onClick={() => setShowFeeModal(true)}
+          className="text-xs font-medium text-muted hover:text-primary transition-colors inline-flex items-center gap-1"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" x2="12" y1="16" y2="12" />
+            <line x1="12" x2="12" y1="8" y2="8" />
+          </svg>
+          Tìm hiểu chính sách biểu phí & quy định
+        </button>
+      </div>
     </form>
-  )
+    <FeePolicyModal
+      isOpen={showFeeModal}
+      onClose={() => setShowFeeModal(false)}
+    />
+  </>
+)
 }
