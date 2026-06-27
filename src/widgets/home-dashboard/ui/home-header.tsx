@@ -169,7 +169,7 @@ export function HomeHeader(): React.ReactElement {
 
           {user ? (
             <div className="flex items-center gap-3">
-              {user.roles?.includes('landlord') && (
+              {user.roles?.includes('landlord') && pathname !== '/properties' && (
                 <Link href={'/properties/new' as Route}>
                   <Button
                     className={`h-[44px] rounded-full px-5 py-2.5 text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 ${
