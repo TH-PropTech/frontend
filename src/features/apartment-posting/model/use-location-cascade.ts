@@ -1,6 +1,34 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import * as React from 'react'
 import type { UseFormSetValue } from 'react-hook-form'
 import type { ApartmentFormValues } from './types'
+
+interface ProvinceData {
+  name: string
+  code: number
+}
+
+interface DistrictData {
+  name: string
+  code: number
+}
+
+interface WardData {
+  name: string
+  code: number
+}
+
+interface ApiProvinceResponse {
+  name: string
+  code: number
+  districts?: DistrictData[]
+}
+
+interface ApiDistrictResponse {
+  name: string
+  code: number
+  wards?: WardData[]
+}
 
 interface UseLocationCascadeProps {
   city: string
@@ -73,7 +101,9 @@ export function useLocationCascade({
       .then(res => res.json())
       .then(data => {
         if (active && Array.isArray(data)) {
-          setProvinces(data.map((p: any) => ({ name: p.name, code: p.code })))
+          setProvinces(
+            data.map((p: ProvinceData) => ({ name: p.name, code: p.code }))
+          )
         }
       })
       .catch(err => {
@@ -152,7 +182,10 @@ export function useLocationCascade({
       .then(data => {
         if (active && data && Array.isArray(data.districts)) {
           setDistrictsList(
-            data.districts.map((d: any) => ({ name: d.name, code: d.code }))
+            data.districts.map((d: DistrictData) => ({
+              name: d.name,
+              code: d.code,
+            }))
           )
         }
       })
@@ -180,7 +213,7 @@ export function useLocationCascade({
       .then(data => {
         if (active && data && Array.isArray(data.wards)) {
           setWardsList(
-            data.wards.map((w: any) => ({ name: w.name, code: w.code }))
+            data.wards.map((w: WardData) => ({ name: w.name, code: w.code }))
           )
         }
       })
@@ -221,7 +254,7 @@ export function useLocationCascade({
         .toLowerCase()
         .replace(/^(tỉnh|thành phố)\s+/i, '')
         .trim()
-      const matchedProv = currentProvinces.find((p: any) => {
+      const matchedProv = currentProvinces.find((p: ProvinceData) => {
         const pName = p.name
           .toLowerCase()
           .replace(/^(tỉnh|thành phố)\s+/i, '')
@@ -246,18 +279,21 @@ export function useLocationCascade({
         const res = await fetch(
           `https://provinces.open-api.vn/api/p/${provCode}?depth=2`
         )
-        const provData = await res.json()
+        const provData = (await res.json()) as ApiProvinceResponse
         const districtsData = provData.districts || []
 
         setDistrictsList(
-          districtsData.map((d: any) => ({ name: d.name, code: d.code }))
+          districtsData.map((d: DistrictData) => ({
+            name: d.name,
+            code: d.code,
+          }))
         )
 
         const searchDist = parsed.district
           .toLowerCase()
           .replace(/^(quận|huyện|thành phố|thị xã)\s+/i, '')
           .trim()
-        const matchedDist = districtsData.find((d: any) => {
+        const matchedDist = districtsData.find((d: DistrictData) => {
           const dName = d.name
             .toLowerCase()
             .replace(/^(quận|huyện|thành phố|thị xã)\s+/i, '')
@@ -272,18 +308,18 @@ export function useLocationCascade({
           const resW = await fetch(
             `https://provinces.open-api.vn/api/d/${distCode}?depth=2`
           )
-          const distData = await resW.json()
+          const distData = (await resW.json()) as ApiDistrictResponse
           const wardsData = distData.wards || []
 
           setWardsList(
-            wardsData.map((w: any) => ({ name: w.name, code: w.code }))
+            wardsData.map((w: WardData) => ({ name: w.name, code: w.code }))
           )
 
           const searchWard = parsed.ward
             .toLowerCase()
             .replace(/^(phường|xã|thị trấn)\s+/i, '')
             .trim()
-          const matchedWard = wardsData.find((w: any) => {
+          const matchedWard = wardsData.find((w: WardData) => {
             const wName = w.name
               .toLowerCase()
               .replace(/^(phường|xã|thị trấn)\s+/i, '')
