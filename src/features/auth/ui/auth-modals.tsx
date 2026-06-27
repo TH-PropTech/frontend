@@ -236,3 +236,139 @@ export function WelcomeModal({
     </Modal>
   )
 }
+
+export function FeePolicyModal({
+  isOpen,
+  onClose,
+}: ModalProps): React.ReactElement {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Quy định thu phí dịch vụ — TH-PropTech"
+      hideFooter={true}
+    >
+      <div className="space-y-6 text-sm text-fg leading-relaxed">
+        <div className="text-center py-5 bg-primary/5 rounded-2xl border border-primary/10">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="36"
+            height="36"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="text-primary mx-auto mb-2"
+          >
+            <line x1="12" x2="12" y1="2" y2="22" />
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
+          <h3 className="text-lg font-bold text-primary">
+            Biểu phí giao dịch minh bạch
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+            TH-PropTech cam kết cung cấp giải pháp đăng tin và giao dịch cho
+            thuê chung cư với chi phí tối ưu nhất.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex gap-4 p-4 rounded-xl border border-border bg-card">
+            <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-bold text-emerald-600 dark:text-emerald-400">
+                Đăng tin cho thuê — Miễn phí 100%
+              </h4>
+              <p className="text-xs text-muted mt-1">
+                Chủ nhà (Landlord) được phép đăng tin cho thuê căn hộ, block căn
+                hộ, hình ảnh 360° VR và mô tả chi tiết hoàn toàn miễn phí. Không
+                giới hạn số lượng tin đăng và không phát sinh phí ẩn duy trì.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-4 p-4 rounded-xl border border-border bg-card">
+            <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-bold text-primary">
+                Thu phí dựa trên hợp đồng thuê
+              </h4>
+              <p className="text-xs text-muted mt-1">
+                Chúng tôi chỉ thực hiện thu phí dịch vụ khi có giao dịch thuê
+                nhà thành công. Phí được tính toán trực tiếp trên giá trị hợp
+                đồng thuê căn hộ chung cư được ký kết chính thức giữa hai bên
+                trên hệ thống.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-4 p-4 rounded-xl border border-border bg-card">
+            <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-blue-500/10 text-blue-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-bold text-blue-600 dark:text-blue-400">
+                Thanh toán qua Smart Contract
+              </h4>
+              <p className="text-xs text-muted mt-1">
+                Hệ thống thu phí tự động hoặc cấn trừ thông qua giao dịch đặt
+                cọc / ký kết hợp đồng thông minh trên nền tảng Blockchain. Đảm
+                bảo tính an toàn, bảo mật và ghi nhận hóa đơn minh bạch cho cả
+                Chủ nhà và Khách thuê.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-2">
+          <Button onClick={onClose} className="w-full rounded-full">
+            Đã hiểu quy định
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}

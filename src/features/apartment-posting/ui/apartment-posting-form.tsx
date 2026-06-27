@@ -15,13 +15,13 @@ import { DetailsStep } from './details-step'
 import { MediaStep } from './media-step'
 import { ReviewStep } from './review-step'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader } from '@/shared/ui/card'
 import { toast } from 'sonner'
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react'
 
 interface ApartmentPostingFormProps {
   initialData?: LandlordApartmentItem | null
   mode?: 'create' | 'edit'
+  noCard?: boolean
 }
 
 const STEPS = [
@@ -34,6 +34,7 @@ const STEPS = [
 export function ApartmentPostingForm({
   initialData = null,
   mode = 'create',
+  noCard = false,
 }: ApartmentPostingFormProps): React.ReactElement {
   const router = useRouter()
   const [currentStep, setCurrentStep] = React.useState(1)
@@ -194,11 +195,17 @@ export function ApartmentPostingForm({
   }
 
   return (
-    <Card className="w-full max-w-4xl mx-auto shadow-2xl border-border/80 bg-background/60 backdrop-blur-md">
-      <CardHeader className="pb-4">
+    <div
+      className={
+        noCard
+          ? 'w-full max-w-4xl mx-auto bg-transparent'
+          : 'w-full max-w-4xl mx-auto shadow-lg border border-border bg-surface rounded-2xl'
+      }
+    >
+      <div className={noCard ? 'pb-4' : 'pb-4 p-6'}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
+            <h1 className="font-display text-2xl font-bold text-fg">
               {mode === 'edit'
                 ? 'Chỉnh sửa tin đăng cho thuê'
                 : 'Đăng tin cho thuê căn hộ'}
@@ -243,9 +250,15 @@ export function ApartmentPostingForm({
             ))}
           </div>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="pt-6 border-t border-border">
+      <div
+        className={
+          noCard
+            ? 'pt-6 border-t border-border'
+            : 'pt-6 border-t border-border p-6'
+        }
+      >
         {/* Render Steps */}
         <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-6">
           {currentStep === 1 && <LocationStep form={form} />}
@@ -272,7 +285,7 @@ export function ApartmentPostingForm({
                 variant="outline"
                 onClick={handlePrev}
                 disabled={currentStep === 1}
-                className="gap-1 border-border bg-background/50 hover:bg-muted"
+                className="gap-1 border-border bg-surface hover:bg-surface-muted"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Quay lại
@@ -289,7 +302,7 @@ export function ApartmentPostingForm({
             </div>
           )}
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
