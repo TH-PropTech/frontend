@@ -65,7 +65,7 @@ export function KycRecommendations({
             >
               {isTop1 && (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full uppercase tracking-wider mb-3">
-                  🏆 TOP 1 GỢI Ý
+                  TOP 1 GỢI Ý
                 </div>
               )}
               <div className="flex justify-between items-start gap-4">
