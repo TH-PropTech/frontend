@@ -9,6 +9,7 @@ import { Button } from '@/shared/ui/button'
 import { apiClient } from '@/shared/api/api-client'
 import { toast } from 'sonner'
 import { FeePolicyModal } from './auth-modals'
+import { loginSchema } from '../model/auth-validation'
 
 type LoginMode = 'password' | 'passwordless-email' | 'two-factor'
 
@@ -57,6 +58,19 @@ export function LoginForm(): React.ReactElement {
     setIsLoading(true)
 
     if (loginMode === 'password') {
+      const validationResult = loginSchema.safeParse({
+        emailOrPhone: email,
+        password,
+      })
+
+      if (!validationResult.success) {
+        const firstError =
+          validationResult.error?.errors[0]?.message ?? 'Đăng nhập thất bại'
+        setErrorMsg(firstError)
+        setIsLoading(false)
+        return
+      }
+
       try {
         const response = await apiClient.post<LoginResult>('/auth/login', {
           emailOrPhone: email,
