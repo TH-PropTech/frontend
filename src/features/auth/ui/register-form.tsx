@@ -9,12 +9,14 @@ import { Button } from '@/shared/ui/button'
 import { apiClient } from '@/shared/api/api-client'
 import { TermsModal, PrivacyModal } from './auth-modals'
 import { toast } from 'sonner'
+import { registerSchema } from '../model/auth-validation'
 
 export function RegisterForm(): React.ReactElement {
   const router = useRouter()
   const [isLoading, setIsLoading] = React.useState(false)
   const [showTerms, setShowTerms] = React.useState(false)
   const [showPrivacy, setShowPrivacy] = React.useState(false)
+  const [acceptedTerms, setAcceptedTerms] = React.useState(false)
 
   // Controlled states for register inputs
   const [fullName, setFullName] = React.useState('')
@@ -37,8 +39,19 @@ export function RegisterForm(): React.ReactElement {
     setErrorMsg('')
     setSuccessMsg('')
 
-    if (password !== confirmPassword) {
-      setErrorMsg('Mật khẩu xác nhận không khớp.')
+    const validationResult = registerSchema.safeParse({
+      fullName,
+      phone,
+      email,
+      password,
+      confirmPassword,
+      acceptedTerms,
+    })
+
+    if (!validationResult.success) {
+      const firstError =
+        validationResult.error?.errors[0]?.message ?? 'Đăng ký thất bại'
+      setErrorMsg(firstError)
       return
     }
 
@@ -362,7 +375,8 @@ export function RegisterForm(): React.ReactElement {
         <label className="flex items-start gap-2.5 cursor-pointer">
           <input
             type="checkbox"
-            required
+            checked={acceptedTerms}
+            onChange={e => setAcceptedTerms(e.target.checked)}
             className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
           />
           <span className="text-xs text-muted leading-relaxed">

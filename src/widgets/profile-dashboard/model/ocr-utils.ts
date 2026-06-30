@@ -12,6 +12,8 @@ export function getMockKycForm(role: 'tenant' | 'landlord') {
     gender: 'Nam',
     nationality: 'Việt Nam',
     placeOfOrigin: role === 'tenant' ? 'Hải Phòng' : 'Hà Nội',
+    issueDate: '20/03/2021',
+    placeOfIssue: 'CỤC CSQLHC VỀ TTXH',
   }
 }
 
@@ -48,6 +50,8 @@ export async function uploadAndProcessCccd(
         gender: result.Gender || 'Nam',
         nationality: result.Nationality || 'Việt Nam',
         placeOfOrigin: result.Place_of_origin || '',
+        issueDate: '20/03/2021',
+        placeOfIssue: 'CỤC CSQLHC VỀ TTXH',
       }
     } else {
       throw new Error('Dữ liệu không hợp lệ từ API')
