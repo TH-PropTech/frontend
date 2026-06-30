@@ -95,6 +95,8 @@ export interface UseProfileReturn {
     gender: string
     nationality: string
     placeOfOrigin: string
+    issueDate: string
+    placeOfIssue: string
   }
   setKycForm: React.Dispatch<
     React.SetStateAction<{
@@ -105,6 +107,8 @@ export interface UseProfileReturn {
       gender: string
       nationality: string
       placeOfOrigin: string
+      issueDate: string
+      placeOfIssue: string
     }>
   >
   cccdUploaded: boolean

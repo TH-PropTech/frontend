@@ -35,6 +35,8 @@ const EMPTY_KYC = {
   gender: '',
   nationality: '',
   placeOfOrigin: '',
+  issueDate: '',
+  placeOfIssue: '',
 }
 
 export function useProfile(): UseProfileReturn {
