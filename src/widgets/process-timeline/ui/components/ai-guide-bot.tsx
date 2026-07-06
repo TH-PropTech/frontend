@@ -68,7 +68,7 @@ export function AiGuideBot({
   const [showResumeBanner, setShowResumeBanner] = React.useState(false)
 
   // Emotion system hook
-  const mascotEmotion = useMascotEmotion(checkedSteps, guide ? guide.steps.length : 0)
+  const mascotEmotion = useMascotEmotion()
 
   // Typing effect on the active tip text
   const currentTip = guide ? getTip(guide, activeStepIndex) : ''
