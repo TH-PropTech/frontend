@@ -22,7 +22,9 @@ const STORAGE_KEY = 'mascot-bookmarks'
  * Persists in localStorage.
  */
 export function useGuideBookmark(articleId: string): GuideBookmarkResult {
-  const [bookmark, setBookmarkState] = React.useState<BookmarkState | null>(null)
+  const [bookmark, setBookmarkState] = React.useState<BookmarkState | null>(
+    null
+  )
 
   // Load bookmark on mount / articleId change
   React.useEffect(() => {
@@ -32,20 +34,31 @@ export function useGuideBookmark(articleId: string): GuideBookmarkResult {
       const bookmarks: BookmarkState[] = JSON.parse(data)
       const found = bookmarks.find(b => b.articleId === articleId) ?? null
       setBookmarkState(found)
-    } catch { /* ignore corrupt data */ }
+    } catch {
+      /* ignore corrupt data */
+    }
   }, [articleId])
 
-  const setBookmark = React.useCallback((stepIndex: number): void => {
-    try {
-      const data = localStorage.getItem(STORAGE_KEY)
-      const bookmarks: BookmarkState[] = data ? JSON.parse(data) : []
-      const filtered = bookmarks.filter(b => b.articleId !== articleId)
-      const newBookmark: BookmarkState = { articleId, stepIndex, savedAt: Date.now() }
-      filtered.push(newBookmark)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
-      setBookmarkState(newBookmark)
-    } catch { /* ignore storage errors */ }
-  }, [articleId])
+  const setBookmark = React.useCallback(
+    (stepIndex: number): void => {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY)
+        const bookmarks: BookmarkState[] = data ? JSON.parse(data) : []
+        const filtered = bookmarks.filter(b => b.articleId !== articleId)
+        const newBookmark: BookmarkState = {
+          articleId,
+          stepIndex,
+          savedAt: Date.now(),
+        }
+        filtered.push(newBookmark)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
+        setBookmarkState(newBookmark)
+      } catch {
+        /* ignore storage errors */
+      }
+    },
+    [articleId]
+  )
 
   const clearBookmark = React.useCallback((): void => {
     try {
@@ -55,7 +68,9 @@ export function useGuideBookmark(articleId: string): GuideBookmarkResult {
       const filtered = bookmarks.filter(b => b.articleId !== articleId)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
       setBookmarkState(null)
-    } catch { /* ignore storage errors */ }
+    } catch {
+      /* ignore storage errors */
+    }
   }, [articleId])
 
   return { bookmark, setBookmark, clearBookmark }

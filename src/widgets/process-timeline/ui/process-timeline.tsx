@@ -13,7 +13,9 @@ export function ProcessTimeline(): React.ReactElement {
   const [searchQuery, setSearchQuery] = React.useState('')
   const [activeArticleId, setActiveArticleId] = React.useState('post-desktop')
   const [showAiGuide, setShowAiGuide] = React.useState(true)
-  const [userRole, setUserRole] = React.useState<'tenant' | 'staff' | 'admin' | 'guest'>('tenant')
+  const [userRole, setUserRole] = React.useState<
+    'tenant' | 'staff' | 'admin' | 'guest'
+  >('tenant')
 
   const [expandedCats, setExpandedCats] = React.useState<
     Record<string, boolean>
@@ -406,7 +408,11 @@ export function ProcessTimeline(): React.ReactElement {
                     <div className="flex items-center gap-3 self-start md:self-center flex-wrap">
                       <select
                         value={userRole}
-                        onChange={e => setUserRole(e.target.value as 'tenant' | 'staff' | 'admin')}
+                        onChange={e =>
+                          setUserRole(
+                            e.target.value as 'tenant' | 'staff' | 'admin'
+                          )
+                        }
                         className="bg-surface border border-border rounded-xl py-2 px-3 text-[11px] font-bold text-fg cursor-pointer outline-none focus:border-primary"
                         title="Đổi vai trò người dùng"
                       >

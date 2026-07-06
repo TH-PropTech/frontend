@@ -18,22 +18,32 @@ interface ProcessedSegment {
 export function useAnnotations(
   text: string,
   glossary?: Record<string, string>,
-  annotations?: AnnotationAnchor[],
+  annotations?: AnnotationAnchor[]
 ) {
   return React.useMemo(() => {
     if (!text) return []
 
     // Collect all unique keywords
-    const keywordsMap = new Map<string, { explanation: string; relatedStepIndex?: number | undefined; isGlossary: boolean }>()
+    const keywordsMap = new Map<
+      string,
+      {
+        explanation: string
+        relatedStepIndex?: number | undefined
+        isGlossary: boolean
+      }
+    >()
 
     if (glossary) {
       Object.entries(glossary).forEach(([term, desc]) => {
-        keywordsMap.set(term.toLowerCase(), { explanation: desc, isGlossary: true })
+        keywordsMap.set(term.toLowerCase(), {
+          explanation: desc,
+          isGlossary: true,
+        })
       })
     }
 
     if (annotations) {
-      annotations.forEach((anno) => {
+      annotations.forEach(anno => {
         keywordsMap.set(anno.keyword.toLowerCase(), {
           explanation: anno.explanation,
           relatedStepIndex: anno.relatedStepIndex,
@@ -42,19 +52,23 @@ export function useAnnotations(
       })
     }
 
-    const keywords = Array.from(keywordsMap.keys()).sort((a, b) => b.length - a.length)
+    const keywords = Array.from(keywordsMap.keys()).sort(
+      (a, b) => b.length - a.length
+    )
     if (keywords.length === 0) {
       return [{ text, isKeyword: false }] as ProcessedSegment[]
     }
 
     // Escape regex characters
-    const escapedKeywords = keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    const escapedKeywords = keywords.map(k =>
+      k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    )
     const regex = new RegExp(`(${escapedKeywords.join('|')})`, 'gi')
 
     const parts = text.split(regex)
     const segments: ProcessedSegment[] = []
 
-    parts.forEach((part) => {
+    parts.forEach(part => {
       const lowerPart = part.toLowerCase()
       const match = keywordsMap.get(lowerPart)
       if (match) {

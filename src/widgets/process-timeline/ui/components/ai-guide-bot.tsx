@@ -19,9 +19,12 @@ import { MiniUiPreview } from './mini-ui-preview'
 /* ─── Time-Aware Greeting ─── */
 const getGreeting = (): string => {
   const hour = new Date().getHours()
-  if (hour >= 5 && hour < 12) return 'Chào buổi sáng! Mình sẵn sàng hướng dẫn bạn nhé.'
-  if (hour >= 12 && hour < 18) return 'Chào buổi chiều! Cùng tiếp tục quy trình thuê nhà nào.'
-  if (hour >= 18 && hour < 22) return 'Chào buổi tối! Bạn cần mình hỗ trợ gì không?'
+  if (hour >= 5 && hour < 12)
+    return 'Chào buổi sáng! Mình sẵn sàng hướng dẫn bạn nhé.'
+  if (hour >= 12 && hour < 18)
+    return 'Chào buổi chiều! Cùng tiếp tục quy trình thuê nhà nào.'
+  if (hour >= 18 && hour < 22)
+    return 'Chào buổi tối! Bạn cần mình hỗ trợ gì không?'
   return 'Khuya rồi! Bạn làm việc khuya thật siêng năng. Mình ở đây hỗ trợ bạn.'
 }
 
@@ -37,14 +40,18 @@ export function AiGuideBot({
   userRole = 'guest',
 }: AiGuideBotProps): React.ReactElement | null {
   const guide = AI_GUIDES[articleId]
-  const [checkedSteps, setCheckedSteps] = React.useState<Record<number, boolean>>({})
+  const [checkedSteps, setCheckedSteps] = React.useState<
+    Record<number, boolean>
+  >({})
   const [isMascotHappy, setIsMascotHappy] = React.useState(false)
   const [activeStepIndex, setActiveStepIndex] = React.useState(0)
   const [mascotTop, setMascotTop] = React.useState(28)
   const [isMascotCrawling, setIsMascotCrawling] = React.useState(false)
   const [greetingText, setGreetingText] = React.useState<string | null>(null)
   const [activeTooltip, setActiveTooltip] = React.useState<string | null>(null)
-  const [feedbackSubmitted, setFeedbackSubmitted] = React.useState<boolean | null>(null)
+  const [feedbackSubmitted, setFeedbackSubmitted] = React.useState<
+    boolean | null
+  >(null)
 
   // Refs for tracking DOM and scroll
   const checklistRef = React.useRef<HTMLDivElement>(null)
@@ -52,7 +59,9 @@ export function AiGuideBot({
 
   // Custom accessibility settings
   const [fontSize, setFontSize] = React.useState<'sm' | 'base' | 'lg'>('sm')
-  const [speechRate, setSpeechRate] = React.useState<'slow' | 'medium' | 'fast'>('medium')
+  const [speechRate, setSpeechRate] = React.useState<
+    'slow' | 'medium' | 'fast'
+  >('medium')
 
   // Platform & WebView detection
   const platform = usePlatform()
@@ -73,7 +82,10 @@ export function AiGuideBot({
   // Typing effect on the active tip text
   const currentTip = guide ? getTip(guide, activeStepIndex) : ''
   const displayTipText = greetingText ?? currentTip
-  const { displayed: typedTipText, isTyping } = useTypingEffect(displayTipText, 25)
+  const { displayed: typedTipText, isTyping } = useTypingEffect(
+    displayTipText,
+    25
+  )
 
   // Annotations and glossary scanner
   const segments = useAnnotations(
@@ -89,7 +101,7 @@ export function AiGuideBot({
   )
 
   // Voice Command control
-  const voiceHelper = useVoiceCommand((cmd) => {
+  const voiceHelper = useVoiceCommand(cmd => {
     if (!guide) return
     if (cmd === 'next') {
       const nextIdx = Math.min(guide.steps.length - 1, activeStepIndex + 1)
@@ -107,35 +119,44 @@ export function AiGuideBot({
   })
 
   // Tutorial configuration
-  const tutorialSteps = React.useMemo(() => [
-    {
-      targetSelector: '.mascot-title-box',
-      message: 'Đây là bảng Hướng Dẫn Trực Quan để thực hiện các quy trình thuê nhà tích hợp Blockchain.',
-      armState: 'greeting' as const,
-    },
-    {
-      targetSelector: '.accessibility-controls',
-      message: 'Bạn có thể phóng to chữ và chỉnh giọng nói chậm lại để dễ quan sát hơn.',
-      armState: 'pointing' as const,
-      pointDirection: 'right' as const,
-    },
-    {
-      targetSelector: '.checklist-box',
-      message: 'Đây là danh sách các bước. Nhấn nút Tròn để đánh dấu bước đã hoàn thành.',
-      armState: 'pointing' as const,
-      pointDirection: 'left' as const,
-    },
-    {
-      targetSelector: '#mascot-track-col',
-      message: 'Mascot robot AI sẽ trườn theo các bước để chỉ dẫn trực quan từng thao tác cho bạn.',
-      armState: 'celebrating' as const,
-    },
-  ], [])
+  const tutorialSteps = React.useMemo(
+    () => [
+      {
+        targetSelector: '.mascot-title-box',
+        message:
+          'Đây là bảng Hướng Dẫn Trực Quan để thực hiện các quy trình thuê nhà tích hợp Blockchain.',
+        armState: 'greeting' as const,
+      },
+      {
+        targetSelector: '.accessibility-controls',
+        message:
+          'Bạn có thể phóng to chữ và chỉnh giọng nói chậm lại để dễ quan sát hơn.',
+        armState: 'pointing' as const,
+        pointDirection: 'right' as const,
+      },
+      {
+        targetSelector: '.checklist-box',
+        message:
+          'Đây là danh sách các bước. Nhấn nút Tròn để đánh dấu bước đã hoàn thành.',
+        armState: 'pointing' as const,
+        pointDirection: 'left' as const,
+      },
+      {
+        targetSelector: '#mascot-track-col',
+        message:
+          'Mascot robot AI sẽ trườn theo các bước để chỉ dẫn trực quan từng thao tác cho bạn.',
+        armState: 'celebrating' as const,
+      },
+    ],
+    []
+  )
 
   const tutorial = useTutorialOverlay(tutorialSteps)
 
   // Milestone and aura states
-  const completedCount = guide ? Object.values(checkedSteps).filter(Boolean).length : 0
+  const completedCount = guide
+    ? Object.values(checkedSteps).filter(Boolean).length
+    : 0
   const totalSteps = guide ? guide.steps.length : 1
   const progressPercent = Math.round((completedCount / totalSteps) * 100)
   const isProgressAura = progressPercent >= 75
@@ -153,7 +174,9 @@ export function AiGuideBot({
     if (saved) {
       try {
         setCheckedSteps(JSON.parse(saved) as Record<number, boolean>)
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }, [articleId])
 
@@ -254,7 +277,8 @@ export function AiGuideBot({
         const activeRect = activeEl.getBoundingClientRect()
         const trackRect = trackEl.getBoundingClientRect()
 
-        const rawTop = activeRect.top - trackRect.top + activeRect.height / 2 - 48
+        const rawTop =
+          activeRect.top - trackRect.top + activeRect.height / 2 - 48
         const minTop = 8
         const maxTop = Math.max(minTop, trackRect.height - 104)
         const clampedTop = Math.min(maxTop, Math.max(minTop, rawTop))
@@ -366,10 +390,22 @@ export function AiGuideBot({
               animation: confetti-fall 2.5s ease-out infinite;
             }
           `}</style>
-          <div className="confetti-piece left-[20%] delay-0" style={{ backgroundColor: 'var(--primary)' }} />
-          <div className="confetti-piece left-[40%] delay-300" style={{ backgroundColor: 'var(--accent)' }} />
-          <div className="confetti-piece left-[60%] delay-700" style={{ backgroundColor: 'var(--success)' }} />
-          <div className="confetti-piece left-[80%] delay-1000" style={{ backgroundColor: 'var(--warning)' }} />
+          <div
+            className="confetti-piece left-[20%] delay-0"
+            style={{ backgroundColor: 'var(--primary)' }}
+          />
+          <div
+            className="confetti-piece left-[40%] delay-300"
+            style={{ backgroundColor: 'var(--accent)' }}
+          />
+          <div
+            className="confetti-piece left-[60%] delay-700"
+            style={{ backgroundColor: 'var(--success)' }}
+          />
+          <div
+            className="confetti-piece left-[80%] delay-1000"
+            style={{ backgroundColor: 'var(--warning)' }}
+          />
         </div>
       )}
 
@@ -440,7 +476,9 @@ export function AiGuideBot({
                 onClick={tutorial.nextStep}
                 className="bg-primary hover:bg-primary-hover text-white text-[11px] font-bold py-1.5 px-3 rounded-lg shadow-sm cursor-pointer transition-colors"
               >
-                {tutorial.currentStep === tutorialSteps.length - 1 ? 'Hoàn tất' : 'Tiếp theo'}
+                {tutorial.currentStep === tutorialSteps.length - 1
+                  ? 'Hoàn tất'
+                  : 'Tiếp theo'}
               </button>
             </div>
           </div>
@@ -453,7 +491,8 @@ export function AiGuideBot({
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-accent animate-ping" />
             <span className="text-amber-950 font-bold">
-              Lần trước bạn đã đọc đến bước {bookmark.stepIndex + 1}. Bạn có muốn tiếp tục không?
+              Lần trước bạn đã đọc đến bước {bookmark.stepIndex + 1}. Bạn có
+              muốn tiếp tục không?
             </span>
           </div>
           <div className="flex gap-2">
@@ -592,7 +631,9 @@ export function AiGuideBot({
                 <button
                   onClick={() => setFontSize('sm')}
                   className={`relative z-10 flex h-7 w-12 items-center justify-center rounded-md font-body text-[11px] font-bold transition-colors duration-200 ${
-                    fontSize === 'sm' ? 'text-white' : 'text-primary hover:text-primary/80'
+                    fontSize === 'sm'
+                      ? 'text-white'
+                      : 'text-primary hover:text-primary/80'
                   }`}
                   title="Cỡ chữ nhỏ"
                 >
@@ -601,7 +642,9 @@ export function AiGuideBot({
                 <button
                   onClick={() => setFontSize('base')}
                   className={`relative z-10 flex h-7 w-12 items-center justify-center rounded-md font-body text-xs font-bold transition-colors duration-200 ${
-                    fontSize === 'base' ? 'text-white' : 'text-primary hover:text-primary/80'
+                    fontSize === 'base'
+                      ? 'text-white'
+                      : 'text-primary hover:text-primary/80'
                   }`}
                   title="Cỡ chữ vừa"
                 >
@@ -610,7 +653,9 @@ export function AiGuideBot({
                 <button
                   onClick={() => setFontSize('lg')}
                   className={`relative z-10 flex h-7 w-12 items-center justify-center rounded-md font-body text-sm font-extrabold transition-colors duration-200 ${
-                    fontSize === 'lg' ? 'text-white' : 'text-primary hover:text-primary/80'
+                    fontSize === 'lg'
+                      ? 'text-white'
+                      : 'text-primary hover:text-primary/80'
                   }`}
                   title="Cỡ chữ lớn"
                 >
@@ -636,7 +681,9 @@ export function AiGuideBot({
                 <button
                   onClick={() => setSpeechRate('slow')}
                   className={`relative z-10 flex h-7 w-14 items-center justify-center rounded-md font-body text-[11px] font-bold transition-colors duration-200 ${
-                    speechRate === 'slow' ? 'text-white' : 'text-primary hover:text-primary/80'
+                    speechRate === 'slow'
+                      ? 'text-white'
+                      : 'text-primary hover:text-primary/80'
                   }`}
                   title="Giọng đọc chậm"
                 >
@@ -645,7 +692,9 @@ export function AiGuideBot({
                 <button
                   onClick={() => setSpeechRate('medium')}
                   className={`relative z-10 flex h-7 w-14 items-center justify-center rounded-md font-body text-[11px] font-bold transition-colors duration-200 ${
-                    speechRate === 'medium' ? 'text-white' : 'text-primary hover:text-primary/80'
+                    speechRate === 'medium'
+                      ? 'text-white'
+                      : 'text-primary hover:text-primary/80'
                   }`}
                   title="Giọng đọc bình thường"
                 >
@@ -654,7 +703,9 @@ export function AiGuideBot({
                 <button
                   onClick={() => setSpeechRate('fast')}
                   className={`relative z-10 flex h-7 w-16 items-center justify-center rounded-md font-body text-[11px] font-bold transition-colors duration-200 ${
-                    speechRate === 'fast' ? 'text-white' : 'text-primary hover:text-primary/80'
+                    speechRate === 'fast'
+                      ? 'text-white'
+                      : 'text-primary hover:text-primary/80'
                   }`}
                   title="Giọng đọc hơi nhanh"
                 >
@@ -675,16 +726,34 @@ export function AiGuideBot({
             {/* Voice Command Mic Trigger */}
             {platform.enableVoiceCommand && (
               <button
-                onClick={voiceHelper.isListening ? voiceHelper.stopListening : voiceHelper.startListening}
+                onClick={
+                  voiceHelper.isListening
+                    ? voiceHelper.stopListening
+                    : voiceHelper.startListening
+                }
                 className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all cursor-pointer ${
                   voiceHelper.isListening
                     ? 'bg-amber-500 border-amber-500 text-white animate-pulse shadow-md'
                     : 'bg-primary/10 border-primary/20 text-primary hover:bg-primary/20'
                 }`}
-                title={voiceHelper.isListening ? 'Dừng lắng nghe' : 'Lắng nghe giọng nói của bạn'}
+                title={
+                  voiceHelper.isListening
+                    ? 'Dừng lắng nghe'
+                    : 'Lắng nghe giọng nói của bạn'
+                }
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                  />
                 </svg>
               </button>
             )}
@@ -697,16 +766,44 @@ export function AiGuideBot({
                   ? 'bg-red-500 border-red-500 text-white animate-pulse shadow-md'
                   : 'bg-primary/10 border-primary/20 text-primary hover:bg-primary/20'
               }`}
-              title={speechHelper.isSpeaking ? 'Dừng đọc giọng nói' : 'Đọc hướng dẫn bằng giọng nói'}
+              title={
+                speechHelper.isSpeaking
+                  ? 'Dừng đọc giọng nói'
+                  : 'Đọc hướng dẫn bằng giọng nói'
+              }
             >
               {speechHelper.isSpeaking ? (
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 10h6v4H9z" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 10h6v4H9z"
+                  />
                 </svg>
               ) : (
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                  />
                 </svg>
               )}
             </button>
@@ -716,7 +813,11 @@ export function AiGuideBot({
         {/* Content Body */}
         <div
           className={`transition-all duration-300 ${
-            fontSize === 'sm' ? 'mt-3.5 space-y-3.5' : fontSize === 'base' ? 'mt-4 space-y-4' : 'mt-5 space-y-5'
+            fontSize === 'sm'
+              ? 'mt-3.5 space-y-3.5'
+              : fontSize === 'base'
+                ? 'mt-4 space-y-4'
+                : 'mt-5 space-y-5'
           }`}
         >
           {/* Mobile Responsive Mascot — visible < md */}
@@ -736,13 +837,19 @@ export function AiGuideBot({
             </div>
           </div>
 
-          <p className={`${getBodyTextClass()} text-muted leading-relaxed font-semibold`}>
+          <p
+            className={`${getBodyTextClass()} text-muted leading-relaxed font-semibold`}
+          >
             {guide.summary}
           </p>
 
           <div
             className={`relative flex items-start transition-all duration-300 ${
-              fontSize === 'sm' ? 'gap-4.5' : fontSize === 'base' ? 'gap-6' : 'gap-7.5'
+              fontSize === 'sm'
+                ? 'gap-4.5'
+                : fontSize === 'base'
+                  ? 'gap-6'
+                  : 'gap-7.5'
             }`}
           >
             {/* Checklist Column */}
@@ -766,7 +873,11 @@ export function AiGuideBot({
                       onClick={() => setActiveStepIndex(idx)}
                       onMouseEnter={() => setActiveStepIndex(idx)}
                       className={`flex flex-col text-left rounded-xl border transition-all duration-300 cursor-pointer ${
-                        fontSize === 'sm' ? 'p-3.5' : fontSize === 'base' ? 'p-4' : 'p-5'
+                        fontSize === 'sm'
+                          ? 'p-3.5'
+                          : fontSize === 'base'
+                            ? 'p-4'
+                            : 'p-5'
                       } ${
                         isActive
                           ? 'bg-primary/[0.05] border-primary/50 shadow-md ring-1 ring-primary/10 scale-[1.01]'
@@ -784,25 +895,41 @@ export function AiGuideBot({
                               handleStepToggle(idx)
                             }}
                             className={`mt-0.5 flex shrink-0 items-center justify-center rounded-full border border-primary/30 hover:border-primary bg-white transition-all duration-200 cursor-pointer shadow-sm ${
-                              fontSize === 'sm' ? 'h-5 w-5' : fontSize === 'base' ? 'h-6 w-6' : 'h-7 w-7'
+                              fontSize === 'sm'
+                                ? 'h-5 w-5'
+                                : fontSize === 'base'
+                                  ? 'h-6 w-6'
+                                  : 'h-7 w-7'
                             }`}
                           >
                             {isChecked ? (
                               <svg
                                 className={`text-primary animate-in zoom-in duration-200 ${
-                                  fontSize === 'sm' ? 'h-3.5 w-3.5' : fontSize === 'base' ? 'h-4 w-4' : 'h-4.5 w-4.5'
+                                  fontSize === 'sm'
+                                    ? 'h-3.5 w-3.5'
+                                    : fontSize === 'base'
+                                      ? 'h-4 w-4'
+                                      : 'h-4.5 w-4.5'
                                 }`}
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
                                 strokeWidth="4"
                               >
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M5 13l4 4L19 7"
+                                />
                               </svg>
                             ) : (
                               <div
                                 className={`rounded-full bg-muted/20 hover:bg-primary/50 transition-colors ${
-                                  fontSize === 'sm' ? 'h-2 w-2' : fontSize === 'base' ? 'h-2.5 w-2.5' : 'h-3 w-3'
+                                  fontSize === 'sm'
+                                    ? 'h-2 w-2'
+                                    : fontSize === 'base'
+                                      ? 'h-2.5 w-2.5'
+                                      : 'h-3 w-3'
                                 }`}
                               />
                             )}
@@ -814,7 +941,7 @@ export function AiGuideBot({
 
                         {/* Bookmark Pin Button */}
                         <button
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation()
                             if (isPinned) {
                               clearBookmark()
@@ -823,12 +950,28 @@ export function AiGuideBot({
                             }
                           }}
                           className={`shrink-0 p-1 rounded-lg hover:bg-primary/10 transition-colors ${
-                            isPinned ? 'text-primary' : 'text-muted/40 hover:text-primary/70'
+                            isPinned
+                              ? 'text-primary'
+                              : 'text-muted/40 hover:text-primary/70'
                           }`}
-                          title={isPinned ? 'Bỏ lưu bước đọc' : 'Lưu lại bước đang đọc'}
+                          title={
+                            isPinned
+                              ? 'Bỏ lưu bước đọc'
+                              : 'Lưu lại bước đang đọc'
+                          }
                         >
-                          <svg className="h-4 w-4" fill={isPinned ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                          <svg
+                            className="h-4 w-4"
+                            fill={isPinned ? 'currentColor' : 'none'}
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -846,7 +989,10 @@ export function AiGuideBot({
                             <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                               Mô tả hình dáng giao diện mẫu:
                             </span>
-                            <MiniUiPreview articleId={articleId} stepIndex={idx} />
+                            <MiniUiPreview
+                              articleId={articleId}
+                              stepIndex={idx}
+                            />
                           </div>
                         </div>
                       )}
@@ -857,7 +1003,10 @@ export function AiGuideBot({
             </div>
 
             {/* Mascot Track Column */}
-            <div id="mascot-track-col" className="relative w-28 self-stretch hidden md:block shrink-0 border-l border-primary/10 pl-4">
+            <div
+              id="mascot-track-col"
+              className="relative w-28 self-stretch hidden md:block shrink-0 border-l border-primary/10 pl-4"
+            >
               <div
                 className={`absolute left-4 transition-all duration-1000 ease-in-out ${
                   isMascotCrawling ? 'anim-mascot-wiggle' : ''
@@ -875,17 +1024,28 @@ export function AiGuideBot({
                       </span>
                       <div
                         className={`leading-relaxed ${
-                          fontSize === 'base' ? 'text-sm' : fontSize === 'lg' ? 'text-base' : 'text-xs'
+                          fontSize === 'base'
+                            ? 'text-sm'
+                            : fontSize === 'lg'
+                              ? 'text-base'
+                              : 'text-xs'
                         }`}
                       >
                         {segments.map((seg, idx) => {
                           if (seg.isKeyword) {
                             return (
-                              <span key={idx} className="relative inline-block group/keyword">
+                              <span
+                                key={idx}
+                                className="relative inline-block group/keyword"
+                              >
                                 <button
-                                  onClick={(e) => {
+                                  onClick={e => {
                                     e.stopPropagation()
-                                    setActiveTooltip(activeTooltip === seg.text ? null : seg.text)
+                                    setActiveTooltip(
+                                      activeTooltip === seg.text
+                                        ? null
+                                        : seg.text
+                                    )
                                     if (seg.relatedStepIndex !== undefined) {
                                       setActiveStepIndex(seg.relatedStepIndex)
                                     }
@@ -895,7 +1055,7 @@ export function AiGuideBot({
                                   {seg.text}
                                 </button>
                                 {/* Tooltip explaining word */}
-                                {(activeTooltip === seg.text) && (
+                                {activeTooltip === seg.text && (
                                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-fg text-surface text-[10px] p-2 rounded-lg shadow-xl block z-50 leading-normal animate-in zoom-in-95 duration-150">
                                     {seg.explanation}
                                     <span className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-fg" />
@@ -916,7 +1076,9 @@ export function AiGuideBot({
                             <button
                               onClick={() => handleFeedback(true)}
                               className={`text-[9px] px-2 py-0.5 rounded transition-all cursor-pointer ${
-                                feedbackSubmitted === true ? 'bg-success text-white' : 'bg-success/10 text-success hover:bg-success/20'
+                                feedbackSubmitted === true
+                                  ? 'bg-success text-white'
+                                  : 'bg-success/10 text-success hover:bg-success/20'
                               }`}
                             >
                               Hữu ích
@@ -924,7 +1086,9 @@ export function AiGuideBot({
                             <button
                               onClick={() => handleFeedback(false)}
                               className={`text-[9px] px-2 py-0.5 rounded transition-all cursor-pointer ${
-                                feedbackSubmitted === false ? 'bg-danger text-white' : 'bg-danger/10 text-danger hover:bg-danger/20'
+                                feedbackSubmitted === false
+                                  ? 'bg-danger text-white'
+                                  : 'bg-danger/10 text-danger hover:bg-danger/20'
                               }`}
                             >
                               Chưa rõ
@@ -957,29 +1121,47 @@ export function AiGuideBot({
           {/* AI Tip / Suggestion */}
           <div
             className={`relative rounded-xl border border-amber-500/25 bg-amber-500/[0.03] text-amber-900 leading-relaxed font-semibold flex transition-all duration-300 ${
-              fontSize === 'sm' ? 'p-3.5 gap-2 text-[11px]' : fontSize === 'base' ? 'p-4 gap-2.5 text-xs' : 'p-5 gap-3 text-sm'
+              fontSize === 'sm'
+                ? 'p-3.5 gap-2 text-[11px]'
+                : fontSize === 'base'
+                  ? 'p-4 gap-2.5 text-xs'
+                  : 'p-5 gap-3 text-sm'
             }`}
           >
             <svg
               className={`text-amber-600 shrink-0 transition-all ${
-                fontSize === 'sm' ? 'h-4 w-4' : fontSize === 'base' ? 'h-5 w-5' : 'h-6 w-6'
+                fontSize === 'sm'
+                  ? 'h-4 w-4'
+                  : fontSize === 'base'
+                    ? 'h-5 w-5'
+                    : 'h-6 w-6'
               }`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
               strokeWidth="2"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
             </svg>
             <div>
               <span
                 className={`font-bold text-amber-950 block mb-1 ${
-                  fontSize === 'sm' ? 'text-xs' : fontSize === 'base' ? 'text-sm' : 'text-[15px]'
+                  fontSize === 'sm'
+                    ? 'text-xs'
+                    : fontSize === 'base'
+                      ? 'text-sm'
+                      : 'text-[15px]'
                 }`}
               >
                 Lưu ý quan trọng từ trợ lý AI:
               </span>
-              <span className={`${getBodyTextClass()} text-amber-900/90 leading-relaxed`}>
+              <span
+                className={`${getBodyTextClass()} text-amber-900/90 leading-relaxed`}
+              >
                 {guide.tip}
               </span>
             </div>

@@ -30,12 +30,15 @@ export function useGuideLang(): GuideLangResult {
     localStorage.setItem('mascot-lang', next)
   }, [lang])
 
-  const getTip = React.useCallback((guide: AiGuide, stepIndex: number): string => {
-    if (lang === 'en' && guide.stepTipsEn?.[stepIndex]) {
-      return guide.stepTipsEn[stepIndex]
-    }
-    return guide.stepTips[stepIndex] ?? ''
-  }, [lang])
+  const getTip = React.useCallback(
+    (guide: AiGuide, stepIndex: number): string => {
+      if (lang === 'en' && guide.stepTipsEn?.[stepIndex]) {
+        return guide.stepTipsEn[stepIndex]
+      }
+      return guide.stepTips[stepIndex] ?? ''
+    },
+    [lang]
+  )
 
   return { lang, toggleLang, getTip }
 }

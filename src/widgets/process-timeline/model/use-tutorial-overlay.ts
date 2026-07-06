@@ -36,9 +36,12 @@ const STORAGE_KEY = 'mascot-tutorial-seen'
  * Calculates target position via getBoundingClientRect and recalculates on resize.
  * State persisted in sessionStorage so tutorial doesn't repeat in same session.
  */
-export function useTutorialOverlay(steps: TutorialStep[]): TutorialOverlayResult {
+export function useTutorialOverlay(
+  steps: TutorialStep[]
+): TutorialOverlayResult {
   const [currentStep, setCurrentStep] = React.useState<number | null>(null)
-  const [spotlightRect, setSpotlightRect] = React.useState<SpotlightRect | null>(null)
+  const [spotlightRect, setSpotlightRect] =
+    React.useState<SpotlightRect | null>(null)
   const [hasSeenTutorial, setHasSeenTutorial] = React.useState(() => {
     if (typeof window === 'undefined') return false
     return sessionStorage.getItem(STORAGE_KEY) === 'true'
@@ -98,7 +101,7 @@ export function useTutorialOverlay(steps: TutorialStep[]): TutorialOverlayResult
     markSeen()
   }, [])
 
-  const activeStep = currentStep !== null ? steps[currentStep] ?? null : null
+  const activeStep = currentStep !== null ? (steps[currentStep] ?? null) : null
 
   return {
     currentStep,

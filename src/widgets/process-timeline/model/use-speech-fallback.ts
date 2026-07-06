@@ -17,7 +17,10 @@ interface SpeechFallbackResult {
  * karaoke-style subtitle highlighting (word-by-word at ~200ms).
  * No new packages — uses built-in Web Speech API.
  */
-export function useSpeechFallback(text: string, lang: string = 'vi-VN'): SpeechFallbackResult {
+export function useSpeechFallback(
+  text: string,
+  lang: string = 'vi-VN'
+): SpeechFallbackResult {
   const [isSpeaking, setIsSpeaking] = React.useState(false)
   const [showSubtitle, setShowSubtitle] = React.useState(false)
   const [highlightIndex, setHighlightIndex] = React.useState(0)
@@ -46,7 +49,10 @@ export function useSpeechFallback(text: string, lang: string = 'vi-VN'): SpeechF
     const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
 
     // Check if Vietnamese TTS is available
-    if (!synth || synth.getVoices().filter(v => v.lang.startsWith('vi')).length === 0) {
+    if (
+      !synth ||
+      synth.getVoices().filter(v => v.lang.startsWith('vi')).length === 0
+    ) {
       setIsSpeaking(true)
       animateSubtitle()
       return

@@ -12,7 +12,10 @@ interface TypingEffectResult {
  * Typing animation hook — displays text character by character.
  * Timer is cleaned up on unmount and paused when tab is hidden (8A.2).
  */
-export function useTypingEffect(text: string, speed: number = 30): TypingEffectResult {
+export function useTypingEffect(
+  text: string,
+  speed: number = 30
+): TypingEffectResult {
   const [displayed, setDisplayed] = React.useState('')
   const [isTyping, setIsTyping] = React.useState(false)
   const intervalRef = React.useRef<NodeJS.Timeout | undefined>(undefined)

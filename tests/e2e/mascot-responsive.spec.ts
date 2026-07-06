@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('Mascot Responsive & Session E2E Tests', () => {
-  test('renders correctly on desktop and supports role selection', async ({ page }) => {
+  test('renders correctly on desktop and supports role selection', async ({
+    page,
+  }) => {
     // Go to the process guide page
     await page.goto('/process')
 

@@ -17,15 +17,15 @@ describe('AiMascot Component', () => {
   })
 
   it('renders all arm states correctly', () => {
-    const states: ('idle' | 'greeting' | 'pointing' | 'thinking' | 'celebrating')[] = [
-      'idle',
-      'greeting',
-      'pointing',
-      'thinking',
-      'celebrating',
-    ]
+    const states: (
+      | 'idle'
+      | 'greeting'
+      | 'pointing'
+      | 'thinking'
+      | 'celebrating'
+    )[] = ['idle', 'greeting', 'pointing', 'thinking', 'celebrating']
 
-    states.forEach((armState) => {
+    states.forEach(armState => {
       const { container } = render(
         <AiMascot
           isHappy={false}
