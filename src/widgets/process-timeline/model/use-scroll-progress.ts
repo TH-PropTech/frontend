@@ -7,7 +7,9 @@ import * as React from 'react'
  * Uses passive event listener for performance.
  * Returns 0–100 integer.
  */
-export function useScrollProgress(contentRef: React.RefObject<HTMLElement | null>): number {
+export function useScrollProgress(
+  contentRef: React.RefObject<HTMLElement | null>
+): number {
   const [progress, setProgress] = React.useState(0)
 
   React.useEffect(() => {

@@ -12,10 +12,10 @@ export interface AiGuide {
   steps: string[]
   tip: string
   stepTips: string[]
-  stepTipsEn?: string[]                                    // Bilingual (§6C.5)
-  glossary?: Record<string, string>                        // Terminology tooltips (§5.5)
-  stepTipsByRole?: Partial<Record<UserRole, string[]>>     // RBAC-aware tips (§6B.1)
-  annotations?: AnnotationAnchor[]                         // Content annotations (§6C.4)
+  stepTipsEn?: string[] // Bilingual (§6C.5)
+  glossary?: Record<string, string> // Terminology tooltips (§5.5)
+  stepTipsByRole?: Partial<Record<UserRole, string[]>> // RBAC-aware tips (§6B.1)
+  annotations?: AnnotationAnchor[] // Content annotations (§6C.4)
 }
 
 export const AI_GUIDES: Record<string, AiGuide> = {
@@ -103,16 +103,33 @@ export const AI_GUIDES: Record<string, AiGuide> = {
       'Bước 3: Blockchain Hyperledger Fabric tự động lưu vết mã băm hợp đồng (contractHash) để đảm bảo không ai có thể đơn phương sửa đổi nội dung đã ký.',
     ],
     glossary: {
-      'Blockchain': 'Giống cuốn sổ cái công khai mà không ai sửa xóa được.',
-      'Smart Contract': 'Thỏa thuận tự thực thi trên blockchain khi hai bên ký duyệt.',
-      'contractHash': 'Mã băm duy nhất đại diện cho nội dung hợp đồng.',
+      Blockchain: 'Giống cuốn sổ cái công khai mà không ai sửa xóa được.',
+      'Smart Contract':
+        'Thỏa thuận tự thực thi trên blockchain khi hai bên ký duyệt.',
+      contractHash: 'Mã băm duy nhất đại diện cho nội dung hợp đồng.',
       'SHA-256': 'Thuật toán mã hóa tạo dấu vân tay số cho dữ liệu.',
-      'Hyperledger Fabric': 'Nền tảng blockchain doanh nghiệp, chỉ các bên được cấp quyền mới đọc được.',
+      'Hyperledger Fabric':
+        'Nền tảng blockchain doanh nghiệp, chỉ các bên được cấp quyền mới đọc được.',
     },
     annotations: [
-      { keyword: 'mã băm', explanation: 'Mã băm duy nhất đại diện cho toàn bộ nội dung hợp đồng. Bất kỳ thay đổi nào sẽ tạo ra hash khác hoàn toàn.', relatedStepIndex: 2 },
-      { keyword: 'ký số', explanation: 'Thay cho chữ ký tay. Sử dụng chứng chỉ số để xác nhận danh tính người ký.', relatedStepIndex: 1 },
-      { keyword: 'Hyperledger Fabric', explanation: 'Nền tảng blockchain doanh nghiệp, không công khai như Bitcoin. Chỉ các bên được cấp quyền mới đọc dữ liệu.', relatedStepIndex: 2 },
+      {
+        keyword: 'mã băm',
+        explanation:
+          'Mã băm duy nhất đại diện cho toàn bộ nội dung hợp đồng. Bất kỳ thay đổi nào sẽ tạo ra hash khác hoàn toàn.',
+        relatedStepIndex: 2,
+      },
+      {
+        keyword: 'ký số',
+        explanation:
+          'Thay cho chữ ký tay. Sử dụng chứng chỉ số để xác nhận danh tính người ký.',
+        relatedStepIndex: 1,
+      },
+      {
+        keyword: 'Hyperledger Fabric',
+        explanation:
+          'Nền tảng blockchain doanh nghiệp, không công khai như Bitcoin. Chỉ các bên được cấp quyền mới đọc dữ liệu.',
+        relatedStepIndex: 2,
+      },
     ],
   },
   'ai-recommender': {

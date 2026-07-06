@@ -19,7 +19,11 @@ export function useTimerBudget(maxTimers: number = 3) {
   const activeTimersRef = React.useRef<TimerRegistration[]>([])
 
   const registerTimer = React.useCallback(
-    (callback: () => void, delay: number, priority: TimerPriority): NodeJS.Timeout => {
+    (
+      callback: () => void,
+      delay: number,
+      priority: TimerPriority
+    ): NodeJS.Timeout => {
       const priorityVal = (p: TimerPriority) => {
         if (p === 'business') return 3
         if (p === 'idle') return 2
@@ -40,7 +44,10 @@ export function useTimerBudget(maxTimers: number = 3) {
         })
 
         // Cancel lowest if new one has higher/equal priority
-        if (lowestIndex !== -1 && priorityVal(priority) >= lowestPriorityValue) {
+        if (
+          lowestIndex !== -1 &&
+          priorityVal(priority) >= lowestPriorityValue
+        ) {
           const preempted = activeTimersRef.current[lowestIndex]
           if (preempted) {
             clearTimeout(preempted.id)
@@ -50,7 +57,9 @@ export function useTimerBudget(maxTimers: number = 3) {
       }
 
       const timerId = setTimeout(() => {
-        activeTimersRef.current = activeTimersRef.current.filter(t => t.id !== timerId)
+        activeTimersRef.current = activeTimersRef.current.filter(
+          t => t.id !== timerId
+        )
         callback()
       }, delay)
       activeTimersRef.current.push({ id: timerId, priority, callback })
@@ -59,11 +68,14 @@ export function useTimerBudget(maxTimers: number = 3) {
     [maxTimers]
   )
 
-  const clearRegisteredTimer = React.useCallback((id: NodeJS.Timeout | undefined) => {
-    if (!id) return
-    clearTimeout(id)
-    activeTimersRef.current = activeTimersRef.current.filter(t => t.id !== id)
-  }, [])
+  const clearRegisteredTimer = React.useCallback(
+    (id: NodeJS.Timeout | undefined) => {
+      if (!id) return
+      clearTimeout(id)
+      activeTimersRef.current = activeTimersRef.current.filter(t => t.id !== id)
+    },
+    []
+  )
 
   // Auto clean up everything on unmount
   React.useEffect(() => {

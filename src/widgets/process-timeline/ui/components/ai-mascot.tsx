@@ -14,8 +14,8 @@ export interface AiMascotProps {
   isProgressAura?: boolean
   emotion?: Emotion
   mouthShape?: MouthShape
-  scrollProgress?: number            // 0–100, thanh tiến trình đọc trên thân robot
-  pendingNotifications?: number       // Badge thông báo trên anten
+  scrollProgress?: number // 0–100, thanh tiến trình đọc trên thân robot
+  pendingNotifications?: number // Badge thông báo trên anten
   onClick?: () => void
   className?: string
 }
@@ -112,7 +112,9 @@ export function AiMascot({
       case 'greeting':
         return 'arm-greeting'
       case 'pointing':
-        return pointDirection === 'right' ? 'arm-pointing-right' : 'arm-pointing-left'
+        return pointDirection === 'right'
+          ? 'arm-pointing-right'
+          : 'arm-pointing-left'
       case 'thinking':
         return 'arm-thinking'
       case 'celebrating':
@@ -144,15 +146,7 @@ export function AiMascot({
           />
         )
       case 'open-o':
-        return (
-          <ellipse
-            cx="20"
-            cy="25"
-            rx="2.5"
-            ry="2"
-            fill="var(--primary)"
-          />
-        )
+        return <ellipse cx="20" cy="25" rx="2.5" ry="2" fill="var(--primary)" />
       case 'worried':
         return (
           <path
@@ -200,9 +194,22 @@ export function AiMascot({
     if (emotion === 'sleepy') {
       return (
         <g className="transition-all duration-300">
-          <circle cx={cx} cy="18" r="7.5" fill="white" stroke="var(--primary)" strokeWidth="2.5" />
+          <circle
+            cx={cx}
+            cy="18"
+            r="7.5"
+            fill="white"
+            stroke="var(--primary)"
+            strokeWidth="2.5"
+          />
           {/* Half-closed lid */}
-          <rect x={cx - 8} y="10" width="16" height="10" fill="var(--surface)" />
+          <rect
+            x={cx - 8}
+            y="10"
+            width="16"
+            height="10"
+            fill="var(--surface)"
+          />
           <line
             x1={cx - 6}
             y1="18"
@@ -212,7 +219,12 @@ export function AiMascot({
             strokeWidth="2.5"
             strokeLinecap="round"
           />
-          <circle cx={cx + eyeOffset.x} cy={19 + eyeOffset.y} r="3" fill="var(--primary)" />
+          <circle
+            cx={cx + eyeOffset.x}
+            cy={19 + eyeOffset.y}
+            r="3"
+            fill="var(--primary)"
+          />
         </g>
       )
     }
@@ -222,7 +234,14 @@ export function AiMascot({
       const radius = side === 'left' ? 5.5 : 7.5
       return (
         <g className="transition-all duration-200">
-          <circle cx={cx} cy="18" r={radius} fill="white" stroke="var(--primary)" strokeWidth="2.5" />
+          <circle
+            cx={cx}
+            cy="18"
+            r={radius}
+            fill="white"
+            stroke="var(--primary)"
+            strokeWidth="2.5"
+          />
           <circle
             cx={cx + eyeOffset.x}
             cy={18 + eyeOffset.y}
@@ -259,7 +278,14 @@ export function AiMascot({
     // Default neutral eyes
     return (
       <g className="transition-all duration-200">
-        <circle cx={cx} cy="18" r="7.5" fill="white" stroke="var(--primary)" strokeWidth="2.5" />
+        <circle
+          cx={cx}
+          cy="18"
+          r="7.5"
+          fill="white"
+          stroke="var(--primary)"
+          strokeWidth="2.5"
+        />
         <circle
           cx={cx + eyeOffset.x}
           cy={18 + eyeOffset.y}
@@ -288,7 +314,9 @@ export function AiMascot({
       role="button"
       tabIndex={0}
       aria-label="Trợ lý robot AI hướng dẫn"
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleMascotClick() }}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') handleMascotClick()
+      }}
       className={`relative w-24 h-[105px] cursor-pointer select-none animate-mascot-float
         min-w-[44px] min-h-[44px]
         focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2
@@ -386,7 +414,13 @@ export function AiMascot({
         {/* ─── Notification Badge on antenna ─── */}
         {pendingNotifications > 0 && (
           <g>
-            <circle cx="26" cy="3" r="4" fill="var(--danger)" className="antenna-tip" />
+            <circle
+              cx="26"
+              cy="3"
+              r="4"
+              fill="var(--danger)"
+              className="antenna-tip"
+            />
             <text
               x="26"
               y="4.5"
@@ -402,10 +436,23 @@ export function AiMascot({
         )}
 
         {/* ─── Connection to Head ─── */}
-        <line x1="20" y1="5" x2="20" y2="9.5" stroke="var(--primary)" strokeWidth="1.5" />
+        <line
+          x1="20"
+          y1="5"
+          x2="20"
+          y2="9.5"
+          stroke="var(--primary)"
+          strokeWidth="1.5"
+        />
 
         {/* ─── Face group (rotates when pointing) ─── */}
-        <g style={{ transform: getFaceTransform(), transformOrigin: '20px 20px', transition: 'transform 0.3s ease' }}>
+        <g
+          style={{
+            transform: getFaceTransform(),
+            transformOrigin: '20px 20px',
+            transition: 'transform 0.3s ease',
+          }}
+        >
           {/* Head Shell */}
           <rect
             x="4.5"
@@ -419,8 +466,22 @@ export function AiMascot({
           />
 
           {/* Ears */}
-          <rect x="1.5" y="17" width="3" height="7" rx="1.5" fill="var(--primary)" />
-          <rect x="35.5" y="17" width="3" height="7" rx="1.5" fill="var(--primary)" />
+          <rect
+            x="1.5"
+            y="17"
+            width="3"
+            height="7"
+            rx="1.5"
+            fill="var(--primary)"
+          />
+          <rect
+            x="35.5"
+            y="17"
+            width="3"
+            height="7"
+            rx="1.5"
+            fill="var(--primary)"
+          />
 
           {/* Eyes */}
           {renderEye('left')}
@@ -430,14 +491,34 @@ export function AiMascot({
           {renderMouth()}
 
           {/* Blush Cheeks */}
-          <circle cx="8" cy="21.5" r="1.5" fill="var(--primary)" fillOpacity="0.25" />
-          <circle cx="32" cy="21.5" r="1.5" fill="var(--primary)" fillOpacity="0.25" />
+          <circle
+            cx="8"
+            cy="21.5"
+            r="1.5"
+            fill="var(--primary)"
+            fillOpacity="0.25"
+          />
+          <circle
+            cx="32"
+            cy="21.5"
+            r="1.5"
+            fill="var(--primary)"
+            fillOpacity="0.25"
+          />
         </g>
 
         {/* ─── Scroll Progress Bar (left side of body) ─── */}
         {scrollProgress > 0 && (
           <g>
-            <rect x="3" y="16" width="2" height="16" rx="1" fill="var(--border)" opacity="0.3" />
+            <rect
+              x="3"
+              y="16"
+              width="2"
+              height="16"
+              rx="1"
+              fill="var(--border)"
+              opacity="0.3"
+            />
             <rect
               x="3"
               y="16"
@@ -453,7 +534,10 @@ export function AiMascot({
         {/* ─── Left Arm ─── */}
         <g
           className="mascot-arm-left"
-          style={{ transformOrigin: '6px 28px', transformBox: 'fill-box' as React.CSSProperties['transformBox'] }}
+          style={{
+            transformOrigin: '6px 28px',
+            transformBox: 'fill-box' as React.CSSProperties['transformBox'],
+          }}
         >
           <circle cx="6" cy="28" r="2" fill="var(--primary)" />
           <path
@@ -475,7 +559,10 @@ export function AiMascot({
         {/* ─── Right Arm ─── */}
         <g
           className="mascot-arm-right"
-          style={{ transformOrigin: '34px 28px', transformBox: 'fill-box' as React.CSSProperties['transformBox'] }}
+          style={{
+            transformOrigin: '34px 28px',
+            transformBox: 'fill-box' as React.CSSProperties['transformBox'],
+          }}
         >
           <circle cx="34" cy="28" r="2" fill="var(--primary)" />
           <path

@@ -15,14 +15,20 @@ interface SpeechRecognitionResultList {
 }
 
 interface SpeechRecognitionEventMap {
-  readonly results: { readonly length: number; item(i: number): SpeechRecognitionResultList; [i: number]: SpeechRecognitionResultList }
+  readonly results: {
+    readonly length: number
+    item(i: number): SpeechRecognitionResultList
+    [i: number]: SpeechRecognitionResultList
+  }
 }
 
 interface WebSpeechRecognition extends EventTarget {
   lang: string
   continuous: boolean
   interimResults: boolean
-  onresult: ((event: { results: SpeechRecognitionEventMap['results'] }) => void) | null
+  onresult:
+    | ((event: { results: SpeechRecognitionEventMap['results'] }) => void)
+    | null
   onend: (() => void) | null
   onerror: (() => void) | null
   start(): void
@@ -55,17 +61,25 @@ function parseCommand(transcript: string): VoiceCommand | null {
  * Graceful degradation: isSupported=false on unsupported browsers.
  * No new packages needed — this is a built-in Web API.
  */
-export function useVoiceCommand(onCommand: (cmd: VoiceCommand) => void): VoiceCommandResult {
+export function useVoiceCommand(
+  onCommand: (cmd: VoiceCommand) => void
+): VoiceCommandResult {
   const [isListening, setIsListening] = React.useState(false)
   const recognitionRef = React.useRef<WebSpeechRecognition | null>(null)
 
-  const win = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : null
-  const isSupported = Boolean(win?.SpeechRecognition || win?.webkitSpeechRecognition)
+  const win =
+    typeof window !== 'undefined'
+      ? (window as unknown as Record<string, unknown>)
+      : null
+  const isSupported = Boolean(
+    win?.SpeechRecognition || win?.webkitSpeechRecognition
+  )
 
   const startListening = React.useCallback((): void => {
     if (!isSupported || !win) return
 
-    const Ctor = (win.SpeechRecognition || win.webkitSpeechRecognition) as new () => WebSpeechRecognition
+    const Ctor = (win.SpeechRecognition ||
+      win.webkitSpeechRecognition) as new () => WebSpeechRecognition
 
     const recognition = new Ctor()
     recognition.lang = 'vi-VN'

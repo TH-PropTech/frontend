@@ -277,16 +277,54 @@ export function AiRunningMascot({
               />
 
               {/* Ears */}
-              <rect x="1.5" y="17" width="3" height="7" rx="1.5" fill="var(--primary)" />
-              <rect x="35.5" y="17" width="3" height="7" rx="1.5" fill="var(--primary)" />
+              <rect
+                x="1.5"
+                y="17"
+                width="3"
+                height="7"
+                rx="1.5"
+                fill="var(--primary)"
+              />
+              <rect
+                x="35.5"
+                y="17"
+                width="3"
+                height="7"
+                rx="1.5"
+                fill="var(--primary)"
+              />
 
               {/* Big eyes */}
-              <circle cx="13" cy="18" r="7.5" fill="white" stroke="var(--primary)" strokeWidth="2.5" />
-              <circle cx="27" cy="18" r="7.5" fill="white" stroke="var(--primary)" strokeWidth="2.5" />
+              <circle
+                cx="13"
+                cy="18"
+                r="7.5"
+                fill="white"
+                stroke="var(--primary)"
+                strokeWidth="2.5"
+              />
+              <circle
+                cx="27"
+                cy="18"
+                r="7.5"
+                fill="white"
+                stroke="var(--primary)"
+                strokeWidth="2.5"
+              />
 
               {/* Pupils */}
-              <circle cx={isMoving ? 13.5 : 13} cy={18} r="4.8" fill="var(--primary)" />
-              <circle cx={isMoving ? 27.5 : 27} cy={18} r="4.8" fill="var(--primary)" />
+              <circle
+                cx={isMoving ? 13.5 : 13}
+                cy={18}
+                r="4.8"
+                fill="var(--primary)"
+              />
+              <circle
+                cx={isMoving ? 27.5 : 27}
+                cy={18}
+                r="4.8"
+                fill="var(--primary)"
+              />
 
               {/* Pupil Shine */}
               <circle cx={isMoving ? 11.5 : 11} cy={16} r="1.5" fill="white" />
@@ -304,14 +342,29 @@ export function AiRunningMascot({
               />
 
               {/* Blush Cheeks */}
-              <circle cx="8" cy="21.5" r="1.5" fill="var(--primary)" fillOpacity="0.25" />
-              <circle cx="32" cy="21.5" r="1.5" fill="var(--primary)" fillOpacity="0.25" />
+              <circle
+                cx="8"
+                cy="21.5"
+                r="1.5"
+                fill="var(--primary)"
+                fillOpacity="0.25"
+              />
+              <circle
+                cx="32"
+                cy="21.5"
+                r="1.5"
+                fill="var(--primary)"
+                fillOpacity="0.25"
+              />
             </g>
 
             {/* ─── Left Arm ─── */}
             <g
               className={isMoving ? 'run-arm-left' : 'idle-arm-left'}
-              style={{ transformOrigin: '6px 28px', transformBox: 'fill-box' as React.CSSProperties['transformBox'] }}
+              style={{
+                transformOrigin: '6px 28px',
+                transformBox: 'fill-box' as React.CSSProperties['transformBox'],
+              }}
             >
               <circle cx="6" cy="28" r="2" fill="var(--primary)" />
               <path
@@ -333,7 +386,10 @@ export function AiRunningMascot({
             {/* ─── Right Arm ─── */}
             <g
               className={isMoving ? 'run-arm-right' : 'idle-arm-right'}
-              style={{ transformOrigin: '34px 28px', transformBox: 'fill-box' as React.CSSProperties['transformBox'] }}
+              style={{
+                transformOrigin: '34px 28px',
+                transformBox: 'fill-box' as React.CSSProperties['transformBox'],
+              }}
             >
               <circle cx="34" cy="28" r="2" fill="var(--primary)" />
               <path

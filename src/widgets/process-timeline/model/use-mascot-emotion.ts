@@ -109,5 +109,12 @@ export function useMascotEmotion(): MascotEmotionState {
     }
   }, [])
 
-  return { emotion, mouthShape, armState, triggerExcited, triggerConfused, triggerGreeting }
+  return {
+    emotion,
+    mouthShape,
+    armState,
+    triggerExcited,
+    triggerConfused,
+    triggerGreeting,
+  }
 }

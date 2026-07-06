@@ -21,21 +21,28 @@ export function usePlatform(): WebViewFeatureFlags {
 
   React.useEffect(() => {
     // Check React Native WebView
-    if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).ReactNativeWebView) {
+    if (
+      typeof window !== 'undefined' &&
+      (window as unknown as Record<string, unknown>).ReactNativeWebView
+    ) {
       setPlatform('mobile-app')
       return
     }
     const mq = window.matchMedia('(max-width: 767px)')
-    const update = (): void => setPlatform(mq.matches ? 'mobile-web' : 'desktop')
+    const update = (): void =>
+      setPlatform(mq.matches ? 'mobile-web' : 'desktop')
     update()
     mq.addEventListener('change', update)
     return () => mq.removeEventListener('change', update)
   }, [])
 
   const isWebView = platform === 'mobile-app'
-  const isSpeechSupported = typeof window !== 'undefined'
-    && Boolean((window as unknown as Record<string, unknown>).SpeechRecognition
-      || (window as unknown as Record<string, unknown>).webkitSpeechRecognition)
+  const isSpeechSupported =
+    typeof window !== 'undefined' &&
+    Boolean(
+      (window as unknown as Record<string, unknown>).SpeechRecognition ||
+      (window as unknown as Record<string, unknown>).webkitSpeechRecognition
+    )
 
   return {
     platform,
