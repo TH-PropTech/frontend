@@ -22,10 +22,7 @@ interface MascotEmotionState {
  * Provides triggers for context-based emotion changes.
  * Business-triggered states always override idle behaviors.
  */
-export function useMascotEmotion(
-  checkedSteps: Record<number, boolean>,
-  totalSteps: number,
-): MascotEmotionState {
+export function useMascotEmotion(): MascotEmotionState {
   const [emotion, setEmotion] = React.useState<Emotion>('neutral')
   const [mouthShape, setMouthShape] = React.useState<MouthShape>('line')
   const [armState, setArmState] = React.useState<ArmState>('idle')

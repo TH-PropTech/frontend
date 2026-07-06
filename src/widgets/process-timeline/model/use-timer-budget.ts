@@ -49,13 +49,10 @@ export function useTimerBudget(maxTimers: number = 3) {
         }
       }
 
-      let timerId: NodeJS.Timeout
-      const wrapper = () => {
+      const timerId = setTimeout(() => {
         activeTimersRef.current = activeTimersRef.current.filter(t => t.id !== timerId)
         callback()
-      }
-
-      timerId = setTimeout(wrapper, delay)
+      }, delay)
       activeTimersRef.current.push({ id: timerId, priority, callback })
       return timerId
     },
