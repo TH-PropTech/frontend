@@ -19,7 +19,8 @@ interface SpeechFallbackResult {
  */
 export function useSpeechFallback(
   text: string,
-  lang: string = 'vi-VN'
+  lang: string = 'vi-VN',
+  rate: number = 1.1
 ): SpeechFallbackResult {
   const [isSpeaking, setIsSpeaking] = React.useState(false)
   const [showSubtitle, setShowSubtitle] = React.useState(false)
@@ -36,13 +37,13 @@ export function useSpeechFallback(
       if (idx < words.length) {
         setHighlightIndex(idx)
         idx++
-        subtitleTimerRef.current = setTimeout(tick, 200)
+        subtitleTimerRef.current = setTimeout(tick, Math.max(80, 180 / rate))
       } else {
         setShowSubtitle(false)
         setIsSpeaking(false)
       }
     }
-    subtitleTimerRef.current = setTimeout(tick, 200)
+    subtitleTimerRef.current = setTimeout(tick, Math.max(80, 180 / rate))
   }, [words])
 
   const speak = React.useCallback((): void => {
@@ -60,6 +61,7 @@ export function useSpeechFallback(
 
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = lang
+    utterance.rate = rate
     utterance.onstart = (): void => setIsSpeaking(true)
     utterance.onend = (): void => setIsSpeaking(false)
     utterance.onerror = (): void => {

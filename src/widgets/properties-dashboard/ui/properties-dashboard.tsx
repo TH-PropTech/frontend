@@ -149,10 +149,10 @@ export function PropertiesDashboard(): React.ReactElement {
   }
 
   return (
-    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative overflow-x-hidden pb-20">
+    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative overflow-x-hidden">
       <HomeHeader />
 
-      <main className="w-full">
+      <main className="w-full pb-20">
         <PropertiesHero />
 
         {!selectedApiProjectId && (
