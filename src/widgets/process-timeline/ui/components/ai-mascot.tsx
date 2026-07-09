@@ -14,6 +14,7 @@ export interface AiMascotProps {
   isProgressAura?: boolean
   emotion?: Emotion
   mouthShape?: MouthShape
+  isTalking?: boolean
   scrollProgress?: number // 0–100, thanh tiến trình đọc trên thân robot
   pendingNotifications?: number // Badge thông báo trên anten
   onClick?: () => void
@@ -27,6 +28,7 @@ export function AiMascot({
   isProgressAura = false,
   emotion = 'neutral',
   mouthShape = 'line',
+  isTalking = false,
   scrollProgress = 0,
   pendingNotifications = 0,
   onClick,
@@ -388,6 +390,14 @@ export function AiMascot({
         .mascot-arm-left, .mascot-arm-right, .mascot-pupil {
           will-change: transform;
         }
+
+        /* Talking mouth animation — pure CSS, no JS timer */
+        @keyframes mouth-talk {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        .mascot-mouth-talk .mouth-open { animation: mouth-talk 0.33s steps(1) infinite; }
+        .mascot-mouth-talk .mouth-closed { animation: mouth-talk 0.33s steps(1) infinite reverse; }
       `}</style>
 
       <svg
@@ -488,7 +498,30 @@ export function AiMascot({
           {renderEye('right')}
 
           {/* Mouth */}
-          {renderMouth()}
+          {isTalking ? (
+            <g className="mascot-mouth-talk">
+              <ellipse
+                className="mouth-open"
+                cx="20"
+                cy="25"
+                rx="2.5"
+                ry="2"
+                fill="var(--primary)"
+              />
+              <line
+                className="mouth-closed"
+                x1="18.5"
+                y1="24.5"
+                x2="21.5"
+                y2="24.5"
+                stroke="var(--primary)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            </g>
+          ) : (
+            renderMouth()
+          )}
 
           {/* Blush Cheeks */}
           <circle

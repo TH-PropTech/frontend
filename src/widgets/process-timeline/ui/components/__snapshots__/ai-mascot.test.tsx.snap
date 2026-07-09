@@ -72,6 +72,14 @@ exports[`AiMascot Component > renders standard mascot correctly 1`] = `
         .mascot-arm-left, .mascot-arm-right, .mascot-pupil {
           will-change: transform;
         }
+
+        /* Talking mouth animation — pure CSS, no JS timer */
+        @keyframes mouth-talk {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        .mascot-mouth-talk .mouth-open { animation: mouth-talk 0.33s steps(1) infinite; }
+        .mascot-mouth-talk .mouth-closed { animation: mouth-talk 0.33s steps(1) infinite reverse; }
       
   </style>
   <svg

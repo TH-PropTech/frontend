@@ -49,10 +49,46 @@ interface VoiceCommandResult {
  * Parse Vietnamese voice transcript into a command.
  */
 function parseCommand(transcript: string): VoiceCommand | null {
-  if (/ti(e|ê)p theo|bu(o|ơ)c ti(e|ê)p/.test(transcript)) return 'next'
-  if (/quay l(a|ạ)i|bu(o|ơ)c tru(o|ơ)c/.test(transcript)) return 'prev'
-  if (/(đ|d)(o|ọ)c l(a|ạ)i|nh(a|ắ)c l(a|ạ)i/.test(transcript)) return 'repeat'
-  if (/ho(a|à)n th(a|à)nh|xong/.test(transcript)) return 'done'
+  const t = transcript.toLowerCase().trim()
+
+  // Next step — "tiếp theo", "bước tiếp", "tiếp tục", "tiếp đi"
+  if (
+    t.includes('tiếp theo') ||
+    t.includes('bước tiếp') ||
+    t.includes('tiếp tục') ||
+    t.includes('tiếp đi') ||
+    t.includes('bước kế')
+  )
+    return 'next'
+
+  // Previous step — "quay lại", "bước trước", "lùi lại"
+  if (
+    t.includes('quay lại') ||
+    t.includes('bước trước') ||
+    t.includes('lùi lại') ||
+    t.includes('quay về')
+  )
+    return 'prev'
+
+  // Repeat — "đọc lại", "nhắc lại", "lặp lại", "nói lại"
+  if (
+    t.includes('đọc lại') ||
+    t.includes('nhắc lại') ||
+    t.includes('lặp lại') ||
+    t.includes('nói lại') ||
+    t.includes('nghe lại')
+  )
+    return 'repeat'
+
+  // Done — "hoàn thành", "xong", "đánh dấu"
+  if (
+    t.includes('hoàn thành') ||
+    t.includes('xong rồi') ||
+    t.includes('xong') ||
+    t.includes('đánh dấu')
+  )
+    return 'done'
+
   return null
 }
 

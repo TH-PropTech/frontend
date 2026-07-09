@@ -59,7 +59,7 @@ export function FavoritesDashboard(): React.ReactElement {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-surface relative overflow-x-hidden pb-20">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-surface relative overflow-x-hidden">
       <HomeHeader />
 
       <div className="flex-1 flex flex-col">
@@ -84,7 +84,7 @@ export function FavoritesDashboard(): React.ReactElement {
         </section>
 
         {/* Content list */}
-        <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8">
+        <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8 pb-20">
           <section className="space-y-6">
             {favoriteApartments.length === 0 ? (
               <div className="bg-white dark:bg-surface-muted border border-border rounded-2xl p-12 text-center space-y-4 max-w-lg mx-auto shadow-sm">
