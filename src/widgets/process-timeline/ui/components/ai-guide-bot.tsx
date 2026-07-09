@@ -12,7 +12,7 @@ import { useGuideLang } from '../../model/use-guide-lang'
 import { useTutorialOverlay } from '../../model/use-tutorial-overlay'
 import { useSpeechFallback } from '../../model/use-speech-fallback'
 import { usePlatform } from '../../model/use-platform'
-import { useAnnotations } from '../../model/use-annotations'
+
 import { AiMascot } from './ai-mascot'
 import { MiniUiPreview } from './mini-ui-preview'
 
@@ -48,7 +48,7 @@ export function AiGuideBot({
   const [mascotTop, setMascotTop] = React.useState(28)
   const [isMascotCrawling, setIsMascotCrawling] = React.useState(false)
   const [greetingText, setGreetingText] = React.useState<string | null>(null)
-  const [activeTooltip, setActiveTooltip] = React.useState<string | null>(null)
+
   const [feedbackSubmitted, setFeedbackSubmitted] = React.useState<
     boolean | null
   >(null)
@@ -87,17 +87,13 @@ export function AiGuideBot({
     25
   )
 
-  // Annotations and glossary scanner
-  const segments = useAnnotations(
-    typedTipText,
-    guide?.glossary,
-    guide?.annotations
-  )
-
   // Speech fallback (TTS + Subtitles)
+  const speechRateValue =
+    speechRate === 'slow' ? 0.75 : speechRate === 'fast' ? 1.5 : 1.1
   const speechHelper = useSpeechFallback(
     displayTipText,
-    lang === 'vi' ? 'vi-VN' : 'en-US'
+    lang === 'vi' ? 'vi-VN' : 'en-US',
+    speechRateValue
   )
 
   // Voice Command control
@@ -200,7 +196,6 @@ export function AiGuideBot({
     mascotEmotion.triggerGreeting()
     const timer = setTimeout(() => setGreetingText(null), 4000)
     return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [articleId, isVisible])
 
   /* ─── Idle Curiosity behaviors ─── */
@@ -240,7 +235,6 @@ export function AiGuideBot({
       clearTimeout(timeout)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVisible, isTyping])
 
   /* ─── Reset states when active article changes ─── */
@@ -563,18 +557,12 @@ export function AiGuideBot({
           }
         `}</style>
 
-        {/* Glow Effect */}
-        <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/10 blur-3xl pointer-events-none group-hover:bg-primary/15 transition-all duration-500" />
-        <div className="absolute -left-20 -bottom-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-primary/10 flex-wrap gap-4">
+        <div className="flex flex-col gap-3 pb-4 border-b border-primary/10">
           <div className="flex items-center gap-3 mascot-title-box">
             <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-xl bg-primary/20 opacity-75 duration-1000" />
               <svg
-                className="h-5 w-5 animate-bounce"
-                style={{ animationDuration: '2s' }}
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -827,6 +815,7 @@ export function AiGuideBot({
               armState={mascotEmotion.armState}
               emotion={mascotEmotion.emotion}
               mouthShape={mascotEmotion.mouthShape}
+              isTalking={speechHelper.isSpeaking}
               isProgressAura={isProgressAura}
               scrollProgress={scrollProgress}
               className="w-12 h-[52px] shrink-0"
@@ -871,8 +860,7 @@ export function AiGuideBot({
                       key={idx}
                       id={`step-btn-${idx}`}
                       onClick={() => setActiveStepIndex(idx)}
-                      onMouseEnter={() => setActiveStepIndex(idx)}
-                      className={`flex flex-col text-left rounded-xl border transition-all duration-300 cursor-pointer ${
+                      className={`flex flex-col text-left rounded-xl border transition-colors duration-200 cursor-pointer ${
                         fontSize === 'sm'
                           ? 'p-3.5'
                           : fontSize === 'base'
@@ -880,10 +868,10 @@ export function AiGuideBot({
                             : 'p-5'
                       } ${
                         isActive
-                          ? 'bg-primary/[0.05] border-primary/50 shadow-md ring-1 ring-primary/10 scale-[1.01]'
+                          ? 'bg-primary/[0.06] border-primary/30 shadow-sm'
                           : isChecked
-                            ? 'bg-primary/[0.01] border-primary/20 opacity-80'
-                            : 'bg-white/50 border-border/70 hover:border-primary/25 hover:bg-white/80'
+                            ? 'bg-primary/[0.01] border-primary/15 opacity-80'
+                            : 'bg-white/50 border-border/70 hover:bg-white/80'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -978,22 +966,40 @@ export function AiGuideBot({
 
                       {/* Expandable detailed visual preview and responsive tips */}
                       {isActive && (
-                        <div className="mt-4 pl-9 space-y-4 animate-in fade-in slide-in-from-top-1 duration-300">
-                          {/* Step Tip text - shown inside step box for small screens */}
-                          <div className="block md:hidden text-xs text-primary bg-primary/5 p-3 rounded-lg leading-relaxed border border-primary/10">
-                            Chỉ dẫn: {greetingText ?? currentTip}
+                        <div className="mt-3 pl-9 space-y-2">
+                          {/* Step Tip text - shown inline on ALL screens */}
+                          <div className="text-xs text-primary bg-primary/5 p-3 rounded-lg leading-relaxed border border-primary/10">
+                            <span className="font-bold uppercase tracking-wider text-[10px] block mb-1">
+                              Trợ lý AI hướng dẫn:
+                            </span>
+                            {greetingText ?? currentTip}
                           </div>
 
-                          {/* Miniature Graphic UI Mockup */}
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
-                              Mô tả hình dáng giao diện mẫu:
-                            </span>
-                            <MiniUiPreview
-                              articleId={articleId}
-                              stepIndex={idx}
-                            />
-                          </div>
+                          {/* Miniature Graphic UI Mockup — collapsed by default */}
+                          <details className="group">
+                            <summary className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-wider cursor-pointer select-none hover:text-primary transition-colors list-none [&::-webkit-details-marker]:hidden">
+                              <svg
+                                className="h-3 w-3 transition-transform duration-200 group-open:rotate-90"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth="3"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M9 5l7 7-7 7"
+                                />
+                              </svg>
+                              Xem giao diện mẫu
+                            </summary>
+                            <div className="mt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                              <MiniUiPreview
+                                articleId={articleId}
+                                stepIndex={idx}
+                              />
+                            </div>
+                          </details>
                         </div>
                       )}
                     </div>
@@ -1015,100 +1021,12 @@ export function AiGuideBot({
                   top: `${mascotTop}px`,
                 }}
               >
-                {/* Speech Bubble — shows greeting or step tip */}
-                {(greetingText || typedTipText) && (
-                  <div className="absolute right-32 top-1/2 -translate-y-1/2 w-64 bg-white border border-primary/20 text-fg p-4 rounded-xl shadow-lg leading-relaxed font-semibold animate-in fade-in duration-300 z-10">
-                    <div className="relative">
-                      <span className="text-primary font-bold block mb-1 text-[11px] uppercase tracking-wider">
-                        Trợ lý AI hướng dẫn:
-                      </span>
-                      <div
-                        className={`leading-relaxed ${
-                          fontSize === 'base'
-                            ? 'text-sm'
-                            : fontSize === 'lg'
-                              ? 'text-base'
-                              : 'text-xs'
-                        }`}
-                      >
-                        {segments.map((seg, idx) => {
-                          if (seg.isKeyword) {
-                            return (
-                              <span
-                                key={idx}
-                                className="relative inline-block group/keyword"
-                              >
-                                <button
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    setActiveTooltip(
-                                      activeTooltip === seg.text
-                                        ? null
-                                        : seg.text
-                                    )
-                                    if (seg.relatedStepIndex !== undefined) {
-                                      setActiveStepIndex(seg.relatedStepIndex)
-                                    }
-                                  }}
-                                  className="text-primary border-b border-dashed border-primary hover:bg-primary/10 px-0.5 rounded cursor-pointer font-bold"
-                                >
-                                  {seg.text}
-                                </button>
-                                {/* Tooltip explaining word */}
-                                {activeTooltip === seg.text && (
-                                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-fg text-surface text-[10px] p-2 rounded-lg shadow-xl block z-50 leading-normal animate-in zoom-in-95 duration-150">
-                                    {seg.explanation}
-                                    <span className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-fg" />
-                                  </span>
-                                )}
-                              </span>
-                            )
-                          }
-                          return <span key={idx}>{seg.text}</span>
-                        })}
-                      </div>
-
-                      {/* Milestone message overlay */}
-                      {progressPercent === 100 && (
-                        <div className="text-[10px] text-success font-bold mt-2 pt-2 border-t border-success/10">
-                          🎉 Hoàn thành tất cả các bước!
-                          <div className="flex gap-2 mt-1.5">
-                            <button
-                              onClick={() => handleFeedback(true)}
-                              className={`text-[9px] px-2 py-0.5 rounded transition-all cursor-pointer ${
-                                feedbackSubmitted === true
-                                  ? 'bg-success text-white'
-                                  : 'bg-success/10 text-success hover:bg-success/20'
-                              }`}
-                            >
-                              Hữu ích
-                            </button>
-                            <button
-                              onClick={() => handleFeedback(false)}
-                              className={`text-[9px] px-2 py-0.5 rounded transition-all cursor-pointer ${
-                                feedbackSubmitted === false
-                                  ? 'bg-danger text-white'
-                                  : 'bg-danger/10 text-danger hover:bg-danger/20'
-                              }`}
-                            >
-                              Chưa rõ
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Arrow pointing right to Mascot */}
-                      <div className="absolute top-1/2 -translate-y-1/2 -right-[17px] w-0 h-0 border-[8px] border-transparent border-l-white" />
-                      <div className="absolute top-1/2 -translate-y-1/2 -right-[19px] w-0 h-0 border-[8px] border-transparent border-l-primary/20 -z-10" />
-                    </div>
-                  </div>
-                )}
-
                 <AiMascot
                   isHappy={isMascotHappy}
                   armState={mascotEmotion.armState}
                   emotion={mascotEmotion.emotion}
                   mouthShape={mascotEmotion.mouthShape}
+                  isTalking={speechHelper.isSpeaking}
                   isProgressAura={isProgressAura}
                   scrollProgress={scrollProgress}
                   pointDirection="left"
