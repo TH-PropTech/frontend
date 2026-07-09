@@ -11,6 +11,7 @@ import { AdvancedDrawer } from './components/advanced-drawer'
 import { PropertiesMap } from './components/properties-map'
 import { CompareModal } from './components/compare-modal'
 import { ProjectGridView } from './components/project-grid-view'
+import { LandlordActionBar } from './components/landlord-action-bar'
 import { toast } from 'sonner'
 
 export function PropertiesDashboard(): React.ReactElement {
@@ -148,10 +149,10 @@ export function PropertiesDashboard(): React.ReactElement {
   }
 
   return (
-    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative overflow-x-hidden pb-20">
+    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative overflow-x-hidden">
       <HomeHeader />
 
-      <main className="w-full">
+      <main className="w-full pb-20">
         <PropertiesHero />
 
         {!selectedApiProjectId && (
@@ -321,6 +322,8 @@ export function PropertiesDashboard(): React.ReactElement {
               </div>
             </div>
           </div>
+
+          <LandlordActionBar />
 
           {viewMode === 'map' ? (
             <PropertiesMap
