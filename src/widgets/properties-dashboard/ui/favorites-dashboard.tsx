@@ -59,12 +59,12 @@ export function FavoritesDashboard(): React.ReactElement {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-surface relative overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-bg text-fg selection:bg-primary/20 selection:text-primary relative overflow-x-hidden">
       <HomeHeader />
 
       <div className="flex-1 flex flex-col">
         {/* Breadcrumbs / Header */}
-        <section className="bg-white dark:bg-surface-muted border-b border-border py-6 px-4 md:px-8">
+        <section className="bg-white dark:bg-surface-muted border-b border-border pt-28 pb-6 px-4 md:px-8">
           <div className="max-w-6xl mx-auto space-y-1">
             <div className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-wider text-muted">
               <span>Đường dẫn</span>
@@ -87,12 +87,22 @@ export function FavoritesDashboard(): React.ReactElement {
         <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8 pb-20">
           <section className="space-y-6">
             {favoriteApartments.length === 0 ? (
-              <div className="bg-white dark:bg-surface-muted border border-border rounded-2xl p-12 text-center space-y-4 max-w-lg mx-auto shadow-sm">
-                <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-surface flex items-center justify-center mx-auto text-muted">
-                  💔
+              <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40 max-w-lg mx-auto shadow-sm">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto text-primary mb-4">
+                  <svg
+                    className="h-6 w-6 stroke-current fill-none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+                    />
+                  </svg>
                 </div>
-                <div className="space-y-2">
-                  <h3 className="font-marketing text-lg font-bold text-fg">
+                <div className="space-y-2 max-w-xs mx-auto">
+                  <h3 className="font-marketing text-sm font-extrabold text-fg uppercase tracking-wider">
                     Chưa có căn hộ yêu thích
                   </h3>
                   <p className="font-body text-xs text-muted leading-relaxed">
