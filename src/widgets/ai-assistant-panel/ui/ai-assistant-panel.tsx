@@ -9,6 +9,9 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Building2,
+  Video,
+  CheckCircle2,
 } from 'lucide-react'
 import { env } from '@/shared/config/env'
 
@@ -25,6 +28,15 @@ interface ChatMessage {
     landlordName?: string
     landlordPhone?: string
   }
+  propertyCards?: Array<{
+    id: string
+    title: string
+    price: number
+    image: string
+    location: string
+    landlordName?: string
+    landlordPhone?: string
+  }>
   bookingRequest?: {
     apartmentId: string
     apartmentTitle: string
@@ -172,6 +184,8 @@ export function AiAssistantPanel(): React.ReactElement {
               sender: 'assistant',
               text: payload.data.text,
               propertyCard: payload.data.metadata?.propertyCard,
+              propertyCards: payload.data.metadata?.propertyCards,
+              bookingRequest: payload.data.metadata?.bookingRequest,
             }
             if (lastMsgIndex !== -1) {
               copy[lastMsgIndex] = finalMsg
@@ -355,42 +369,113 @@ export function AiAssistantPanel(): React.ReactElement {
                       {msg.text}
                     </div>
 
-                    {msg.propertyCard && (
-                      <div className="mt-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-md max-w-xs transition-shadow hover:shadow-lg">
-                        <img
-                          src={msg.propertyCard.image}
-                          alt={msg.propertyCard.title}
-                          className="h-28 w-full object-cover"
-                        />
-                        <div className="p-3 space-y-1">
-                          <h4 className="font-semibold text-xs text-zinc-900 dark:text-white truncate">
-                            {msg.propertyCard.title}
-                          </h4>
-                          <p className="text-[10px] text-zinc-400">
-                            {msg.propertyCard.location}
-                          </p>
-                          {(msg.propertyCard.landlordName ||
-                            msg.propertyCard.landlordPhone) && (
-                            <p className="text-[9px] text-[#C65A3A] font-semibold mt-0.5">
-                              Chủ: {msg.propertyCard.landlordName || 'Chưa rõ'}{' '}
-                              {msg.propertyCard.landlordPhone
-                                ? `(${msg.propertyCard.landlordPhone})`
-                                : ''}
+                    {msg.propertyCards && msg.propertyCards.length > 0 ? (
+                      <div className="mt-3 flex gap-3 overflow-x-auto pb-2 snap-x scrollbar-none max-w-sm">
+                        {msg.propertyCards.map((card, idx) => (
+                          <div
+                            key={card.id || idx}
+                            className="snap-start shrink-0 w-56 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-md transition-shadow hover:shadow-lg"
+                          >
+                            <img
+                              src={card.image}
+                              alt={card.title}
+                              className="h-24 w-full object-cover"
+                            />
+                            <div className="p-2.5 space-y-1">
+                              <h4 className="font-semibold text-[11px] text-zinc-900 dark:text-white truncate">
+                                {card.title}
+                              </h4>
+                              <p className="text-[9px] text-zinc-400 truncate">
+                                {card.location}
+                              </p>
+                              {(card.landlordName || card.landlordPhone) && (
+                                <p className="text-[8px] text-[#C65A3A] font-semibold truncate">
+                                  Chủ: {card.landlordName || 'Chưa rõ'}{' '}
+                                  {card.landlordPhone
+                                    ? `(${card.landlordPhone})`
+                                    : ''}
+                                </p>
+                              )}
+                              <div className="flex items-center justify-between pt-1">
+                                <span className="font-bold text-[10px] text-[#C65A3A]">
+                                  {formatPrice(card.price)}
+                                </span>
+                                <div className="flex gap-1">
+                                  <Link
+                                    href={`/properties/${card.id}`}
+                                    className="text-[9px] bg-[#C65A3A] hover:bg-[#A54B2F] text-white px-2 py-0.5 rounded transition-colors font-medium flex items-center"
+                                  >
+                                    Chi tiết
+                                  </Link>
+                                  <button
+                                    onClick={() => {
+                                      handleSend(
+                                        `Đặt lịch xem căn hộ "${card.title}"`
+                                      )
+                                    }}
+                                    className="text-[9px] border border-[#C65A3A] hover:bg-[#FDF3F0] text-[#C65A3A] px-1.5 py-0.5 rounded transition-colors font-medium"
+                                  >
+                                    Đặt lịch
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      msg.propertyCard && (
+                        <div className="mt-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-md max-w-xs transition-shadow hover:shadow-lg">
+                          <img
+                            src={msg.propertyCard.image}
+                            alt={msg.propertyCard.title}
+                            className="h-28 w-full object-cover"
+                          />
+                          <div className="p-3 space-y-1">
+                            <h4 className="font-semibold text-xs text-zinc-900 dark:text-white truncate">
+                              {msg.propertyCard.title}
+                            </h4>
+                            <p className="text-[10px] text-zinc-400">
+                              {msg.propertyCard.location}
                             </p>
-                          )}
-                          <div className="flex items-center justify-between pt-1">
-                            <span className="font-bold text-xs text-[#C65A3A]">
-                              {formatPrice(msg.propertyCard.price)}
-                            </span>
-                            <Link
-                              href={`/properties/${msg.propertyCard.id}`}
-                              className="text-[10px] bg-[#C65A3A] hover:bg-[#A54B2F] text-white px-2.5 py-1 rounded-md transition-colors font-medium"
-                            >
-                              Chi tiết
-                            </Link>
+                            {(msg.propertyCard.landlordName ||
+                              msg.propertyCard.landlordPhone) && (
+                              <p className="text-[9px] text-[#C65A3A] font-semibold mt-0.5">
+                                Chủ:{' '}
+                                {msg.propertyCard.landlordName || 'Chưa rõ'}{' '}
+                                {msg.propertyCard.landlordPhone
+                                  ? `(${msg.propertyCard.landlordPhone})`
+                                  : ''}
+                              </p>
+                            )}
+                            <div className="flex items-center justify-between pt-1">
+                              <span className="font-bold text-xs text-[#C65A3A]">
+                                {formatPrice(msg.propertyCard.price)}
+                              </span>
+                              <div className="flex gap-1.5">
+                                <Link
+                                  href={`/properties/${msg.propertyCard.id}`}
+                                  className="text-[10px] bg-[#C65A3A] hover:bg-[#A54B2F] text-white px-2.5 py-1 rounded-md transition-colors font-medium flex items-center"
+                                >
+                                  Chi tiết
+                                </Link>
+                                <button
+                                  onClick={() => {
+                                    if (msg.propertyCard) {
+                                      handleSend(
+                                        `Đặt lịch xem căn hộ "${msg.propertyCard.title}"`
+                                      )
+                                    }
+                                  }}
+                                  className="text-[10px] border border-[#C65A3A] hover:bg-[#FDF3F0] text-[#C65A3A] px-2 py-1 rounded-md transition-colors font-medium"
+                                >
+                                  Đặt lịch
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )
                     )}
 
                     {msg.bookingRequest && (
@@ -545,11 +630,14 @@ function BookingRequestCard({
   request,
   onConfirm,
 }: BookingRequestCardProps): React.ReactElement {
+  const [selectedMethod, setSelectedMethod] = React.useState<
+    'onsite' | 'video'
+  >('onsite')
   const [selectedDate, setSelectedDate] = React.useState<string>('')
   const [selectedTime, setSelectedTime] = React.useState<string>('')
   const [isSubmitted, setIsSubmitted] = React.useState(false)
 
-  // Generate the next 3 days: Hôm nay, Ngày mai, Ngày kia formatted as DD/MM/YYYY
+  // Generate the next 3 days with labels and short dates (DD/MM)
   const dates = React.useMemo(() => {
     const today = new Date()
     const tomorrow = new Date(today)
@@ -564,10 +652,28 @@ function BookingRequestCard({
       return `${day}/${month}/${year}`
     }
 
+    const formatShort = (d: Date) => {
+      const day = String(d.getDate()).padStart(2, '0')
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      return `${day}/${month}`
+    }
+
     return [
-      { label: 'Hôm nay', value: formatDate(today) },
-      { label: 'Ngày mai', value: formatDate(tomorrow) },
-      { label: 'Ngày kia', value: formatDate(dayAfter) },
+      {
+        label: 'Hôm nay',
+        shortDate: formatShort(today),
+        value: formatDate(today),
+      },
+      {
+        label: 'Ngày mai',
+        shortDate: formatShort(tomorrow),
+        value: formatDate(tomorrow),
+      },
+      {
+        label: 'Ngày kia',
+        shortDate: formatShort(dayAfter),
+        value: formatDate(dayAfter),
+      },
     ]
   }, [])
 
@@ -576,33 +682,123 @@ function BookingRequestCard({
   const handleSubmit = () => {
     if (selectedDate && selectedTime) {
       setIsSubmitted(true)
-      onConfirm(selectedDate, selectedTime)
+      const methodText =
+        selectedMethod === 'video' ? ' [Video Call]' : ' [Xem trực tiếp]'
+      onConfirm(selectedDate, selectedTime + methodText)
     }
   }
 
   return (
-    <div className="mt-3 bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-200/50 dark:border-zinc-800/50 rounded-2xl p-3.5 space-y-3.5 max-w-xs shadow-sm">
+    <div
+      className="mt-3 rounded-2xl p-3.5 space-y-3.5 max-w-xs shadow-sm border"
+      style={{
+        backgroundColor: 'var(--surface-muted)',
+        borderColor: 'var(--border)',
+      }}
+    >
       <div className="space-y-1">
-        <h4 className="font-semibold text-xs text-zinc-900 dark:text-white flex items-center gap-1.5">
-          <span className="flex h-2 w-2 rounded-full bg-[#C65A3A]" />
+        <h4
+          className="font-semibold text-xs flex items-center gap-1.5"
+          style={{ color: 'var(--fg)' }}
+        >
+          <span
+            className="flex h-2 w-2 rounded-full"
+            style={{ backgroundColor: 'var(--primary)' }}
+          />
           Lên lịch xem căn hộ
         </h4>
-        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 line-clamp-1">
+        <p
+          className="text-[10px] line-clamp-1 font-medium"
+          style={{ color: 'var(--muted)' }}
+        >
           {request.apartmentTitle}
         </p>
       </div>
 
       {isSubmitted ? (
-        <div className="text-center py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-            ✓ Đã gửi yêu cầu đặt lịch hẹn
+        <div
+          className="text-center py-2.5 px-3 rounded-xl border space-y-1"
+          style={{
+            backgroundColor: 'var(--success-soft)',
+            borderColor: 'var(--success)',
+          }}
+        >
+          <p
+            className="text-[11px] font-semibold flex items-center justify-center gap-1.5"
+            style={{ color: 'var(--success)' }}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Đã gửi yêu cầu đặt lịch xem phòng
+          </p>
+          <p className="text-[10px] font-medium" style={{ color: 'var(--fg)' }}>
+            {selectedDate} lúc {selectedTime} (
+            {selectedMethod === 'video' ? 'Video Call' : 'Trực tiếp'})
           </p>
         </div>
       ) : (
         <>
+          {/* Method Selector */}
+          <div className="space-y-1.5">
+            <span
+              className="text-[10px] font-medium"
+              style={{ color: 'var(--muted)' }}
+            >
+              Hình thức xem phòng:
+            </span>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSelectedMethod('onsite')}
+                className="text-[9px] px-2 py-1.5 rounded-lg border transition-all cursor-pointer font-medium flex items-center justify-center gap-1"
+                style={{
+                  backgroundColor:
+                    selectedMethod === 'onsite'
+                      ? 'var(--primary-soft)'
+                      : 'var(--surface)',
+                  borderColor:
+                    selectedMethod === 'onsite'
+                      ? 'var(--primary)'
+                      : 'var(--border)',
+                  color:
+                    selectedMethod === 'onsite'
+                      ? 'var(--primary)'
+                      : 'var(--muted)',
+                }}
+              >
+                <Building2 className="w-3 h-3" />
+                Xem trực tiếp
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedMethod('video')}
+                className="text-[9px] px-2 py-1.5 rounded-lg border transition-all cursor-pointer font-medium flex items-center justify-center gap-1"
+                style={{
+                  backgroundColor:
+                    selectedMethod === 'video'
+                      ? 'var(--primary-soft)'
+                      : 'var(--surface)',
+                  borderColor:
+                    selectedMethod === 'video'
+                      ? 'var(--primary)'
+                      : 'var(--border)',
+                  color:
+                    selectedMethod === 'video'
+                      ? 'var(--primary)'
+                      : 'var(--muted)',
+                }}
+              >
+                <Video className="w-3 h-3" />
+                Video Call
+              </button>
+            </div>
+          </div>
+
           {/* Date Selector */}
           <div className="space-y-1.5">
-            <span className="text-[10px] font-medium text-zinc-400">
+            <span
+              className="text-[10px] font-medium"
+              style={{ color: 'var(--muted)' }}
+            >
               Chọn ngày:
             </span>
             <div className="flex gap-1.5 flex-wrap">
@@ -611,13 +807,20 @@ function BookingRequestCard({
                   key={d.value}
                   type="button"
                   onClick={() => setSelectedDate(d.value)}
-                  className={`text-[9px] px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
-                    selectedDate === d.value
-                      ? 'bg-[#C65A3A] border-[#C65A3A] text-white font-medium shadow-sm'
-                      : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-                  }`}
+                  className="text-[9px] px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer font-medium"
+                  style={{
+                    backgroundColor:
+                      selectedDate === d.value
+                        ? 'var(--primary)'
+                        : 'var(--surface)',
+                    borderColor:
+                      selectedDate === d.value
+                        ? 'var(--primary)'
+                        : 'var(--border)',
+                    color: selectedDate === d.value ? '#ffffff' : 'var(--fg)',
+                  }}
                 >
-                  {d.label}
+                  {d.label} ({d.shortDate})
                 </button>
               ))}
             </div>
@@ -625,7 +828,10 @@ function BookingRequestCard({
 
           {/* Time Selector */}
           <div className="space-y-1.5">
-            <span className="text-[10px] font-medium text-zinc-400">
+            <span
+              className="text-[10px] font-medium"
+              style={{ color: 'var(--muted)' }}
+            >
               Chọn giờ:
             </span>
             <div className="flex gap-1.5 flex-wrap">
@@ -634,11 +840,14 @@ function BookingRequestCard({
                   key={t}
                   type="button"
                   onClick={() => setSelectedTime(t)}
-                  className={`text-[9px] px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
-                    selectedTime === t
-                      ? 'bg-[#C65A3A] border-[#C65A3A] text-white font-medium shadow-sm'
-                      : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-                  }`}
+                  className="text-[9px] px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer font-medium"
+                  style={{
+                    backgroundColor:
+                      selectedTime === t ? 'var(--primary)' : 'var(--surface)',
+                    borderColor:
+                      selectedTime === t ? 'var(--primary)' : 'var(--border)',
+                    color: selectedTime === t ? '#ffffff' : 'var(--fg)',
+                  }}
                 >
                   {t}
                 </button>
@@ -651,9 +860,17 @@ function BookingRequestCard({
             type="button"
             onClick={handleSubmit}
             disabled={!selectedDate || !selectedTime}
-            className="w-full text-center text-[10px] font-semibold bg-[#C65A3A] hover:bg-[#A54B2F] disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-600 text-white py-2 rounded-xl transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
+            className="w-full text-center text-[10px] font-semibold py-2 rounded-xl transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
+            style={{
+              backgroundColor:
+                !selectedDate || !selectedTime
+                  ? 'var(--border)'
+                  : 'var(--primary)',
+              color:
+                !selectedDate || !selectedTime ? 'var(--muted)' : '#ffffff',
+            }}
           >
-            Xác nhận đặt lịch
+            Xác nhận đặt lịch xem phòng
           </button>
         </>
       )}
