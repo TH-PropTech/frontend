@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Space_Grotesk, Lora } from 'next/font/google'
 import { Suspense } from 'react'
 import { PageTransition } from '@/shared/ui/page-transition'
 import { Providers } from './providers'
+import { AiAssistantPanel } from '@/widgets/ai-assistant-panel'
 import './globals.css'
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -51,6 +52,7 @@ export default function RootLayout({
             <PageTransition />
           </Suspense>
           {children}
+          <AiAssistantPanel />
         </Providers>
       </body>
     </html>
