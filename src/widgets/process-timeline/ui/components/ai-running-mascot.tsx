@@ -57,10 +57,21 @@ export function AiRunningMascot({
       }, delay)
     }
 
+    // Pause when tab hidden
+    const handleVisibility = (): void => {
+      if (document.hidden) {
+        clearTimeout(timeoutId)
+      } else {
+        moveNext()
+      }
+    }
+
     moveNext()
+    document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
       clearTimeout(timeoutId)
+      document.removeEventListener('visibilitychange', handleVisibility)
     }
   }, [isVisible])
 
@@ -149,6 +160,36 @@ export function AiRunningMascot({
         .anim-mascot-jump {
           animation: mascot-jump 0.5s ease-out;
         }
+
+        /* ─── Running Mascot Arm Keyframes ─── */
+        @keyframes run-arm-swing-l {
+          0%, 100% { transform: rotate(20deg); }
+          50% { transform: rotate(-20deg); }
+        }
+        @keyframes run-arm-swing-r {
+          0%, 100% { transform: rotate(-20deg); }
+          50% { transform: rotate(20deg); }
+        }
+        @keyframes idle-arm-l {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(-5deg); }
+        }
+        @keyframes idle-arm-r {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(5deg); }
+        }
+        .run-arm-left  { animation: run-arm-swing-l 0.4s infinite linear; }
+        .run-arm-right { animation: run-arm-swing-r 0.4s infinite linear; }
+        .idle-arm-left  { animation: idle-arm-l 3s ease-in-out infinite; }
+        .idle-arm-right { animation: idle-arm-r 3s ease-in-out infinite; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .anim-leg-left, .anim-leg-right,
+          .anim-body-run, .anim-body-idle,
+          .anim-mascot-jump,
+          .run-arm-left, .run-arm-right,
+          .idle-arm-left, .idle-arm-right { animation: none !important; }
+        }
       `}</style>
 
       {/* Speech Bubble (No emojis, larger text, aligned to extend inwards) */}
@@ -178,6 +219,7 @@ export function AiRunningMascot({
             onClose()
           }}
           className="absolute -top-3 -right-2 h-4 w-4 rounded-full bg-surface-muted/90 border border-border flex items-center justify-center text-[8px] font-bold text-muted hover:bg-primary hover:text-white transition-colors shadow-sm cursor-pointer z-10"
+          aria-label="Đóng trợ lý AI"
         >
           ✕
         </button>
@@ -192,9 +234,11 @@ export function AiRunningMascot({
         >
           <svg
             className="w-full h-full drop-shadow-md"
-            viewBox="0 0 40 40"
+            viewBox="0 0 40 44"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            role="img"
+            aria-label="Trợ lý robot AI chạy"
           >
             {/* Head and Body group */}
             <g className={isMoving ? 'anim-body-run' : 'anim-body-idle'}>
@@ -205,7 +249,7 @@ export function AiRunningMascot({
                 rx="6"
                 ry="1.5"
                 fill="none"
-                stroke="#C65A3A"
+                stroke="var(--primary)"
                 strokeWidth="1.2"
                 strokeDasharray="2.5,2.5"
               />
@@ -216,7 +260,7 @@ export function AiRunningMascot({
                 y1="5"
                 x2="20"
                 y2="9"
-                stroke="#C65A3A"
+                stroke="var(--primary)"
                 strokeWidth="1.5"
               />
 
@@ -227,8 +271,8 @@ export function AiRunningMascot({
                 width="31"
                 height="23"
                 rx="10.5"
-                fill="white"
-                stroke="#C65A3A"
+                fill="var(--surface)"
+                stroke="var(--primary)"
                 strokeWidth="3"
               />
 
@@ -239,7 +283,7 @@ export function AiRunningMascot({
                 width="3"
                 height="7"
                 rx="1.5"
-                fill="#C65A3A"
+                fill="var(--primary)"
               />
               <rect
                 x="35.5"
@@ -247,16 +291,16 @@ export function AiRunningMascot({
                 width="3"
                 height="7"
                 rx="1.5"
-                fill="#C65A3A"
+                fill="var(--primary)"
               />
 
-              {/* Big eyes matching the image */}
+              {/* Big eyes */}
               <circle
                 cx="13"
                 cy="18"
                 r="7.5"
                 fill="white"
-                stroke="#C65A3A"
+                stroke="var(--primary)"
                 strokeWidth="2.5"
               />
               <circle
@@ -264,7 +308,7 @@ export function AiRunningMascot({
                 cy="18"
                 r="7.5"
                 fill="white"
-                stroke="#C65A3A"
+                stroke="var(--primary)"
                 strokeWidth="2.5"
               />
 
@@ -273,13 +317,13 @@ export function AiRunningMascot({
                 cx={isMoving ? 13.5 : 13}
                 cy={18}
                 r="4.8"
-                fill="#C65A3A"
+                fill="var(--primary)"
               />
               <circle
                 cx={isMoving ? 27.5 : 27}
                 cy={18}
                 r="4.8"
-                fill="#C65A3A"
+                fill="var(--primary)"
               />
 
               {/* Pupil Shine */}
@@ -292,7 +336,7 @@ export function AiRunningMascot({
                 y1="24.5"
                 x2="21.5"
                 y2="24.5"
-                stroke="#C65A3A"
+                stroke="var(--primary)"
                 strokeWidth="2.5"
                 strokeLinecap="round"
               />
@@ -302,15 +346,65 @@ export function AiRunningMascot({
                 cx="8"
                 cy="21.5"
                 r="1.5"
-                fill="#C65A3A"
+                fill="var(--primary)"
                 fillOpacity="0.25"
               />
               <circle
                 cx="32"
                 cy="21.5"
                 r="1.5"
-                fill="#C65A3A"
+                fill="var(--primary)"
                 fillOpacity="0.25"
+              />
+            </g>
+
+            {/* ─── Left Arm ─── */}
+            <g
+              className={isMoving ? 'run-arm-left' : 'idle-arm-left'}
+              style={{
+                transformOrigin: '6px 28px',
+                transformBox: 'fill-box' as React.CSSProperties['transformBox'],
+              }}
+            >
+              <circle cx="6" cy="28" r="2" fill="var(--primary)" />
+              <path
+                d="M 6 28 Q 2 32 4 36"
+                fill="none"
+                stroke="var(--primary)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M 3 36 C 2 36 2 38 4 38 M 5 36 C 6 36 6 38 4 38"
+                fill="none"
+                stroke="var(--primary)"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </g>
+
+            {/* ─── Right Arm ─── */}
+            <g
+              className={isMoving ? 'run-arm-right' : 'idle-arm-right'}
+              style={{
+                transformOrigin: '34px 28px',
+                transformBox: 'fill-box' as React.CSSProperties['transformBox'],
+              }}
+            >
+              <circle cx="34" cy="28" r="2" fill="var(--primary)" />
+              <path
+                d="M 34 28 Q 38 32 36 36"
+                fill="none"
+                stroke="var(--primary)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M 37 36 C 38 36 38 38 36 38 M 35 36 C 34 36 34 38 36 38"
+                fill="none"
+                stroke="var(--primary)"
+                strokeWidth="1.8"
+                strokeLinecap="round"
               />
             </g>
 
@@ -320,7 +414,7 @@ export function AiRunningMascot({
               y1="31"
               x2="14"
               y2="37"
-              stroke="#C65A3A"
+              stroke="var(--primary)"
               strokeWidth="2.5"
               strokeLinecap="round"
               className={isMoving ? 'anim-leg-left' : ''}
@@ -330,7 +424,7 @@ export function AiRunningMascot({
               y1="31"
               x2="26"
               y2="37"
-              stroke="#C65A3A"
+              stroke="var(--primary)"
               strokeWidth="2.5"
               strokeLinecap="round"
               className={isMoving ? 'anim-leg-right' : ''}
