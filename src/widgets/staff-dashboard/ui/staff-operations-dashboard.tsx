@@ -7,6 +7,9 @@ import { KycApprovalsView } from './views/kyc-approvals-view'
 import { SchedulesView } from './views/schedules-view'
 import { DisputesView } from './views/disputes-view'
 import { CommunityView } from './views/community-view'
+import { SafetyReportsView } from './views/safety-reports-view'
+import { SupportQueueView } from './views/support-queue-view'
+import { LifeBuoy, ShieldAlert } from 'lucide-react'
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
 
@@ -17,6 +20,8 @@ type TabType =
   | 'schedules'
   | 'disputes'
   | 'community'
+  | 'safety-reports'
+  | 'support-tickets'
 
 interface SidebarItem {
   type: TabType
@@ -130,6 +135,16 @@ export function StaffOperationsDashboard({
       ),
     },
     {
+      type: 'safety-reports',
+      label: 'Báo cáo an toàn',
+      icon: <ShieldAlert className="h-[18px] w-[18px]" />,
+    },
+    {
+      type: 'support-tickets',
+      label: 'Hỗ trợ & SLA',
+      icon: <LifeBuoy className="h-[18px] w-[18px]" />,
+    },
+    {
       type: 'community',
       label: 'Duyệt bài cộng đồng',
       icon: (
@@ -185,6 +200,10 @@ export function StaffOperationsDashboard({
         return <DisputesView />
       case 'community':
         return <CommunityView />
+      case 'safety-reports':
+        return <SafetyReportsView />
+      case 'support-tickets':
+        return <SupportQueueView />
       default:
         return <HomeView onNavigateTab={handleSidebarItemClick} />
     }

@@ -97,6 +97,10 @@ export function LoginForm(): React.ReactElement {
           description: `Chào mừng quay trở lại, ${successResp.user.name}!`,
         })
 
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('start-page-transition'))
+        }
+
         setTimeout(() => {
           if (
             successResp.user.roles.includes('staff') ||
@@ -106,7 +110,7 @@ export function LoginForm(): React.ReactElement {
           } else {
             router.push('/' as Route)
           }
-        }, 1000)
+        }, 800)
       } catch (err: unknown) {
         const msg =
           err instanceof Error
@@ -170,6 +174,11 @@ export function LoginForm(): React.ReactElement {
 
         setSuccessMsg('Xác thực 2FA thành công! Đang chuyển hướng...')
         toast.success('Xác thực 2FA thành công!')
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('start-page-transition'))
+        }
+
         setTimeout(() => {
           if (
             response.user.roles.includes('staff') ||
@@ -179,7 +188,7 @@ export function LoginForm(): React.ReactElement {
           } else {
             router.push('/' as Route)
           }
-        }, 1000)
+        }, 800)
       } catch (err: unknown) {
         const msg =
           err instanceof Error

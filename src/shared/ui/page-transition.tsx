@@ -96,8 +96,20 @@ export function PageTransition(): React.ReactElement | null {
     }
 
     document.addEventListener('click', handleLinkClick)
+
+    const handleCustomStart = (): void => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      startTimeRef.current = Date.now()
+      isTransitioningRef.current = true
+      setIsFadingOut(false)
+      setIsActive(true)
+    }
+
+    window.addEventListener('start-page-transition', handleCustomStart)
+
     return (): void => {
       document.removeEventListener('click', handleLinkClick)
+      window.removeEventListener('start-page-transition', handleCustomStart)
       if (timerRef.current) clearTimeout(timerRef.current)
     }
   }, [])
@@ -194,7 +206,7 @@ export function PageTransition(): React.ReactElement | null {
         <div className="flex items-center gap-1">
           <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
           <span className="font-body text-[11px] font-semibold text-[#7a6a61] tracking-wide">
-            Đang tải không gian giao dịch...
+            Đang tải không gian TH-Proptech...
           </span>
         </div>
       </div>

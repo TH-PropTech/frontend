@@ -56,6 +56,10 @@ export function useProfile(): UseProfileReturn {
     | 'maintenance'
     | 'security'
     | 'listings'
+    | 'saved-searches'
+    | 'living-cost'
+    | 'safety-reports'
+    | 'support-tickets'
   >(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
@@ -67,7 +71,11 @@ export function useProfile(): UseProfileReturn {
         tab === 'bills' ||
         tab === 'blockchain' ||
         tab === 'maintenance' ||
-        tab === 'security'
+        tab === 'security' ||
+        tab === 'saved-searches' ||
+        tab === 'living-cost' ||
+        tab === 'safety-reports' ||
+        tab === 'support-tickets'
       ) {
         return tab
       }
