@@ -12,6 +12,8 @@ import { PropertiesMap } from './components/properties-map'
 import { CompareModal } from './components/compare-modal'
 import { ProjectGridView } from './components/project-grid-view'
 import { LandlordActionBar } from './components/landlord-action-bar'
+import { SavedSearchControl } from './components/saved-search-control'
+import type { SavedSearchFilters } from '@/features/saved-searches'
 import { toast } from 'sonner'
 
 export function PropertiesDashboard(): React.ReactElement {
@@ -115,6 +117,37 @@ export function PropertiesDashboard(): React.ReactElement {
     return filteredApartments.filter(apt => compareIds.includes(apt.id))
   }, [compareIds, filteredApartments])
 
+  const savedSearchFilters = React.useMemo<SavedSearchFilters>(
+    () => ({
+      ...(selectedCity ? { city: selectedCity } : {}),
+      ...(selectedDistrict ? { district: selectedDistrict } : {}),
+      ...(selectedWard ? { ward: selectedWard } : {}),
+      ...(minPrice !== '' ? { minPrice } : {}),
+      ...(maxPrice !== '' ? { maxPrice } : {}),
+      ...(minArea !== '' ? { minArea } : {}),
+      ...(maxArea !== '' ? { maxArea } : {}),
+      ...(bedroomsFilter !== 'all' ? { bedrooms: bedroomsFilter } : {}),
+      ...(bathroomsFilter !== 'all' ? { bathrooms: bathroomsFilter } : {}),
+      ...(selectedAmenities.length > 0 ? { amenities: selectedAmenities } : {}),
+      ...(furnitureFilter !== 'all' ? { furniture: furnitureFilter } : {}),
+      ...(moveInTimeFilter !== 'all' ? { moveInTime: moveInTimeFilter } : {}),
+    }),
+    [
+      bathroomsFilter,
+      bedroomsFilter,
+      furnitureFilter,
+      maxArea,
+      maxPrice,
+      minArea,
+      minPrice,
+      moveInTimeFilter,
+      selectedAmenities,
+      selectedCity,
+      selectedDistrict,
+      selectedWard,
+    ]
+  )
+
   const handleToggleCompare = (id: string): void => {
     setCompareIds(prev => {
       if (prev.includes(id)) {
@@ -156,43 +189,46 @@ export function PropertiesDashboard(): React.ReactElement {
         <PropertiesHero />
 
         {!selectedApiProjectId && (
-          <PropertiesSearchConsole
-            activeTab={activeTab}
-            searchKeyword={searchKeyword}
-            setSearchKeyword={setSearchKeyword}
-            isLocationModalOpen={isLocationModalOpen}
-            setIsLocationModalOpen={setIsLocationModalOpen}
-            isPriceModalOpen={isPriceModalOpen}
-            setIsPriceModalOpen={setIsPriceModalOpen}
-            isAreaModalOpen={isAreaModalOpen}
-            setIsAreaOpen={setIsAreaOpen}
-            locationLabel={locationLabel}
-            priceLabel={priceLabel}
-            areaLabel={areaLabel}
-            activeFiltersCount={activeFiltersCount}
-            setIsAdvancedDrawerOpen={setIsAdvancedDrawerOpen}
-            handleSearchSubmit={handleSearchSubmit}
-            selectedCity={selectedCity}
-            setSelectedCity={setSelectedCity}
-            selectedDistrict={selectedDistrict}
-            setSelectedDistrict={setSelectedDistrict}
-            selectedWard={selectedWard}
-            setSelectedWard={setSelectedWard}
-            selectedStreet={selectedStreet}
-            setSelectedStreet={setSelectedStreet}
-            selectedProject={selectedProject}
-            setSelectedProject={setSelectedProject}
-            minPrice={minPrice}
-            setMinPrice={setMinPrice}
-            maxPrice={maxPrice}
-            setMaxPrice={setMaxPrice}
-            minArea={minArea}
-            setMinArea={setMinArea}
-            maxArea={maxArea}
-            setMaxArea={setMaxArea}
-            applyLocationFilters={applyLocationFilters}
-            revertLocationFilters={revertLocationFilters}
-          />
+          <>
+            <PropertiesSearchConsole
+              activeTab={activeTab}
+              searchKeyword={searchKeyword}
+              setSearchKeyword={setSearchKeyword}
+              isLocationModalOpen={isLocationModalOpen}
+              setIsLocationModalOpen={setIsLocationModalOpen}
+              isPriceModalOpen={isPriceModalOpen}
+              setIsPriceModalOpen={setIsPriceModalOpen}
+              isAreaModalOpen={isAreaModalOpen}
+              setIsAreaOpen={setIsAreaOpen}
+              locationLabel={locationLabel}
+              priceLabel={priceLabel}
+              areaLabel={areaLabel}
+              activeFiltersCount={activeFiltersCount}
+              setIsAdvancedDrawerOpen={setIsAdvancedDrawerOpen}
+              handleSearchSubmit={handleSearchSubmit}
+              selectedCity={selectedCity}
+              setSelectedCity={setSelectedCity}
+              selectedDistrict={selectedDistrict}
+              setSelectedDistrict={setSelectedDistrict}
+              selectedWard={selectedWard}
+              setSelectedWard={setSelectedWard}
+              selectedStreet={selectedStreet}
+              setSelectedStreet={setSelectedStreet}
+              selectedProject={selectedProject}
+              setSelectedProject={setSelectedProject}
+              minPrice={minPrice}
+              setMinPrice={setMinPrice}
+              maxPrice={maxPrice}
+              setMaxPrice={setMaxPrice}
+              minArea={minArea}
+              setMinArea={setMinArea}
+              maxArea={maxArea}
+              setMaxArea={setMaxArea}
+              applyLocationFilters={applyLocationFilters}
+              revertLocationFilters={revertLocationFilters}
+            />
+            <SavedSearchControl filters={savedSearchFilters} />
+          </>
         )}
 
         <section className="mx-auto max-w-lg mt-12 px-6">

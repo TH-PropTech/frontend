@@ -12,6 +12,7 @@ import { PropertyGallery } from './components/property-gallery'
 import { Property360Modal } from './components/property-360-modal'
 import { PropertyReviews } from './components/property-reviews'
 import { LandlordChatModal } from './components/landlord-chat-modal'
+import { PropertyDecisionActions } from './components/property-decision-actions'
 import { apiClient } from '@/shared/api/api-client'
 import { Compass, CheckCircle2, Phone, Mail } from 'lucide-react'
 
@@ -94,6 +95,12 @@ export function PropertyDetail(): React.ReactElement {
         <section className="mx-auto max-w-6xl px-6 pt-10 md:px-10">
           <PropertyGallery gallery={property.gallery || []} />
         </section>
+
+        <PropertyDecisionActions
+          propertyId={property.id}
+          title={property.title}
+          monthlyRent={property.priceNum * 1_000_000}
+        />
 
         {/* 360 Tour Interactive CTA Banner */}
         {property.images360 && property.images360.length > 0 && (

@@ -36,20 +36,21 @@ export function ProfileHeader({
     handleRoleChange,
   } = profile
 
-  // Lấy thông tin user từ localStorage (đã lưu khi login)
-  const storedUser = React.useMemo(() => {
-    if (typeof window === 'undefined') return null
+  const [userInfo] = React.useState<{
+    name?: string
+    email?: string
+  } | null>(() => {
     try {
       const raw = localStorage.getItem('user')
       return raw ? (JSON.parse(raw) as { name?: string; email?: string }) : null
     } catch {
       return null
     }
-  }, [])
+  })
 
   const userName =
-    storedUser?.name || (role === 'tenant' ? 'Khách thuê' : 'Chủ nhà')
-  const userEmail = storedUser?.email || ''
+    userInfo?.name || (role === 'tenant' ? 'Khách thuê' : 'Chủ nhà')
+  const userEmail = userInfo?.email || ''
 
   return (
     <>
