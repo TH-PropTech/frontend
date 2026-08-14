@@ -4,6 +4,7 @@ import * as React from 'react'
 import { apiClient } from '@/shared/api/api-client'
 import { VrPreviewPanel } from './components/vr-preview-panel'
 import { toast } from 'sonner'
+import { ListingReviewQueue } from '@/features/listing-freshness'
 
 interface Property {
   id: string
@@ -144,6 +145,7 @@ export function PropertyApprovalsView(): React.ReactElement {
 
   return (
     <div className="space-y-6">
+      <ListingReviewQueue />
       {/* Title & Filter headers */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
