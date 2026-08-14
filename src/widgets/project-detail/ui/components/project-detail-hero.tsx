@@ -97,8 +97,21 @@ export function ProjectDetailHero({
         {/* Back Button */}
         <div className="mb-6">
           <Link href={'/properties?tab=project' as Route}>
-            <span className="text-xs font-bold text-primary hover:underline flex items-center gap-1.5 cursor-pointer w-fit">
-              &larr; Quay lại danh sách dự án
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-white text-xs font-bold text-fg hover:text-primary hover:border-primary/40 hover:shadow-sm active:scale-95 transition-all cursor-pointer">
+              <svg
+                className="w-3.5 h-3.5 text-primary"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+                />
+              </svg>
+              <span>Quay lại danh sách dự án</span>
             </span>
           </Link>
         </div>

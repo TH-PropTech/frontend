@@ -4,7 +4,6 @@ import * as React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
-  Sparkles,
   Send,
   X,
   Trash2,
@@ -20,6 +19,8 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { env } from '@/shared/config/env'
+
+import { AiMascot } from './ai-mascot'
 
 interface ChatMessage {
   id: string
@@ -296,9 +297,10 @@ export function AiAssistantPanel(): React.ReactElement {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-[#C65A3A] to-[#E28766] text-white shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform duration-200 focus:outline-none"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-[#C65A3A] via-[#E28766] to-[#F3A589] text-white shadow-xl shadow-orange-500/30 hover:scale-110 active:scale-95 transition-all duration-300 focus:outline-none ring-4 ring-white/20 dark:ring-zinc-900/30"
+          title="Mở Trợ lý ảo TH-PropTech"
         >
-          <Sparkles className="h-6 w-6 animate-pulse" />
+          <AiMascot size={56} isAnimated={false} />
         </button>
       )}
 
@@ -308,13 +310,9 @@ export function AiAssistantPanel(): React.ReactElement {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-[#C65A3A] text-white">
             <div className="flex items-center gap-2.5">
-              <div className="relative h-7 w-7 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm">
-                <img
-                  src="/logo.png"
-                  alt="TH-PropTech Logo"
-                  className="h-5 w-5 object-contain"
-                />
-                <span className="absolute bottom-0 right-0 block h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-white animate-pulse" />
+              <div className="relative h-9 w-9 bg-white/10 rounded-xl flex items-center justify-center p-0.5 shadow-sm border border-white/20">
+                <AiMascot size={32} isAnimated={false} />
+                <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-[#C65A3A] animate-pulse" />
               </div>
               <span className="font-semibold text-sm">
                 Trợ lý ảo TH-PropTech
@@ -348,8 +346,8 @@ export function AiAssistantPanel(): React.ReactElement {
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
             {messages.length === 0 && !isTyping && (
-              <div className="flex flex-col items-center justify-center h-full text-center p-6 text-zinc-400">
-                <Sparkles className="h-10 w-10 text-[#C65A3A]/40 mb-3" />
+              <div className="flex flex-col items-center justify-center h-full text-center p-6 text-zinc-400 space-y-3">
+                <AiMascot size={72} isAnimated={false} />
                 <p className="text-xs">
                   Chưa có cuộc hội thoại nào. Hãy nhập tin nhắn bên dưới hoặc
                   chọn gợi ý để bắt đầu!

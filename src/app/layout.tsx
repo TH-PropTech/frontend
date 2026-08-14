@@ -45,8 +45,9 @@ export default function RootLayout({
     <html
       lang="vi"
       className={`${beVietnamPro.variable} ${spaceGrotesk.variable} ${lora.variable}`}
+      suppressHydrationWarning
     >
-      <body className={beVietnamPro.className}>
+      <body className={beVietnamPro.className} suppressHydrationWarning>
         <Providers>
           <Suspense fallback={null}>
             <PageTransition />

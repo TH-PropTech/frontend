@@ -77,6 +77,12 @@ export function HomeHeader(): React.ReactElement {
 
   const hasKycWarning = user && user.kycStatus !== 'verified'
 
+  const handleTabClick = (targetHref: string): void => {
+    if (pathname !== targetHref && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('start-page-transition'))
+    }
+  }
+
   return (
     <header
       className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
@@ -88,6 +94,7 @@ export function HomeHeader(): React.ReactElement {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 md:px-10">
         <Link
           href="/"
+          onClick={() => handleTabClick('/')}
           className="transition-transform hover:scale-[1.02] active:scale-[0.98]"
         >
           <Logo size="md" variant={isLightHeader ? 'default' : 'white'} />
@@ -103,6 +110,7 @@ export function HomeHeader(): React.ReactElement {
               <Link
                 key={item.href}
                 href={item.href as Route}
+                onClick={() => handleTabClick(item.href)}
                 className={`transition-all duration-200 relative py-1 ${
                   isActive
                     ? isLightHeader
@@ -123,6 +131,7 @@ export function HomeHeader(): React.ReactElement {
           {user ? (
             <Link
               href={'/properties/favorites' as Route}
+              onClick={() => handleTabClick('/properties/favorites')}
               className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 relative ${
                 isLightHeader
                   ? 'border-border bg-white text-primary hover:bg-surface-muted'
@@ -171,6 +180,7 @@ export function HomeHeader(): React.ReactElement {
             <div className="flex items-center gap-3">
               <Link
                 href={'/profile' as Route}
+                onClick={() => handleTabClick('/profile')}
                 className={`flex items-center gap-2 text-sm font-bold ${
                   isLightHeader
                     ? 'text-fg hover:text-primary'
@@ -223,7 +233,10 @@ export function HomeHeader(): React.ReactElement {
               </Button>
             </div>
           ) : (
-            <Link href={'/login' as Route}>
+            <Link
+              href={'/login' as Route}
+              onClick={() => handleTabClick('/login')}
+            >
               <Button
                 className={`h-[44px] rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_12px_32px_rgba(43,33,30,0.15)] transition-all hover:-translate-y-0.5 active:translate-y-0 ${
                   isLightHeader

@@ -61,9 +61,9 @@ export function LandlordActionBar(): React.ReactElement | null {
     <>
       <div className="mb-8 p-6 rounded-2xl border border-border bg-surface flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-primary-soft text-primary flex items-center justify-center shrink-0">
+          <div className="text-primary flex items-center justify-center shrink-0">
             <svg
-              className="h-6 w-6"
+              className="h-8 w-8"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
