@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Send,
   X,
@@ -11,6 +12,11 @@ import {
   Building2,
   Video,
   CheckCircle2,
+  User,
+  Phone,
+  Calendar,
+  CalendarClock,
+  ArrowRight,
 } from 'lucide-react'
 import { env } from '@/shared/config/env'
 
@@ -374,9 +380,12 @@ export function AiAssistantPanel(): React.ReactElement {
                             key={card.id || idx}
                             className="snap-start shrink-0 w-56 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-md transition-shadow hover:shadow-lg"
                           >
-                            <img
+                            <Image
+                              unoptimized
                               src={card.image}
                               alt={card.title}
+                              width={224}
+                              height={96}
                               className="h-24 w-full object-cover"
                             />
                             <div className="p-2.5 space-y-1">
@@ -424,9 +433,12 @@ export function AiAssistantPanel(): React.ReactElement {
                     ) : (
                       msg.propertyCard && (
                         <div className="mt-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-md max-w-xs transition-shadow hover:shadow-lg">
-                          <img
+                          <Image
+                            unoptimized
                             src={msg.propertyCard.image}
                             alt={msg.propertyCard.title}
+                            width={320}
+                            height={112}
                             className="h-28 w-full object-cover"
                           />
                           <div className="p-3 space-y-1">
@@ -479,8 +491,25 @@ export function AiAssistantPanel(): React.ReactElement {
                     {msg.bookingRequest && (
                       <BookingRequestCard
                         request={msg.bookingRequest}
-                        onConfirm={(date, time) => {
-                          const formattedMessage = `Đặt lịch xem căn hộ "${msg.bookingRequest?.apartmentTitle || 'căn hộ'}" vào lúc ${time} ngày ${date}`
+                        onConfirm={({
+                          date,
+                          time,
+                          method,
+                          fullName,
+                          phone,
+                        }) => {
+                          const methodText =
+                            method === 'video'
+                              ? ' [Video Call]'
+                              : ' [Xem trực tiếp]'
+                          const contactParts: string[] = []
+                          if (fullName) contactParts.push(`Khách: ${fullName}`)
+                          if (phone) contactParts.push(`SĐT: ${phone}`)
+                          const contactText =
+                            contactParts.length > 0
+                              ? ` - ${contactParts.join(', ')}`
+                              : ''
+                          const formattedMessage = `Đặt lịch xem căn hộ "${msg.bookingRequest?.apartmentTitle || 'căn hộ'}" vào lúc ${time} ngày ${date}${methodText}${contactText}`
                           handleSend(formattedMessage)
                         }}
                       />
@@ -616,25 +645,26 @@ export function AiAssistantPanel(): React.ReactElement {
   )
 }
 
+interface BookingConfirmPayload {
+  date: string
+  time: string
+  method: 'onsite' | 'video'
+  fullName?: string | null | undefined
+  phone?: string | null | undefined
+}
+
 interface BookingRequestCardProps {
   request: {
     apartmentId: string
     apartmentTitle: string
   }
-  onConfirm: (date: string, time: string) => void
+  onConfirm: (payload: BookingConfirmPayload) => void
 }
 
 function BookingRequestCard({
   request,
   onConfirm,
 }: BookingRequestCardProps): React.ReactElement {
-  const [selectedMethod, setSelectedMethod] = React.useState<
-    'onsite' | 'video'
-  >('onsite')
-  const [selectedDate, setSelectedDate] = React.useState<string>('')
-  const [selectedTime, setSelectedTime] = React.useState<string>('')
-  const [isSubmitted, setIsSubmitted] = React.useState(false)
-
   // Generate the next 3 days with labels and short dates (DD/MM)
   const dates = React.useMemo(() => {
     const today = new Date()
@@ -675,203 +705,457 @@ function BookingRequestCard({
     ]
   }, [])
 
+  const [selectedMethod, setSelectedMethod] = React.useState<
+    'onsite' | 'video'
+  >('onsite')
+  const [selectedDate, setSelectedDate] = React.useState<string>(
+    () => dates[0]?.value || ''
+  )
+  const [selectedTime, setSelectedTime] = React.useState<string>('')
+  const [fullName, setFullName] = React.useState<string>('')
+  const [phone, setPhone] = React.useState<string>('')
+  const [isSubmitted, setIsSubmitted] = React.useState(false)
+
   const times = ['09:00', '10:30', '14:00', '15:30', '17:00']
+
+  const isValidPhone = (p: string) => {
+    const cleaned = p.replace(/\D/g, '')
+    return /^0\d{9}$/.test(cleaned)
+  }
+
+  const isPhoneValid = phone.trim() === '' || isValidPhone(phone.trim())
 
   const handleSubmit = () => {
     if (selectedDate && selectedTime) {
+      if (phone.trim() && !isValidPhone(phone.trim())) {
+        return
+      }
       setIsSubmitted(true)
-      const methodText =
-        selectedMethod === 'video' ? ' [Video Call]' : ' [Xem trực tiếp]'
-      onConfirm(selectedDate, selectedTime + methodText)
+      onConfirm({
+        date: selectedDate,
+        time: selectedTime,
+        method: selectedMethod,
+        fullName: fullName.trim() || undefined,
+        phone: phone.trim() || undefined,
+      })
     }
+  }
+
+  if (isSubmitted) {
+    return (
+      <div
+        className="mt-3 rounded-2xl border shadow-xs overflow-hidden max-w-xs transition-all animate-in fade-in zoom-in-95 duration-200"
+        style={{
+          backgroundColor: 'var(--surface)',
+          borderColor: 'var(--border)',
+        }}
+      >
+        {/* Header Ticket Ribbon */}
+        <div
+          className="px-3.5 py-2.5 border-b flex items-center justify-between"
+          style={{
+            backgroundColor: 'var(--surface-muted)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          <div className="flex items-center gap-1.5">
+            <div
+              className="flex h-5 w-5 items-center justify-center rounded-full"
+              style={{
+                backgroundColor: 'var(--success-soft)',
+                color: 'var(--success)',
+              }}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
+            <span
+              className="text-[11px] font-bold tracking-tight"
+              style={{ color: 'var(--fg)' }}
+            >
+              Phiếu hẹn xem phòng
+            </span>
+          </div>
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold border"
+            style={{
+              backgroundColor: 'var(--success-soft)',
+              borderColor: 'var(--success)',
+              color: 'var(--success)',
+            }}
+          >
+            <span
+              className="h-1.5 w-1.5 rounded-full animate-pulse"
+              style={{ backgroundColor: 'var(--success)' }}
+            />
+            Chờ xác nhận
+          </span>
+        </div>
+
+        {/* Ticket Body */}
+        <div className="p-3.5 space-y-3">
+          <div>
+            <span
+              className="text-[9px] uppercase tracking-wider font-semibold"
+              style={{ color: 'var(--subtle)' }}
+            >
+              Căn hộ
+            </span>
+            <h4
+              className="text-xs font-bold line-clamp-1 mt-0.5"
+              style={{ color: 'var(--fg)' }}
+            >
+              {request.apartmentTitle}
+            </h4>
+          </div>
+
+          <div
+            className="grid grid-cols-2 gap-2 p-2.5 rounded-xl border"
+            style={{
+              backgroundColor: 'var(--surface-muted)',
+              borderColor: 'var(--border)',
+            }}
+          >
+            <div className="space-y-0.5">
+              <div
+                className="flex items-center gap-1 text-[9px] font-medium"
+                style={{ color: 'var(--muted)' }}
+              >
+                <Calendar className="w-2.5 h-2.5" />
+                <span>Thời gian</span>
+              </div>
+              <p
+                className="text-[11px] font-bold"
+                style={{ color: 'var(--fg)' }}
+              >
+                {selectedTime} • {selectedDate.slice(0, 5)}
+              </p>
+            </div>
+            <div className="space-y-0.5">
+              <div
+                className="flex items-center gap-1 text-[9px] font-medium"
+                style={{ color: 'var(--muted)' }}
+              >
+                {selectedMethod === 'video' ? (
+                  <Video
+                    className="w-2.5 h-2.5"
+                    style={{ color: 'var(--primary)' }}
+                  />
+                ) : (
+                  <Building2
+                    className="w-2.5 h-2.5"
+                    style={{ color: 'var(--primary)' }}
+                  />
+                )}
+                <span>Hình thức</span>
+              </div>
+              <p
+                className="text-[11px] font-bold"
+                style={{ color: 'var(--fg)' }}
+              >
+                {selectedMethod === 'video' ? 'Video Call' : 'Xem trực tiếp'}
+              </p>
+            </div>
+          </div>
+
+          {(fullName.trim() || phone.trim()) && (
+            <div
+              className="flex items-center justify-between text-[10px] px-0.5 border-t border-dashed pt-2"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              <span
+                className="flex items-center gap-1 text-[10px] font-medium"
+                style={{ color: 'var(--muted)' }}
+              >
+                <User className="w-3 h-3" style={{ color: 'var(--subtle)' }} />
+                {fullName.trim() || 'Khách xem'}
+              </span>
+              {phone.trim() && (
+                <span
+                  className="flex items-center gap-1 font-mono text-[10px] font-semibold"
+                  style={{ color: 'var(--fg)' }}
+                >
+                  <Phone
+                    className="w-2.5 h-2.5"
+                    style={{ color: 'var(--subtle)' }}
+                  />
+                  {phone.trim()}
+                </span>
+              )}
+            </div>
+          )}
+
+          <p
+            className="text-[9px] text-center italic"
+            style={{ color: 'var(--muted)' }}
+          >
+            Chủ nhà sẽ liên hệ trước giờ hẹn để xác nhận với bạn.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div
-      className="mt-3 rounded-2xl p-3.5 space-y-3.5 max-w-xs shadow-sm border"
+      className="mt-3 rounded-2xl border shadow-xs overflow-hidden max-w-xs transition-all"
       style={{
-        backgroundColor: 'var(--surface-muted)',
+        backgroundColor: 'var(--surface)',
         borderColor: 'var(--border)',
       }}
     >
-      <div className="space-y-1">
-        <h4
-          className="font-semibold text-xs flex items-center gap-1.5"
-          style={{ color: 'var(--fg)' }}
-        >
-          <span
-            className="flex h-2 w-2 rounded-full"
-            style={{ backgroundColor: 'var(--primary)' }}
-          />
-          Lên lịch xem căn hộ
-        </h4>
-        <p
-          className="text-[10px] line-clamp-1 font-medium"
-          style={{ color: 'var(--muted)' }}
-        >
-          {request.apartmentTitle}
-        </p>
-      </div>
-
-      {isSubmitted ? (
+      {/* Header */}
+      <div
+        className="px-3.5 py-2.5 border-b flex items-center gap-2"
+        style={{
+          backgroundColor: 'var(--surface-muted)',
+          borderColor: 'var(--border)',
+        }}
+      >
         <div
-          className="text-center py-2.5 px-3 rounded-xl border space-y-1"
+          className="flex h-6 w-6 items-center justify-center rounded-lg flex-shrink-0"
           style={{
-            backgroundColor: 'var(--success-soft)',
-            borderColor: 'var(--success)',
+            backgroundColor: 'var(--primary-soft)',
+            color: 'var(--primary)',
           }}
         >
-          <p
-            className="text-[11px] font-semibold flex items-center justify-center gap-1.5"
-            style={{ color: 'var(--success)' }}
+          <CalendarClock className="w-3.5 h-3.5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h4
+            className="font-bold text-xs leading-tight"
+            style={{ color: 'var(--fg)' }}
           >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Đã gửi yêu cầu đặt lịch xem phòng
-          </p>
-          <p className="text-[10px] font-medium" style={{ color: 'var(--fg)' }}>
-            {selectedDate} lúc {selectedTime} (
-            {selectedMethod === 'video' ? 'Video Call' : 'Trực tiếp'})
+            Lên lịch xem phòng
+          </h4>
+          <p
+            className="text-[10px] line-clamp-1 font-medium"
+            style={{ color: 'var(--muted)' }}
+          >
+            {request.apartmentTitle}
           </p>
         </div>
-      ) : (
-        <>
-          {/* Method Selector */}
-          <div className="space-y-1.5">
-            <span
-              className="text-[10px] font-medium"
-              style={{ color: 'var(--muted)' }}
-            >
-              Hình thức xem phòng:
-            </span>
-            <div className="grid grid-cols-2 gap-1.5">
-              <button
-                type="button"
-                onClick={() => setSelectedMethod('onsite')}
-                className="text-[9px] px-2 py-1.5 rounded-lg border transition-all cursor-pointer font-medium flex items-center justify-center gap-1"
-                style={{
-                  backgroundColor:
-                    selectedMethod === 'onsite'
-                      ? 'var(--primary-soft)'
-                      : 'var(--surface)',
-                  borderColor:
-                    selectedMethod === 'onsite'
-                      ? 'var(--primary)'
-                      : 'var(--border)',
-                  color:
-                    selectedMethod === 'onsite'
-                      ? 'var(--primary)'
-                      : 'var(--muted)',
-                }}
-              >
-                <Building2 className="w-3 h-3" />
-                Xem trực tiếp
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedMethod('video')}
-                className="text-[9px] px-2 py-1.5 rounded-lg border transition-all cursor-pointer font-medium flex items-center justify-center gap-1"
-                style={{
-                  backgroundColor:
-                    selectedMethod === 'video'
-                      ? 'var(--primary-soft)'
-                      : 'var(--surface)',
-                  borderColor:
-                    selectedMethod === 'video'
-                      ? 'var(--primary)'
-                      : 'var(--border)',
-                  color:
-                    selectedMethod === 'video'
-                      ? 'var(--primary)'
-                      : 'var(--muted)',
-                }}
-              >
-                <Video className="w-3 h-3" />
-                Video Call
-              </button>
-            </div>
-          </div>
+      </div>
 
-          {/* Date Selector */}
-          <div className="space-y-1.5">
-            <span
-              className="text-[10px] font-medium"
-              style={{ color: 'var(--muted)' }}
+      <div className="p-3.5 space-y-3">
+        {/* Method Switcher - Segmented Control */}
+        <div className="space-y-1">
+          <label
+            className="text-[10px] font-semibold block"
+            style={{ color: 'var(--muted)' }}
+          >
+            Hình thức xem phòng
+          </label>
+          <div
+            className="grid grid-cols-2 p-1 rounded-xl gap-1"
+            style={{ backgroundColor: 'var(--surface-muted)' }}
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedMethod('onsite')}
+              className="text-[10px] py-1.5 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              style={{
+                backgroundColor:
+                  selectedMethod === 'onsite'
+                    ? 'var(--surface)'
+                    : 'transparent',
+                color:
+                  selectedMethod === 'onsite'
+                    ? 'var(--primary)'
+                    : 'var(--muted)',
+                boxShadow:
+                  selectedMethod === 'onsite' ? 'var(--shadow-sm)' : 'none',
+                fontWeight: selectedMethod === 'onsite' ? 600 : 500,
+              }}
             >
-              Chọn ngày:
-            </span>
-            <div className="flex gap-1.5 flex-wrap">
-              {dates.map(d => (
+              <Building2 className="w-3 h-3" />
+              Xem trực tiếp
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedMethod('video')}
+              className="text-[10px] py-1.5 rounded-lg font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              style={{
+                backgroundColor:
+                  selectedMethod === 'video' ? 'var(--surface)' : 'transparent',
+                color:
+                  selectedMethod === 'video'
+                    ? 'var(--primary)'
+                    : 'var(--muted)',
+                boxShadow:
+                  selectedMethod === 'video' ? 'var(--shadow-sm)' : 'none',
+                fontWeight: selectedMethod === 'video' ? 600 : 500,
+              }}
+            >
+              <Video className="w-3 h-3" />
+              Video Call
+            </button>
+          </div>
+        </div>
+
+        {/* Date Selector */}
+        <div className="space-y-1">
+          <label
+            className="text-[10px] font-semibold block"
+            style={{ color: 'var(--muted)' }}
+          >
+            Chọn ngày
+          </label>
+          <div className="grid grid-cols-3 gap-1.5">
+            {dates.map(d => {
+              const isSelected = selectedDate === d.value
+              return (
                 <button
                   key={d.value}
                   type="button"
                   onClick={() => setSelectedDate(d.value)}
-                  className="text-[9px] px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer font-medium"
+                  className="py-1.5 px-1 rounded-xl border text-center transition-all cursor-pointer"
                   style={{
-                    backgroundColor:
-                      selectedDate === d.value
-                        ? 'var(--primary)'
-                        : 'var(--surface)',
-                    borderColor:
-                      selectedDate === d.value
-                        ? 'var(--primary)'
-                        : 'var(--border)',
-                    color: selectedDate === d.value ? '#ffffff' : 'var(--fg)',
+                    backgroundColor: isSelected
+                      ? 'var(--primary-soft)'
+                      : 'var(--surface-muted)',
+                    borderColor: isSelected
+                      ? 'var(--primary)'
+                      : 'var(--border)',
+                    color: isSelected ? 'var(--primary)' : 'var(--fg)',
+                    fontWeight: isSelected ? 600 : 500,
                   }}
                 >
-                  {d.label} ({d.shortDate})
+                  <span className="block text-[10px] leading-tight">
+                    {d.label}
+                  </span>
+                  <span
+                    className="block text-[9px] font-mono leading-tight mt-0.5"
+                    style={{
+                      color: isSelected ? 'var(--primary)' : 'var(--muted)',
+                    }}
+                  >
+                    {d.shortDate}
+                  </span>
                 </button>
-              ))}
-            </div>
+              )
+            })}
           </div>
+        </div>
 
-          {/* Time Selector */}
-          <div className="space-y-1.5">
-            <span
-              className="text-[10px] font-medium"
-              style={{ color: 'var(--muted)' }}
-            >
-              Chọn giờ:
-            </span>
-            <div className="flex gap-1.5 flex-wrap">
-              {times.map(t => (
+        {/* Time Selector */}
+        <div className="space-y-1">
+          <label
+            className="text-[10px] font-semibold block"
+            style={{ color: 'var(--muted)' }}
+          >
+            Chọn giờ
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {times.map(t => {
+              const isSelected = selectedTime === t
+              return (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setSelectedTime(t)}
-                  className="text-[9px] px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer font-medium"
+                  className="px-2.5 py-1 rounded-lg border text-[10px] font-mono transition-all cursor-pointer"
                   style={{
-                    backgroundColor:
-                      selectedTime === t ? 'var(--primary)' : 'var(--surface)',
-                    borderColor:
-                      selectedTime === t ? 'var(--primary)' : 'var(--border)',
-                    color: selectedTime === t ? '#ffffff' : 'var(--fg)',
+                    backgroundColor: isSelected
+                      ? 'var(--primary)'
+                      : 'var(--surface-muted)',
+                    borderColor: isSelected
+                      ? 'var(--primary)'
+                      : 'var(--border)',
+                    color: isSelected ? '#ffffff' : 'var(--fg)',
+                    fontWeight: isSelected ? 600 : 500,
                   }}
                 >
                   {t}
                 </button>
-              ))}
-            </div>
+              )
+            })}
           </div>
+        </div>
 
-          {/* Submit Button */}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!selectedDate || !selectedTime}
-            className="w-full text-center text-[10px] font-semibold py-2 rounded-xl transition-colors shadow-sm cursor-pointer disabled:cursor-not-allowed"
-            style={{
-              backgroundColor:
-                !selectedDate || !selectedTime
-                  ? 'var(--border)'
-                  : 'var(--primary)',
-              color:
-                !selectedDate || !selectedTime ? 'var(--muted)' : '#ffffff',
-            }}
+        {/* Contact Inputs */}
+        <div
+          className="space-y-1.5 pt-2 border-t"
+          style={{ borderColor: 'var(--border)' }}
+        >
+          <label
+            className="text-[10px] font-semibold block"
+            style={{ color: 'var(--muted)' }}
           >
-            Xác nhận đặt lịch xem phòng
-          </button>
-        </>
-      )}
+            Thông tin người xem
+          </label>
+          <div className="space-y-1.5">
+            <div
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all"
+              style={{
+                backgroundColor: 'var(--surface-muted)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <User
+                className="w-3 h-3 flex-shrink-0"
+                style={{ color: 'var(--subtle)' }}
+              />
+              <input
+                type="text"
+                placeholder="Họ và tên (tùy chọn)"
+                value={fullName}
+                onChange={e => setFullName(e.target.value)}
+                className="w-full bg-transparent outline-none text-[11px]"
+                style={{ color: 'var(--fg)' }}
+              />
+            </div>
+            <div
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all"
+              style={{
+                backgroundColor: 'var(--surface-muted)',
+                borderColor: !isPhoneValid ? 'var(--danger)' : 'var(--border)',
+              }}
+            >
+              <Phone
+                className="w-3 h-3 flex-shrink-0"
+                style={{ color: 'var(--subtle)' }}
+              />
+              <input
+                type="tel"
+                placeholder="Số điện thoại liên hệ"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                className="w-full bg-transparent outline-none text-[11px]"
+                style={{ color: 'var(--fg)' }}
+              />
+            </div>
+            {!isPhoneValid && (
+              <span
+                className="text-[9px] block px-1 font-medium"
+                style={{ color: 'var(--danger)' }}
+              >
+                Số điện thoại phải gồm 10 chữ số (bắt đầu bằng 0)
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={!selectedDate || !selectedTime || !isPhoneValid}
+          className="w-full py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor:
+              !selectedDate || !selectedTime || !isPhoneValid
+                ? 'var(--border)'
+                : 'var(--primary)',
+            color:
+              !selectedDate || !selectedTime || !isPhoneValid
+                ? 'var(--muted)'
+                : '#ffffff',
+          }}
+        >
+          <span>Xác nhận lịch xem</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   )
 }
