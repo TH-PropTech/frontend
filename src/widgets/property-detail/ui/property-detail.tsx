@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
@@ -15,6 +16,89 @@ import { LandlordChatModal } from './components/landlord-chat-modal'
 import { PropertyDecisionActions } from './components/property-decision-actions'
 import { apiClient } from '@/shared/api/api-client'
 import { Compass, CheckCircle2, Phone, Mail } from 'lucide-react'
+import { FreshnessBadge } from '@/features/listing-freshness'
+import { PriceBenchmarkCard } from '@/features/price-benchmark'
+import { ViewingNoteEditor } from '@/features/viewing-notes'
+import {
+  getAreaProfileForApartment,
+  NearbyFacilitiesCard,
+} from '@/features/area-profile'
+import {
+  getListingQualityScore,
+  ImprovementChecklist,
+  QualityScoreCard,
+} from '@/features/listing-quality'
+import { ApplyDialog } from '@/features/rental-application'
+import { ConditionAnalysisPanel } from '@/features/condition-analysis'
+import { LocationRiskPanel } from '@/features/location-risk'
+
+function subscribeToSession(onStoreChange: () => void): () => void {
+  window.addEventListener('storage', onStoreChange)
+  return () => window.removeEventListener('storage', onStoreChange)
+}
+
+function getStoredUser(): string | null {
+  return window.localStorage.getItem('user')
+}
+
+function getServerUser(): null {
+  return null
+}
+
+function OwnerQualitySection({
+  apartmentId,
+  enabled,
+}: {
+  apartmentId: string
+  enabled: boolean
+}): React.ReactElement | null {
+  const quality = useQuery({
+    queryKey: ['listing-quality', apartmentId],
+    queryFn: () => getListingQualityScore(apartmentId),
+    enabled,
+  })
+  if (!enabled) return null
+  if (quality.isLoading)
+    return <div className="h-48 animate-pulse rounded-3xl bg-surface-muted" />
+  if (quality.isError || !quality.data)
+    return (
+      <p className="rounded-2xl border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
+        Không tải được chất lượng tin đăng.
+      </p>
+    )
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <QualityScoreCard result={quality.data} />
+      <ImprovementChecklist checklist={quality.data.checklist} />
+    </div>
+  )
+}
+
+function AreaProfileSection({
+  apartmentId,
+}: {
+  apartmentId: string
+}): React.ReactElement {
+  const profile = useQuery({
+    queryKey: ['area-profile', apartmentId],
+    queryFn: () => getAreaProfileForApartment(apartmentId),
+  })
+  if (profile.isLoading)
+    return <div className="h-32 animate-pulse rounded-3xl bg-surface-muted" />
+  if (profile.isError)
+    return (
+      <p className="rounded-2xl border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
+        Không tải được thông tin khu vực.
+      </p>
+    )
+  if (!profile.data)
+    return (
+      <p className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted">
+        Chưa có thông tin khu vực.
+      </p>
+    )
+  return <NearbyFacilitiesCard profile={profile.data} />
+}
 
 // Map amenities keys to Vietnamese labels
 const AMENITY_LABELS: Record<string, string> = {
@@ -30,6 +114,24 @@ const AMENITY_LABELS: Record<string, string> = {
 export function PropertyDetail(): React.ReactElement {
   const params = useParams()
   const propertyId = (params?.id as string) || ''
+  const storedUser = React.useSyncExternalStore(
+    subscribeToSession,
+    getStoredUser,
+    getServerUser
+  )
+  const viewer = React.useMemo(() => {
+    if (!storedUser) return null
+    try {
+      return JSON.parse(storedUser) as {
+        id?: string
+        _id?: string
+        roles?: string[]
+      }
+    } catch (error) {
+      console.warn('Failed to parse current user:', error)
+      return null
+    }
+  }, [storedUser])
 
   const [property, setProperty] = React.useState<ApartmentItem | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -101,6 +203,16 @@ export function PropertyDetail(): React.ReactElement {
           title={property.title}
           monthlyRent={property.priceNum * 1_000_000}
         />
+
+        {viewer?.roles?.includes('tenant') ? (
+          <section className="mx-auto flex max-w-6xl justify-end px-6 pt-4 md:px-10">
+            <ApplyDialog apartmentId={property.id} />
+          </section>
+        ) : null}
+
+        <section className="mx-auto max-w-6xl px-6 pt-6 md:px-10">
+          <FreshnessBadge listingId={property.id} />
+        </section>
 
         {/* 360 Tour Interactive CTA Banner */}
         {property.images360 && property.images360.length > 0 && (
@@ -368,6 +480,32 @@ export function PropertyDetail(): React.ReactElement {
 
         {/* Full-width Property Analytics and Data Visualizations */}
         <section className="mx-auto max-w-6xl px-6 py-6 md:px-10 space-y-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <PriceBenchmarkCard
+              criteria={{
+                district: property.district,
+                bedrooms: property.bedrooms,
+                priceMonthly: property.priceNum * 1_000_000,
+                area: property.areaNum,
+                furniture: property.furniture,
+              }}
+            />
+            <ViewingNoteEditor apartmentId={property.id} />
+          </div>
+          <AreaProfileSection apartmentId={property.id} />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {viewer ? (
+              <ConditionAnalysisPanel apartmentId={property.id} />
+            ) : null}
+            <LocationRiskPanel apartmentId={property.id} />
+          </div>
+          <OwnerQualitySection
+            apartmentId={property.id}
+            enabled={Boolean(
+              viewer?.roles?.includes('landlord') &&
+              property.landlord?.id === (viewer.id ?? viewer._id)
+            )}
+          />
           <PropertyAnalytics property={property} />
         </section>
 
