@@ -44,7 +44,7 @@ export function useSpeechFallback(
       }
     }
     subtitleTimerRef.current = setTimeout(tick, Math.max(80, 180 / rate))
-  }, [words])
+  }, [words, rate])
 
   const speak = React.useCallback((): void => {
     const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
@@ -69,7 +69,7 @@ export function useSpeechFallback(
       animateSubtitle()
     }
     synth.speak(utterance)
-  }, [text, lang, animateSubtitle])
+  }, [text, lang, rate, animateSubtitle])
 
   const stop = React.useCallback((): void => {
     clearTimeout(subtitleTimerRef.current)

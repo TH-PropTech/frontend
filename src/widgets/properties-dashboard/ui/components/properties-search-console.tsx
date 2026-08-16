@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { locationData } from '@/entities/properties'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { LocationFilterModal } from './location-filter-modal'
 import { PriceFilterModal } from './price-filter-modal'
@@ -30,10 +29,10 @@ interface PropertiesSearchConsoleProps {
   setSelectedDistrict: (val: string) => void
   selectedWard: string
   setSelectedWard: (val: string) => void
-  selectedStreet: string
-  setSelectedStreet: (val: string) => void
-  selectedProject: string
-  setSelectedProject: (val: string) => void
+  selectedProvinceCode: number | null
+  setSelectedProvinceCode: (val: number | null) => void
+  selectedDistrictCode: number | null
+  setSelectedDistrictCode: (val: number | null) => void
 
   minPrice: number | ''
   setMinPrice: (val: number | '') => void
@@ -71,10 +70,10 @@ export function PropertiesSearchConsole({
   setSelectedDistrict,
   selectedWard,
   setSelectedWard,
-  selectedStreet,
-  setSelectedStreet,
-  selectedProject,
-  setSelectedProject,
+  selectedProvinceCode,
+  setSelectedProvinceCode,
+  selectedDistrictCode,
+  setSelectedDistrictCode,
   minPrice,
   setMinPrice,
   maxPrice,
@@ -159,7 +158,7 @@ export function PropertiesSearchConsole({
                 </svg>
                 <div className="flex flex-col flex-1 min-w-0 select-none">
                   <span className="text-[10px] uppercase font-bold text-muted tracking-wider">
-                    Khu vực & Dự án
+                    Khu vực
                   </span>
                   <span className="font-semibold text-fg text-xs mt-0.5 truncate">
                     {locationLabel}
@@ -172,7 +171,6 @@ export function PropertiesSearchConsole({
               align="start"
             >
               <LocationFilterModal
-                activeTab={activeTab}
                 onClose={() => setIsLocationModalOpen(false)}
                 onApply={applyLocationFilters}
                 selectedCity={selectedCity}
@@ -181,11 +179,10 @@ export function PropertiesSearchConsole({
                 setSelectedDistrict={setSelectedDistrict}
                 selectedWard={selectedWard}
                 setSelectedWard={setSelectedWard}
-                selectedStreet={selectedStreet}
-                setSelectedStreet={setSelectedStreet}
-                selectedProject={selectedProject}
-                setSelectedProject={setSelectedProject}
-                locationData={locationData}
+                selectedProvinceCode={selectedProvinceCode}
+                setSelectedProvinceCode={setSelectedProvinceCode}
+                selectedDistrictCode={selectedDistrictCode}
+                setSelectedDistrictCode={setSelectedDistrictCode}
               />
             </PopoverContent>
           </Popover>

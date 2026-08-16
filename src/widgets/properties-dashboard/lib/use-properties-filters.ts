@@ -104,6 +104,14 @@ export function usePropertiesFilters() {
   const [selectedStreet, setSelectedStreet] = React.useState('')
   const [selectedProject, setSelectedProject] = React.useState('')
 
+  // Province/District codes for API cascade lookup
+  const [selectedProvinceCode, setSelectedProvinceCode] = React.useState<
+    number | null
+  >(null)
+  const [selectedDistrictCode, setSelectedDistrictCode] = React.useState<
+    number | null
+  >(null)
+
   const [appliedCity, setAppliedCity] = React.useState('')
   const [appliedDistrict, setAppliedDistrict] = React.useState('')
   const [appliedWard, setAppliedWard] = React.useState('')
@@ -885,10 +893,8 @@ export function usePropertiesFilters() {
     if (appliedCity) parts.push(appliedCity)
     if (appliedDistrict) parts.push(appliedDistrict)
     if (appliedWard) parts.push(appliedWard)
-    if (appliedProject) parts.push(appliedProject)
-    else if (appliedStreet) parts.push(appliedStreet)
     return parts.length > 0 ? parts.join(' • ') : 'Toàn quốc'
-  }, [appliedCity, appliedDistrict, appliedWard, appliedStreet, appliedProject])
+  }, [appliedCity, appliedDistrict, appliedWard])
 
   const priceLabel = React.useMemo(() => {
     if (minPrice === '' && maxPrice === '') return 'Tất cả'
@@ -910,6 +916,8 @@ export function usePropertiesFilters() {
     setSelectedWard('')
     setSelectedStreet('')
     setSelectedProject('')
+    setSelectedProvinceCode(null)
+    setSelectedDistrictCode(null)
     setMinPrice('')
     setMaxPrice('')
     setMinArea('')
@@ -1092,5 +1100,10 @@ export function usePropertiesFilters() {
     appliedWard,
     appliedStreet,
     appliedProject,
+    // Province/District codes for API cascade
+    selectedProvinceCode,
+    setSelectedProvinceCode,
+    selectedDistrictCode,
+    setSelectedDistrictCode,
   }
 }

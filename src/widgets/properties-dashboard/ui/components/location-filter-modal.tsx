@@ -8,9 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select'
+import { useVietnamLocations } from '@/shared/lib/use-vietnam-locations'
 
 interface LocationFilterModalProps {
-  activeTab?: 'single' | 'project'
   onClose: () => void
   onApply?: () => void
   selectedCity: string
@@ -19,25 +19,13 @@ interface LocationFilterModalProps {
   setSelectedDistrict: (val: string) => void
   selectedWard: string
   setSelectedWard: (val: string) => void
-  selectedStreet: string
-  setSelectedStreet: (val: string) => void
-  selectedProject: string
-  setSelectedProject: (val: string) => void
-  locationData: Record<
-    string,
-    Record<
-      string,
-      {
-        wards: string[]
-        streets: string[]
-        projects: string[]
-      }
-    >
-  >
+  selectedProvinceCode: number | null
+  setSelectedProvinceCode: (val: number | null) => void
+  selectedDistrictCode: number | null
+  setSelectedDistrictCode: (val: number | null) => void
 }
 
 export function LocationFilterModal({
-  activeTab = 'single',
   onClose,
   onApply,
   selectedCity,
@@ -46,24 +34,32 @@ export function LocationFilterModal({
   setSelectedDistrict,
   selectedWard,
   setSelectedWard,
-  selectedStreet,
-  setSelectedStreet,
-  selectedProject,
-  setSelectedProject,
-  locationData,
+  selectedProvinceCode,
+  setSelectedProvinceCode,
+  selectedDistrictCode,
+  setSelectedDistrictCode,
 }: LocationFilterModalProps): React.ReactElement {
+  const {
+    provinces,
+    districts,
+    wards,
+    isLoadingProvinces,
+    isLoadingDistricts,
+    isLoadingWards,
+  } = useVietnamLocations(selectedProvinceCode, selectedDistrictCode)
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between border-b border-border pb-2">
-        <span className="font-bold text-sm text-fg">Chọn khu vực & dự án</span>
+        <span className="font-bold text-sm text-fg">Chọn khu vực</span>
         <button
           type="button"
           onClick={() => {
             setSelectedCity('')
             setSelectedDistrict('')
             setSelectedWard('')
-            setSelectedStreet('')
-            setSelectedProject('')
+            setSelectedProvinceCode(null)
+            setSelectedDistrictCode(null)
           }}
           className="text-xs font-semibold text-primary hover:underline cursor-pointer"
         >
@@ -72,7 +68,7 @@ export function LocationFilterModal({
       </div>
 
       <div className="space-y-3 text-left">
-        {/* City */}
+        {/* City / Province */}
         <div>
           <label className="text-[10px] font-bold text-muted uppercase">
             Tỉnh / Thành phố
@@ -80,21 +76,29 @@ export function LocationFilterModal({
           <Select
             value={selectedCity || 'all'}
             onValueChange={val => {
-              setSelectedCity(val === 'all' ? '' : val)
+              if (val === 'all') {
+                setSelectedCity('')
+                setSelectedProvinceCode(null)
+              } else {
+                const province = provinces.find(p => p.name === val)
+                setSelectedCity(val)
+                setSelectedProvinceCode(province?.code ?? null)
+              }
               setSelectedDistrict('')
+              setSelectedDistrictCode(null)
               setSelectedWard('')
-              setSelectedStreet('')
-              setSelectedProject('')
             }}
           >
             <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary cursor-pointer h-9 shadow-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="max-h-60 overflow-y-auto">
-              <SelectItem value="all">Chọn Tỉnh/Thành phố</SelectItem>
-              {Object.keys(locationData).map(city => (
-                <SelectItem key={city} value={city}>
-                  {city}
+              <SelectItem value="all">
+                {isLoadingProvinces ? 'Đang tải...' : 'Chọn Tỉnh/Thành phố'}
+              </SelectItem>
+              {provinces.map(province => (
+                <SelectItem key={province.code} value={province.name}>
+                  {province.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -110,128 +114,60 @@ export function LocationFilterModal({
             value={selectedDistrict || 'all'}
             disabled={!selectedCity}
             onValueChange={val => {
-              setSelectedDistrict(val === 'all' ? '' : val)
+              if (val === 'all') {
+                setSelectedDistrict('')
+                setSelectedDistrictCode(null)
+              } else {
+                const district = districts.find(d => d.name === val)
+                setSelectedDistrict(val)
+                setSelectedDistrictCode(district?.code ?? null)
+              }
               setSelectedWard('')
-              setSelectedStreet('')
-              setSelectedProject('')
             }}
           >
             <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="max-h-60 overflow-y-auto">
-              <SelectItem value="all">Chọn Quận/Huyện</SelectItem>
-              {selectedCity &&
-                locationData[selectedCity] &&
-                Object.keys(locationData[selectedCity]).map(dist => (
-                  <SelectItem key={dist} value={dist}>
-                    {dist}
-                  </SelectItem>
-                ))}
+              <SelectItem value="all">
+                {isLoadingDistricts ? 'Đang tải...' : 'Chọn Quận/Huyện'}
+              </SelectItem>
+              {districts.map(district => (
+                <SelectItem key={district.code} value={district.name}>
+                  {district.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
         {/* Ward */}
-        {activeTab === 'single' && (
-          <div>
-            <label className="text-[10px] font-bold text-muted uppercase">
-              Phường / Xã
-            </label>
-            <Select
-              value={selectedWard || 'all'}
-              disabled={!selectedDistrict}
-              onValueChange={val => {
-                setSelectedWard(val === 'all' ? '' : val)
-              }}
-            >
-              <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-60 overflow-y-auto">
-                <SelectItem value="all">Chọn Phường/Xã</SelectItem>
-                {selectedCity &&
-                  selectedDistrict &&
-                  locationData[selectedCity]?.[selectedDistrict] &&
-                  locationData[selectedCity][selectedDistrict].wards.map(
-                    ward => (
-                      <SelectItem key={ward} value={ward}>
-                        {ward}
-                      </SelectItem>
-                    )
-                  )}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        {activeTab === 'single' && (
-          <div className="grid grid-cols-2 gap-2">
-            {/* Street */}
-            <div>
-              <label className="text-[10px] font-bold text-muted uppercase">
-                Đường / Phố
-              </label>
-              <Select
-                value={selectedStreet || 'all'}
-                disabled={!selectedDistrict}
-                onValueChange={val => {
-                  setSelectedStreet(val === 'all' ? '' : val)
-                  setSelectedProject('')
-                }}
-              >
-                <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-60 overflow-y-auto">
-                  <SelectItem value="all">Chọn Đường</SelectItem>
-                  {selectedCity &&
-                    selectedDistrict &&
-                    locationData[selectedCity]?.[selectedDistrict] &&
-                    locationData[selectedCity][selectedDistrict].streets.map(
-                      street => (
-                        <SelectItem key={street} value={street}>
-                          {street}
-                        </SelectItem>
-                      )
-                    )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Project */}
-            <div>
-              <label className="text-[10px] font-bold text-muted uppercase">
-                Dự án
-              </label>
-              <Select
-                value={selectedProject || 'all'}
-                disabled={!selectedDistrict}
-                onValueChange={val => {
-                  setSelectedProject(val === 'all' ? '' : val)
-                  setSelectedStreet('')
-                }}
-              >
-                <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-60 overflow-y-auto">
-                  <SelectItem value="all">Chọn Dự án</SelectItem>
-                  {selectedCity &&
-                    selectedDistrict &&
-                    locationData[selectedCity]?.[selectedDistrict] &&
-                    locationData[selectedCity][selectedDistrict].projects.map(
-                      project => (
-                        <SelectItem key={project} value={project}>
-                          {project}
-                        </SelectItem>
-                      )
-                    )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
+        <div>
+          <label className="text-[10px] font-bold text-muted uppercase">
+            Phường / Xã
+          </label>
+          <Select
+            value={selectedWard || 'all'}
+            disabled={!selectedDistrict}
+            onValueChange={val => {
+              setSelectedWard(val === 'all' ? '' : val)
+            }}
+          >
+            <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="max-h-60 overflow-y-auto">
+              <SelectItem value="all">
+                {isLoadingWards ? 'Đang tải...' : 'Chọn Phường/Xã'}
+              </SelectItem>
+              {wards.map(ward => (
+                <SelectItem key={ward.code} value={ward.name}>
+                  {ward.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <button
