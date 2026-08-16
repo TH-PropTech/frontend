@@ -93,16 +93,6 @@ export interface ProjectItem {
   units?: ProjectUnit[]
 }
 
-export interface LocationHierarchy {
-  [province: string]: {
-    [district: string]: {
-      wards: string[]
-      streets: string[]
-      projects: string[]
-    }
-  }
-}
-
 /** Backend API response shape for a Project */
 export interface ApiProjectItem {
   id: string

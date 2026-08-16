@@ -30,10 +30,10 @@ export function PropertiesDashboard(): React.ReactElement {
     setSelectedDistrict,
     selectedWard,
     setSelectedWard,
-    selectedStreet,
-    setSelectedStreet,
-    selectedProject,
-    setSelectedProject,
+    selectedProvinceCode,
+    setSelectedProvinceCode,
+    selectedDistrictCode,
+    setSelectedDistrictCode,
     minPrice,
     setMinPrice,
     maxPrice,
@@ -212,10 +212,10 @@ export function PropertiesDashboard(): React.ReactElement {
               setSelectedDistrict={setSelectedDistrict}
               selectedWard={selectedWard}
               setSelectedWard={setSelectedWard}
-              selectedStreet={selectedStreet}
-              setSelectedStreet={setSelectedStreet}
-              selectedProject={selectedProject}
-              setSelectedProject={setSelectedProject}
+              selectedProvinceCode={selectedProvinceCode}
+              setSelectedProvinceCode={setSelectedProvinceCode}
+              selectedDistrictCode={selectedDistrictCode}
+              setSelectedDistrictCode={setSelectedDistrictCode}
               minPrice={minPrice}
               setMinPrice={setMinPrice}
               maxPrice={maxPrice}
