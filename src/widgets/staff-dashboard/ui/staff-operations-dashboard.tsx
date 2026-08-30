@@ -9,12 +9,14 @@ import { DisputesView } from './views/disputes-view'
 import { CommunityView } from './views/community-view'
 import { SafetyReportsView } from './views/safety-reports-view'
 import { SupportQueueView } from './views/support-queue-view'
-import { LifeBuoy, ShieldAlert } from 'lucide-react'
+import { ApartmentManagementView } from './views/apartment-management-view'
+import { LifeBuoy, ShieldAlert, Building2 } from 'lucide-react'
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
 
 type TabType =
   | 'home'
+  | 'apartments'
   | 'properties'
   | 'kyc'
   | 'schedules'
@@ -45,6 +47,11 @@ export function StaffOperationsDashboard({
   const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false)
 
   const sidebarItems: SidebarItem[] = [
+    {
+      type: 'apartments',
+      label: 'Quản lý căn hộ',
+      icon: <Building2 className="h-[18px] w-[18px]" />,
+    },
     {
       type: 'home',
       label: 'Trang chủ vận hành',
@@ -190,6 +197,8 @@ export function StaffOperationsDashboard({
     switch (activeTab) {
       case 'home':
         return <HomeView onNavigateTab={handleSidebarItemClick} />
+      case 'apartments':
+        return <ApartmentManagementView />
       case 'properties':
         return <PropertyApprovalsView />
       case 'kyc':
