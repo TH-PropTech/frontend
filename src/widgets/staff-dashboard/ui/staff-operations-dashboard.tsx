@@ -1,7 +1,9 @@
 'use client'
 
 import * as React from 'react'
+import type { Route } from 'next'
 import { HomeView } from './views/home-view'
+import { OverviewView } from './views/overview-view'
 import { PropertyApprovalsView } from './views/property-approvals-view'
 import { KycApprovalsView } from './views/kyc-approvals-view'
 import { SchedulesView } from './views/schedules-view'
@@ -10,11 +12,13 @@ import { CommunityView } from './views/community-view'
 import { SafetyReportsView } from './views/safety-reports-view'
 import { SupportQueueView } from './views/support-queue-view'
 import { ApartmentManagementView } from './views/apartment-management-view'
-import { LifeBuoy, ShieldAlert, Building2 } from 'lucide-react'
+import { LifeBuoy, ShieldAlert, Building2, LayoutDashboard } from 'lucide-react'
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 
 type TabType =
+  | 'overview'
   | 'home'
   | 'apartments'
   | 'properties'
@@ -24,6 +28,26 @@ type TabType =
   | 'community'
   | 'safety-reports'
   | 'support-tickets'
+
+const STAFF_TABS: readonly TabType[] = [
+  'overview',
+  'home',
+  'apartments',
+  'properties',
+  'kyc',
+  'schedules',
+  'disputes',
+  'community',
+  'safety-reports',
+  'support-tickets',
+]
+
+function resolveStaffTab(pathname: string): TabType {
+  const section = pathname.split('/')[2]
+  return STAFF_TABS.includes(section as TabType)
+    ? (section as TabType)
+    : 'overview'
+}
 
 interface SidebarItem {
   type: TabType
@@ -42,19 +66,16 @@ interface StaffOperationsDashboardProps {
 export function StaffOperationsDashboard({
   initialUser,
 }: StaffOperationsDashboardProps): React.ReactElement {
-  const [activeTab, setActiveTab] = React.useState<TabType>('home')
+  const pathname = usePathname()
+  const router = useRouter()
+  const activeTab = resolveStaffTab(pathname)
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false)
 
   const sidebarItems: SidebarItem[] = [
     {
-      type: 'apartments',
-      label: 'Quản lý căn hộ',
-      icon: <Building2 className="h-[18px] w-[18px]" />,
-    },
-    {
       type: 'home',
-      label: 'Trang chủ vận hành',
+      label: 'Chào mừng',
       icon: (
         <svg
           width="18"
@@ -68,6 +89,16 @@ export function StaffOperationsDashboard({
           <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
       ),
+    },
+    {
+      type: 'overview',
+      label: 'Dashboard tổng quan',
+      icon: <LayoutDashboard className="h-[18px] w-[18px]" />,
+    },
+    {
+      type: 'apartments',
+      label: 'Quản lý căn hộ',
+      icon: <Building2 className="h-[18px] w-[18px]" />,
     },
     {
       type: 'properties',
@@ -170,7 +201,7 @@ export function StaffOperationsDashboard({
   ]
 
   const handleSidebarItemClick = (type: TabType): void => {
-    setActiveTab(type)
+    router.push(`/staff/${type}` as Route)
     setIsSidebarOpen(false)
   }
 
@@ -195,6 +226,8 @@ export function StaffOperationsDashboard({
 
   const renderActiveView = (): React.ReactNode => {
     switch (activeTab) {
+      case 'overview':
+        return <OverviewView />
       case 'home':
         return <HomeView onNavigateTab={handleSidebarItemClick} />
       case 'apartments':

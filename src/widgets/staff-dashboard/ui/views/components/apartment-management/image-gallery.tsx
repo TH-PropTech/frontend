@@ -2,21 +2,23 @@
 
 import * as React from 'react'
 import { ImageIcon, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
+import Image from 'next/image'
 
 interface ImageGalleryProps {
   images: string[]
   onUpload: (files: FileList) => void
   isUploading: boolean
-  previewUrls: string[]
+  emptyLabel: string
+  uploadLabel: string
 }
 
 export function ImageGallery({
   images,
   onUpload,
   isUploading,
-  previewUrls,
+  emptyLabel,
+  uploadLabel,
 }: ImageGalleryProps): React.ReactElement {
-  const allImages = [...images, ...previewUrls]
   const [activeIdx, setActiveIdx] = React.useState(0)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
@@ -26,10 +28,10 @@ export function ImageGallery({
     setActiveIdx(0)
   }
 
-  const goNext = (): void => setActiveIdx(prev => (prev + 1) % allImages.length)
+  const goNext = (): void => setActiveIdx(prev => (prev + 1) % images.length)
 
   const goPrev = (): void =>
-    setActiveIdx(prev => (prev - 1 + allImages.length) % allImages.length)
+    setActiveIdx(prev => (prev - 1 + images.length) % images.length)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (e.target.files && e.target.files.length > 0) {
@@ -37,8 +39,7 @@ export function ImageGallery({
     }
   }
 
-  const activeImage = allImages[activeIdx]
-  const isPreview = activeIdx >= images.length
+  const activeImage = images[activeIdx]
 
   return (
     <div className="flex flex-col h-full bg-[color:var(--surface-muted)]/30">
@@ -47,17 +48,14 @@ export function ImageGallery({
         {activeImage ? (
           <>
             {}
-            <img
+            <Image
               src={activeImage}
               alt={`Ảnh căn hộ ${activeIdx + 1}`}
+              fill
+              unoptimized
               className="max-h-full max-w-full object-contain"
             />
-            {isPreview && (
-              <span className="absolute top-3 right-3 bg-[color:var(--accent)] text-[color:var(--fg)] text-[10px] font-bold px-2 py-0.5 rounded-full">
-                Xem trước
-              </span>
-            )}
-            {allImages.length > 1 && (
+            {images.length > 1 && (
               <>
                 <button
                   onClick={goPrev}
@@ -79,15 +77,15 @@ export function ImageGallery({
         ) : (
           <div className="flex flex-col items-center gap-2 text-[color:var(--muted)]">
             <ImageIcon className="w-12 h-12 opacity-30" />
-            <span className="text-xs">Chưa có ảnh</span>
+            <span className="text-xs">{emptyLabel}</span>
           </div>
         )}
       </div>
 
       {/* Thumbnail strip */}
-      {allImages.length > 0 && (
+      {images.length > 0 && (
         <div className="flex gap-1.5 p-2 overflow-x-auto no-scrollbar border-t border-[color:var(--border)]">
-          {allImages.map((src, idx) => (
+          {images.map((src, idx) => (
             <button
               key={idx}
               onClick={() => setActiveIdx(idx)}
@@ -99,14 +97,13 @@ export function ImageGallery({
               }`}
             >
               {}
-              <img
+              <Image
                 src={src}
                 alt={`thumbnail ${idx + 1}`}
+                fill
+                unoptimized
                 className="w-full h-full object-cover"
               />
-              {idx >= images.length && (
-                <span className="absolute inset-0 bg-[color:var(--accent)]/30" />
-              )}
             </button>
           ))}
         </div>
@@ -136,15 +133,10 @@ export function ImageGallery({
           ) : (
             <>
               <Upload className="w-3.5 h-3.5" />
-              Tải ảnh lên (preview)
+              {uploadLabel}
             </>
           )}
         </button>
-        {previewUrls.length > 0 && (
-          <p className="text-[10px] text-[color:var(--success)] text-center mt-1.5">
-            {previewUrls.length} ảnh đã upload thành công
-          </p>
-        )}
       </div>
     </div>
   )

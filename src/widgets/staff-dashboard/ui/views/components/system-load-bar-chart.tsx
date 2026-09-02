@@ -6,76 +6,81 @@ export function SystemLoadBarChart(): React.ReactElement {
   const [hoveredBar, setHoveredBar] = React.useState<number | null>(null)
 
   const barChartData = [
-    { hour: '04h', transactions: 12, height: 35 },
-    { hour: '08h', transactions: 24, height: 70 },
-    { hour: '12h', transactions: 32, height: 95 },
-    { hour: '16h', transactions: 18, height: 55 },
-    { hour: '20h', transactions: 29, height: 85 },
-    { hour: '24h', transactions: 15, height: 45 },
+    { hour: '04:00', transactions: 12, height: 45, x: 70 },
+    { hour: '08:00', transactions: 24, height: 85, x: 155 },
+    { hour: '12:00', transactions: 32, height: 115, x: 240 },
+    { hour: '16:00', transactions: 18, height: 65, x: 325 },
+    { hour: '20:00', transactions: 29, height: 100, x: 410 },
+    { hour: '24:00', transactions: 15, height: 55, x: 495 },
   ]
 
+  const BAR_WIDTH = 40
+
   return (
-    <div className="bg-surface border border-line rounded-xl p-5 shadow-sm flex flex-col justify-between">
+    <div className="bg-surface border border-border rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between h-full">
       <div>
         <div className="flex justify-between items-center">
           <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
             Tải lượng & Giao dịch mạng
           </h4>
-          <span className="text-[9px] font-bold text-muted bg-fg/5 px-2 py-0.5 rounded border border-line">
+          <span className="text-[10px] font-bold text-muted bg-fg/5 px-2.5 py-1 rounded-full border border-border">
             24 giờ qua
           </span>
         </div>
-        <p className="text-[11px] text-muted mt-1">
-          Cường độ giao dịch qua Smart Contract theo giờ.
+        <p className="text-[11px] text-muted mt-1 font-body">
+          Cường độ giao dịch qua Smart Contract theo khung giờ trong ngày.
         </p>
       </div>
 
-      <div className="relative mt-4 min-h-[160px] flex items-center justify-center">
+      <div className="relative mt-4 w-full h-48 sm:h-56 lg:h-64 flex items-center justify-center">
         <svg
-          className="w-full h-full max-h-[160px]"
-          viewBox="0 0 320 180"
+          className="w-full h-full"
+          viewBox="0 0 600 200"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="xMidYMid meet"
         >
           <defs>
             <linearGradient id="bar-grad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--primary)" />
-              <stop offset="100%" stopColor="#e37253" />
+              <stop offset="100%" stopColor="var(--accent)" />
             </linearGradient>
           </defs>
+
+          {/* Grid lines */}
           <line
-            x1="30"
+            x1="40"
             y1="35"
-            x2="290"
+            x2="560"
             y2="35"
-            stroke="var(--line)"
-            strokeWidth="0.5"
+            stroke="var(--border)"
+            strokeWidth="1"
             strokeDasharray="4,4"
           />
           <line
-            x1="30"
-            y1="85"
-            x2="290"
-            y2="85"
-            stroke="var(--line)"
-            strokeWidth="0.5"
+            x1="40"
+            y1="92"
+            x2="560"
+            y2="92"
+            stroke="var(--border)"
+            strokeWidth="1"
             strokeDasharray="4,4"
           />
           <line
-            x1="30"
-            y1="135"
-            x2="290"
-            y2="135"
-            stroke="var(--line)"
+            x1="40"
+            y1="150"
+            x2="560"
+            y2="150"
+            stroke="var(--border)"
             strokeWidth="1"
           />
 
-          {/* Bars rendering */}
+          {/* Bars */}
           {barChartData.map((bar, idx) => {
-            const barWidth = 22
-            const gap = 20
-            const startX = 40 + idx * (barWidth + gap)
-            const y = 135 - bar.height
+            const startX = bar.x - BAR_WIDTH / 2
+            const y = 150 - bar.height
+            const isHov = hoveredBar === idx
+
             return (
               <g
                 key={idx}
@@ -83,37 +88,40 @@ export function SystemLoadBarChart(): React.ReactElement {
                 onMouseEnter={() => setHoveredBar(idx)}
                 onMouseLeave={() => setHoveredBar(null)}
               >
-                {/* Background hover guide path */}
-                {hoveredBar === idx && (
+                {/* Background hover column */}
+                {isHov && (
                   <rect
-                    x={startX - 4}
-                    y="20"
-                    width={barWidth + 8}
-                    height="115"
+                    x={startX - 6}
+                    y="25"
+                    width={BAR_WIDTH + 12}
+                    height="128"
                     fill="var(--fg)"
-                    fillOpacity="0.03"
-                    rx="4"
+                    fillOpacity="0.04"
+                    rx="8"
                   />
                 )}
-                {/* The bar */}
+
+                {/* Main bar */}
                 <rect
                   x={startX}
                   y={y}
-                  width={barWidth}
+                  width={BAR_WIDTH}
                   height={bar.height}
                   fill="url(#bar-grad)"
-                  fillOpacity={hoveredBar === idx ? '1' : '0.8'}
-                  rx="3"
+                  fillOpacity={isHov ? '1' : '0.85'}
+                  rx="6"
                   className="transition-all duration-200"
                 />
-                {/* x-axis Label */}
+
+                {/* X Axis Label */}
                 <text
-                  x={startX + barWidth / 2}
-                  y="152"
-                  fill={hoveredBar === idx ? 'var(--primary)' : 'var(--muted)'}
-                  fontSize="9"
-                  fontWeight={hoveredBar === idx ? 'bold' : 'normal'}
+                  x={bar.x}
+                  y="174"
+                  fill={isHov ? 'var(--primary)' : 'var(--muted)'}
+                  fontSize="11"
+                  fontWeight={isHov ? 'bold' : '500'}
                   textAnchor="middle"
+                  fontFamily="var(--font-body)"
                 >
                   {bar.hour}
                 </text>
@@ -124,26 +132,28 @@ export function SystemLoadBarChart(): React.ReactElement {
           {/* Tooltip */}
           {hoveredBar !== null && barChartData[hoveredBar] && (
             <g
-              transform={`translate(${barChartData[hoveredBar].transactions > 20 ? 110 : 160}, 15)`}
+              transform={`translate(${barChartData[hoveredBar].x - 60}, ${Math.max(
+                150 - barChartData[hoveredBar].height - 40,
+                10
+              )})`}
             >
               <rect
-                width="90"
-                height="25"
-                rx="4"
-                fill="var(--surface)"
-                stroke="var(--line)"
-                strokeWidth="1"
-                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.05))"
+                width="120"
+                height="32"
+                rx="6"
+                fill="var(--fg)"
+                opacity="0.95"
               />
               <text
-                x="45"
-                y="16"
-                fill="var(--fg)"
-                fontSize="9"
+                x="60"
+                y="20"
+                fill="var(--on-control)"
+                fontSize="11"
                 fontWeight="bold"
                 textAnchor="middle"
+                fontFamily="var(--font-display)"
               >
-                {barChartData[hoveredBar].transactions} Tx giao dịch
+                {barChartData[hoveredBar].transactions} giao dịch
               </text>
             </g>
           )}
