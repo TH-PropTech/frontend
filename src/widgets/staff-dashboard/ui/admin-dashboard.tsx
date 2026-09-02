@@ -1,14 +1,30 @@
 'use client'
 
 import * as React from 'react'
+import type { Route } from 'next'
 import { OverviewView } from './views/overview-view'
 import { ContractMonitorView } from './views/contract-monitor-view'
 import { AiConsultationView } from './views/ai-consultation-view'
 import { PermissionMatrixView } from './views/permission-matrix-view'
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 
 type TabType = 'overview' | 'contracts' | 'ai-consultation' | 'permissions'
+
+const ADMIN_TABS: readonly TabType[] = [
+  'overview',
+  'contracts',
+  'ai-consultation',
+  'permissions',
+]
+
+function resolveAdminTab(pathname: string): TabType {
+  const section = pathname.split('/')[2]
+  return ADMIN_TABS.includes(section as TabType)
+    ? (section as TabType)
+    : 'overview'
+}
 
 interface SidebarItem {
   type: TabType
@@ -27,7 +43,9 @@ interface AdminDashboardProps {
 export function AdminDashboard({
   initialUser,
 }: AdminDashboardProps): React.ReactElement {
-  const [activeTab, setActiveTab] = React.useState<TabType>('overview')
+  const pathname = usePathname()
+  const router = useRouter()
+  const activeTab = resolveAdminTab(pathname)
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false)
 
@@ -109,7 +127,7 @@ export function AdminDashboard({
   ]
 
   const handleSidebarItemClick = (type: TabType): void => {
-    setActiveTab(type)
+    router.push(`/staff/${type}` as Route)
     setIsSidebarOpen(false)
   }
 

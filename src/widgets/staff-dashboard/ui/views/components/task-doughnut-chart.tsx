@@ -4,24 +4,24 @@ import * as React from 'react'
 
 export function TaskDoughnutChart(): React.ReactElement {
   return (
-    <div className="bg-surface border border-line rounded-xl p-5 shadow-sm flex flex-col justify-between">
+    <div className="bg-surface border border-border rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between h-full">
       <div>
         <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
           Phân bổ Công việc
         </h4>
-        <p className="text-[11px] text-muted mt-1">
-          Tỉ lệ phần trạng các loại hồ sơ tồn đọng.
+        <p className="text-[11px] text-muted mt-1 font-body">
+          Tỷ lệ trạng thái các loại hồ sơ tồn đọng.
         </p>
       </div>
 
-      <div className="flex justify-center items-center py-2 relative">
-        <svg width="120" height="120" viewBox="0 0 200 200">
+      <div className="flex justify-center items-center py-4 relative">
+        <svg width="160" height="160" viewBox="0 0 200 200">
           <circle
             cx="100"
             cy="100"
             r="75"
             fill="transparent"
-            stroke="var(--line)"
+            stroke="var(--border)"
             strokeWidth="16"
           />
           <circle
@@ -29,7 +29,7 @@ export function TaskDoughnutChart(): React.ReactElement {
             cy="100"
             r="75"
             fill="transparent"
-            stroke="#c65a3a"
+            stroke="var(--primary)"
             strokeWidth="18"
             strokeDasharray="235.6 471.2"
             strokeDashoffset="0"
@@ -41,7 +41,7 @@ export function TaskDoughnutChart(): React.ReactElement {
             cy="100"
             r="75"
             fill="transparent"
-            stroke="#6b8e4e"
+            stroke="var(--success)"
             strokeWidth="18"
             strokeDasharray="164.9 471.2"
             strokeDashoffset="-235.6"
@@ -53,7 +53,7 @@ export function TaskDoughnutChart(): React.ReactElement {
             cy="100"
             r="75"
             fill="transparent"
-            stroke="#d64545"
+            stroke="var(--danger)"
             strokeWidth="18"
             strokeDasharray="70.7 471.2"
             strokeDashoffset="-400.5"
@@ -64,7 +64,7 @@ export function TaskDoughnutChart(): React.ReactElement {
             x="100"
             y="96"
             fill="var(--fg)"
-            fontSize="24"
+            fontSize="28"
             fontWeight="bold"
             textAnchor="middle"
             className="font-display"
@@ -73,9 +73,9 @@ export function TaskDoughnutChart(): React.ReactElement {
           </text>
           <text
             x="100"
-            y="116"
+            y="118"
             fill="var(--muted)"
-            fontSize="9"
+            fontSize="10"
             fontWeight="bold"
             textAnchor="middle"
             className="tracking-wider uppercase"
@@ -85,27 +85,36 @@ export function TaskDoughnutChart(): React.ReactElement {
         </svg>
       </div>
 
-      <div className="space-y-1.5 pt-3 border-t border-line">
-        <div className="flex justify-between items-center text-[10px] font-semibold">
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#c65a3a]" />
-            <span className="text-muted">Duyệt tin bđs</span>
+      <div className="space-y-2 pt-3 border-t border-border">
+        <div className="flex justify-between items-center text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <span
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ background: 'var(--primary)' }}
+            />
+            <span className="text-muted">Duyệt tin BĐS</span>
           </div>
-          <span className="text-fg">21 căn (50%)</span>
+          <span className="text-fg font-bold">21 căn (50%)</span>
         </div>
-        <div className="flex justify-between items-center text-[10px] font-semibold">
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#6b8e4e]" />
+        <div className="flex justify-between items-center text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <span
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ background: 'var(--success)' }}
+            />
             <span className="text-muted">Định danh KYC</span>
           </div>
-          <span className="text-fg">15 hs (35%)</span>
+          <span className="text-fg font-bold">15 hồ sơ (35%)</span>
         </div>
-        <div className="flex justify-between items-center text-[10px] font-semibold">
-          <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#d64545]" />
+        <div className="flex justify-between items-center text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <span
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ background: 'var(--danger)' }}
+            />
             <span className="text-muted">Tranh chấp cọc</span>
           </div>
-          <span className="text-fg">7 hs (15%)</span>
+          <span className="text-fg font-bold">7 hồ sơ (15%)</span>
         </div>
       </div>
     </div>

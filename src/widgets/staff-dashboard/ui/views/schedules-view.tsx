@@ -45,6 +45,7 @@ interface BackendBookingListResult {
 export function SchedulesView(): React.ReactElement {
   const [appointments, setAppointments] = React.useState<Appointment[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
   const [filter, setFilter] = React.useState<
     'all' | 'pending' | 'confirmed' | 'cancelled' | 'rejected' | 'completed'
   >('pending')
@@ -70,6 +71,7 @@ export function SchedulesView(): React.ReactElement {
 
   const loadAppointments = React.useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const data = await apiClient.get<BackendBookingListResult>(
         '/bookings?limit=100'
@@ -79,6 +81,9 @@ export function SchedulesView(): React.ReactElement {
       }
     } catch (err) {
       console.error('Failed to load bookings:', err)
+      const message =
+        err instanceof Error ? err.message : 'Không thể tải dữ liệu lịch hẹn'
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -97,6 +102,22 @@ export function SchedulesView(): React.ReactElement {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
+        <p className="text-sm font-medium text-danger">⚠️ {error}</p>
+        <button
+          onClick={() => {
+            void loadAppointments()
+          }}
+          className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-on-control hover:bg-primary-hover transition-colors"
+        >
+          Thử lại
+        </button>
       </div>
     )
   }

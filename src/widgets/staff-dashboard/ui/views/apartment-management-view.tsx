@@ -204,6 +204,13 @@ export function ApartmentManagementView(): React.ReactElement {
     setSelected(prev => (prev?.id === id ? { ...prev, status } : prev))
   }
 
+  const handleMediaChange = (updated: StaffApartment): void => {
+    setApartments(prev =>
+      prev.map(apartment => (apartment.id === updated.id ? updated : apartment))
+    )
+    setSelected(updated)
+  }
+
   const handleApprove = async (id: string): Promise<void> => {
     await apiClient.patch(`/apartments/${id}/approve`, {})
     handleStatusChange(id, 'available')
@@ -345,6 +352,7 @@ export function ApartmentManagementView(): React.ReactElement {
           onStatusChange={handleStatusChange}
           onApprove={handleApprove}
           onReject={handleReject}
+          onMediaChange={handleMediaChange}
         />
       )}
     </div>

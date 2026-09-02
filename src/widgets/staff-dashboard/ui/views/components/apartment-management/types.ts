@@ -99,7 +99,8 @@ export const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-export function formatPrice(price: number): string {
+export function formatPrice(price: number | undefined | null): string {
+  if (price == null || isNaN(price)) return 'Chưa có giá'
   if (price >= 1_000_000) {
     const millions = price / 1_000_000
     return `${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)} triệu/tháng`

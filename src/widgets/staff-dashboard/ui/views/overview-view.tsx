@@ -1,497 +1,658 @@
 'use client'
 
 import * as React from 'react'
+import {
+  CalendarCheck2,
+  Clock,
+  ShieldCheck,
+  Building2,
+  BarChart2,
+  ChevronDown,
+  TrendingUp,
+  HelpCircle,
+  RefreshCw,
+  Activity,
+  Cpu,
+  Layers,
+} from 'lucide-react'
+import { FilterDropdown } from '@/shared/ui/filter-dropdown'
+import { DateRangePicker } from '@/shared/ui/date-range-picker'
+import type { DateRange } from '@/shared/ui/date-range-picker'
+import { BookingBarChart } from './components/booking-bar-chart'
+import { BookingStatusDoughnut } from './components/booking-status-doughnut'
+import { BookingTrendLineChart } from './components/booking-trend-line-chart'
 import { EscrowLineChart } from './components/escrow-line-chart'
 import { SystemLoadBarChart } from './components/system-load-bar-chart'
 import { TaskDoughnutChart } from './components/task-doughnut-chart'
+import { apiClient } from '@/shared/api/api-client'
+
+// ─── Backend types ─────────────────────────────────────────────────────────────
+
+interface OperationsStats {
+  bookings: {
+    total: number
+    pending: number
+    confirmed: number
+    cancelled: number
+    completed: number
+  }
+  kyc: { total: number; pending: number; verified: number; rejected: number }
+  apartments: {
+    total: number
+    pending: number
+    available: number
+    rejected: number
+  }
+  tickets: { total: number; open: number; inProgress: number; resolved: number }
+}
+
+interface ChartPoint {
+  label: string
+  date: string
+  bookings: number
+  confirmed: number
+  pending: number
+  cancelled: number
+}
+interface StatusBreakdown {
+  status: string
+  label: string
+  count: number
+  color: string
+}
+interface OperationsChartData {
+  trend: ChartPoint[]
+  statusBreakdown: StatusBreakdown[]
+}
+
+// ─── Filter options ─────────────────────────────────────────────────────────────
+
+const TIME_RANGE_OPTIONS = [
+  { value: '7', label: '7 ngày qua' },
+  { value: '14', label: '14 ngày qua' },
+  { value: '30', label: '30 ngày qua' },
+  { value: '90', label: '3 tháng qua' },
+]
+
+// ─── StatCard ─────────────────────────────────────────────────────────────────
 
 interface StatCardProps {
   title: string
-  value: string | number
+  value: React.ReactNode
   subtext: string
-  trend?: {
-    value: string
-    type: 'up' | 'down' | 'neutral'
-  }
   icon: React.ReactNode
+  trend?: { value: string; type: 'up' | 'down' | 'neutral' } | undefined
+  color?: 'primary' | 'success' | 'warning' | 'info' | 'danger'
 }
 
 function StatCard({
   title,
   value,
   subtext,
-  trend,
   icon,
+  trend,
+  color = 'primary',
 }: StatCardProps): React.ReactElement {
+  const colorMap = {
+    primary: { bg: 'bg-primary-soft', text: 'text-primary' },
+    success: { bg: 'bg-success/10', text: 'text-success' },
+    warning: { bg: 'bg-warning/10', text: 'text-warning' },
+    danger: { bg: 'bg-danger/10', text: 'text-danger' },
+    info: { bg: 'bg-info-soft', text: 'text-info' },
+  }
+  const c = colorMap[color]
   return (
-    <div className="bg-surface border border-line rounded-xl p-5 shadow-sm hover:translate-y-[-2px] hover:shadow-md transition-all duration-300">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-muted tracking-wide uppercase font-body">
+    <div className="bg-surface border border-border rounded-xl p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex flex-col gap-2">
+      <div className="flex items-start justify-between">
+        <span className="text-[10px] font-bold text-muted tracking-widest uppercase font-body leading-tight">
           {title}
         </span>
-        <div className="p-2 bg-primary/5 text-primary rounded-lg">{icon}</div>
+        <div className={`p-2 rounded-lg ${c.bg} ${c.text} shrink-0`}>
+          {icon}
+        </div>
       </div>
-      <div className="mt-4 flex items-baseline gap-2">
+      <div className="flex items-baseline gap-2">
         <span className="text-2xl font-bold text-fg font-display">{value}</span>
         {trend && (
           <span
             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
               trend.type === 'up'
-                ? 'bg-accent-2/10 text-accent-2'
+                ? 'bg-success/10 text-success'
                 : trend.type === 'down'
-                  ? 'bg-accent/10 text-accent'
-                  : 'bg-muted/10 text-muted'
+                  ? 'bg-danger/10 text-danger'
+                  : 'bg-surface-muted text-muted'
             }`}
           >
             {trend.value}
           </span>
         )}
       </div>
-      <p className="mt-1 text-xs text-subtle font-body">{subtext}</p>
+      <p className="text-[11px] text-muted font-body leading-relaxed">
+        {subtext}
+      </p>
     </div>
   )
 }
 
-export function OverviewView(): React.ReactElement {
+function Skeleton(): React.ReactElement {
+  return <div className="h-7 w-16 bg-surface-muted rounded animate-pulse" />
+}
+
+// ─── Blockchain welcome banner ─────────────────────────────────────────────────
+
+function BlockchainBanner(): React.ReactElement {
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-      {/* Welcome banner with Sticker */}
-      <div className="bg-surface border border-line rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden shadow-sm">
-        <div className="flex items-center gap-4 relative z-10">
-          {/* Custom Blockchain Network Sticker */}
-          <svg
+    <div className="bg-surface border border-border rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden shadow-sm">
+      <div className="flex items-center gap-4 relative z-10">
+        {/* Blockchain sticker */}
+        <svg
+          width="56"
+          height="56"
+          viewBox="0 0 64 64"
+          fill="none"
+          className="shrink-0 drop-shadow-[0_4px_10px_rgba(198,90,58,0.12)]"
+        >
+          <rect
+            x="4"
+            y="4"
             width="56"
             height="56"
-            viewBox="0 0 64 64"
-            fill="none"
-            className="shrink-0 drop-shadow-[0_4px_10px_rgba(198,90,58,0.12)]"
-          >
-            <rect
-              x="4"
-              y="4"
-              width="56"
-              height="56"
-              rx="14"
-              fill="#ffffff"
-              stroke="#c65a3a"
-              strokeWidth="2"
-            />
-            <rect
-              x="7"
-              y="7"
-              width="50"
-              height="50"
-              rx="11"
-              fill="url(#sticker-bg)"
-            />
-            <line
-              x1="20"
-              y1="20"
-              x2="44"
-              y2="44"
-              stroke="#c65a3a"
-              strokeWidth="1.5"
-              strokeOpacity="0.15"
-              strokeDasharray="3,3"
-            />
-            <line
-              x1="44"
-              y1="20"
-              x2="20"
-              y2="44"
-              stroke="#c65a3a"
-              strokeWidth="1.5"
-              strokeOpacity="0.15"
-              strokeDasharray="3,3"
-            />
-            <circle cx="20" cy="20" r="4" fill="#f2b66d" />
-            <circle cx="44" cy="20" r="4" fill="#6b8e4e" />
-            <circle cx="20" cy="44" r="4" fill="#e37253" />
-            <circle cx="44" cy="44" r="4" fill="#c79354" />
-            <circle
-              cx="32"
-              cy="32"
-              r="8"
-              fill="#c65a3a"
-              fillOpacity="0.2"
-              className="animate-ping"
-              style={{ animationDuration: '2.5s' }}
-            />
-            <circle
-              cx="32"
-              cy="32"
-              r="5"
-              fill="#ffffff"
-              stroke="#c65a3a"
-              strokeWidth="1.5"
-            />
-            <circle cx="32" cy="32" r="2.5" fill="#c65a3a" />
-            <defs>
-              <linearGradient id="sticker-bg" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#fffcf9" />
-                <stop offset="100%" stopColor="#fbeae3" />
-              </linearGradient>
-            </defs>
-          </svg>
+            rx="14"
+            fill="#ffffff"
+            stroke="var(--primary)"
+            strokeWidth="2"
+          />
+          <circle cx="32" cy="32" r="8" fill="var(--primary)" opacity="0.15" />
+          <circle cx="32" cy="32" r="4" fill="var(--primary)" />
+          <circle cx="16" cy="20" r="3" fill="var(--primary)" opacity="0.7" />
+          <circle cx="48" cy="20" r="3" fill="var(--primary)" opacity="0.7" />
+          <circle cx="16" cy="44" r="3" fill="var(--primary)" opacity="0.7" />
+          <circle cx="48" cy="44" r="3" fill="var(--primary)" opacity="0.7" />
+          <line
+            x1="19"
+            y1="20"
+            x2="28"
+            y2="28"
+            stroke="var(--primary)"
+            strokeWidth="1.5"
+            opacity="0.5"
+          />
+          <line
+            x1="45"
+            y1="20"
+            x2="36"
+            y2="28"
+            stroke="var(--primary)"
+            strokeWidth="1.5"
+            opacity="0.5"
+          />
+          <line
+            x1="19"
+            y1="44"
+            x2="28"
+            y2="36"
+            stroke="var(--primary)"
+            strokeWidth="1.5"
+            opacity="0.5"
+          />
+          <line
+            x1="45"
+            y1="44"
+            x2="36"
+            y2="36"
+            stroke="var(--primary)"
+            strokeWidth="1.5"
+            opacity="0.5"
+          />
+        </svg>
+        <div>
+          <h2 className="text-base font-bold text-fg font-marketing">
+            Tổng quan vận hành
+          </h2>
+          <p className="text-xs text-muted font-body mt-0.5">
+            Hệ thống thuê căn hộ tích hợp Blockchain · Smart Contract · eKYC
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2 relative z-10">
+        <span className="flex items-center gap-1.5 text-[10px] font-bold text-primary bg-primary-soft border border-primary/20 px-3 py-1.5 rounded-full">
+          <Cpu className="h-3 w-3" /> Fabric Network
+        </span>
+        <span className="flex items-center gap-1.5 text-[10px] font-bold text-success bg-success/10 border border-success/20 px-3 py-1.5 rounded-full">
+          <Layers className="h-3 w-3" /> Smart Contract
+        </span>
+        <span className="flex items-center gap-1.5 text-[10px] font-bold text-muted bg-surface-muted border border-border px-3 py-1.5 rounded-full">
+          <Activity className="h-3 w-3" /> Live
+        </span>
+      </div>
+      {/* Decorative bg */}
+      <div className="absolute right-0 top-0 w-48 h-full opacity-[0.03] pointer-events-none">
+        <svg viewBox="0 0 200 200" className="w-full h-full" fill="none">
+          <circle
+            cx="150"
+            cy="50"
+            r="80"
+            stroke="var(--primary)"
+            strokeWidth="40"
+          />
+        </svg>
+      </div>
+    </div>
+  )
+}
 
-          <div>
-            <h2 className="text-lg font-bold text-fg font-marketing">
-              Chào ngày làm việc mới, culi vận hành!
-            </h2>
-            <p className="text-xs text-muted mt-1">
-              Hệ thống phân tích dữ liệu và giám sát mạng lưới giao dịch
-              TH-PropTech thời gian thực.
-            </p>
+// ─── Main ──────────────────────────────────────────────────────────────────────
+
+export function OverviewView(): React.ReactElement {
+  // Filter state
+  const [days, setDays] = React.useState('7')
+  const [dateRange, setDateRange] = React.useState<DateRange>({
+    from: null,
+    to: null,
+  })
+  const [showCharts, setShowCharts] = React.useState(true)
+
+  // Data state
+  const [stats, setStats] = React.useState<OperationsStats | null>(null)
+  const [chartData, setChartData] = React.useState<OperationsChartData | null>(
+    null
+  )
+  const [loadingStats, setLoadingStats] = React.useState(true)
+  const [loadingChart, setLoadingChart] = React.useState(true)
+  const [statsError, setStatsError] = React.useState<string | null>(null)
+  const [chartError, setChartError] = React.useState<string | null>(null)
+
+  const fetchStats = React.useCallback((): void => {
+    setLoadingStats(true)
+    setStatsError(null)
+    apiClient
+      .get<OperationsStats>('/operations/stats')
+      .then(data => setStats(data))
+      .catch((err: unknown) => {
+        setStatsError(
+          err instanceof Error ? err.message : 'Không thể tải thống kê'
+        )
+      })
+      .finally(() => setLoadingStats(false))
+  }, [])
+
+  const fetchChartData = React.useCallback((numDays: string): void => {
+    setLoadingChart(true)
+    setChartError(null)
+    apiClient
+      .get<OperationsChartData>(`/operations/chart-data?days=${numDays}`)
+      .then(data => setChartData(data))
+      .catch((err: unknown) => {
+        setChartError(
+          err instanceof Error ? err.message : 'Không thể tải biểu đồ'
+        )
+      })
+      .finally(() => setLoadingChart(false))
+  }, [])
+
+  React.useEffect(() => {
+    const timeoutId = window.setTimeout(fetchStats, 0)
+    return () => window.clearTimeout(timeoutId)
+  }, [fetchStats])
+
+  React.useEffect(() => {
+    const timeoutId = window.setTimeout(() => fetchChartData(days), 0)
+    return () => window.clearTimeout(timeoutId)
+  }, [fetchChartData, days])
+
+  // Derived chart data
+  const filteredTrend = React.useMemo((): ChartPoint[] => {
+    if (!chartData?.trend) return []
+    if (!dateRange.from && !dateRange.to) return chartData.trend
+    return chartData.trend.filter(p => {
+      const d = new Date(p.date)
+      if (dateRange.from && d < dateRange.from) return false
+      if (dateRange.to && d > dateRange.to) return false
+      return true
+    })
+  }, [chartData, dateRange])
+
+  const barChartData = React.useMemo(
+    () =>
+      filteredTrend.map(p => ({
+        label: p.label,
+        pending: p.pending,
+        confirmed: p.confirmed,
+        cancelled: p.cancelled,
+      })),
+    [filteredTrend]
+  )
+  const trendData = React.useMemo(
+    () =>
+      filteredTrend.map(p => ({
+        label: p.label,
+        bookings: p.bookings,
+        approved: p.confirmed,
+      })),
+    [filteredTrend]
+  )
+  const doughnutData = React.useMemo(
+    () =>
+      (chartData?.statusBreakdown ?? []).map(s => ({
+        label: s.label,
+        value: s.count,
+        color: s.color,
+        softColor: s.color,
+      })),
+    [chartData]
+  )
+
+  const completionRate =
+    stats && stats.bookings.total > 0
+      ? Math.round(
+          ((stats.bookings.confirmed + stats.bookings.completed) /
+            stats.bookings.total) *
+            100
+        )
+      : 0
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {/* ── Blockchain Banner ────────────────────────────────────────────── */}
+      <BlockchainBanner />
+
+      {/* ── Section 1: Vận hành thực tế (Backend API) ───────────────────── */}
+      <div className="space-y-4">
+        {/* Sub-header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-bold text-fg font-marketing">
+              Số liệu vận hành thực
+            </h3>
+            {(loadingStats || loadingChart) && (
+              <span className="inline-block h-3 w-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                fetchStats()
+                fetchChartData(days)
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-lg text-muted hover:text-fg hover:border-border-strong transition-colors bg-surface"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Làm mới
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCharts(prev => !prev)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all duration-200"
+              style={
+                showCharts
+                  ? {
+                      background: 'var(--primary)',
+                      color: 'var(--on-control)',
+                      borderColor: 'var(--primary)',
+                    }
+                  : {
+                      background: 'var(--surface)',
+                      color: 'var(--fg)',
+                      borderColor: 'var(--border)',
+                    }
+              }
+            >
+              <BarChart2 className="h-3 w-3" />
+              {showCharts ? 'Ẩn biểu đồ' : 'Hiện biểu đồ'}
+              <ChevronDown
+                className={`h-3 w-3 transition-transform duration-200 ${showCharts ? 'rotate-180' : ''}`}
+              />
+            </button>
           </div>
         </div>
-        <div className="flex gap-2 relative z-10 shrink-0">
-          <span className="text-xs font-semibold bg-accent-2/10 text-accent-2 px-3 py-2 rounded-lg border border-accent-2/20">
-            Node Blockchain: Hoạt động (99.8% uptime)
+
+        {/* Filter bar */}
+        <div className="bg-surface border border-border rounded-xl p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[10px] font-bold text-muted uppercase tracking-widest">
+              Bộ lọc
+            </span>
+            {(days !== '7' || dateRange.from) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDays('7')
+                  setDateRange({ from: null, to: null })
+                }}
+                className="ml-auto text-[10px] font-bold text-danger hover:underline"
+              >
+                Xoá bộ lọc
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-3 items-end">
+            <FilterDropdown
+              id="overview-days"
+              label="Khoảng thời gian"
+              options={TIME_RANGE_OPTIONS}
+              value={days}
+              onChange={v => {
+                setDays(v)
+                setDateRange({ from: null, to: null })
+              }}
+            />
+            <DateRangePicker
+              id="overview-date-range"
+              label="Ngày cụ thể"
+              value={dateRange}
+              onChange={setDateRange}
+            />
+          </div>
+        </div>
+
+        {/* Stats — row 1: Bookings */}
+        <div>
+          <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-2 flex items-center gap-1.5">
+            <CalendarCheck2 className="h-3 w-3" /> Lịch hẹn xem nhà
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <StatCard
+              title="Tổng lịch hẹn"
+              value={loadingStats ? <Skeleton /> : (stats?.bookings.total ?? 0)}
+              subtext="Tất cả trạng thái"
+              icon={<CalendarCheck2 className="h-4 w-4" />}
+              color="primary"
+            />
+            <StatCard
+              title="Chờ xác nhận"
+              value={
+                loadingStats ? <Skeleton /> : (stats?.bookings.pending ?? 0)
+              }
+              subtext="Cần xử lý sớm"
+              icon={<Clock className="h-4 w-4" />}
+              trend={
+                stats && stats.bookings.pending > 5
+                  ? { value: 'Cần xử lý', type: 'down' }
+                  : undefined
+              }
+              color="warning"
+            />
+            <StatCard
+              title="Đã xác nhận"
+              value={
+                loadingStats ? <Skeleton /> : (stats?.bookings.confirmed ?? 0)
+              }
+              subtext="Đã được duyệt"
+              icon={<ShieldCheck className="h-4 w-4" />}
+              color="success"
+            />
+            <StatCard
+              title="Hoàn thành"
+              value={loadingStats ? <Skeleton /> : `${completionRate}%`}
+              subtext="Tỷ lệ xác nhận / tổng"
+              icon={<TrendingUp className="h-4 w-4" />}
+              trend={
+                stats
+                  ? {
+                      value: completionRate >= 60 ? 'Tốt' : 'Cần cải thiện',
+                      type: completionRate >= 60 ? 'up' : 'down',
+                    }
+                  : undefined
+              }
+              color="info"
+            />
+          </div>
+        </div>
+
+        {/* Stats — row 2: KYC, Apartments, Tickets */}
+        <div>
+          <p className="text-[10px] font-bold text-muted uppercase tracking-widest mb-2 flex items-center gap-1.5">
+            <Building2 className="h-3 w-3" /> Nghiệp vụ khác
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <StatCard
+              title="KYC chờ duyệt"
+              value={loadingStats ? <Skeleton /> : (stats?.kyc.pending ?? 0)}
+              subtext={`Tổng ${stats?.kyc.total ?? 0} hồ sơ`}
+              icon={<ShieldCheck className="h-4 w-4" />}
+              trend={
+                stats && stats.kyc.pending > 0
+                  ? { value: `${stats.kyc.pending} chờ`, type: 'down' }
+                  : { value: 'OK', type: 'up' }
+              }
+              color="warning"
+            />
+            <StatCard
+              title="Căn hộ chờ duyệt"
+              value={
+                loadingStats ? <Skeleton /> : (stats?.apartments.pending ?? 0)
+              }
+              subtext={`${stats?.apartments.available ?? 0} đang cho thuê`}
+              icon={<Building2 className="h-4 w-4" />}
+              trend={
+                stats && stats.apartments.pending > 0
+                  ? { value: `${stats.apartments.pending} chờ`, type: 'down' }
+                  : { value: 'OK', type: 'up' }
+              }
+              color="primary"
+            />
+            <StatCard
+              title="Ticket hỗ trợ mở"
+              value={loadingStats ? <Skeleton /> : (stats?.tickets.open ?? 0)}
+              subtext={`${stats?.tickets.inProgress ?? 0} đang xử lý`}
+              icon={<HelpCircle className="h-4 w-4" />}
+              trend={
+                stats && stats.tickets.open > 3
+                  ? { value: 'Cần xử lý', type: 'down' }
+                  : { value: 'OK', type: 'up' }
+              }
+              color={stats && stats.tickets.open > 3 ? 'danger' : 'success'}
+            />
+          </div>
+        </div>
+
+        {statsError && (
+          <div className="flex items-center gap-2 text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
+            <span>⚠ {statsError}</span>
+            <button
+              type="button"
+              onClick={fetchStats}
+              className="ml-auto font-bold underline"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
+
+        {/* Booking charts (toggleable) */}
+        <div
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${showCharts ? 'max-h-[900px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'}`}
+        >
+          {chartError ? (
+            <div className="flex items-center gap-2 text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
+              <span>⚠ {chartError}</span>
+              <button
+                type="button"
+                onClick={() => fetchChartData(days)}
+                className="ml-auto font-bold underline"
+              >
+                Thử lại
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 min-h-[240px]">
+                  {loadingChart ? (
+                    <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex items-center justify-center min-h-[240px]">
+                      <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                    </div>
+                  ) : (
+                    <BookingBarChart
+                      data={barChartData}
+                      title="Lịch hẹn theo ngày"
+                    />
+                  )}
+                </div>
+                <div className="min-h-[240px]">
+                  {loadingChart ? (
+                    <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex items-center justify-center min-h-[240px]">
+                      <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                    </div>
+                  ) : (
+                    <BookingStatusDoughnut
+                      data={doughnutData}
+                      title="Tỷ lệ trạng thái"
+                    />
+                  )}
+                </div>
+              </div>
+              <div className="min-h-[220px]">
+                {loadingChart ? (
+                  <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex items-center justify-center min-h-[220px]">
+                    <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                  </div>
+                ) : (
+                  <BookingTrendLineChart
+                    data={trendData}
+                    title="Xu hướng lịch hẹn theo thời gian"
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Divider ───────────────────────────────────────────────────────── */}
+      <div className="relative flex items-center gap-3">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-[10px] font-bold text-muted uppercase tracking-widest bg-bg px-2">
+          Blockchain & Hệ thống
+        </span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      {/* ── Section 2: Blockchain / Smart Contract (charts cũ) ───────────── */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Cpu className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-bold text-fg font-marketing">
+            Blockchain & Smart Contract
+          </h3>
+          <span className="text-[10px] font-bold text-success bg-success/10 border border-success/20 px-2 py-0.5 rounded-full ml-1">
+            Live
           </span>
         </div>
-      </div>
 
-      {/* DETAILED STATISTICS SECTION */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold text-muted font-body uppercase tracking-wider">
-          Thông số Hoạt động Vận hành
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Tin đăng chờ duyệt"
-            value="12 căn"
-            subtext="6 tin mới gửi trong 3 giờ qua"
-            trend={{ value: '+25%', type: 'up' }}
-            icon={
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            }
-          />
-          <StatCard
-            title="KYC chờ đối soát"
-            value="28 hồ sơ"
-            subtext="Thời gian chờ trung bình: 14 phút"
-            trend={{ value: '+12%', type: 'up' }}
-            icon={
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            }
-          />
-          <StatCard
-            title="Tranh chấp cọc"
-            value="3 vụ việc"
-            subtext="Cần culi phán quyết khẩn cấp"
-            trend={{ value: 'Yêu cầu xử lý', type: 'down' }}
-            icon={
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-            }
-          />
-          <StatCard
-            title="Lịch hẹn hôm nay"
-            value="14 cuộc"
-            subtext="Gồm 8 lịch xem nhà trực tiếp"
-            trend={{ value: 'Bình thường', type: 'neutral' }}
-            icon={
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
-            }
-          />
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold text-muted font-body uppercase tracking-wider">
-          Số liệu Blockchain & Mạng lưới
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Tổng quỹ cọc Escrow"
-            value="4.85 ETH"
-            subtext="~365,000,000 VND đang bị khóa"
-            trend={{ value: 'Tăng trưởng', type: 'up' }}
-            icon={
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <rect x="2" y="5" width="20" height="14" rx="2" ry="2" />
-                <line x1="2" y1="10" x2="22" y2="10" />
-              </svg>
-            }
-          />
-          <StatCard
-            title="Smart Contracts"
-            value="142 Hợp đồng"
-            subtext="Đã biên dịch và triển khai thành công"
-            trend={{ value: '100% Khớp', type: 'neutral' }}
-            icon={
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <polyline points="16 18 22 12 16 6" />
-                <polyline points="8 6 2 12 8 18" />
-              </svg>
-            }
-          />
-          <StatCard
-            title="Gas Fee trung bình"
-            value="12.5 Gwei"
-            subtext="Phí gas mạng lưới đang rất rẻ"
-            trend={{ value: 'Tốt', type: 'up' }}
-            icon={
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-            }
-          />
-          <StatCard
-            title="Độ trễ Node Ping"
-            value="42 ms"
-            subtext="Thời gian phản hồi với cổng RPC"
-            trend={{ value: 'Rất nhanh', type: 'up' }}
-            icon={
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-              </svg>
-            }
-          />
-        </div>
-      </div>
-
-      {/* ANALYTICS CHARTS ROW */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* Left: Escrow Deposit Line Chart */}
-        <div className="xl:col-span-5">
-          <EscrowLineChart />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <EscrowLineChart />
+          </div>
+          <div>
+            <TaskDoughnutChart />
+          </div>
         </div>
 
-        {/* Center: System Load Bar Chart */}
-        <div className="xl:col-span-4">
+        <div>
           <SystemLoadBarChart />
-        </div>
-
-        {/* Right: Task Distribution Doughnut Chart */}
-        <div className="xl:col-span-3">
-          <TaskDoughnutChart />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Work queues list */}
-        <div className="lg:col-span-2 bg-surface border border-line rounded-xl p-5 shadow-sm">
-          <h3 className="text-base font-bold text-fg font-marketing mb-4">
-            Danh sách công việc ưu tiên
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3.5 bg-bg/40 border border-line rounded-lg hover:bg-bg/60 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-                <div>
-                  <h4 className="text-xs font-semibold text-fg">
-                    Tranh chấp: Hủy hợp đồng căn hộ #104
-                  </h4>
-                  <p className="text-xs text-subtle mt-0.5">
-                    Người dùng Nguyễn Văn A yêu cầu rút cọc sớm. Chủ nhà từ
-                    chối.
-                  </p>
-                </div>
-              </div>
-              <span className="text-xs text-accent font-medium bg-accent/5 px-2.5 py-1 rounded border border-accent/10">
-                Tranh chấp
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-3.5 bg-bg/40 border border-line rounded-lg hover:bg-bg/60 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-accent-3" />
-                <div>
-                  <h4 className="text-xs font-semibold text-fg">
-                    Duyệt KYC: Trần Thị B
-                  </h4>
-                  <p className="text-xs text-subtle mt-0.5">
-                    Đã tải ảnh chân dung và mặt trước/mặt sau CCCD mới.
-                  </p>
-                </div>
-              </div>
-              <span className="text-xs text-accent-3 font-medium bg-accent-3/5 px-2.5 py-1 rounded border border-accent-3/10">
-                Duyệt KYC
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-3.5 bg-bg/40 border border-line rounded-lg hover:bg-bg/60 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-accent-2" />
-                <div>
-                  <h4 className="text-xs font-semibold text-fg">
-                    Duyệt tin đăng: Căn hộ Landmark 81 - 2PN
-                  </h4>
-                  <p className="text-xs text-subtle mt-0.5">
-                    Chủ nhà Nguyễn Đức C đã tải lên ảnh quét VR 360° hoàn chỉnh.
-                  </p>
-                </div>
-              </div>
-              <span className="text-xs text-accent-2 font-medium bg-accent-2/5 px-2.5 py-1 rounded border border-accent-2/10">
-                Duyệt tin
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Blockchain System logs */}
-        <div className="bg-surface border border-line rounded-xl p-5 shadow-sm">
-          <h3 className="text-base font-bold text-fg font-marketing mb-4">
-            Lịch sử giao dịch Blockchain
-          </h3>
-          <div className="space-y-4">
-            <div className="flex gap-3 items-start">
-              <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-2/10 text-accent-2">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-fg">
-                  Khóa cọc thành công (Escrow Lock)
-                </p>
-                <p className="text-xs text-subtle mt-0.5">
-                  Căn hộ #201 bởi ví `0x71C...897` (1.2 ETH)
-                </p>
-                <span className="text-[10px] text-muted-foreground font-mono block mt-1">
-                  Block: #18920144 • 2 phút trước
-                </span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 items-start">
-              <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-2/10 text-accent-2">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-fg">
-                  Khởi tạo Hợp đồng thông minh (Deploy)
-                </p>
-                <p className="text-xs text-subtle mt-0.5">
-                  Hợp đồng thuê căn hộ Landmark 81 - Phòng 1502
-                </p>
-                <span className="text-[10px] text-muted-foreground font-mono block mt-1">
-                  Tx: `0x8fa...a1e` • 15 phút trước
-                </span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 items-start">
-              <div className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-3/10 text-accent-3">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-fg">
-                  Giao dịch chờ xác nhận (Pending)
-                </p>
-                <p className="text-xs text-subtle mt-0.5">
-                  Thanh toán tiền thuê tháng 6 căn hộ #109
-                </p>
-                <span className="text-[10px] text-muted-foreground font-mono block mt-1">
-                  Tx: `0x2b2...890` • Đang chờ...
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

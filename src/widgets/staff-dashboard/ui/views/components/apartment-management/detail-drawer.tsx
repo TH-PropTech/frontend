@@ -14,6 +14,8 @@ import {
   CheckCircle,
   XCircle,
   X,
+  ImageIcon,
+  ScanLine,
 } from 'lucide-react'
 import { ImageGallery } from './image-gallery'
 import { StatusBadge } from './status-badge'
@@ -26,7 +28,10 @@ interface DetailDrawerProps {
   onStatusChange: (id: string, status: ApartmentStatus) => void
   onApprove: (id: string) => Promise<void>
   onReject: (id: string, reason: string) => Promise<void>
+  onMediaChange: (apartment: StaffApartment) => void
 }
+
+type MediaType = 'gallery' | 'images360'
 
 export function DetailDrawer({
   apartment,
@@ -34,14 +39,14 @@ export function DetailDrawer({
   onStatusChange,
   onApprove,
   onReject,
+  onMediaChange,
 }: DetailDrawerProps): React.ReactElement {
-  const [previewUrls, setPreviewUrls] = React.useState<string[]>([])
+  const [mediaType, setMediaType] = React.useState<MediaType>('gallery')
   const [isUploading, setIsUploading] = React.useState(false)
   const [isActing, setIsActing] = React.useState(false)
   const [showRejectInput, setShowRejectInput] = React.useState(false)
   const [rejectReason, setRejectReason] = React.useState('')
 
-  const allImages = [...apartment.gallery, ...apartment.images360]
   const cfg = STATUS_CONFIG[apartment.status]
 
   const handleUpload = async (files: FileList): Promise<void> => {
@@ -53,8 +58,14 @@ export function DetailDrawer({
         '/apartments/upload',
         formData
       )
-      setPreviewUrls(prev => [...prev, ...res.urls])
-      toast.success(`Đã upload ${res.urls.length} ảnh thành công!`)
+      const updated = await apiClient.patch<StaffApartment>(
+        `/apartments/${apartment.id}/media`,
+        { [mediaType]: res.urls }
+      )
+      onMediaChange(updated)
+      toast.success(
+        `Đã thay thế ${res.urls.length} ${mediaType === 'gallery' ? 'ảnh thường' : 'ảnh 360°'} thành công!`
+      )
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Upload ảnh thất bại')
     } finally {
@@ -114,11 +125,46 @@ export function DetailDrawer({
       <div className="relative z-10 flex flex-col lg:flex-row w-full max-w-5xl h-[90vh] bg-[color:var(--surface)] rounded-2xl border border-[color:var(--border)] shadow-[var(--shadow-lg)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* LEFT — Gallery */}
         <div className="w-full lg:w-[55%] flex flex-col min-h-0">
+          <div className="grid grid-cols-2 gap-1 p-2 border-b border-[color:var(--border)] bg-[color:var(--surface)]">
+            <button
+              type="button"
+              onClick={() => setMediaType('gallery')}
+              className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                mediaType === 'gallery'
+                  ? 'bg-[color:var(--primary)] text-[color:var(--on-control)]'
+                  : 'text-[color:var(--muted)] hover:bg-[color:var(--surface-muted)]'
+              }`}
+            >
+              <ImageIcon className="h-3.5 w-3.5" />
+              Ảnh thường ({apartment.gallery.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMediaType('images360')}
+              className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                mediaType === 'images360'
+                  ? 'bg-[color:var(--primary)] text-[color:var(--on-control)]'
+                  : 'text-[color:var(--muted)] hover:bg-[color:var(--surface-muted)]'
+              }`}
+            >
+              <ScanLine className="h-3.5 w-3.5" />
+              Ảnh 360° ({apartment.images360.length})
+            </button>
+          </div>
           <ImageGallery
-            images={allImages}
+            images={apartment[mediaType]}
             onUpload={handleUpload}
             isUploading={isUploading}
-            previewUrls={previewUrls}
+            emptyLabel={
+              mediaType === 'gallery'
+                ? 'Chưa có ảnh thường'
+                : 'Chưa có ảnh 360°'
+            }
+            uploadLabel={
+              mediaType === 'gallery'
+                ? 'Tải ảnh thường để thay thế'
+                : 'Tải ảnh 360° để thay thế'
+            }
           />
         </div>
 

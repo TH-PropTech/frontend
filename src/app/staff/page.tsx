@@ -1,12 +1,6 @@
-import type { Metadata } from 'next'
-import { StaffDashboard } from '@/widgets/staff-dashboard'
+import type { Route } from 'next'
+import { redirect } from 'next/navigation'
 
-export const metadata: Metadata = {
-  title: 'Bảng điều khiển Nhân viên',
-  description:
-    'Hệ thống quản lý, phê duyệt tin đăng, KYC và hợp đồng thông minh dành cho nhân viên vận hành TH PropTech.',
-}
-
-export default function StaffPage(): React.ReactElement {
-  return <StaffDashboard />
+export default function StaffPage(): never {
+  redirect('/staff/overview' as Route)
 }
