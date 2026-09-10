@@ -22,6 +22,7 @@ import {
   Upload,
 } from 'lucide-react'
 import { env } from '@/shared/config/env'
+import { downloadContractArtifact } from '@/features/contracts'
 
 interface ModalContractProps {
   profile: UseProfileReturn
@@ -96,6 +97,28 @@ export function ModalContract({
     }
     setIsWebcamActive(false)
     setShowContractModal(false)
+  }
+
+  const handleDownloadArtifact = async (): Promise<void> => {
+    if (!activeProperty.id || activeProperty.id.length !== 24) {
+      toast.error('Chưa có mã hợp đồng hợp lệ để tải tài liệu.')
+      return
+    }
+    try {
+      const artifact = await downloadContractArtifact(activeProperty.id, 'pdf')
+      const url = URL.createObjectURL(artifact)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `${activeProperty.code}.pdf`
+      anchor.click()
+      URL.revokeObjectURL(url)
+    } catch (downloadError) {
+      toast.error(
+        downloadError instanceof Error
+          ? downloadError.message
+          : 'Không thể tải tài liệu hợp đồng.'
+      )
+    }
   }
 
   const startWebcam = async () => {
@@ -405,9 +428,7 @@ export function ModalContract({
             {contractViewOnly ? (
               <div className="flex gap-3 pt-2 shrink-0">
                 <Button
-                  onClick={() => {
-                    toast.success('Đã tải file hợp đồng PDF về thiết bị.')
-                  }}
+                  onClick={() => void handleDownloadArtifact()}
                   variant="secondary"
                   className="flex-1 h-10 text-xs rounded-full font-bold flex items-center justify-center gap-1.5"
                 >

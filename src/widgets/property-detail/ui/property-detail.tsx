@@ -206,7 +206,10 @@ export function PropertyDetail(): React.ReactElement {
 
         {viewer?.roles?.includes('tenant') ? (
           <section className="mx-auto flex max-w-6xl justify-end px-6 pt-4 md:px-10">
-            <ApplyDialog apartmentId={property.id} />
+            <ApplyDialog
+              apartmentId={property.id}
+              packages={property.rentalPackages}
+            />
           </section>
         ) : null}
 

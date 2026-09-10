@@ -12,28 +12,49 @@ import {
   DialogTrigger,
 } from '@/shared/ui/dialog'
 import { createRentalApplication } from '../api/rental-application-api'
+import { RentalPackageSelector } from './rental-package-selector'
+import type { RentalPackageItem } from '@/entities/properties'
 
 export function ApplyDialog({
   apartmentId,
+  packages = [],
 }: {
   apartmentId: string
+  packages?: RentalPackageItem[] | undefined
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
   const [submitting, setSubmitting] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [selectedPackageId, setSelectedPackageId] = React.useState('')
+  const activePackages = packages.filter(item => item.status === 'active')
   const submit = async (
     event: React.FormEvent<HTMLFormElement>
   ): Promise<void> => {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
+    const selectedPackage = activePackages.find(
+      item => item.packageId === selectedPackageId
+    )
+    if (activePackages.length > 0 && !selectedPackage) {
+      setError('Vui lòng chọn một gói thuê đang hiệu lực.')
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
       await createRentalApplication({
         apartmentId,
+        ...(selectedPackage
+          ? {
+              packageId: selectedPackage.packageId,
+              packageVersion: selectedPackage.version,
+            }
+          : {}),
         occupants: Number(form.get('occupants')),
         moveInDate: String(form.get('moveInDate')),
-        leaseDurationMonths: Number(form.get('leaseDurationMonths')),
+        leaseDurationMonths:
+          selectedPackage?.durationMonths ??
+          Number(form.get('leaseDurationMonths')),
         occupation: String(form.get('occupation')),
         hasPets: form.get('hasPets') === 'on',
         ...(String(form.get('notes')).trim()
@@ -56,7 +77,7 @@ export function ApplyDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button data-testid="rental-application-trigger">
           <FileText className="h-4 w-4" />
           Ứng tuyển thuê căn
         </Button>
@@ -91,18 +112,29 @@ export function ApplyDialog({
               className={fieldClass}
             />
           </label>
-          <label className="block text-xs text-muted">
-            Thời hạn thuê (tháng)
-            <input
-              required
-              aria-label="Thời hạn thuê"
-              name="leaseDurationMonths"
-              type="number"
-              min="1"
-              max="60"
-              className={fieldClass}
+          {activePackages.length > 0 ? (
+            <RentalPackageSelector
+              packages={packages}
+              value={selectedPackageId}
+              onChange={packageId => {
+                setSelectedPackageId(packageId)
+                setError(null)
+              }}
             />
-          </label>
+          ) : (
+            <label className="block text-xs text-muted">
+              Thời hạn thuê (tháng)
+              <input
+                required
+                aria-label="Thời hạn thuê"
+                name="leaseDurationMonths"
+                type="number"
+                min="1"
+                max="60"
+                className={fieldClass}
+              />
+            </label>
+          )}
           <label className="block text-xs text-muted">
             Nghề nghiệp
             <input
@@ -126,7 +158,11 @@ export function ApplyDialog({
             />
           </label>
           {error ? <p className="text-xs text-danger">{error}</p> : null}
-          <Button type="submit" loading={submitting}>
+          <Button
+            type="submit"
+            loading={submitting}
+            data-testid="rental-application-submit"
+          >
             Gửi ứng tuyển
           </Button>
         </form>
