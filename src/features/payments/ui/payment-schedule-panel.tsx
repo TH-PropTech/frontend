@@ -1,0 +1,197 @@
+'use client'
+
+import * as React from 'react'
+import { Banknote, Link2, Loader2, RefreshCw } from 'lucide-react'
+import { Button } from '@/shared/ui/button'
+import {
+  getLinkedWallet,
+  getPaymentsByContract,
+  initRentPayment,
+  linkWallet,
+  type LinkedWallet,
+  type PaymentItem,
+} from '../api/payments-api'
+
+export interface PaymentSchedulePanelProps {
+  contractId: string
+}
+
+export function PaymentSchedulePanel({
+  contractId,
+}: PaymentSchedulePanelProps): React.ReactElement {
+  const [payments, setPayments] = React.useState<PaymentItem[]>([])
+  const [wallet, setWallet] = React.useState<LinkedWallet | null>(null)
+  const [loading, setLoading] = React.useState(true)
+  const [busyPaymentId, setBusyPaymentId] = React.useState<string | null>(null)
+  const [linking, setLinking] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+  const [lastPaymentRef, setLastPaymentRef] = React.useState<string | null>(
+    null
+  )
+
+  const load = React.useCallback(async (): Promise<void> => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [schedule, linkedWallet] = await Promise.all([
+        getPaymentsByContract(contractId),
+        getLinkedWallet(),
+      ])
+      setPayments(schedule)
+      setWallet(linkedWallet)
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : 'Không tải được lịch thanh toán.'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }, [contractId])
+
+  React.useEffect(() => {
+    const scheduleLoad = window.setTimeout(() => {
+      void load()
+    }, 0)
+
+    return () => window.clearTimeout(scheduleLoad)
+  }, [load])
+
+  const handleLinkWallet = async (): Promise<void> => {
+    setLinking(true)
+    setError(null)
+    try {
+      setWallet(await linkWallet())
+    } catch (linkError) {
+      setError(
+        linkError instanceof Error
+          ? linkError.message
+          : 'Không liên kết được ví.'
+      )
+    } finally {
+      setLinking(false)
+    }
+  }
+
+  const handlePay = async (payment: PaymentItem): Promise<void> => {
+    setBusyPaymentId(payment._id)
+    setError(null)
+    try {
+      const init = await initRentPayment(payment._id)
+      setLastPaymentRef(init.txRef)
+    } catch (paymentError) {
+      setError(
+        paymentError instanceof Error
+          ? paymentError.message
+          : 'Không tạo được phiên thanh toán.'
+      )
+    } finally {
+      setBusyPaymentId(null)
+    }
+  }
+
+  if (loading) {
+    return <p className="text-sm text-muted">Đang tải lịch thanh toán…</p>
+  }
+  if (error && payments.length === 0) {
+    return (
+      <div className="space-y-3 rounded-2xl border border-danger/30 bg-danger/10 p-4">
+        <p className="text-sm text-danger">{error}</p>
+        <Button type="button" variant="secondary" onClick={() => void load()}>
+          <RefreshCw className="h-4 w-4" /> Thử lại
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <section className="space-y-4 rounded-2xl border border-border bg-surface p-5">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="font-semibold text-fg">Lịch thanh toán</h3>
+          <p className="text-xs text-muted">
+            Thanh toán qua cổng liên kết; nền tảng không giữ hoặc tự động trừ
+            tiền.
+          </p>
+        </div>
+        <span className="rounded-full bg-warning/10 px-2.5 py-1 text-[11px] font-semibold text-warning">
+          Mô phỏng sandbox
+        </span>
+      </header>
+
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface-muted p-3 text-xs">
+        <Link2 className="h-4 w-4 text-primary" />
+        {wallet?.status === 'linked'
+          ? `Đã liên kết ${wallet.externalAccountRef}`
+          : 'Chưa liên kết tài khoản thanh toán'}
+        {wallet?.balance === null
+          ? ' · số dư không được nền tảng quản lý'
+          : null}
+        {wallet?.status !== 'linked' ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            loading={linking}
+            onClick={() => void handleLinkWallet()}
+          >
+            Liên kết
+          </Button>
+        ) : null}
+      </div>
+
+      {payments.length === 0 ? (
+        <p className="rounded-xl border border-border bg-surface-muted p-4 text-sm text-muted">
+          Chưa có kỳ thanh toán.
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {payments.map(payment => (
+            <div
+              key={payment._id}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3"
+            >
+              <div>
+                <p className="text-sm font-semibold text-fg">
+                  {payment.description}
+                </p>
+                <p className="text-xs text-muted">
+                  Hạn {new Date(payment.dueDate).toLocaleDateString('vi-VN')} ·{' '}
+                  {payment.amount.toLocaleString('vi-VN')} đ
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-muted">
+                  {payment.status}
+                </span>
+                {payment.status !== 'paid' ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={busyPaymentId !== null}
+                    onClick={() => void handlePay(payment)}
+                  >
+                    {busyPaymentId === payment._id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Banknote className="h-4 w-4" />
+                    )}
+                    Thanh toán
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {lastPaymentRef ? (
+        <p className="text-xs text-info">
+          Đã tạo payment intent {lastPaymentRef}; chờ callback sandbox xác nhận.
+        </p>
+      ) : null}
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
+    </section>
+  )
+}

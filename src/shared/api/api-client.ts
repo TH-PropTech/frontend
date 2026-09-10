@@ -42,11 +42,30 @@ export class ApiClient {
     return this.request<TData>(path, { method: 'PATCH', body })
   }
 
+  async put<TData>(path: string, body: unknown): Promise<TData> {
+    return this.request<TData>(path, { method: 'PUT', body })
+  }
+
   async delete<TData>(
     path: string,
     options: RequestOptions = {}
   ): Promise<TData> {
     return this.request<TData>(path, { ...options, method: 'DELETE' })
+  }
+
+  async getBlob(path: string): Promise<Blob> {
+    const headers = new Headers()
+    const token = this.getAccessToken?.()
+    if (token) headers.set('Authorization', `Bearer ${token}`)
+    const response = await fetch(createApiUrl(this.baseUrl, path), { headers })
+    if (!response.ok) {
+      throw new ApiClientError(
+        'Không thể tải nội dung được bảo vệ',
+        response.status,
+        null
+      )
+    }
+    return response.blob()
   }
 
   private async request<TData>(

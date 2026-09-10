@@ -1,3 +1,17 @@
+export type RentalPackageDuration = 1 | 3 | 6 | 12
+
+export interface RentalPackageItem {
+  packageId: string
+  version: number
+  durationMonths: RentalPackageDuration
+  monthlyRent: number
+  depositPolicy:
+    | { type: 'MONTHS_OF_RENT'; months: number }
+    | { type: 'FIXED_AMOUNT'; amount: number }
+  resolvedDepositAmount: number
+  status: 'active' | 'inactive'
+}
+
 export interface ApartmentItem {
   id: string
   title: string
@@ -45,6 +59,9 @@ export interface ApartmentItem {
     avatar: string
     kycStatus: string
   } | null
+  pricingMode?: 'packages' | 'legacy'
+  pricingRevision?: number
+  rentalPackages?: RentalPackageItem[]
 }
 
 export interface ProjectUnit {

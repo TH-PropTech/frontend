@@ -92,6 +92,7 @@ export interface UseProfileReturn {
   usdtBalance: number
   escrowBalance: number
   isKycVerified: boolean
+  kycStatus: 'not-started' | 'pending' | 'verified' | 'rejected'
   showKycModal: boolean
   setShowKycModal: React.Dispatch<React.SetStateAction<boolean>>
   isOcrLoading: boolean
@@ -155,7 +156,7 @@ export interface UseProfileReturn {
   appointments: Appointment[]
   handleConnectWallet: () => void
   handleUploadCccd: (imageBase64?: string) => Promise<void> | void
-  handleConfirmKyc: () => void
+  refreshKycStatus: () => Promise<void>
   handlePayDeposit: () => void
   handleSignContract: () => void
   handlePayRent: () => void

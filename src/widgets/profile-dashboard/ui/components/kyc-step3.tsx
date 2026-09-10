@@ -33,8 +33,7 @@ interface KycStep3Props {
     verified: boolean
     faceMatch: boolean
     liveness: boolean
-    spoofScore: number
-    ocrMatchRate: number
+    realConfidence: number | null
   }
   preferredDistrict: string
   setPreferredDistrict: (val: string) => void
@@ -233,7 +232,9 @@ export function KycStep3({
                 Chỉ số Spoof Score:
               </span>
               <span className="font-bold text-emerald-700">
-                {(verifyResults.spoofScore * 100).toFixed(0)}%
+                {verifyResults.realConfidence === null
+                  ? 'Không có dữ liệu'
+                  : `${(verifyResults.realConfidence * 100).toFixed(0)}%`}
               </span>
             </div>
           </div>

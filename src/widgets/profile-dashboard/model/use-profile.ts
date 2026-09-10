@@ -17,6 +17,7 @@ import {
 import { useProfileMaintenance } from './use-profile-maintenance'
 import { useProfileAppointments } from './use-profile-appointments'
 import { uploadAndProcessCccd } from './ocr-utils'
+import { getMyKyc } from '../api/kyc-api'
 
 // Re-export types for convenience
 export type {
@@ -109,24 +110,63 @@ export function useProfile(): UseProfileReturn {
   const [escrowBalance, setEscrowBalance] = React.useState(0)
 
   // KYC
-  const [isKycVerified, setIsKycVerified] = React.useState(() => {
+  const [kycStatus, setKycStatus] = React.useState<
+    'not-started' | 'pending' | 'verified' | 'rejected'
+  >(() => {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('user')
         if (stored) {
           const u = JSON.parse(stored) as { kycStatus?: string }
-          return u.kycStatus === 'verified'
+          if (
+            u.kycStatus === 'pending' ||
+            u.kycStatus === 'verified' ||
+            u.kycStatus === 'rejected'
+          ) {
+            return u.kycStatus
+          }
         }
       } catch {
         // Ignore JSON parse error
       }
     }
-    return false
+    return 'not-started'
   })
+  const isKycVerified = kycStatus === 'verified'
   const [showKycModal, setShowKycModal] = React.useState(false)
   const [isOcrLoading, setIsOcrLoading] = React.useState(false)
   const [kycForm, setKycForm] = React.useState(EMPTY_KYC)
   const [cccdUploaded, setCccdUploaded] = React.useState(false)
+
+  const refreshKycStatus = React.useCallback(async (): Promise<void> => {
+    const record = await getMyKyc()
+    setKycStatus(record?.status ?? 'not-started')
+    if (record) {
+      setKycForm({
+        fullName: record.fullName ?? '',
+        cccdNumber: record.idCardNumber,
+        dob: record.dateOfBirth ?? '',
+        address: record.placeOfResidence ?? '',
+        gender: record.gender ?? '',
+        nationality: record.nationality ?? '',
+        placeOfOrigin: record.placeOfOrigin ?? '',
+        issueDate: record.issueDate ?? '',
+        placeOfIssue: record.placeOfIssue ?? '',
+      })
+    }
+  }, [])
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !localStorage.getItem('accessToken')) {
+      return
+    }
+    const timer = setTimeout(() => {
+      void refreshKycStatus().catch(error => {
+        console.warn('Could not load current KYC status', error)
+      })
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [refreshKycStatus])
 
   React.useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -234,19 +274,6 @@ export function useProfile(): UseProfileReturn {
     } finally {
       setIsOcrLoading(false)
     }
-  }
-
-  const handleConfirmKyc = (): void => {
-    setIsKycVerified(true)
-    const event =
-      role === 'tenant' ? 'TENANT_KYC_VERIFIED' : 'LANDLORD_KYC_VERIFIED'
-    addBlockchainLog(
-      event,
-      '7b8a109a27e3d09a25b18920138d89f2c1e8aa2206b7d912da98d1a1b2c3d4e5f'
-    )
-    toast.success('Xác minh danh tính KYC hoàn tất', {
-      description: 'Chứng chỉ Fabric CA (X.509) đã được cấp và neo lên Ledger.',
-    })
   }
 
   const handlePayDeposit = (): void => {
@@ -399,7 +426,7 @@ export function useProfile(): UseProfileReturn {
     setIsWalletConnected(false)
     setWalletAddress('')
     setEscrowBalance(0)
-    setIsKycVerified(false)
+    setKycStatus('not-started')
     setCccdUploaded(false)
     setKycForm(EMPTY_KYC)
     setActivePropertyId('prop-1')
@@ -437,6 +464,7 @@ export function useProfile(): UseProfileReturn {
     usdtBalance,
     escrowBalance,
     isKycVerified,
+    kycStatus,
     showKycModal,
     setShowKycModal,
     isOcrLoading,
@@ -466,7 +494,7 @@ export function useProfile(): UseProfileReturn {
     appointments,
     handleConnectWallet,
     handleUploadCccd,
-    handleConfirmKyc,
+    refreshKycStatus,
     handlePayDeposit,
     handleSignContract,
     handlePayRent,

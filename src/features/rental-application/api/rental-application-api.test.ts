@@ -1,11 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { apiClient } from '@/shared/api'
+import { ApiClientError, apiClient } from '@/shared/api'
 import {
   createRentalApplication,
   getMyRentalApplications,
   respondToRentalApplication,
+  isRentalPackageStaleError,
 } from './rental-application-api'
 vi.mock('@/shared/api', () => ({
+  ApiClientError: class MockApiClientError extends Error {
+    status: number
+    body: unknown
+    constructor(message: string, status: number, body: unknown) {
+      super(message)
+      this.status = status
+      this.body = body
+    }
+  },
   apiClient: { post: vi.fn(), get: vi.fn(), patch: vi.fn() },
 }))
 describe('rental application API', () => {
@@ -36,5 +46,14 @@ describe('rental application API', () => {
       '/rental-applications/application-1/respond',
       { status: 'accepted', reasonCode: 'meets_requirements' }
     )
+  })
+
+  it('identifies a stale package response without treating it as a client validation success', () => {
+    const stale = new ApiClientError('PACKAGE_STALE', 409, {
+      code: 'HTTP_409',
+      message: 'PACKAGE_STALE',
+    })
+    expect(isRentalPackageStaleError(stale)).toBe(true)
+    expect(isRentalPackageStaleError(new Error('PACKAGE_STALE'))).toBe(false)
   })
 })

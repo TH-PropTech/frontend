@@ -1,8 +1,10 @@
-import { apiClient } from '@/shared/api'
+import { apiClient, ApiClientError } from '@/shared/api'
 
 export type RentalApplicationStatus = 'pending' | 'accepted' | 'rejected'
 export interface CreateRentalApplicationInput {
   apartmentId: string
+  packageId?: string
+  packageVersion?: number
   occupants: number
   moveInDate: string
   leaseDurationMonths: number
@@ -20,6 +22,13 @@ export interface RentalApplicationItem extends CreateRentalApplicationInput {
   actorTimestamp: string | null
   createdAt: string
   updatedAt: string
+  packageSnapshot?: {
+    packageId: string
+    version: number
+    durationMonths: 1 | 3 | 6 | 12
+    monthlyRent: number
+    resolvedDepositAmount: number
+  } | null
 }
 export interface RentalApplicationList {
   items: RentalApplicationItem[]
@@ -50,5 +59,13 @@ export async function respondToRentalApplication(
   return apiClient.patch<RentalApplicationItem>(
     `/rental-applications/${id}/respond`,
     input
+  )
+}
+
+export function isRentalPackageStaleError(error: unknown): boolean {
+  if (!(error instanceof ApiClientError)) return false
+  return (
+    error.message.includes('PACKAGE_STALE') ||
+    error.body?.code === 'PACKAGE_STALE'
   )
 }

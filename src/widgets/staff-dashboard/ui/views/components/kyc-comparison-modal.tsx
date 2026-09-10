@@ -1,8 +1,10 @@
 'use client'
 
 import * as React from 'react'
+import Image from 'next/image'
 import type { KycRecord } from '../kyc-approvals-view'
 import { CccdMockupCard } from './cccd-mockup-card'
+import { apiClient } from '@/shared/api/api-client'
 
 interface KycComparisonModalProps {
   selectedRecord: KycRecord
@@ -17,6 +19,10 @@ export function KycComparisonModal({
   onVerify,
   onShowReject,
 }: KycComparisonModalProps): React.ReactElement {
+  const frontCardUrl = useProtectedKycImage(selectedRecord.id, 'front-card')
+  const backCardUrl = useProtectedKycImage(selectedRecord.id, 'back-card')
+  const selfieUrl = useProtectedKycImage(selectedRecord.id, 'selfie')
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10">
       <div
@@ -66,12 +72,14 @@ export function KycComparisonModal({
               <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                 Mặt trước CCCD
               </span>
-              {selectedRecord.frontCardUrl ? (
+              {frontCardUrl ? (
                 <div className="relative aspect-[1.58/1] w-full max-w-sm mx-auto overflow-hidden rounded-xl border border-line bg-surface shadow-sm hover:border-primary/50 transition-colors">
-                  <img
-                    src={selectedRecord.frontCardUrl}
+                  <Image
+                    src={frontCardUrl}
                     alt="Mặt trước CCCD"
-                    className="w-full h-full object-cover"
+                    fill
+                    unoptimized
+                    className="object-cover"
                   />
                 </div>
               ) : (
@@ -84,12 +92,14 @@ export function KycComparisonModal({
               <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                 Mặt sau CCCD
               </span>
-              {selectedRecord.backCardUrl ? (
+              {backCardUrl ? (
                 <div className="relative aspect-[1.58/1] w-full max-w-sm mx-auto overflow-hidden rounded-xl border border-line bg-surface shadow-sm hover:border-primary/50 transition-colors">
-                  <img
-                    src={selectedRecord.backCardUrl}
+                  <Image
+                    src={backCardUrl}
                     alt="Mặt sau CCCD"
-                    className="w-full h-full object-cover"
+                    fill
+                    unoptimized
+                    className="object-cover"
                   />
                 </div>
               ) : (
@@ -98,16 +108,18 @@ export function KycComparisonModal({
             </div>
 
             {/* Selfie Image */}
-            {selectedRecord.selfieUrl && (
+            {selfieUrl && (
               <div className="space-y-2">
                 <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
                   Ảnh chân dung đối chiếu (Selfie)
                 </span>
                 <div className="relative aspect-[1/1] w-48 mx-auto overflow-hidden rounded-xl border border-line bg-surface shadow-sm hover:border-primary/50 transition-colors">
-                  <img
-                    src={selectedRecord.selfieUrl}
+                  <Image
+                    src={selfieUrl}
                     alt="Ảnh Selfie chân dung"
-                    className="w-full h-full object-cover"
+                    fill
+                    unoptimized
+                    className="object-cover"
                   />
                 </div>
               </div>
@@ -121,7 +133,9 @@ export function KycComparisonModal({
                 Dữ liệu trích xuất từ OCR
               </h3>
               <span className="text-xs font-bold text-accent-2 bg-accent-2/10 px-2.5 py-1 rounded-lg border border-accent-2/20">
-                Trùng khớp {selectedRecord.ocrScore}%
+                {selectedRecord.ocrScore === null
+                  ? 'Không có điểm OCR'
+                  : `Trùng khớp ${selectedRecord.ocrScore}%`}
               </span>
             </div>
 
@@ -233,4 +247,32 @@ export function KycComparisonModal({
   function handleVerifyLocal(): void {
     void onVerify(selectedRecord.id)
   }
+}
+
+function useProtectedKycImage(
+  recordId: string,
+  field: 'front-card' | 'back-card' | 'selfie'
+): string | null {
+  const [url, setUrl] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    let objectUrl: string | null = null
+    let active = true
+    apiClient
+      .getBlob(`/kyc/${recordId}/media/${field}`)
+      .then(blob => {
+        if (!active) return
+        objectUrl = URL.createObjectURL(blob)
+        setUrl(objectUrl)
+      })
+      .catch(error => {
+        console.warn(`Could not load protected KYC media: ${field}`, error)
+      })
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [field, recordId])
+
+  return url
 }

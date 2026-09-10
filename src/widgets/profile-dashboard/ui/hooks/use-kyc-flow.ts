@@ -2,8 +2,8 @@
 
 import * as React from 'react'
 import { toast } from 'sonner'
-import { env } from '@/shared/config/env'
 import { UseProfileReturn } from '../../model/use-profile'
+import { extractKycCards, submitKyc, verifyKycFace } from '../../api/kyc-api'
 
 export interface Recommendation {
   id: number
@@ -37,7 +37,7 @@ const base64ToBlob = (base64: string): Blob => {
 }
 
 export function useKycFlow(profile: UseProfileReturn) {
-  const { setShowKycModal, kycForm, setKycForm, handleConfirmKyc } = profile
+  const { setShowKycModal, kycForm, setKycForm, refreshKycStatus } = profile
 
   const [currentStep, setCurrentStep] = React.useState<1 | 2 | 3>(1)
   const [isProcessing, setIsProcessing] = React.useState(false)
@@ -72,8 +72,7 @@ export function useKycFlow(profile: UseProfileReturn) {
     verified: false,
     faceMatch: false,
     liveness: false,
-    spoofScore: 0,
-    ocrMatchRate: 0,
+    realConfidence: null as number | null,
   })
 
   // Recommendations
@@ -210,92 +209,45 @@ export function useKycFlow(profile: UseProfileReturn) {
 
   // API Call: Step 1 OCR
   const handleExtractOcr = async () => {
-    if (!frontPreview) {
-      toast.error('Vui lòng cung cấp ảnh mặt trước CCCD!')
+    if (!frontPreview || !backPreview) {
+      toast.error('Vui lòng cung cấp đủ ảnh mặt trước và mặt sau CCCD!')
       return
     }
 
     setIsProcessing(true)
     try {
-      const formData = new FormData()
       const frontBlob = base64ToBlob(frontPreview)
-      formData.append('frontID', frontBlob, 'front.jpg')
-
-      const response = await fetch(`${env.apiUrl}/kyc/ocr-front`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: formData,
-      })
-
-      if (!response.ok) throw new Error('OCR mặt trước thất bại')
-      const data = await response.json()
-      const ocrResult = data?.result || {}
-
-      let ocrBackResult: {
-        issue_date?: string
-        init_date?: string
-        place_of_birth?: string
-        place?: string
-      } = {}
-      if (backPreview) {
-        const backFormData = new FormData()
-        const backBlob = base64ToBlob(backPreview)
-        backFormData.append('backID', backBlob, 'back.jpg')
-
-        const backResponse = await fetch(`${env.apiUrl}/kyc/ocr-back`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-          body: backFormData,
-        })
-        if (backResponse.ok) {
-          const backData = await backResponse.json()
-          ocrBackResult = backData?.result?.data || {}
-        }
+      const backBlob = base64ToBlob(backPreview)
+      const [ocrResult, ocrBackResult] = await extractKycCards(
+        frontBlob,
+        backBlob
+      )
+      if (!ocrBackResult.success) {
+        throw new Error('Không thể trích xuất mặt sau CCCD')
       }
-
       const extractedAddress =
-        ocrResult.address || '720A Điện Biên Phủ, Phường 22, Bình Thạnh, TP.HCM'
+        ocrResult.address ?? ocrBackResult.data?.address ?? ''
 
       setKycForm({
-        fullName: ocrResult.fullName || 'NGUYỄN VĂN A',
-        cccdNumber: ocrResult.idNumber || '038096001234',
-        dob: ocrResult.dob || '15/08/1996',
+        fullName: ocrResult.fullName,
+        cccdNumber: ocrResult.idNumber,
+        dob: ocrResult.dob,
         address: extractedAddress,
-        gender: ocrResult.gender || 'Nam',
-        nationality: ocrResult.nationality || 'Việt Nam',
-        placeOfOrigin: ocrResult.birthplace || 'Hải Phòng',
-        issueDate:
-          ocrBackResult.issue_date || ocrBackResult.init_date || '20/03/2021',
-        placeOfIssue:
-          ocrBackResult.place_of_birth ||
-          ocrBackResult.place ||
-          'CỤC CSQLHC VỀ TTXH',
+        gender: ocrResult.gender,
+        nationality: ocrResult.nationality,
+        placeOfOrigin:
+          ocrResult.birthplace ?? ocrBackResult.data?.placeOfBirth ?? '',
+        issueDate: ocrBackResult.data?.issueDate ?? '',
+        placeOfIssue: '',
       })
 
       detectDistrict(extractedAddress)
       toast.success('Trích xuất thông tin OCR thành công!')
       setCurrentStep(2)
-    } catch (err) {
-      console.error(err)
-      toast.info('Sử dụng thông tin demo do lỗi kết nối OCR.')
-      const demoAddress = '720A Điện Biên Phủ, Phường 22, Bình Thạnh, TP.HCM'
-      setKycForm({
-        fullName: 'NGUYỄN VĂN A',
-        cccdNumber: '038096001234',
-        dob: '15/08/1996',
-        address: demoAddress,
-        gender: 'Nam',
-        nationality: 'Việt Nam',
-        placeOfOrigin: 'Hải Phòng',
-        issueDate: '20/03/2021',
-        placeOfIssue: 'CỤC CSQLHC VỀ TTXH',
-      })
-      detectDistrict(demoAddress)
-      setCurrentStep(2)
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Không thể trích xuất CCCD'
+      )
     } finally {
       setIsProcessing(false)
     }
@@ -310,37 +262,12 @@ export function useKycFlow(profile: UseProfileReturn) {
 
     setIsProcessing(true)
     try {
-      const formData = new FormData()
       const selfieBlob = base64ToBlob(selfiePreview)
       const frontBlob = base64ToBlob(frontPreview)
+      const result = await verifyKycFace(selfieBlob, frontBlob)
+      setVerifyResults(result)
 
-      formData.append('portraitImages', selfieBlob, 'selfie.jpg')
-      formData.append('frontID', frontBlob, 'front.jpg')
-
-      const response = await fetch(`${env.apiUrl}/kyc/verify-face`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: formData,
-      })
-
-      if (!response.ok) throw new Error('So khớp khuôn mặt thất bại')
-      const data = await response.json()
-      const results = data.results || {}
-
-      const isMatch = results.face_matching === true
-      const isLive = results.liveness === true
-
-      setVerifyResults({
-        verified: isMatch && isLive,
-        faceMatch: isMatch,
-        liveness: isLive,
-        spoofScore: results.spoof_score ?? 0.95,
-        ocrMatchRate: isMatch ? 95 : 12,
-      })
-
-      if (!isMatch || !isLive) {
+      if (!result.verified) {
         toast.error(
           'Xác thực sinh trắc học không khớp CCCD hoặc phát hiện spoofing!'
         )
@@ -348,17 +275,16 @@ export function useKycFlow(profile: UseProfileReturn) {
         toast.success('So khớp sinh trắc học thành công!')
         setCurrentStep(3)
       }
-    } catch (err) {
-      console.error(err)
-      toast.info('Sử dụng kết quả demo do lỗi kết nối Face Match.')
+    } catch (error) {
       setVerifyResults({
-        verified: true,
-        faceMatch: true,
-        liveness: true,
-        spoofScore: 0.96,
-        ocrMatchRate: 95,
+        verified: false,
+        faceMatch: false,
+        liveness: false,
+        realConfidence: null,
       })
-      setCurrentStep(3)
+      toast.error(
+        error instanceof Error ? error.message : 'Không thể xác thực khuôn mặt'
+      )
     } finally {
       setIsProcessing(false)
     }
@@ -366,41 +292,34 @@ export function useKycFlow(profile: UseProfileReturn) {
 
   // API Call: Step 3 Submit
   const handleConfirmAndSubmitKyc = async () => {
+    if (
+      !verifyResults.verified ||
+      !frontPreview ||
+      !backPreview ||
+      !selfiePreview
+    ) {
+      toast.error('Hồ sơ chưa đủ ảnh hoặc chưa qua xác thực sinh trắc học')
+      return
+    }
     setIsProcessing(true)
     try {
-      const payload = {
+      await submitKyc({
         idCardNumber: kycForm.cccdNumber,
-        frontCardUrl: frontPreview,
-        backCardUrl:
-          backPreview ||
-          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-        selfieUrl: selfiePreview,
         fullName: kycForm.fullName,
         dateOfBirth: kycForm.dob,
         gender: kycForm.gender,
         nationality: kycForm.nationality,
         placeOfOrigin: kycForm.placeOfOrigin,
         placeOfResidence: kycForm.address,
-        issueDate: kycForm.issueDate || '20/03/2021',
-        placeOfIssue: kycForm.placeOfIssue || 'CỤC CSQLHC VỀ TTXH',
-        faceMatchResult: verifyResults.faceMatch,
-        livenessResult: verifyResults.liveness,
-        spoofScore: verifyResults.spoofScore,
-        ocrMatchRate: verifyResults.ocrMatchRate,
-      }
-
-      const response = await fetch(`${env.apiUrl}/kyc/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify(payload),
+        issueDate: kycForm.issueDate,
+        placeOfIssue: kycForm.placeOfIssue,
+        frontCard: base64ToBlob(frontPreview),
+        backCard: base64ToBlob(backPreview),
+        selfie: base64ToBlob(selfiePreview),
       })
 
-      if (!response.ok) throw new Error('API submit hồ sơ KYC thất bại')
-
-      toast.success('Hồ sơ KYC đã được gửi lên hệ thống và lưu trữ Blockchain!')
+      await refreshKycStatus()
+      toast.success('Hồ sơ KYC đã được gửi và đang chờ nhân viên duyệt')
       await handleVerifyAndRecommend()
     } catch (error) {
       toast.error(
@@ -489,7 +408,6 @@ export function useKycFlow(profile: UseProfileReturn) {
       ])
     } finally {
       setShowResults(true)
-      handleConfirmKyc()
     }
   }
 
