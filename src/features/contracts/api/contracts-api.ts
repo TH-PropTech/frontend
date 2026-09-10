@@ -52,6 +52,30 @@ export interface ContractIntegrityResult {
   onChain: unknown
 }
 
+export type PublicServiceChecklistItem = {
+  id:
+    | 'locked-contract-copy'
+    | 'signing-evidence'
+    | 'notarization-or-authentication'
+  status: 'available' | 'required-before-submission' | 'evidence-present'
+  required: boolean
+}
+
+export interface PublicServiceChecklist {
+  purpose: 'permanent-residence'
+  externalProcedureCompleted: false
+  officialSourceUrl: string
+  executionMethod: 'WET_INK' | 'QUALIFIED_DIGITAL_SIGNATURE' | 'POC_ECONSENT'
+  notarizationStatus:
+    | 'not-requested'
+    | 'pending'
+    | 'notarized'
+    | 'authenticated'
+    | 'rejected'
+  disclaimer: string
+  items: PublicServiceChecklistItem[]
+}
+
 export interface SigningGrant {
   grantId: string
   expiresAt: string
@@ -63,6 +87,15 @@ export async function getMyContracts(): Promise<ContractItem[]> {
 
 export async function getContract(contractId: string): Promise<ContractItem> {
   return apiClient.get<ContractItem>(`/contracts/${contractId}`)
+}
+
+export async function getPublicServiceChecklist(
+  contractId: string,
+  purpose: PublicServiceChecklist['purpose'] = 'permanent-residence'
+): Promise<PublicServiceChecklist> {
+  return apiClient.get<PublicServiceChecklist>(
+    `/contracts/${contractId}/public-service-checklist?purpose=${purpose}`
+  )
 }
 
 export async function verifyContractIntegrity(

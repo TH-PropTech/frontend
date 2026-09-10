@@ -8,6 +8,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { PublicServiceChecklistPanel } from './public-service-checklist-panel'
 import {
   downloadContractArtifact,
   getContract,
@@ -118,6 +119,8 @@ export function ContractParticipantPanel({
           {contract.status}
         </span>
       </header>
+
+      <PublicServiceChecklistPanel contractId={contract._id} />
 
       <div className="grid gap-2 text-sm text-muted sm:grid-cols-2">
         <p>Tiền thuê: {contract.monthlyRent.toLocaleString('vi-VN')} đ/tháng</p>
