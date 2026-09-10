@@ -14,12 +14,9 @@ export interface KycRecord {
   gender: string
   hometown: string
   address: string
-  ocrScore: number
+  ocrScore: number | null
   submittedAt: string
   status: 'pending' | 'approved' | 'rejected'
-  frontCardUrl?: string
-  backCardUrl?: string
-  selfieUrl?: string
 }
 
 interface BackendKycResponse {
@@ -80,14 +77,11 @@ export function KycApprovalsView(): React.ReactElement {
       gender: k.gender || '',
       hometown: k.placeOfOrigin || '',
       address: k.placeOfResidence || '',
-      ocrScore: k.ocrMatchRate || 0,
+      ocrScore: k.ocrMatchRate ?? null,
       submittedAt: k.createdAt
         ? new Date(k.createdAt).toLocaleString('vi-VN')
         : '',
       status: mappedStatus,
-      frontCardUrl: k.frontCardUrl,
-      backCardUrl: k.backCardUrl,
-      selfieUrl: k.selfieUrl,
     }
   }, [])
 
@@ -232,14 +226,10 @@ export function KycApprovalsView(): React.ReactElement {
                   <td className="p-4 font-mono">{record.cccdNumber}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-16 bg-fg/10 rounded-full h-1.5 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${record.ocrScore > 97 ? 'bg-accent-2' : record.ocrScore > 90 ? 'bg-accent-3' : 'bg-accent'}`}
-                          style={{ width: `${record.ocrScore}%` }}
-                        />
-                      </div>
                       <span className="font-semibold text-fg">
-                        {record.ocrScore}%
+                        {record.ocrScore === null
+                          ? 'Không có dữ liệu'
+                          : `${record.ocrScore}%`}
                       </span>
                     </div>
                   </td>

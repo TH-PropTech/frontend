@@ -25,6 +25,7 @@ export function ProfileHeader({
   const {
     role,
     isKycVerified,
+    kycStatus,
     kycForm,
     isWalletConnected,
     walletAddress,
@@ -115,6 +116,16 @@ export function ProfileHeader({
                     <ShieldCheck className="h-3.5 w-3.5" />
                     Đã xác minh KYC (
                     {role === 'tenant' ? 'Khách thuê' : 'Chủ nhà'})
+                  </span>
+                ) : kycStatus === 'pending' ? (
+                  <span className="flex items-center gap-1 text-warning">
+                    <AlertCircle className="h-3.5 w-3.5 text-warning" />
+                    Hồ sơ KYC đang chờ duyệt
+                  </span>
+                ) : kycStatus === 'rejected' ? (
+                  <span className="flex items-center gap-1 text-danger">
+                    <AlertCircle className="h-3.5 w-3.5 text-danger" />
+                    Hồ sơ KYC cần gửi lại
                   </span>
                 ) : (
                   <span className="flex items-center gap-1 text-warning">
