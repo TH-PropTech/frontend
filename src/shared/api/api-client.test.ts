@@ -13,15 +13,20 @@ describe('createApiUrl', () => {
 
 describe('ApiClient.getBlob', () => {
   it('sends the bearer token when loading protected media', async () => {
-    const image = new Blob(['image'], { type: 'image/jpeg' })
-    const fetchMock = vi.fn().mockResolvedValue(new Response(image))
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response('image', { headers: { 'Content-Type': 'image/jpeg' } })
+      )
     vi.stubGlobal('fetch', fetchMock)
     const client = new ApiClient({
       baseUrl: 'http://localhost:3001/api/v1',
       getAccessToken: () => 'token',
     })
 
-    await expect(client.getBlob('/kyc/id/media/selfie')).resolves.toEqual(image)
+    const result = await client.getBlob('/kyc/id/media/selfie')
+    expect(result.size).toBe(5)
+    expect(result.type).toBe('image/jpeg')
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:3001/api/v1/kyc/id/media/selfie',
       expect.objectContaining({ headers: expect.any(Headers) })

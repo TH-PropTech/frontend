@@ -49,14 +49,27 @@ describe('KYC API', () => {
     ])
   })
 
-  it('blocks card OCR network calls while demo maintenance mode is enabled', async () => {
+  it('runs both card OCR requests with the required multipart fields', async () => {
+    vi.mocked(apiClient.post)
+      .mockResolvedValueOnce({ idNumber: '079123456789' })
+      .mockResolvedValueOnce({ success: true })
     const image = new Blob(['image'], { type: 'image/jpeg' })
 
-    await expect(extractKycCards(image, image)).rejects.toThrow(
-      'eKYC đang tạm bảo trì'
-    )
+    await expect(extractKycCards(image, image)).resolves.toEqual([
+      { idNumber: '079123456789' },
+      { success: true },
+    ])
 
-    expect(apiClient.post).not.toHaveBeenCalled()
+    expect(apiClient.post).toHaveBeenNthCalledWith(
+      1,
+      '/kyc/ocr-front',
+      expect.any(FormData)
+    )
+    expect(apiClient.post).toHaveBeenNthCalledWith(
+      2,
+      '/kyc/ocr-back',
+      expect.any(FormData)
+    )
   })
 
   it('submits private media as multipart instead of base64 JSON fields', async () => {
