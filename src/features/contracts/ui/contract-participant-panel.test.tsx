@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   grant: vi.fn(),
   sign: vi.fn(),
   download: vi.fn(),
+  checklist: vi.fn(),
 }))
 
 vi.mock('../api/contracts-api', () => ({
@@ -16,6 +17,7 @@ vi.mock('../api/contracts-api', () => ({
   issueSigningGrant: mocks.grant,
   signContract: mocks.sign,
   downloadContractArtifact: mocks.download,
+  getPublicServiceChecklist: mocks.checklist,
 }))
 
 describe('ContractParticipantPanel', () => {

@@ -31,6 +31,7 @@ import {
 import { ApplyDialog } from '@/features/rental-application'
 import { ConditionAnalysisPanel } from '@/features/condition-analysis'
 import { LocationRiskPanel } from '@/features/location-risk'
+import { ApartmentFloorplanSection } from '@/features/apartment-floorplan'
 
 function subscribeToSession(onStoreChange: () => void): () => void {
   window.addEventListener('storage', onStoreChange)
@@ -243,6 +244,8 @@ export function PropertyDetail(): React.ReactElement {
             </div>
           </section>
         )}
+
+        <ApartmentFloorplanSection property={property} />
 
         {/* Details and Bento Info Section */}
         <section className="mx-auto max-w-6xl px-6 py-12 md:px-10 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
