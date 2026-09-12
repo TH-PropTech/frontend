@@ -106,7 +106,6 @@ test('submits the selected package identity and server-derived duration', async 
       apartmentId: 'apt-1',
       packageId: 'pkg-12',
       packageVersion: 3,
-      leaseDurationMonths: 12,
     })
 })
 

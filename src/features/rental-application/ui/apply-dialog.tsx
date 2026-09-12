@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { FileText } from 'lucide-react'
+import { AlertCircle, CheckCircle2, FileText } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -11,162 +11,351 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/ui/dialog'
-import { createRentalApplication } from '../api/rental-application-api'
-import { RentalPackageSelector } from './rental-package-selector'
+import {
+  createRentalApplication,
+  getRentalApplicationContext,
+  type RentalApplicationContext,
+} from '../api/rental-application-api'
 import type { RentalPackageItem } from '@/entities/properties'
+
+type Step = 1 | 2 | 3 | 4
 
 export function ApplyDialog({
   apartmentId,
-  packages = [],
 }: {
   apartmentId: string
   packages?: RentalPackageItem[] | undefined
 }): React.ReactElement {
   const [open, setOpen] = React.useState(false)
+  const [step, setStep] = React.useState<Step>(1)
+  const [context, setContext] = React.useState<RentalApplicationContext | null>(
+    null
+  )
+  const [loading, setLoading] = React.useState(false)
   const [submitting, setSubmitting] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [selectedPackageId, setSelectedPackageId] = React.useState('')
-  const activePackages = packages.filter(item => item.status === 'active')
+  const [acknowledged, setAcknowledged] = React.useState<string[]>([])
+
+  const handleOpenChange = (nextOpen: boolean): void => {
+    if (nextOpen) {
+      setStep(1)
+      setError(null)
+      setContext(null)
+      setSelectedPackageId('')
+      setAcknowledged([])
+      setLoading(true)
+    }
+    setOpen(nextOpen)
+  }
+
+  React.useEffect(() => {
+    if (!open) return
+    void getRentalApplicationContext(apartmentId)
+      .then(result => {
+        setContext(result)
+        const firstActive = result.packages.find(
+          item => item.status === 'active'
+        )
+        if (firstActive) setSelectedPackageId(firstActive.packageId)
+      })
+      .catch(loadError => {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'Không thể tải điều kiện thuê căn hộ'
+        )
+      })
+      .finally(() => setLoading(false))
+  }, [apartmentId, open])
+
+  const activePackages =
+    context?.packages.filter(item => item.status === 'active') ?? []
+  const selectedPackage = activePackages.find(
+    item => item.packageId === selectedPackageId
+  )
+  const requiredDisclosureIds =
+    context?.disclosure.items
+      .filter(item => item.required)
+      .map(item => item.id) ?? []
+  const allDisclosuresAcknowledged = requiredDisclosureIds.every(id =>
+    acknowledged.includes(id)
+  )
+
   const submit = async (
     event: React.FormEvent<HTMLFormElement>
   ): Promise<void> => {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    const selectedPackage = activePackages.find(
-      item => item.packageId === selectedPackageId
-    )
-    if (activePackages.length > 0 && !selectedPackage) {
-      setError('Vui lòng chọn một gói thuê đang hiệu lực.')
-      return
-    }
+    if (!context || !selectedPackage || !allDisclosuresAcknowledged) return
     setSubmitting(true)
     setError(null)
+    const form = new FormData(event.currentTarget)
     try {
       await createRentalApplication({
         apartmentId,
-        ...(selectedPackage
-          ? {
-              packageId: selectedPackage.packageId,
-              packageVersion: selectedPackage.version,
-            }
-          : {}),
+        packageId: selectedPackage.packageId,
+        packageVersion: selectedPackage.version,
         occupants: Number(form.get('occupants')),
         moveInDate: String(form.get('moveInDate')),
-        leaseDurationMonths:
-          selectedPackage?.durationMonths ??
-          Number(form.get('leaseDurationMonths')),
-        occupation: String(form.get('occupation')),
+        occupation: String(form.get('occupation')).trim(),
         hasPets: form.get('hasPets') === 'on',
         ...(String(form.get('notes')).trim()
           ? { notes: String(form.get('notes')).trim() }
           : {}),
+        disclosureVersion: context.disclosure.version,
+        acknowledgedDisclosureIds: acknowledged,
       })
-      setOpen(false)
+      setStep(4)
     } catch (submitError) {
       setError(
         submitError instanceof Error
           ? submitError.message
-          : 'Không thể gửi ứng tuyển'
+          : 'Không thể gửi hồ sơ thuê căn hộ'
       )
     } finally {
       setSubmitting(false)
     }
   }
+
   const fieldClass =
     'mt-1 h-10 w-full rounded-lg border border-border bg-bg px-3 text-sm text-fg'
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button data-testid="rental-application-trigger">
+        <Button
+          className="h-auto rounded-2xl bg-primary px-6 py-3.5 text-xs font-semibold text-white shadow-lg shadow-primary/20 hover:bg-primary-hover active:scale-[0.98]"
+          data-testid="rental-application-trigger"
+        >
           <FileText className="h-4 w-4" />
-          Ứng tuyển thuê căn
+          Đặt thuê căn hộ
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-surface">
+      <DialogContent className="max-h-[90vh] overflow-y-auto bg-surface">
         <DialogHeader>
-          <DialogTitle>Hồ sơ ứng tuyển thuê căn</DialogTitle>
+          <DialogTitle>Đặt thuê căn hộ</DialogTitle>
           <DialogDescription>
-            Gửi các điều kiện thuê dự kiến cho chủ nhà xem xét trước hợp đồng.
+            Kiểm tra thông tin, chọn gói thuê và xác nhận yêu cầu trước khi gửi
+            chủ nhà.
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-3" onSubmit={event => void submit(event)}>
-          <label className="block text-xs text-muted">
-            Số người ở
-            <input
-              required
-              aria-label="Số người ở"
-              name="occupants"
-              type="number"
-              min="1"
-              max="20"
-              className={fieldClass}
-            />
-          </label>
-          <label className="block text-xs text-muted">
-            Ngày dự kiến vào ở
-            <input
-              required
-              aria-label="Ngày dự kiến vào ở"
-              name="moveInDate"
-              type="date"
-              className={fieldClass}
-            />
-          </label>
-          {activePackages.length > 0 ? (
-            <RentalPackageSelector
-              packages={packages}
-              value={selectedPackageId}
-              onChange={packageId => {
-                setSelectedPackageId(packageId)
-                setError(null)
-              }}
-            />
-          ) : (
-            <label className="block text-xs text-muted">
-              Thời hạn thuê (tháng)
-              <input
-                required
-                aria-label="Thời hạn thuê"
-                name="leaseDurationMonths"
-                type="number"
-                min="1"
-                max="60"
-                className={fieldClass}
-              />
-            </label>
-          )}
-          <label className="block text-xs text-muted">
-            Nghề nghiệp
-            <input
-              required
-              aria-label="Nghề nghiệp"
-              name="occupation"
-              maxLength={200}
-              className={fieldClass}
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-fg">
-            <input name="hasPets" type="checkbox" />
-            Có thú cưng
-          </label>
-          <label className="block text-xs text-muted">
-            Ghi chú
-            <textarea
-              name="notes"
-              maxLength={1000}
-              className="mt-1 min-h-20 w-full rounded-lg border border-border bg-bg p-3 text-sm text-fg"
-            />
-          </label>
-          {error ? <p className="text-xs text-danger">{error}</p> : null}
-          <Button
-            type="submit"
-            loading={submitting}
-            data-testid="rental-application-submit"
-          >
-            Gửi ứng tuyển
-          </Button>
-        </form>
+        {loading ? (
+          <p className="text-sm text-muted">Đang tải điều kiện thuê…</p>
+        ) : null}
+        {!loading && error && !context ? (
+          <Message icon={<AlertCircle className="h-4 w-4" />} text={error} />
+        ) : null}
+        {!loading && context && !context.enabled ? (
+          <Message text="Luồng đặt thuê đang tạm tắt để bảo trì." />
+        ) : null}
+        {!loading && context && context.enabled && !context.eligible ? (
+          <Message text="Căn hộ hiện chưa đủ điều kiện nhận yêu cầu thuê." />
+        ) : null}
+        {!loading && context?.eligible && activePackages.length === 0 ? (
+          <Message text="Chủ nhà chưa công bố gói thuê đang hiệu lực." />
+        ) : null}
+        {!loading &&
+        context?.eligible &&
+        activePackages.length > 0 &&
+        step < 4 ? (
+          <form className="space-y-4" onSubmit={event => void submit(event)}>
+            <div className="flex items-center gap-2 text-xs text-muted">
+              <span className={step >= 1 ? 'font-semibold text-primary' : ''}>
+                1. Thông tin
+              </span>
+              <span>→</span>
+              <span className={step >= 2 ? 'font-semibold text-primary' : ''}>
+                2. Gói thuê
+              </span>
+              <span>→</span>
+              <span className={step >= 3 ? 'font-semibold text-primary' : ''}>
+                3. Xác nhận
+              </span>
+            </div>
+            {step === 1 ? (
+              <>
+                <label className="block text-xs text-muted">
+                  Số người ở
+                  <input
+                    required
+                    aria-label="Số người ở"
+                    name="occupants"
+                    type="number"
+                    min="1"
+                    max="20"
+                    defaultValue="1"
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="block text-xs text-muted">
+                  Ngày dự kiến vào ở
+                  <input
+                    required
+                    aria-label="Ngày dự kiến vào ở"
+                    name="moveInDate"
+                    type="date"
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="block text-xs text-muted">
+                  Nghề nghiệp
+                  <input
+                    required
+                    aria-label="Nghề nghiệp"
+                    name="occupation"
+                    maxLength={200}
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="flex items-center gap-2 text-sm text-fg">
+                  <input name="hasPets" type="checkbox" /> Có vật nuôi
+                </label>
+                <label className="block text-xs text-muted">
+                  Ghi chú
+                  <textarea
+                    name="notes"
+                    maxLength={1000}
+                    className="mt-1 min-h-20 w-full rounded-lg border border-border bg-bg p-3 text-sm text-fg"
+                  />
+                </label>
+                <Button type="button" onClick={() => setStep(2)}>
+                  Tiếp tục chọn gói
+                </Button>
+              </>
+            ) : null}
+            {step === 2 ? (
+              <>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-fg">
+                    Gói thuê đã công bố
+                  </p>
+                  {activePackages.map(item => {
+                    const selected = selectedPackageId === item.packageId
+                    return (
+                      <button
+                        key={`${item.packageId}-${item.version}`}
+                        type="button"
+                        data-testid={`rental-package-${item.packageId}`}
+                        aria-pressed={selected}
+                        onClick={() => setSelectedPackageId(item.packageId)}
+                        className={`w-full rounded-lg border p-3 text-left ${selected ? 'border-primary bg-primary-soft' : 'border-border bg-bg'}`}
+                      >
+                        <span className="block text-sm font-semibold text-fg">
+                          {item.durationMonths} tháng ·{' '}
+                          {formatMoney(item.monthlyRent)} đ/tháng
+                        </span>
+                        <span className="mt-1 block text-xs text-muted">
+                          Tiền cọc dự kiến{' '}
+                          {formatMoney(item.resolvedDepositAmount)} đ · phiên
+                          bản {item.version}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setStep(1)}
+                  >
+                    Quay lại
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={!selectedPackage}
+                    onClick={() => setStep(3)}
+                  >
+                    Xem điều khoản
+                  </Button>
+                </div>
+              </>
+            ) : null}
+            {step === 3 ? (
+              <>
+                <div className="rounded-lg border border-border bg-surface-muted p-3 text-sm text-fg">
+                  <p className="font-semibold">Tóm tắt yêu cầu</p>
+                  <p className="mt-1 text-muted">
+                    {selectedPackage?.durationMonths} tháng ·{' '}
+                    {formatMoney(selectedPackage?.monthlyRent ?? 0)} đ/tháng ·
+                    cọc dự kiến{' '}
+                    {formatMoney(selectedPackage?.resolvedDepositAmount ?? 0)} đ
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {context.disclosure.items.map(item => (
+                    <label key={item.id} className="flex gap-2 text-sm text-fg">
+                      <input
+                        type="checkbox"
+                        checked={acknowledged.includes(item.id)}
+                        onChange={event =>
+                          setAcknowledged(current =>
+                            event.target.checked
+                              ? [...current, item.id]
+                              : current.filter(id => id !== item.id)
+                          )
+                        }
+                      />
+                      <span>
+                        <strong>{item.title}.</strong> {item.body}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {error ? <p className="text-xs text-danger">{error}</p> : null}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setStep(2)}
+                  >
+                    Quay lại
+                  </Button>
+                  <Button
+                    type="submit"
+                    loading={submitting}
+                    disabled={!allDisclosuresAcknowledged}
+                    data-testid="rental-application-submit"
+                  >
+                    Gửi yêu cầu thuê
+                  </Button>
+                </div>
+              </>
+            ) : null}
+          </form>
+        ) : null}
+        {step === 4 ? (
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <CheckCircle2 className="h-10 w-10 text-success" />
+            <p className="font-semibold text-fg">Đã gửi yêu cầu thuê</p>
+            <p className="text-sm text-muted">
+              Chủ nhà sẽ xem xét trước khi hệ thống tạo bản nháp hợp đồng.
+            </p>
+            <Button type="button" onClick={() => setOpen(false)}>
+              Đóng
+            </Button>
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   )
+}
+
+function Message({
+  icon,
+  text,
+}: {
+  icon?: React.ReactNode
+  text: string
+}): React.ReactElement {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-border bg-surface-muted p-3 text-sm text-muted">
+      {icon}
+      {text}
+    </div>
+  )
+}
+
+function formatMoney(value: number): string {
+  return new Intl.NumberFormat('vi-VN').format(value)
 }

@@ -46,7 +46,11 @@ export function ApplicationList(): React.ReactElement {
               Ngày vào ở {new Date(item.moveInDate).toLocaleDateString('vi-VN')}
             </p>
             <p className="text-xs text-muted">
-              {item.occupants} người · {item.leaseDurationMonths} tháng
+              {item.occupants} người ·{' '}
+              {item.packageSnapshot?.durationMonths ?? '—'} tháng
+              {item.status === 'accepted' && item.contractId
+                ? ' · Có bản nháp hợp đồng'
+                : ''}
             </p>
           </div>
           <ApplicationStatusBadge status={item.status} />
