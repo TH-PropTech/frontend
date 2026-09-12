@@ -14,7 +14,8 @@ export function use360Narrator(
   currentRoomIndex: number,
   isOpen: boolean
 ): Use360NarratorResult {
-  const [isAiEnabled, setIsAiEnabled] = React.useState(true)
+  // Narration is opt-in so opening a tour never starts audio unexpectedly.
+  const [isAiEnabled, setIsAiEnabled] = React.useState(false)
   const [isSpeaking, setIsSpeaking] = React.useState(false)
   const [speechText, setSpeechText] = React.useState('')
   const utteranceRef = React.useRef<SpeechSynthesisUtterance | null>(null)

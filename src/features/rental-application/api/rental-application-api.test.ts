@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiClientError, apiClient } from '@/shared/api'
 import {
   createRentalApplication,
+  getRentalApplicationContext,
   getMyRentalApplications,
   respondToRentalApplication,
   isRentalPackageStaleError,
@@ -26,11 +27,18 @@ describe('rental application API', () => {
     vi.mocked(apiClient.patch).mockResolvedValue({ status: 'accepted' })
     const input = {
       apartmentId: 'apartment-1',
+      packageId: 'pkg-12',
+      packageVersion: 3,
       occupants: 2,
       moveInDate: '2030-01-01',
-      leaseDurationMonths: 12,
       occupation: 'Engineer',
       hasPets: false,
+      disclosureVersion: 'rental-review-v1',
+      acknowledgedDisclosureIds: [
+        'listing-terms',
+        'pre-contract-request',
+        'future-payment-and-signing',
+      ],
     }
     await createRentalApplication(input)
     await getMyRentalApplications()
@@ -45,6 +53,14 @@ describe('rental application API', () => {
     expect(apiClient.patch).toHaveBeenCalledWith(
       '/rental-applications/application-1/respond',
       { status: 'accepted', reasonCode: 'meets_requirements' }
+    )
+  })
+
+  it('loads server-owned context before rendering the review flow', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ enabled: true })
+    await getRentalApplicationContext('apartment-1')
+    expect(apiClient.get).toHaveBeenCalledWith(
+      '/rental-applications/context/apartment-1'
     )
   })
 

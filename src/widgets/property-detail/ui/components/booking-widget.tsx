@@ -112,8 +112,7 @@ export function BookingWidget({
 
   return (
     <>
-      <div className="bg-white border border-border rounded-3xl p-6 shadow-md relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-primary" />
+      <div className="rounded-3xl border border-border bg-surface p-6 shadow-md">
         <h3 className="font-marketing text-base font-bold text-fg mb-1">
           Lên lịch xem căn hộ
         </h3>
