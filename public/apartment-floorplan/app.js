@@ -282,10 +282,7 @@
     controls.maxPolarAngle = Math.PI / 2 - 0.08
     controls.minDistance = 3
     controls.maxDistance = 18
-    scene.add(new THREE.AmbientLight(0xfff8ef, 1.8))
-    var keyLight = new THREE.DirectionalLight(0xfff4df, 1.2)
-    keyLight.position.set(5, 10, 6)
-    scene.add(keyLight)
+    window.FloorplanMaterials.addLighting(scene)
     walk = window.FloorplanWalk.create({
       camera: camera,
       scene: scene,
