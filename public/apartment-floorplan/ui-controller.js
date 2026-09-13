@@ -51,14 +51,11 @@
       button.dataset.roomId = room.id
       button.textContent = room.label
       button.addEventListener('click', function () {
-        highlight(room.id)
+        options.onRoomClick(room.id)
       })
       list.appendChild(button)
     })
 
-    document
-      .getElementById('reset-button')
-      .addEventListener('click', options.onReset)
     return {
       getSelectedId: function () {
         return selectedId
