@@ -50,6 +50,12 @@ function kinds(pieces: Piece[]): string[] {
   return pieces.map(piece => piece.kind)
 }
 
+function pieceAt(pieces: Piece[], index: number): Piece {
+  const item = pieces[index]
+  if (!item) throw new Error('missing geometry piece at index ' + index)
+  return item
+}
+
 describe('floorplan-geometry', () => {
   it('draws one solid piece per side without a door', () => {
     const pieces = geometry.wallPieces(room())
@@ -62,7 +68,11 @@ describe('floorplan-geometry', () => {
 
   it('matches the P0 wall placement on every side', () => {
     const t = geometry.WALL_THICKNESS
-    const [front, back, east, west] = geometry.wallPieces(room())
+    const pieces = geometry.wallPieces(room())
+    const front = pieceAt(pieces, 0)
+    const back = pieceAt(pieces, 1)
+    const east = pieceAt(pieces, 2)
+    const west = pieceAt(pieces, 3)
 
     expect(front).toMatchObject({ x: 0, width: 3, depth: t, y: 0.36 })
     expect(front.z).toBeCloseTo(1 - t / 2)
@@ -89,9 +99,11 @@ describe('floorplan-geometry', () => {
   })
 
   it('keeps the door opening centred between the wall segments', () => {
-    const [left, right, postA, postB] = geometry.wallPieces(
-      room({ doors: ['front'] })
-    )
+    const pieces = geometry.wallPieces(room({ doors: ['front'] }))
+    const left = pieceAt(pieces, 0)
+    const right = pieceAt(pieces, 1)
+    const postA = pieceAt(pieces, 2)
+    const postB = pieceAt(pieces, 3)
 
     expect(left.x + left.width / 2).toBeCloseTo(postA.x)
     expect(right.x - right.width / 2).toBeCloseTo(postB.x)

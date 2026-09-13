@@ -67,6 +67,12 @@ const LARGE_SCALE_SAMPLES: Array<[number, number]> = [
   [3, 2],
   [8, 8],
 ]
+const DIRECTIONS: ReadonlyArray<readonly [number, number]> = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+]
 
 function templateFor(
   bedrooms: number,
@@ -87,6 +93,12 @@ function roomById(template: Template, id: string): Room {
   const room = template.rooms.find(item => item.id === id)
   if (!room) throw new Error(`missing room ${id}`)
   return room
+}
+
+function rectAt(rects: Rect[], index: number): Rect {
+  const rect = rects[index]
+  if (!rect) throw new Error('missing rectangle at index ' + index)
+  return rect
 }
 
 function walk(nav: Nav, start: Point, delta: Point, steps: number): Point {
@@ -113,14 +125,10 @@ function floodFrom(nav: Nav, template: Template, start: Point) {
   queue[tail++] = indexOf(0, 0)
   while (head < tail) {
     const index = queue[head++]
+    if (index === undefined) throw new Error('missing queued grid index')
     const i = (index % columns) - spanX
     const j = Math.floor(index / columns) - spanZ
-    for (const [di, dj] of [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1],
-    ]) {
+    for (const [di, dj] of DIRECTIONS) {
       const ni = i + di
       const nj = j + dj
       if (Math.abs(ni) > spanX || Math.abs(nj) > spanZ) continue
@@ -156,7 +164,10 @@ function unreachableRooms(
     return [`${label}: spawn`]
   const reached = floodFrom(layoutNav, layout, spawn)
   return layout.rooms
-    .filter(room => !reached(navigation.roomTarget(layout, room.id)!))
+    .filter(room => {
+      const target = navigation.roomTarget(layout, room.id)
+      return !target || !reached(target)
+    })
     .map(room => `${label}: ${room.id}`)
 }
 
@@ -194,7 +205,7 @@ describe('walk-navigation', () => {
   })
 
   it('cannot leave the floor at the open hallway ends', () => {
-    const corridor = template.circulation[0]
+    const corridor = rectAt(template.circulation, 0)
     const westEnd = corridor.x - corridor.width / 2
     const end = walk(
       nav,
@@ -217,7 +228,7 @@ describe('walk-navigation', () => {
   it('keeps the avatar inside the balcony railing and the spine bottom', () => {
     const balcony = roomById(template, 'balcony')
     const outerZ = balcony.z + balcony.depth / 2
-    const spine = template.circulation[1]
+    const spine = rectAt(template.circulation, 1)
 
     expect(navigation.canStand(nav, balcony.x, outerZ - 0.1)).toBe(false)
     expect(navigation.canStand(nav, balcony.x, outerZ + 0.01)).toBe(false)
@@ -240,7 +251,7 @@ describe('walk-navigation', () => {
 
     expect(navigation.spawnPoint(template)).toEqual({
       x: living.x,
-      z: template.circulation[0].z,
+      z: rectAt(template.circulation, 0).z,
       yaw: Math.PI,
     })
   })

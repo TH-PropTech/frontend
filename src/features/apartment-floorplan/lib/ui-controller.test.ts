@@ -99,7 +99,7 @@ describe('ui-controller', () => {
     controller.highlight(null)
 
     expect(post).toHaveBeenCalledTimes(1)
-    expect(post.mock.calls[0][0]).toMatchObject({
+    expect(post.mock.calls[0]?.[0]).toMatchObject({
       version: 1,
       type: 'FLOORPLAN_ROOM_SELECTED',
       payload: { roomId: 'kitchen' },
