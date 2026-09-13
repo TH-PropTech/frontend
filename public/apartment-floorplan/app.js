@@ -15,12 +15,22 @@
   var pointer
   var canvas
   var resizeObserver
+  var pointerStart = null
+  var CONFIG_LIMITS = { bedrooms: 8, bathrooms: 8, areaM2: 1000 }
+  var DRAG_THRESHOLD_PX = 5
+  var CAMERA_FIT = 0.85
+  var DEFAULT_LAYOUT_SIZE = 10
+  var MIN_MAX_DISTANCE = 18
 
   function send(type, payload) {
     window.FloorplanHostBridge.post(
       { version: MESSAGE_VERSION, type: type, payload: payload },
       expectedOrigin
     )
+  }
+
+  function isBounded(value, maximum) {
+    return Number.isFinite(value) && value >= 0 && value <= maximum
   }
 
   function parseConfig(value) {
@@ -31,9 +41,10 @@
       !value.apartmentId
     )
       return null
-    if (!Number.isFinite(value.bedrooms) || value.bedrooms < 0) return null
-    if (!Number.isFinite(value.bathrooms) || value.bathrooms < 0) return null
-    if (!Number.isFinite(value.areaM2) || value.areaM2 <= 0) return null
+    if (!isBounded(value.bedrooms, CONFIG_LIMITS.bedrooms)) return null
+    if (!isBounded(value.bathrooms, CONFIG_LIMITS.bathrooms)) return null
+    if (!isBounded(value.areaM2, CONFIG_LIMITS.areaM2) || value.areaM2 <= 0)
+      return null
     if (['bare', 'partial', 'full'].indexOf(value.furnishing) < 0) return null
     return value
   }
@@ -82,6 +93,8 @@
     if (controls) controls.dispose()
     disposeGroup(apartmentGroup, true)
     if (renderer) renderer.dispose()
+    if (canvas)
+      canvas.removeEventListener('pointerdown', handleCanvasPointerDown)
     if (canvas) canvas.removeEventListener('pointerup', handleCanvasPointer)
     if (canvas)
       canvas.removeEventListener('webglcontextlost', handleContextLost)
@@ -102,8 +115,16 @@
     resetCamera()
   }
 
+  function handleCanvasPointerDown(event) {
+    pointerStart = { x: event.clientX, y: event.clientY }
+  }
+
   function handleCanvasPointer(event) {
-    if (!apartmentGroup || !ui || event.button !== 0) return
+    var start = pointerStart
+    pointerStart = null
+    if (!apartmentGroup || !ui || event.button !== 0 || !start) return
+    var moved = Math.hypot(event.clientX - start.x, event.clientY - start.y)
+    if (moved > DRAG_THRESHOLD_PX) return
     var bounds = canvas.getBoundingClientRect()
     pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1
     pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1
@@ -127,7 +148,11 @@
 
   function resetCamera() {
     if (!camera || !controls) return
-    camera.position.set(8, 8, 9)
+    var size =
+      (apartmentGroup && apartmentGroup.userData.size) || DEFAULT_LAYOUT_SIZE
+    var distance = size * CAMERA_FIT
+    camera.position.set(distance, distance, distance * 1.1)
+    controls.maxDistance = Math.max(MIN_MAX_DISTANCE, size * 2.5)
     controls.target.set(0, 0, 0)
     controls.update()
   }
@@ -162,6 +187,7 @@
       window.addEventListener('resize', resize)
     }
     window.addEventListener('beforeunload', disposeRenderer)
+    canvas.addEventListener('pointerdown', handleCanvasPointerDown)
     canvas.addEventListener('pointerup', handleCanvasPointer)
     canvas.addEventListener('webglcontextlost', handleContextLost)
     document.getElementById('loading').style.display = 'none'
