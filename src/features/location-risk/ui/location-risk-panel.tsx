@@ -16,12 +16,10 @@ export function LocationRiskPanel({
 }: {
   apartmentId: string
 }): React.ReactElement {
-  const isRealId = /^[0-9a-f]{24}$/i.test(apartmentId)
   const [weights, setWeights] = React.useState<Record<string, number>>({})
   const initial = useQuery({
     queryKey: ['location-risk', apartmentId],
     queryFn: () => getLocationRiskScore(apartmentId),
-    enabled: isRealId,
   })
   const recalculate = useMutation({
     mutationFn: () => getLocationRiskScore(apartmentId, weights),

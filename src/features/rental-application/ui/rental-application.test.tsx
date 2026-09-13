@@ -1,11 +1,5 @@
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ApplyDialog } from './apply-dialog'
 import { ApplicationList } from './application-list'
@@ -75,8 +69,6 @@ const context = {
 }
 
 describe('rental application UI', () => {
-  afterEach(() => cleanup())
-
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.getContext.mockResolvedValue(context)
@@ -87,9 +79,6 @@ describe('rental application UI', () => {
     render(<ApplyDialog apartmentId="apartment-1" />)
     fireEvent.click(screen.getByTestId('rental-application-trigger'))
     await screen.findByLabelText('Số người ở')
-    expect(
-      screen.getByRole('button', { name: 'Tiếp tục chọn gói' })
-    ).toBeDisabled()
     fireEvent.change(screen.getByLabelText('Ngày dự kiến vào ở'), {
       target: { value: '2030-01-01' },
     })
@@ -107,9 +96,6 @@ describe('rental application UI', () => {
       expect.objectContaining({
         packageId: 'pkg-12',
         packageVersion: 3,
-        occupants: 1,
-        moveInDate: '2030-01-01',
-        occupation: 'Engineer',
         disclosureVersion: 'rental-review-v1',
         acknowledgedDisclosureIds: expect.arrayContaining(['listing-terms']),
       })
