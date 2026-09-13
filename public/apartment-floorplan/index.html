@@ -123,6 +123,66 @@
       .control-button {
         padding: 7px 10px;
       }
+      #walk-panel {
+        left: 16px;
+        bottom: 72px;
+        display: none;
+        max-width: min(320px, calc(100% - 32px));
+        padding: 10px 12px;
+        border-radius: 14px;
+        font-size: 11px;
+        line-height: 1.5;
+      }
+      #walk-panel p {
+        margin: 0;
+      }
+      #room-announcer {
+        margin-top: 4px;
+        font-weight: 700;
+        color: var(--primary);
+      }
+      #walk-dpad {
+        display: none;
+        grid-template-areas:
+          '. forward .'
+          'left back right';
+        grid-template-columns: repeat(3, 44px);
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .dpad-button {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        font-size: 18px;
+        text-align: center;
+        touch-action: none;
+        user-select: none;
+      }
+      [data-walk-move='forward'] {
+        grid-area: forward;
+      }
+      [data-walk-move='left'] {
+        grid-area: left;
+      }
+      [data-walk-move='back'] {
+        grid-area: back;
+      }
+      [data-walk-move='right'] {
+        grid-area: right;
+      }
+      .walking #walk-panel {
+        display: block;
+      }
+      .walking #canvas {
+        touch-action: none;
+        cursor: crosshair;
+      }
+      @media (pointer: coarse) {
+        .walking #walk-dpad {
+          display: grid;
+        }
+      }
       #loading,
       #error {
         position: absolute;
@@ -149,6 +209,11 @@
         }
         #title-panel {
           right: 16px;
+        }
+        #walk-panel {
+          right: 16px;
+          bottom: 182px;
+          max-width: none;
         }
       }
     </style>
@@ -178,7 +243,56 @@
         <button id="reset-button" class="control-button" type="button">
           Đặt lại góc nhìn
         </button>
+        <button
+          id="walk-button"
+          class="control-button"
+          type="button"
+          aria-pressed="false"
+        >
+          Đi bộ
+        </button>
+        <button id="view-button" class="control-button" type="button" hidden>
+          Góc nhìn thứ ba
+        </button>
       </div>
+      <section id="walk-panel" class="panel" aria-label="Chế độ đi bộ">
+        <p id="walk-hint"></p>
+        <p id="room-announcer" aria-live="polite"></p>
+        <div id="walk-dpad">
+          <button
+            class="control-button dpad-button"
+            type="button"
+            data-walk-move="forward"
+            aria-label="Đi tới"
+          >
+            ↑
+          </button>
+          <button
+            class="control-button dpad-button"
+            type="button"
+            data-walk-move="left"
+            aria-label="Sang trái"
+          >
+            ←
+          </button>
+          <button
+            class="control-button dpad-button"
+            type="button"
+            data-walk-move="back"
+            aria-label="Lùi lại"
+          >
+            ↓
+          </button>
+          <button
+            class="control-button dpad-button"
+            type="button"
+            data-walk-move="right"
+            aria-label="Sang phải"
+          >
+            →
+          </button>
+        </div>
+      </section>
     </main>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -197,7 +311,9 @@
     <script src="./layout-templates.js"></script>
     <script src="./floorplan-geometry.js"></script>
     <script src="./apartment-generator.js"></script>
+    <script src="./walk-navigation.js"></script>
     <script src="./ui-controller.js"></script>
+    <script src="./walk-controller.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>
