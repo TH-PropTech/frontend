@@ -3,19 +3,32 @@ import { describe, expect, it } from 'vitest'
 import { runRendererScripts } from './renderer-script-harness'
 
 interface GeneratorApi {
-  create: (config: Record<string, unknown>) => THREE.Group
+  create: (
+    config: Record<string, unknown>,
+    options?: { wallHeight?: number }
+  ) => THREE.Group
 }
 
 interface TemplatesApi {
   create: (config: Record<string, unknown>) => { circulation: unknown[] }
 }
 
+interface GeometryApi {
+  wallPieces: (room: unknown, options?: { wallHeight?: number }) => unknown[]
+}
+
 const renderer = runRendererScripts(
-  ['room-materials.js', 'layout-templates.js', 'apartment-generator.js'],
+  [
+    'room-materials.js',
+    'layout-templates.js',
+    'floorplan-geometry.js',
+    'apartment-generator.js',
+  ],
   { THREE }
 )
 const generator = renderer.ApartmentGenerator as GeneratorApi
 const templates = renderer.FloorplanTemplates as TemplatesApi
+const geometry = renderer.FloorplanGeometry as GeometryApi
 const materials = renderer.FloorplanMaterials as Record<string, THREE.Material>
 
 function configFor(bedrooms: number, bathrooms: number) {
@@ -37,6 +50,12 @@ function meshes(group: THREE.Group): THREE.Mesh[] {
 
 function meshesOf(group: THREE.Group, roomId: string): THREE.Mesh[] {
   return meshes(group).filter(mesh => mesh.userData.roomId === roomId)
+}
+
+function heightsOf(group: THREE.Group, piece: string): number[] {
+  return meshes(group)
+    .filter(mesh => mesh.userData.piece === piece)
+    .map(mesh => (mesh.geometry as THREE.BoxGeometry).parameters.height)
 }
 
 describe('apartment-generator', () => {
@@ -91,5 +110,36 @@ describe('apartment-generator', () => {
 
   it('exposes the layout size for camera fitting', () => {
     expect(generator.create(configFor(3, 2)).userData.size).toBeGreaterThan(0)
+  })
+
+  it('keeps the P0 cutaway wall height by default', () => {
+    const heights = heightsOf(generator.create(configFor(2, 2)), 'wall')
+
+    expect(heights.length).toBeGreaterThan(0)
+    expect(heights.every(height => height === 0.72)).toBe(true)
+  })
+
+  it('raises walls when asked for the walking height', () => {
+    const heights = heightsOf(
+      generator.create(configFor(2, 2), { wallHeight: 2.4 }),
+      'wall'
+    )
+
+    expect(heights.length).toBeGreaterThan(0)
+    expect(heights.every(height => height === 2.4)).toBe(true)
+  })
+
+  it('builds exactly the pieces described by the shared geometry', () => {
+    const group = generator.create(configFor(3, 2), { wallHeight: 2.4 })
+    const template = group.userData.template as { rooms: unknown[] }
+    const expected = template.rooms.reduce<number>(
+      (sum, room) =>
+        sum + geometry.wallPieces(room, { wallHeight: 2.4 }).length,
+      0
+    )
+
+    expect(meshes(group).filter(mesh => mesh.userData.piece)).toHaveLength(
+      expected
+    )
   })
 })

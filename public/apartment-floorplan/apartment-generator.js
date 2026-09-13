@@ -1,14 +1,15 @@
 ;(function () {
   'use strict'
 
-  var WALL_HEIGHT = 0.72
-  var RAILING_HEIGHT = 0.42
-  var WALL_THICKNESS = 0.08
   var FLOOR_THICKNESS = 0.04
-  var MAX_DOOR_WIDTH = 0.85
-  var DOOR_POST_HEIGHT = WALL_HEIGHT * 0.7
   var FURNITURE_HEIGHT = 0.24
-  var SIDES = ['front', 'back', 'east', 'west']
+  var PIECE_MATERIALS = {
+    wall: 'divider',
+    header: 'divider',
+    railing: 'glass',
+    post: 'furniture',
+    lintel: 'furniture',
+  }
 
   function palette() {
     return window.FloorplanMaterials
@@ -29,78 +30,16 @@
     addMesh(group, floor, roomId)
   }
 
-  function describeWall(room, side) {
-    var alongX = side === 'front' || side === 'back'
-    var inset = WALL_THICKNESS / 2
-    var x = room.x
-    var z = room.z
-    if (side === 'front') z = room.z + room.depth / 2 - inset
-    if (side === 'back') z = room.z - room.depth / 2 + inset
-    if (side === 'east') x = room.x + room.width / 2 - inset
-    if (side === 'west') x = room.x - room.width / 2 + inset
-    return {
-      alongX: alongX,
-      x: x,
-      z: z,
-      length: alongX ? room.width : room.depth - WALL_THICKNESS * 2,
-    }
-  }
-
-  function addWallPiece(group, roomId, wall, offset, length, height, material) {
-    var mesh = wall.alongX
-      ? createBox(length, height, WALL_THICKNESS, material)
-      : createBox(WALL_THICKNESS, height, length, material)
-    mesh.position.set(
-      wall.alongX ? wall.x + offset : wall.x,
-      height / 2,
-      wall.alongX ? wall.z : wall.z + offset
+  function addPiece(group, room, item) {
+    var mesh = createBox(
+      item.width,
+      item.height,
+      item.depth,
+      palette()[PIECE_MATERIALS[item.kind]]
     )
-    addMesh(group, mesh, roomId)
-  }
-
-  function addDoorFrame(group, roomId, wall, doorWidth) {
-    var material = palette().furniture
-    var span = doorWidth + WALL_THICKNESS
-    addWallPiece(
-      group,
-      roomId,
-      wall,
-      -doorWidth / 2,
-      WALL_THICKNESS,
-      DOOR_POST_HEIGHT,
-      material
-    )
-    addWallPiece(
-      group,
-      roomId,
-      wall,
-      doorWidth / 2,
-      WALL_THICKNESS,
-      DOOR_POST_HEIGHT,
-      material
-    )
-    var lintel = wall.alongX
-      ? createBox(span, WALL_THICKNESS, WALL_THICKNESS, material)
-      : createBox(WALL_THICKNESS, WALL_THICKNESS, span, material)
-    lintel.position.set(wall.x, DOOR_POST_HEIGHT, wall.z)
-    addMesh(group, lintel, roomId)
-  }
-
-  function addSide(group, room, side) {
-    var wall = describeWall(room, side)
-    var isRailing = room.kind === 'balcony' && side !== 'back'
-    var material = isRailing ? palette().glass : palette().divider
-    var height = isRailing ? RAILING_HEIGHT : WALL_HEIGHT
-    if (room.doors.indexOf(side) < 0) {
-      addWallPiece(group, room.id, wall, 0, wall.length, height, material)
-      return
-    }
-    var doorWidth = Math.min(MAX_DOOR_WIDTH, wall.length * 0.35)
-    var segment = (wall.length - doorWidth) / 2
-    var offset = (doorWidth + segment) / 2
-    addWallPiece(group, room.id, wall, -offset, segment, height, material)
-    addWallPiece(group, room.id, wall, offset, segment, height, material)
-    addDoorFrame(group, room.id, wall, doorWidth)
+    mesh.position.set(item.x, item.y, item.z)
+    mesh.userData.piece = item.kind
+    addMesh(group, mesh, room.id)
   }
 
   function addFurniture(group, room, furnishing) {
@@ -125,19 +64,22 @@
     addMesh(group, ceramic, room.id)
   }
 
-  function create(config) {
+  function create(config, options) {
     var template = window.FloorplanTemplates.create(config)
     var group = new THREE.Group()
     group.userData.rooms = template.rooms
+    group.userData.template = template
     group.userData.size = Math.max(template.width, template.depth)
     template.circulation.forEach(function (rect) {
       addFloor(group, rect, palette().floor, null)
     })
     template.rooms.forEach(function (room) {
       addFloor(group, room, palette()[room.kind] || palette().floor, room.id)
-      SIDES.forEach(function (side) {
-        addSide(group, room, side)
-      })
+      window.FloorplanGeometry.wallPieces(room, options).forEach(
+        function (item) {
+          addPiece(group, room, item)
+        }
+      )
       addFurniture(group, room, config.furnishing)
     })
     return group
