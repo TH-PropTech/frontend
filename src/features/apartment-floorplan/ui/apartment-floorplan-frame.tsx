@@ -23,6 +23,7 @@ export function ApartmentFloorplanFrame({
     'loading'
   )
   const [errorCode, setErrorCode] = React.useState<string | null>(null)
+  const [attempt, setAttempt] = React.useState(0)
 
   const postToFrame = React.useCallback(
     (
@@ -67,7 +68,7 @@ export function ApartmentFloorplanFrame({
       window.clearTimeout(timeout)
       window.removeEventListener('message', handleMessage)
     }
-  }, [config, postToFrame])
+  }, [attempt, config, postToFrame])
 
   React.useEffect(() => {
     const handleVisibility = (): void => {
@@ -98,7 +99,7 @@ export function ApartmentFloorplanFrame({
   const handleRetry = (): void => {
     setErrorCode(null)
     setStatus('loading')
-    frameRef.current?.contentWindow?.location.reload()
+    setAttempt(current => current + 1)
   }
 
   const handleFrameError = (): void => {
@@ -145,6 +146,7 @@ export function ApartmentFloorplanFrame({
       </div>
       <div className="relative h-[560px] bg-surface-muted">
         <iframe
+          key={attempt}
           ref={frameRef}
           src="/apartment-floorplan/index.html"
           title="Sơ đồ 3D minh hoạ"
