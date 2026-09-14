@@ -1,3 +1,4 @@
 export * from './api/payments-api'
 export * from './ui/payment-schedule-panel'
 export * from './ui/overdue-reminders-panel'
+export * from './ui/deposit-payment-panel'

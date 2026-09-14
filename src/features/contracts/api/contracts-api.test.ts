@@ -62,4 +62,56 @@ describe('contracts API', () => {
       }
     )
   })
+
+  it('supports enriched contract workspace and signing endpoints', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({ contract: { id: 'c1' } })
+    vi.mocked(apiClient.get).mockResolvedValueOnce([{ id: 'evt-1' }])
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ sessionId: 's1' })
+    vi.mocked(apiClient.post).mockResolvedValueOnce({ success: true })
+    vi.mocked(apiClient.post).mockResolvedValueOnce({
+      verified: true,
+      biometricEvidenceId: 'bio-1',
+    })
+
+    const {
+      getContractView,
+      getContractAuditEvents,
+      initiateContractOtp,
+      verifyContractOtp,
+      verifySigner,
+    } = await import('./contracts-api')
+
+    const view = await getContractView('c1')
+    expect(apiClient.get).toHaveBeenCalledWith('/contracts/c1/view')
+    expect(view.contract.id).toBe('c1')
+
+    const events = await getContractAuditEvents('c1')
+    expect(apiClient.get).toHaveBeenCalledWith('/contracts/c1/audit-events')
+    expect(events).toHaveLength(1)
+
+    const otpInit = await initiateContractOtp('c1', 'device-1')
+    expect(apiClient.post).toHaveBeenCalledWith('/contracts/c1/otp-challenge', {
+      deviceId: 'device-1',
+    })
+    expect(otpInit.sessionId).toBe('s1')
+
+    const otpVer = await verifyContractOtp('c1', {
+      sessionId: 's1',
+      otpCode: '123456',
+    })
+    expect(apiClient.post).toHaveBeenCalledWith('/contracts/c1/verify-otp', {
+      sessionId: 's1',
+      otpCode: '123456',
+    })
+    expect(otpVer.success).toBe(true)
+
+    const file = new Blob(['image'], { type: 'image/jpeg' })
+    const signerResult = await verifySigner('c1', file)
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/contracts/c1/verify-signer',
+      expect.any(FormData)
+    )
+    expect(signerResult.verified).toBe(true)
+    expect(signerResult.biometricEvidenceId).toBe('bio-1')
+  })
 })
