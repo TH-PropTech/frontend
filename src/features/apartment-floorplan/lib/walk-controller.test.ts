@@ -86,6 +86,10 @@ function announcer(): string {
 }
 
 beforeEach(() => {
+  Object.defineProperty(document, 'pointerLockElement', {
+    configurable: true,
+    value: null,
+  })
   document.body.innerHTML =
     '<main id="viewer">' +
     '<canvas id="canvas"></canvas>' +
@@ -190,6 +194,29 @@ describe('walk-controller', () => {
     walk.update(0)
 
     expect(lookDirection().y).toBeCloseTo(0)
+  })
+
+  it('bounds an anomalous pointer-lock delta after sustained walking', () => {
+    walk.enter(template)
+    press('keydown', 'w')
+    tick(75)
+    press('keyup', 'w')
+    const before = lookDirection()
+    const canvas = document.getElementById('canvas')!
+    Object.defineProperty(document, 'pointerLockElement', {
+      configurable: true,
+      value: canvas,
+    })
+    const outlier = new MouseEvent('mousemove', { bubbles: true })
+    Object.defineProperties(outlier, {
+      movementX: { value: 1257 },
+      movementY: { value: 0 },
+    })
+
+    document.dispatchEvent(outlier)
+    walk.update(1 / 60)
+
+    expect(before.angleTo(lookDirection())).toBeLessThanOrEqual(Math.PI / 6)
   })
 
   it('asks the app to exit on Escape when the pointer is not locked', () => {

@@ -5,6 +5,7 @@
   var SPEED = 1.4
   var MAX_DT = 0.1
   var MAX_PITCH = Math.PI / 3
+  var MAX_LOOK_STEP = Math.PI / 6
   var LOCK_SENSITIVITY = 0.0025
   var DRAG_SENSITIVITY = 0.005
   var THIRD_PERSON_BACK = 2.5
@@ -100,8 +101,16 @@
     }
 
     function applyLook() {
-      yaw += pendingYaw
-      pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch + pendingPitch))
+      var frameYaw = Math.max(
+        -MAX_LOOK_STEP,
+        Math.min(MAX_LOOK_STEP, pendingYaw)
+      )
+      var framePitch = Math.max(
+        -MAX_LOOK_STEP,
+        Math.min(MAX_LOOK_STEP, pendingPitch)
+      )
+      yaw += frameYaw
+      pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch + framePitch))
       pendingYaw = 0
       pendingPitch = 0
     }
