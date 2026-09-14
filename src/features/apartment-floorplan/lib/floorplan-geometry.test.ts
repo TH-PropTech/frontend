@@ -57,6 +57,21 @@ function pieceAt(pieces: Piece[], index: number): Piece {
   return item
 }
 
+function overlapsVolume(a: Piece, b: Piece): boolean {
+  const epsilon = 0.000001
+  return (
+    Math.min(a.x + a.width / 2, b.x + b.width / 2) -
+      Math.max(a.x - a.width / 2, b.x - b.width / 2) >
+      epsilon &&
+    Math.min(a.y + a.height / 2, b.y + b.height / 2) -
+      Math.max(a.y - a.height / 2, b.y - b.height / 2) >
+      epsilon &&
+    Math.min(a.z + a.depth / 2, b.z + b.depth / 2) -
+      Math.max(a.z - a.depth / 2, b.z - b.depth / 2) >
+      epsilon
+  )
+}
+
 describe('floorplan-geometry', () => {
   it('draws one solid piece per side without a door', () => {
     const pieces = geometry.wallPieces(room())
@@ -113,8 +128,12 @@ describe('floorplan-geometry', () => {
     const postA = pieceAt(pieces, 2)
     const postB = pieceAt(pieces, 3)
 
-    expect(left.x + left.width / 2).toBeCloseTo(postA.x)
-    expect(right.x - right.width / 2).toBeCloseTo(postB.x)
+    expect(left.x + left.width / 2).toBeCloseTo(
+      postA.x - geometry.WALL_THICKNESS / 2
+    )
+    expect(right.x - right.width / 2).toBeCloseTo(
+      postB.x + geometry.WALL_THICKNESS / 2
+    )
     expect(postA.x + postB.x).toBeCloseTo(0)
     expect(postB.x - postA.x - geometry.WALL_THICKNESS).toBeGreaterThan(0.3)
   })
@@ -159,8 +178,29 @@ describe('floorplan-geometry', () => {
         .filter(piece => piece.kind === 'post')
         .every(piece => piece.height === 2)
     ).toBe(true)
-    expect(header.y - header.height / 2).toBeCloseTo(2)
+    expect(header.y - header.height / 2).toBeCloseTo(
+      2 + geometry.WALL_THICKNESS
+    )
     expect(header.y + header.height / 2).toBeCloseTo(2.4)
+  })
+
+  it('joins doorway pieces without overlapping their rendered volumes', () => {
+    const doorway = geometry
+      .wallPieces(room({ doors: ['east'] }), {
+        wallHeight: geometry.WALK_WALL_HEIGHT,
+      })
+      .filter(piece => piece.side === 'east')
+    const overlaps: string[] = []
+
+    doorway.forEach((piece, index) => {
+      doorway.slice(index + 1).forEach(other => {
+        if (overlapsVolume(piece, other)) {
+          overlaps.push(piece.kind + '/' + other.kind)
+        }
+      })
+    })
+
+    expect(overlaps).toEqual([])
   })
 
   it('adds no header at the cutaway height', () => {

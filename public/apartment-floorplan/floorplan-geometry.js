@@ -56,8 +56,9 @@
       return [piece(wall, 0, wall.length, height, height / 2, kind, side)]
     }
     var doorWidth = Math.min(MAX_DOOR_WIDTH, wall.length * DOOR_RATIO)
-    var segment = (wall.length - doorWidth) / 2
-    var offset = (doorWidth + segment) / 2
+    var frameWidth = doorWidth + WALL_THICKNESS
+    var segment = (wall.length - frameWidth) / 2
+    var offset = (frameWidth + segment) / 2
     var doorHeight = doorHeightFor(height)
     var pieces = [
       piece(wall, -offset, segment, height, height / 2, kind, side),
@@ -83,22 +84,23 @@
       piece(
         wall,
         0,
-        doorWidth + WALL_THICKNESS,
+        frameWidth,
         WALL_THICKNESS,
-        doorHeight,
+        doorHeight + WALL_THICKNESS / 2,
         'lintel',
         side
       ),
     ]
     if (height >= WALK_WALL_HEIGHT) {
-      var headerHeight = height - doorHeight
+      var headerBottom = doorHeight + WALL_THICKNESS
+      var headerHeight = height - headerBottom
       pieces.push(
         piece(
           wall,
           0,
-          doorWidth,
+          frameWidth,
           headerHeight,
-          doorHeight + headerHeight / 2,
+          headerBottom + headerHeight / 2,
           'header',
           side
         )
