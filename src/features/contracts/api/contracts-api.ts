@@ -207,7 +207,8 @@ export interface OtpChallengeResponseDto {
 }
 
 export interface ContractIntegrityResult {
-  isValid: boolean
+  isValid: boolean | null
+  verificationStatus: 'valid' | 'invalid' | 'not-recorded' | 'unavailable'
   currentHash: string
   storedHash: string | null
   blockchainAddress: string | null

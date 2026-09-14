@@ -16,7 +16,11 @@ export interface BlockchainVerifyBadgeProps {
   contractId: string
   onVerifyIntegrity?: () => Promise<void> | void
   isVerifying?: boolean
-  integrityResult?: { isValid: boolean; message?: string } | null
+  integrityResult?: {
+    isValid: boolean | null
+    verificationStatus?: 'valid' | 'invalid' | 'not-recorded' | 'unavailable'
+    message?: string
+  } | null
 }
 
 export function BlockchainVerifyBadge({
@@ -157,21 +161,29 @@ export function BlockchainVerifyBadge({
         <div
           data-testid="integrity-result-box"
           className={`flex items-center gap-2 p-3 rounded-lg border text-xs ${
-            integrityResult.isValid
+            integrityResult.isValid === true
               ? 'bg-[var(--surface-muted)] border-[var(--success)] text-[var(--success)]'
-              : 'bg-[var(--surface-muted)] border-[var(--danger)] text-[var(--danger)]'
+              : integrityResult.isValid === false
+                ? 'bg-[var(--surface-muted)] border-[var(--danger)] text-[var(--danger)]'
+                : 'bg-[var(--surface-muted)] border-[var(--warning)] text-[var(--warning)]'
           }`}
         >
-          {integrityResult.isValid ? (
+          {integrityResult.isValid === true ? (
             <ShieldCheck className="w-4 h-4 shrink-0" />
-          ) : (
+          ) : integrityResult.isValid === false ? (
             <AlertTriangle className="w-4 h-4 shrink-0" />
+          ) : (
+            <Info className="w-4 h-4 shrink-0" />
           )}
           <span className="font-medium">
             {integrityResult.message ||
-              (integrityResult.isValid
+              (integrityResult.isValid === true
                 ? 'Tính toàn vẹn hợp đồng hợp lệ: Hash khớp 100% với bản ghi sổ cái.'
-                : 'Cảnh báo sai lệch: Nội dung đã bị thay đổi so với bản gốc trên sổ cái!')}
+                : integrityResult.isValid === false
+                  ? 'Cảnh báo sai lệch: Nội dung đã bị thay đổi so với bản gốc trên sổ cái!'
+                  : integrityResult.verificationStatus === 'unavailable'
+                    ? 'Hệ thống sổ cái tạm thời không khả dụng: Không thể kết nối tới nút mạng Hyperledger Fabric.'
+                    : 'Chưa ghi nhận trên sổ cái: Hợp đồng chưa có bản ghi xác nhận trên blockchain.')}
           </span>
         </div>
       )}

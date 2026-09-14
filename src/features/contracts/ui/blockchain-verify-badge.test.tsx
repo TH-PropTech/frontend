@@ -76,16 +76,80 @@ describe('BlockchainVerifyBadge', () => {
     expect(onVerifyMock).toHaveBeenCalledTimes(1)
   })
 
-  it('displays integrity result banner when provided', () => {
+  it('displays integrity result banner when valid', () => {
     render(
       <BlockchainVerifyBadge
         ledger={mockSimulationLedger}
         contractId="c1"
-        integrityResult={{ isValid: true, message: 'Hash khớp tuyệt đối.' }}
+        integrityResult={{
+          isValid: true,
+          verificationStatus: 'valid',
+          message: 'Hash khớp tuyệt đối.',
+        }}
       />
     )
 
     expect(screen.getByTestId('integrity-result-box')).toBeInTheDocument()
     expect(screen.getByText('Hash khớp tuyệt đối.')).toBeInTheDocument()
+  })
+
+  it('displays warning banner when integrity is invalid', () => {
+    render(
+      <BlockchainVerifyBadge
+        ledger={mockFabricLedger}
+        contractId="c1"
+        integrityResult={{
+          isValid: false,
+          verificationStatus: 'invalid',
+        }}
+      />
+    )
+
+    expect(screen.getByTestId('integrity-result-box')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Cảnh báo sai lệch: Nội dung đã bị thay đổi so với bản gốc trên sổ cái!'
+      )
+    ).toBeInTheDocument()
+  })
+
+  it('displays not-recorded message when contract has not been recorded', () => {
+    render(
+      <BlockchainVerifyBadge
+        ledger={mockFabricLedger}
+        contractId="c1"
+        integrityResult={{
+          isValid: null,
+          verificationStatus: 'not-recorded',
+        }}
+      />
+    )
+
+    expect(screen.getByTestId('integrity-result-box')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Chưa ghi nhận trên sổ cái: Hợp đồng chưa có bản ghi xác nhận trên blockchain.'
+      )
+    ).toBeInTheDocument()
+  })
+
+  it('displays unavailable message when fabric network is unreachable', () => {
+    render(
+      <BlockchainVerifyBadge
+        ledger={mockFabricLedger}
+        contractId="c1"
+        integrityResult={{
+          isValid: null,
+          verificationStatus: 'unavailable',
+        }}
+      />
+    )
+
+    expect(screen.getByTestId('integrity-result-box')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Hệ thống sổ cái tạm thời không khả dụng: Không thể kết nối tới nút mạng Hyperledger Fabric.'
+      )
+    ).toBeInTheDocument()
   })
 })
