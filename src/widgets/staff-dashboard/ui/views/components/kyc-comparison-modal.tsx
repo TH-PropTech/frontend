@@ -24,26 +24,27 @@ export function KycComparisonModal({
   const selfieUrl = useProtectedKycImage(selectedRecord.id, 'selfie')
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8">
       <div
         className="absolute inset-0 bg-fg/40 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      <div className="relative z-10 flex flex-col w-full max-w-5xl h-[85vh] bg-surface rounded-xl border border-line shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-line bg-surface-muted/30 flex justify-between items-center">
+      <div className="relative z-10 flex h-[min(90vh,820px)] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-border bg-surface-muted/30 px-6 py-4">
           <div>
-            <span className="text-[10px] font-bold text-primary font-display">
+            <span className="font-display text-[10px] font-bold text-primary">
               {selectedRecord.id}
             </span>
-            <h2 className="text-sm font-bold text-fg font-marketing mt-0.5">
+            <h2 className="mt-0.5 font-marketing text-sm font-bold text-fg">
               Xác minh KYC: {selectedRecord.name}
             </h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-subtle hover:bg-fg/5 hover:text-fg transition-colors"
+            aria-label="Đóng cửa sổ xác minh KYC"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-subtle transition-colors hover:bg-primary-soft hover:text-fg"
           >
             <svg
               width="18"
@@ -52,6 +53,7 @@ export function KycComparisonModal({
               fill="none"
               stroke="currentColor"
               strokeWidth="2.5"
+              aria-hidden="true"
             >
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -59,64 +61,41 @@ export function KycComparisonModal({
           </button>
         </div>
 
-        {/* Split layout content workspace */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-          {/* Left Side: Uploaded CCCD & Selfie Images */}
-          <div className="flex-1 bg-bg/50 p-6 overflow-y-auto space-y-6 border-r border-line">
-            <h3 className="text-xs font-bold text-fg uppercase tracking-wider font-body mb-3">
-              Hình ảnh CCCD & Selfie chân dung
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+          <div className="min-w-0 flex-1 overflow-y-auto border-r border-border bg-bg/50 p-5 md:overflow-hidden">
+            <h3 className="mb-3 font-body text-xs font-bold uppercase tracking-wider text-fg">
+              Hình ảnh CCCD & selfie chân dung
             </h3>
 
-            {/* Front side of CCCD */}
-            <div className="space-y-2">
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
-                Mặt trước CCCD
-              </span>
-              {frontCardUrl ? (
-                <div className="relative aspect-[1.58/1] w-full max-w-sm mx-auto overflow-hidden rounded-xl border border-line bg-surface shadow-sm hover:border-primary/50 transition-colors">
-                  <Image
-                    src={frontCardUrl}
-                    alt="Mặt trước CCCD"
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
-                </div>
-              ) : (
-                <CccdMockupCard record={selectedRecord} side="front" />
-              )}
+            <div className="grid grid-cols-2 gap-3">
+              <KycDocumentImage
+                label="Mặt trước CCCD"
+                url={frontCardUrl}
+                record={selectedRecord}
+                side="front"
+              />
+              <KycDocumentImage
+                label="Mặt sau CCCD"
+                url={backCardUrl}
+                record={selectedRecord}
+                side="back"
+              />
             </div>
 
-            {/* Back side of CCCD */}
-            <div className="space-y-2">
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
-                Mặt sau CCCD
-              </span>
-              {backCardUrl ? (
-                <div className="relative aspect-[1.58/1] w-full max-w-sm mx-auto overflow-hidden rounded-xl border border-line bg-surface shadow-sm hover:border-primary/50 transition-colors">
-                  <Image
-                    src={backCardUrl}
-                    alt="Mặt sau CCCD"
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
-                </div>
-              ) : (
-                <CccdMockupCard record={selectedRecord} side="back" />
-              )}
-            </div>
-
-            {/* Selfie Image */}
             {selfieUrl && (
-              <div className="space-y-2">
-                <span className="text-[10px] font-bold text-muted uppercase tracking-wider block">
-                  Ảnh chân dung đối chiếu (Selfie)
-                </span>
-                <div className="relative aspect-[1/1] w-48 mx-auto overflow-hidden rounded-xl border border-line bg-surface shadow-sm hover:border-primary/50 transition-colors">
+              <div className="mt-4 flex items-center gap-4 rounded-lg border border-border bg-surface/70 p-3">
+                <div>
+                  <span className="block font-body text-[10px] font-bold uppercase tracking-wider text-muted">
+                    Ảnh chân dung đối chiếu
+                  </span>
+                  <span className="mt-1 block text-[11px] text-subtle">
+                    Selfie người nộp hồ sơ
+                  </span>
+                </div>
+                <div className="relative ml-auto aspect-square w-20 shrink-0 overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
                   <Image
                     src={selfieUrl}
-                    alt="Ảnh Selfie chân dung"
+                    alt="Ảnh selfie chân dung"
                     fill
                     unoptimized
                     className="object-cover"
@@ -126,113 +105,71 @@ export function KycComparisonModal({
             )}
           </div>
 
-          {/* Right Side: OCR Extracted Fields Side-by-side Form */}
-          <div className="w-full md:w-[450px] p-6 overflow-y-auto space-y-5">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xs font-bold text-fg uppercase tracking-wider font-body">
-                Dữ liệu trích xuất từ OCR
-              </h3>
-              <span className="text-xs font-bold text-accent-2 bg-accent-2/10 px-2.5 py-1 rounded-lg border border-accent-2/20">
-                {selectedRecord.ocrScore === null
-                  ? 'Không có điểm OCR'
-                  : `Trùng khớp ${selectedRecord.ocrScore}%`}
-              </span>
-            </div>
+          <div className="flex min-h-0 w-full flex-col md:w-[450px]">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="font-body text-xs font-bold uppercase tracking-wider text-fg">
+                  Dữ liệu trích xuất từ OCR
+                </h3>
+                <span className="shrink-0 rounded-full border border-success/30 bg-success-soft px-2.5 py-1 text-[11px] font-bold text-success">
+                  {selectedRecord.ocrScore === null
+                    ? 'Không có điểm OCR'
+                    : `Trùng khớp ${selectedRecord.ocrScore}%`}
+                </span>
+              </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-muted uppercase tracking-wider font-body">
-                  Họ và tên (Full Name)
-                </label>
-                <input
-                  type="text"
-                  defaultValue={selectedRecord.name}
-                  className="w-full mt-1.5 p-2.5 bg-bg/30 border border-line rounded-lg text-xs font-semibold text-fg focus:outline-none"
+              <div className="space-y-3">
+                <KycField
+                  label="Họ và tên (Full name)"
+                  value={selectedRecord.name}
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-muted uppercase tracking-wider font-body">
-                    Số CCCD (ID Number)
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedRecord.cccdNumber}
-                    className="w-full mt-1.5 p-2.5 bg-bg/30 border border-line rounded-lg text-xs font-mono font-semibold text-fg focus:outline-none"
+                <div className="grid grid-cols-2 gap-3">
+                  <KycField
+                    label="Số CCCD (ID number)"
+                    value={selectedRecord.cccdNumber}
+                    mono
+                  />
+                  <KycField
+                    label="Ngày sinh (Date of birth)"
+                    value={selectedRecord.dob}
                   />
                 </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-muted uppercase tracking-wider font-body">
-                    Ngày sinh (Date of birth)
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedRecord.dob}
-                    className="w-full mt-1.5 p-2.5 bg-bg/30 border border-line rounded-lg text-xs font-semibold text-fg focus:outline-none"
+                <div className="grid grid-cols-2 gap-3">
+                  <KycField
+                    label="Giới tính (Gender)"
+                    value={selectedRecord.gender}
                   />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-muted uppercase tracking-wider font-body">
-                    Giới tính (Gender)
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedRecord.gender}
-                    className="w-full mt-1.5 p-2.5 bg-bg/30 border border-line rounded-lg text-xs font-semibold text-fg focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-muted uppercase tracking-wider font-body">
-                    Email liên kết
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedRecord.email}
-                    className="w-full mt-1.5 p-2.5 bg-bg/30 border border-line rounded-lg text-xs font-semibold text-fg focus:outline-none"
+                  <KycField
+                    label="Email liên kết"
+                    value={selectedRecord.email}
                     disabled
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-muted uppercase tracking-wider font-body">
-                  Quê quán (Place of origin)
-                </label>
-                <input
-                  type="text"
-                  defaultValue={selectedRecord.hometown}
-                  className="w-full mt-1.5 p-2.5 bg-bg/30 border border-line rounded-lg text-xs font-semibold text-fg focus:outline-none"
+                <KycField
+                  label="Quê quán (Place of origin)"
+                  value={selectedRecord.hometown}
                 />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-muted uppercase tracking-wider font-body">
-                  Nơi thường trú (Residence)
-                </label>
-                <textarea
-                  defaultValue={selectedRecord.address}
-                  rows={2}
-                  className="w-full mt-1.5 p-2.5 bg-bg/30 border border-line rounded-lg text-xs font-semibold text-fg focus:outline-none resize-none"
+                <KycField
+                  label="Nơi thường trú (Residence)"
+                  value={selectedRecord.address}
+                  multiline
                 />
               </div>
             </div>
 
-            {/* Verification footer */}
             {selectedRecord.status === 'pending' && (
-              <div className="border-t border-line/60 pt-4 mt-6 flex gap-2">
+              <div className="flex shrink-0 gap-2 border-t border-border bg-surface p-5 pt-4">
                 <button
+                  type="button"
                   onClick={onShowReject}
-                  className="flex-1 py-2.5 bg-surface border border-accent hover:bg-accent/5 text-accent text-xs font-semibold rounded-lg transition-colors"
+                  className="flex-1 rounded-lg border border-primary bg-surface py-2.5 text-xs font-semibold text-primary transition-colors hover:bg-primary-soft"
                 >
                   Yêu cầu chụp lại
                 </button>
                 <button
-                  onClick={() => handleVerifyLocal()}
-                  className="flex-1 py-2.5 bg-accent-2 hover:bg-accent-2/95 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
+                  type="button"
+                  onClick={() => void onVerify(selectedRecord.id)}
+                  className="flex-1 rounded-lg bg-success py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-success/90"
                 >
                   Xác nhận KYC
                 </button>
@@ -243,10 +180,76 @@ export function KycComparisonModal({
       </div>
     </div>
   )
+}
 
-  function handleVerifyLocal(): void {
-    void onVerify(selectedRecord.id)
-  }
+function KycDocumentImage({
+  label,
+  url,
+  record,
+  side,
+}: {
+  label: string
+  url: string | null
+  record: KycRecord
+  side: 'front' | 'back'
+}): React.ReactElement {
+  return (
+    <div className="space-y-2">
+      <span className="block font-body text-[10px] font-bold uppercase tracking-wider text-muted">
+        {label}
+      </span>
+      {url ? (
+        <div className="relative aspect-[1.58/1] w-full overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+          <Image
+            src={url}
+            alt={label}
+            fill
+            unoptimized
+            className="object-cover"
+          />
+        </div>
+      ) : (
+        <CccdMockupCard record={record} side={side} />
+      )}
+    </div>
+  )
+}
+
+function KycField({
+  label,
+  value,
+  disabled = false,
+  mono = false,
+  multiline = false,
+}: {
+  label: string
+  value: string
+  disabled?: boolean
+  mono?: boolean
+  multiline?: boolean
+}): React.ReactElement {
+  const className = `mt-1.5 w-full rounded-lg border border-border bg-bg/30 p-2.5 text-xs font-semibold text-fg outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary-soft ${mono ? 'font-mono' : ''}`
+  return (
+    <div>
+      <label className="block font-body text-[10px] font-bold uppercase tracking-wider text-muted">
+        {label}
+      </label>
+      {multiline ? (
+        <textarea
+          defaultValue={value}
+          rows={2}
+          className={`${className} resize-none`}
+        />
+      ) : (
+        <input
+          type="text"
+          defaultValue={value}
+          disabled={disabled}
+          className={className}
+        />
+      )}
+    </div>
+  )
 }
 
 function useProtectedKycImage(

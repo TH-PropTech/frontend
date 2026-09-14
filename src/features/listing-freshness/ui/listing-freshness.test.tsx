@@ -36,29 +36,42 @@ describe('listing freshness UI', () => {
 
   it('shows a stale badge and lets an owner confirm the listing', async () => {
     mocks.getFreshness.mockResolvedValue({
-      apartmentId: 'listing-1',
+      apartmentId: '6a811b784cb8ecf7051f5e8d',
       status: 'stale',
       daysSinceUpdate: 70,
       needsConfirmation: true,
       lastUpdatedAt: '2026-06-01T00:00:00.000Z',
     })
     mocks.confirm.mockResolvedValue({
-      apartmentId: 'listing-1',
+      apartmentId: '6a811b784cb8ecf7051f5e8d',
       status: 'fresh',
       daysSinceUpdate: 0,
       needsConfirmation: false,
       lastUpdatedAt: '2026-08-11T00:00:00.000Z',
     })
 
-    renderWithQuery(<FreshnessBadge listingId="listing-1" canConfirm />)
+    renderWithQuery(
+      <FreshnessBadge listingId="6a811b784cb8ecf7051f5e8d" canConfirm />
+    )
 
     expect(await screen.findByText(/tin đã lâu chưa cập nhật/i)).toBeTruthy()
     fireEvent.click(
       screen.getByRole('button', { name: /xác nhận tin còn hiệu lực/i })
     )
 
-    await waitFor(() => expect(mocks.confirm).toHaveBeenCalledWith('listing-1'))
+    await waitFor(() =>
+      expect(mocks.confirm).toHaveBeenCalledWith('6a811b784cb8ecf7051f5e8d')
+    )
     expect(await screen.findByText(/tin mới cập nhật/i)).toBeTruthy()
+  })
+
+  it('does not call the backend for a human-readable display id', () => {
+    const { container } = renderWithQuery(
+      <FreshnessBadge listingId="PROP-CAR-102" />
+    )
+
+    expect(container).toBeEmptyDOMElement()
+    expect(mocks.getFreshness).not.toHaveBeenCalled()
   })
 
   it('renders the empty and recoverable error queue states', async () => {

@@ -15,7 +15,10 @@ import { PropertyReviews } from './components/property-reviews'
 import { LandlordChatModal } from './components/landlord-chat-modal'
 import { PropertyDecisionActions } from './components/property-decision-actions'
 import { apiClient } from '@/shared/api/api-client'
-import { Compass, CheckCircle2, Phone, Mail } from 'lucide-react'
+import Link from 'next/link'
+import type { Route } from 'next'
+import { Button } from '@/shared/ui/button'
+import { Compass, CheckCircle2, Phone, Mail, FileText } from 'lucide-react'
 import { FreshnessBadge } from '@/features/listing-freshness'
 import { PriceBenchmarkCard } from '@/features/price-benchmark'
 import { ViewingNoteEditor } from '@/features/viewing-notes'
@@ -28,7 +31,6 @@ import {
   ImprovementChecklist,
   QualityScoreCard,
 } from '@/features/listing-quality'
-import { ApplyDialog } from '@/features/rental-application'
 import { ConditionAnalysisPanel } from '@/features/condition-analysis'
 import { LocationRiskPanel } from '@/features/location-risk'
 import { ApartmentFloorplanSection } from '@/features/apartment-floorplan'
@@ -186,6 +188,8 @@ export function PropertyDetail(): React.ReactElement {
     )
   }
 
+  const apartmentResourceId = propertyId || property.id
+
   return (
     <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative">
       <HomeHeader />
@@ -200,22 +204,27 @@ export function PropertyDetail(): React.ReactElement {
         </section>
 
         <PropertyDecisionActions
-          propertyId={property.id}
+          propertyId={apartmentResourceId}
           title={property.title}
           monthlyRent={property.priceNum * 1_000_000}
         />
 
         {viewer?.roles?.includes('tenant') ? (
           <section className="mx-auto flex max-w-6xl justify-end px-6 pt-4 md:px-10">
-            <ApplyDialog
-              apartmentId={property.id}
-              packages={property.rentalPackages}
-            />
+            <Button
+              asChild
+              className="flex items-center gap-2 rounded-2xl bg-primary text-white shadow-sm hover:bg-primary-hover"
+            >
+              <Link href={`/properties/${apartmentResourceId}/apply` as Route}>
+                <FileText aria-hidden="true" className="h-4 w-4" />
+                <span>Đặt thuê căn hộ</span>
+              </Link>
+            </Button>
           </section>
         ) : null}
 
         <section className="mx-auto max-w-6xl px-6 pt-6 md:px-10">
-          <FreshnessBadge listingId={property.id} />
+          <FreshnessBadge listingId={apartmentResourceId} />
         </section>
 
         {/* 360 Tour Interactive CTA Banner */}
@@ -421,7 +430,7 @@ export function PropertyDetail(): React.ReactElement {
             </div>
 
             {/* Visit Booking Widget */}
-            <BookingWidget propertyId={property.id} />
+            <BookingWidget propertyId={apartmentResourceId} />
 
             {/* Landlord Info Card */}
             {property.landlord && (
@@ -496,17 +505,17 @@ export function PropertyDetail(): React.ReactElement {
                 furniture: property.furniture,
               }}
             />
-            <ViewingNoteEditor apartmentId={property.id} />
+            <ViewingNoteEditor apartmentId={apartmentResourceId} />
           </div>
-          <AreaProfileSection apartmentId={property.id} />
+          <AreaProfileSection apartmentId={apartmentResourceId} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {viewer ? (
-              <ConditionAnalysisPanel apartmentId={property.id} />
+              <ConditionAnalysisPanel apartmentId={apartmentResourceId} />
             ) : null}
-            <LocationRiskPanel apartmentId={property.id} />
+            <LocationRiskPanel apartmentId={apartmentResourceId} />
           </div>
           <OwnerQualitySection
-            apartmentId={property.id}
+            apartmentId={apartmentResourceId}
             enabled={Boolean(
               viewer?.roles?.includes('landlord') &&
               property.landlord?.id === (viewer.id ?? viewer._id)
