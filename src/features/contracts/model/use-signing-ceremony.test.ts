@@ -66,7 +66,7 @@ describe('useSigningCeremony', () => {
     })
     vi.mocked(contractsApi.signContract).mockResolvedValue({
       _id: 'c1',
-    } as unknown as contractsApi.ContractViewDto)
+    } as unknown as contractsApi.ContractItem)
 
     const { result } = renderHook(() =>
       useSigningCeremony({ contractId: 'c1' })
