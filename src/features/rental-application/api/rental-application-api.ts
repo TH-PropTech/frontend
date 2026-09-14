@@ -40,20 +40,6 @@ export interface RentalApplicationContext {
     currency: 'VND'
   }>
   disclosure: RentalApplicationDisclosure
-  terms?: {
-    key: string
-    version: number
-    hash: string
-    url: string
-  } | null
-  flowProfile?: {
-    profileId: string
-    name: string
-    version: number
-    hash: string
-    precedence: string
-    steps: unknown
-  } | null
 }
 
 export interface CreateRentalApplicationInput {
@@ -64,13 +50,9 @@ export interface CreateRentalApplicationInput {
   moveInDate: string
   occupation: string
   hasPets: boolean
-  notes?: string | undefined
+  notes?: string
   disclosureVersion: string
   acknowledgedDisclosureIds: string[]
-  acceptedTermsVersion?: number | undefined
-  acceptedTermsHash?: string | undefined
-  flowProfileVersion?: number | undefined
-  flowProfileHash?: string | undefined
 }
 export interface RentalApplicationItem {
   _id: string
@@ -151,20 +133,5 @@ export function isRentalPackageStaleError(error: unknown): boolean {
   return (
     error.message.includes('PACKAGE_STALE') ||
     error.body?.code === 'PACKAGE_STALE'
-  )
-}
-
-export function isRentalTermsStaleError(error: unknown): boolean {
-  if (!(error instanceof ApiClientError)) return false
-  return (
-    error.message.includes('TERMS_STALE') || error.body?.code === 'TERMS_STALE'
-  )
-}
-
-export function isFlowConfigStaleError(error: unknown): boolean {
-  if (!(error instanceof ApiClientError)) return false
-  return (
-    error.message.includes('FLOW_CONFIG_STALE') ||
-    error.body?.code === 'FLOW_CONFIG_STALE'
   )
 }

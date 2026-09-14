@@ -36,13 +36,12 @@ export function FreshnessBadge({
 }: {
   listingId: string
   canConfirm?: boolean
-}): React.ReactElement | null {
+}): React.ReactElement {
   const queryClient = useQueryClient()
-  const isRealId = /^[0-9a-f]{24}$/i.test(listingId)
   const freshness = useQuery({
     queryKey: ['listing-freshness', listingId],
     queryFn: () => getListingFreshness(listingId),
-    enabled: isRealId,
+    enabled: Boolean(listingId),
   })
   const confirm = useMutation({
     mutationFn: () => confirmListingFreshness(listingId),
@@ -51,7 +50,6 @@ export function FreshnessBadge({
     },
   })
 
-  if (!isRealId) return null
   if (freshness.isLoading) {
     return (
       <div className="h-8 w-40 animate-pulse rounded-full bg-surface-muted" />

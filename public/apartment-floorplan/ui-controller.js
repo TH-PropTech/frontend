@@ -7,20 +7,25 @@
     var list = document.getElementById('room-list')
     var selectedId = null
     var defaultMaterials = new Map()
+    var selectableSurfaces = []
 
     list.replaceChildren()
 
     group.traverse(function (object) {
-      if (object.userData && object.userData.roomId && object.material) {
+      if (
+        object.userData &&
+        object.userData.selectableSurface &&
+        object.material
+      ) {
         defaultMaterials.set(object.uuid, object.material)
+        selectableSurfaces.push(object)
       }
     })
 
     function highlight(roomId) {
       selectedId = roomId
-      group.traverse(function (object) {
+      selectableSurfaces.forEach(function (object) {
         var baseMaterial = defaultMaterials.get(object.uuid)
-        if (!baseMaterial) return
         object.material =
           object.userData.roomId === roomId
             ? window.FloorplanMaterials.selected
@@ -51,14 +56,11 @@
       button.dataset.roomId = room.id
       button.textContent = room.label
       button.addEventListener('click', function () {
-        highlight(room.id)
+        options.onRoomClick(room.id)
       })
       list.appendChild(button)
     })
 
-    document
-      .getElementById('reset-button')
-      .addEventListener('click', options.onReset)
     return {
       getSelectedId: function () {
         return selectedId
