@@ -67,6 +67,8 @@
     var position = { x: 0, z: 0 }
     var yaw = 0
     var pitch = 0
+    var pendingYaw = 0
+    var pendingPitch = 0
     var roomId
     var lastPointerType = 'mouse'
 
@@ -80,6 +82,8 @@
       keyState = {}
       padState = {}
       drag = null
+      pendingYaw = 0
+      pendingPitch = 0
     }
 
     function releasePointer() {
@@ -90,12 +94,16 @@
       options.hint.textContent = isLocked() ? HINT_LOCKED : HINT_UNLOCKED
     }
 
-    function look(dx, dy, sensitivity) {
-      yaw -= dx * sensitivity
-      pitch = Math.max(
-        -MAX_PITCH,
-        Math.min(MAX_PITCH, pitch - dy * sensitivity)
-      )
+    function queueLook(dx, dy, sensitivity) {
+      pendingYaw -= dx * sensitivity
+      pendingPitch -= dy * sensitivity
+    }
+
+    function applyLook() {
+      yaw += pendingYaw
+      pitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, pitch + pendingPitch))
+      pendingYaw = 0
+      pendingPitch = 0
     }
 
     function axis(positive, negative) {
@@ -179,6 +187,7 @@
 
     function update(dt) {
       if (!active) return
+      applyLook()
       var forward = axis('forward', 'back')
       var strafe = axis('right', 'left')
       var step = SPEED * Math.min(Math.max(dt, 0), MAX_DT)
@@ -219,7 +228,7 @@
 
     function handleMouseMove(event) {
       if (!active || !isLocked()) return
-      look(event.movementX || 0, event.movementY || 0, LOCK_SENSITIVITY)
+      queueLook(event.movementX || 0, event.movementY || 0, LOCK_SENSITIVITY)
     }
 
     function handlePointerDown(event) {
@@ -230,7 +239,11 @@
 
     function handlePointerMove(event) {
       if (!active || !drag || isLocked() || event.pointerId !== drag.id) return
-      look(event.clientX - drag.x, event.clientY - drag.y, DRAG_SENSITIVITY)
+      queueLook(
+        event.clientX - drag.x,
+        event.clientY - drag.y,
+        DRAG_SENSITIVITY
+      )
       drag = { id: drag.id, x: event.clientX, y: event.clientY }
     }
 

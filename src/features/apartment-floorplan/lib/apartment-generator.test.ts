@@ -129,7 +129,24 @@ describe('apartment-generator', () => {
     expect(heights.every(height => height === 2.4)).toBe(true)
   })
 
-  it('builds exactly the pieces described by the shared geometry', () => {
+  it('renders one structural owner for a shared doorway boundary', () => {
+    const group = generator.create(configFor(2, 2), { wallHeight: 2.4 })
+    const sharedDoorwayOwners = new Set(
+      meshes(group)
+        .filter(
+          mesh =>
+            (mesh.userData.roomId === 'living' &&
+              mesh.userData.side === 'east') ||
+            (mesh.userData.roomId === 'kitchen' &&
+              mesh.userData.side === 'west')
+        )
+        .map(mesh => mesh.userData.roomId)
+    )
+
+    expect(sharedDoorwayOwners).toHaveLength(1)
+  })
+
+  it('does not build more pieces than the shared geometry describes', () => {
     const group = generator.create(configFor(3, 2), { wallHeight: 2.4 })
     const template = group.userData.template as { rooms: unknown[] }
     const expected = template.rooms.reduce<number>(
@@ -138,8 +155,8 @@ describe('apartment-generator', () => {
       0
     )
 
-    expect(meshes(group).filter(mesh => mesh.userData.piece)).toHaveLength(
-      expected
-    )
+    expect(
+      meshes(group).filter(mesh => mesh.userData.piece).length
+    ).toBeLessThanOrEqual(expected)
   })
 })

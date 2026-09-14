@@ -14,6 +14,7 @@ interface Room {
 
 interface Piece {
   kind: 'wall' | 'railing' | 'post' | 'lintel' | 'header'
+  side: 'front' | 'back' | 'east' | 'west'
   x: number
   z: number
   width: number
@@ -81,6 +82,13 @@ describe('floorplan-geometry', () => {
     expect(east.x).toBeCloseTo(1.5 - t / 2)
     expect(east.depth).toBeCloseTo(2 - 2 * t)
     expect(west.x).toBeCloseTo(-1.5 + t / 2)
+  })
+
+  it('identifies the owning side on every structural piece', () => {
+    const pieces = geometry.wallPieces(room({ doors: ['east'] }))
+
+    expect(pieces.filter(piece => piece.side === 'east')).toHaveLength(5)
+    expect(pieces.every(piece => Boolean(piece.side))).toBe(true)
   })
 
   it('splits a door side into two walls, two posts and a lintel', () => {

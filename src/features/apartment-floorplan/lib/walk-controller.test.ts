@@ -179,6 +179,19 @@ describe('walk-controller', () => {
     expect(lookDirection().z).toBeLessThan(0.9)
   })
 
+  it('coalesces opposite drag samples before applying the frame pitch', () => {
+    walk.enter(template)
+    const canvas = document.getElementById('canvas')!
+
+    pointer(canvas, 'pointerdown', 0, 0)
+    pointer(canvas, 'pointermove', 0, 1000)
+    pointer(canvas, 'pointermove', 0, 0)
+    pointer(canvas, 'pointerup', 0, 0)
+    walk.update(0)
+
+    expect(lookDirection().y).toBeCloseTo(0)
+  })
+
   it('asks the app to exit on Escape when the pointer is not locked', () => {
     walk.enter(template)
     press('keydown', 'Escape')

@@ -31,6 +31,7 @@ const generator = renderer.ApartmentGenerator as {
   create: (config: Record<string, unknown>) => THREE.Group
 }
 const ui = renderer.FloorplanUi as UiApi
+const materials = renderer.FloorplanMaterials as Record<string, THREE.Material>
 const config = {
   version: 1,
   apartmentId: 'apt-1',
@@ -106,5 +107,28 @@ describe('ui-controller', () => {
     })
     expect(controller.getSelectedId()).toBeNull()
     expect(roomButton('kitchen').classList.contains('active')).toBe(false)
+  })
+
+  it('keeps doorway structure stable while highlighting the room floor', () => {
+    const group = generator.create(config)
+    const structural = group.children.filter(
+      (child): child is THREE.Mesh =>
+        child instanceof THREE.Mesh && Boolean(child.userData.piece)
+    )
+    const originalMaterials = structural.map(mesh => mesh.material)
+    const controller = ui.create({ group, onRoomClick: vi.fn() })
+
+    controller.highlight('kitchen')
+
+    expect(structural.map(mesh => mesh.material)).toEqual(originalMaterials)
+    expect(
+      group.children.some(
+        child =>
+          child instanceof THREE.Mesh &&
+          child.userData.roomId === 'kitchen' &&
+          child.userData.selectableSurface === true &&
+          child.material === materials.selected
+      )
+    ).toBe(true)
   })
 })

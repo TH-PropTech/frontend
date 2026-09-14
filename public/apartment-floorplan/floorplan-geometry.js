@@ -28,9 +28,10 @@
     }
   }
 
-  function piece(wall, offset, length, height, y, kind) {
+  function piece(wall, offset, length, height, y, kind, side) {
     return {
       kind: kind,
+      side: side,
       x: wall.alongX ? wall.x + offset : wall.x,
       z: wall.alongX ? wall.z : wall.z + offset,
       width: wall.alongX ? length : WALL_THICKNESS,
@@ -52,22 +53,23 @@
     var kind = isRailing ? 'railing' : 'wall'
     var height = isRailing ? RAILING_HEIGHT : wallHeight
     if (room.doors.indexOf(side) < 0) {
-      return [piece(wall, 0, wall.length, height, height / 2, kind)]
+      return [piece(wall, 0, wall.length, height, height / 2, kind, side)]
     }
     var doorWidth = Math.min(MAX_DOOR_WIDTH, wall.length * DOOR_RATIO)
     var segment = (wall.length - doorWidth) / 2
     var offset = (doorWidth + segment) / 2
     var doorHeight = doorHeightFor(height)
     var pieces = [
-      piece(wall, -offset, segment, height, height / 2, kind),
-      piece(wall, offset, segment, height, height / 2, kind),
+      piece(wall, -offset, segment, height, height / 2, kind, side),
+      piece(wall, offset, segment, height, height / 2, kind, side),
       piece(
         wall,
         -doorWidth / 2,
         WALL_THICKNESS,
         doorHeight,
         doorHeight / 2,
-        'post'
+        'post',
+        side
       ),
       piece(
         wall,
@@ -75,7 +77,8 @@
         WALL_THICKNESS,
         doorHeight,
         doorHeight / 2,
-        'post'
+        'post',
+        side
       ),
       piece(
         wall,
@@ -83,7 +86,8 @@
         doorWidth + WALL_THICKNESS,
         WALL_THICKNESS,
         doorHeight,
-        'lintel'
+        'lintel',
+        side
       ),
     ]
     if (height >= WALK_WALL_HEIGHT) {
@@ -95,7 +99,8 @@
           doorWidth,
           headerHeight,
           doorHeight + headerHeight / 2,
-          'header'
+          'header',
+          side
         )
       )
     }

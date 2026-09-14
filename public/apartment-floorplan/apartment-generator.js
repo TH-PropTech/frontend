@@ -3,6 +3,13 @@
 
   var FLOOR_THICKNESS = 0.04
   var FURNITURE_HEIGHT = 0.24
+  var EDGE_EPSILON = 0.0001
+  var OPPOSITE_SIDE = {
+    front: 'back',
+    back: 'front',
+    east: 'west',
+    west: 'east',
+  }
   var PIECE_MATERIALS = {
     wall: 'divider',
     header: 'divider',
@@ -27,6 +34,7 @@
   function addFloor(group, rect, material, roomId) {
     var floor = createBox(rect.width, FLOOR_THICKNESS, rect.depth, material)
     floor.position.set(rect.x, FLOOR_THICKNESS, rect.z)
+    floor.userData.selectableSurface = Boolean(roomId)
     addMesh(group, floor, roomId)
   }
 
@@ -39,7 +47,43 @@
     )
     mesh.position.set(item.x, item.y, item.z)
     mesh.userData.piece = item.kind
+    mesh.userData.side = item.side
     addMesh(group, mesh, room.id)
+  }
+
+  function edge(room, side) {
+    var alongX = side === 'front' || side === 'back'
+    return {
+      axis: alongX ? 'z' : 'x',
+      boundary: alongX
+        ? room.z + (side === 'front' ? room.depth / 2 : -room.depth / 2)
+        : room.x + (side === 'east' ? room.width / 2 : -room.width / 2),
+      start: alongX ? room.x - room.width / 2 : room.z - room.depth / 2,
+      end: alongX ? room.x + room.width / 2 : room.z + room.depth / 2,
+      hasDoor: room.doors.indexOf(side) >= 0,
+    }
+  }
+
+  function closeTo(a, b) {
+    return Math.abs(a - b) <= EDGE_EPSILON
+  }
+
+  function sameEdge(a, b) {
+    return (
+      a.axis === b.axis &&
+      closeTo(a.boundary, b.boundary) &&
+      closeTo(a.start, b.start) &&
+      closeTo(a.end, b.end) &&
+      a.hasDoor === b.hasDoor
+    )
+  }
+
+  function ownedByEarlierRoom(rooms, roomIndex, room, side) {
+    var current = edge(room, side)
+    var opposite = OPPOSITE_SIDE[side]
+    return rooms.slice(0, roomIndex).some(function (other) {
+      return sameEdge(current, edge(other, opposite))
+    })
   }
 
   function addFurniture(group, room, furnishing) {
@@ -73,11 +117,13 @@
     template.circulation.forEach(function (rect) {
       addFloor(group, rect, palette().floor, null)
     })
-    template.rooms.forEach(function (room) {
+    template.rooms.forEach(function (room, roomIndex) {
       addFloor(group, room, palette()[room.kind] || palette().floor, room.id)
       window.FloorplanGeometry.wallPieces(room, options).forEach(
         function (item) {
-          addPiece(group, room, item)
+          if (!ownedByEarlierRoom(template.rooms, roomIndex, room, item.side)) {
+            addPiece(group, room, item)
+          }
         }
       )
       addFurniture(group, room, config.furnishing)
