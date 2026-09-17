@@ -110,4 +110,25 @@ describe('ApplyStepSubmitted Component', () => {
     expect(screen.getByText('app-998877')).toBeInTheDocument()
     expect(screen.getByText('0 ₫/tháng')).toBeInTheDocument()
   })
+
+  it('exposes the real contract CTA only when handoff provisioning is ready', () => {
+    render(
+      <ApplyStepSubmitted
+        application={{
+          ...mockApplication,
+          status: 'accepted',
+          contractHandoff: {
+            state: 'ready',
+            contractId: 'contract-ready-1',
+            href: '/contracts/contract-ready-1',
+            reasonCode: null,
+          },
+        }}
+        apartmentId="apartment-demo-1"
+      />
+    )
+
+    const contractLink = screen.getByRole('link', { name: /Xem hợp đồng số/i })
+    expect(contractLink).toHaveAttribute('href', '/contracts/contract-ready-1')
+  })
 })

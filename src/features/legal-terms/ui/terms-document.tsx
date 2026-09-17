@@ -145,7 +145,7 @@ export function TermsDocument({
                   href="#sec-public-service"
                   className="block rounded-lg px-2.5 py-1.5 font-medium text-muted transition hover:bg-primary-soft hover:text-primary"
                 >
-                  Dịch vụ công: Cư trú & VNeID (TTHC 6007)
+                  Dịch vụ công: Đăng ký tạm trú & VNeID (TTHC 1.004194)
                 </a>
               </li>
             </ul>
@@ -232,7 +232,7 @@ export function TermsDocument({
             </div>
           </section>
 
-          {/* Public Service Procedure Guide (TTHC 6007) */}
+          {/* Public Service Procedure Guide (TTHC 1.004194) */}
           <section
             id="sec-public-service"
             className="scroll-mt-28 rounded-2xl border border-info/30 bg-info/5 p-6 shadow-sm md:p-8"
@@ -251,8 +251,8 @@ export function TermsDocument({
               </p>
               <ul className="list-inside list-disc space-y-1.5 text-xs text-fg md:text-sm">
                 <li>
-                  Mã thủ tục hành chính: <strong>TTHC 6007</strong> (Đăng ký tạm
-                  trú / Thường trú).
+                  Mã thủ tục hành chính: <strong>TTHC 1.004194</strong> (Đăng ký
+                  tạm trú / Thường trú).
                 </li>
                 <li>
                   Hình thức nộp: Trực tuyến qua Cổng DVC Bộ Công an hoặc Cổng
@@ -265,7 +265,7 @@ export function TermsDocument({
               </ul>
               <div className="pt-2">
                 <a
-                  href="https://thutuc.dichvucong.gov.vn/p/home/dvc-tthc-thu-tuc-hanh-chinh-chi-tiet.html?ma_thu_tuc=6007"
+                  href="https://thutuc.dichvucong.gov.vn/p/home/dvc-chi-tiet-thu-tuc-hanh-chinh.html?ma_thu_tuc=1.004194"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 font-semibold text-primary underline underline-offset-4 hover:text-primary-hover"

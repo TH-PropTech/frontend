@@ -113,14 +113,14 @@ const NEXT_STEPS_TIMELINE = [
   {
     step: 3,
     title: 'Khởi tạo & Ký số hợp đồng',
-    desc: 'Hệ thống tự động lập hợp đồng số theo Phụ lục II NĐ 96/2024 để hai bên ký số qua eKYC/OTP.',
+    desc: 'Hệ thống tự động lập hợp đồng số theo Phụ lục II NĐ 96/2024 để hai bên xem xét và ký số qua VNPT SmartCA.',
     icon: FileSignature,
     status: 'upcoming',
   },
   {
     step: 4,
     title: 'Đăng ký tạm trú trực tuyến',
-    desc: 'Sử dụng hợp đồng số đã kích hoạt để đăng ký tạm trú theo thủ tục Dịch vụ công 6007.',
+    desc: 'Sử dụng hợp đồng số đã kích hoạt để đăng ký tạm trú theo thủ tục Dịch vụ công 1.004194.',
     icon: ShieldCheck,
     status: 'upcoming',
   },
@@ -136,6 +136,26 @@ export function ApplyStepSubmitted({
   const monthlyRent = snapshot?.monthlyRent ?? 0
   const deposit = snapshot?.resolvedDepositAmount ?? 0
   const subtotalEstimate = monthlyRent * durationMonths
+  const handoff =
+    application.contractHandoff ??
+    ({
+      state:
+        application.status === 'accepted'
+          ? application.provisioningStatus === 'failed'
+            ? 'failed'
+            : application.contractId
+              ? 'ready'
+              : 'provisioning'
+          : application.status === 'rejected'
+            ? 'rejected'
+            : 'pending',
+      contractId: application.contractId ?? null,
+      href: application.contractId
+        ? `/contracts/${application.contractId}`
+        : null,
+      reasonCode: application.provisioningErrorCode ?? null,
+    } as const)
+  const isContractReady = handoff.state === 'ready' && Boolean(handoff.href)
 
   const formattedMoveIn = React.useMemo(() => {
     try {
@@ -153,11 +173,18 @@ export function ApplyStepSubmitted({
           <CheckCircle2 aria-hidden="true" className="h-9 w-9" />
         </div>
         <h2 className="mt-4 font-display text-2xl font-bold text-fg sm:text-3xl">
-          Hồ sơ đặt thuê đã được gửi thành công
+          {isContractReady
+            ? 'Hợp đồng thuê đã sẵn sàng để xem và ký'
+            : application.status === 'accepted'
+              ? 'Hồ sơ thuê đã được chấp thuận'
+              : 'Hồ sơ đặt thuê đã được gửi thành công'}
         </h2>
         <p className="mx-auto mt-2 max-w-lg text-sm text-muted">
-          Yêu cầu thuê căn hộ của bạn đã được ghi nhận. Chủ nhà sẽ xem xét và
-          phản hồi trước khi hợp đồng số chính thức được khởi tạo.
+          {isContractReady
+            ? 'Hãy mở bản hợp đồng chính thức để kiểm tra nội dung và hoàn tất ký SmartCA.'
+            : application.status === 'accepted'
+              ? 'Chủ nhà đã chấp thuận. Hệ thống đang chuẩn bị hợp đồng và thỏa thuận cọc.'
+              : 'Yêu cầu thuê căn hộ của bạn đã được ghi nhận. Hợp đồng chính thức chỉ được tạo sau khi chủ nhà phê duyệt.'}
         </p>
         <div className="mt-5 inline-flex flex-wrap items-center justify-center gap-3 rounded-full border border-border bg-surface px-5 py-2 text-xs text-muted shadow-sm">
           <span>Mã định danh hồ sơ:</span>
@@ -165,7 +192,13 @@ export function ApplyStepSubmitted({
           <span className="h-3 w-px bg-border hidden sm:block" />
           <span className="inline-flex items-center gap-1 font-semibold text-warning">
             <Clock aria-hidden="true" className="h-3.5 w-3.5" />
-            Đang chờ chủ nhà phản hồi
+            {handoff.state === 'ready'
+              ? 'Hợp đồng đã sẵn sàng'
+              : handoff.state === 'failed'
+                ? 'Cần thử lại provisioning'
+                : application.status === 'accepted'
+                  ? 'Đang chuẩn bị hợp đồng'
+                  : 'Đang chờ chủ nhà phản hồi'}
           </span>
         </div>
       </section>
@@ -379,15 +412,28 @@ export function ApplyStepSubmitted({
           </Link>
         </Button>
 
-        <Button
-          asChild
-          className="flex items-center justify-center gap-2 bg-control px-6 py-2.5 text-sm font-semibold text-on-control shadow-sm hover:opacity-90"
-        >
-          <Link href={'/rental-applications' as Route}>
-            <span>Theo dõi tiến trình hồ sơ của tôi</span>
-            <ArrowRight aria-hidden="true" className="h-4 w-4" />
-          </Link>
-        </Button>
+        {isContractReady && handoff.href ? (
+          <Button
+            asChild
+            className="flex items-center justify-center gap-2 bg-control px-6 py-2.5 text-sm font-semibold text-on-control shadow-sm hover:opacity-90"
+          >
+            <Link href={handoff.href as Route}>
+              <FileSignature aria-hidden="true" className="h-4 w-4" />
+              <span>Xem hợp đồng số</span>
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            asChild
+            className="flex items-center justify-center gap-2 bg-control px-6 py-2.5 text-sm font-semibold text-on-control shadow-sm hover:opacity-90"
+          >
+            <Link href={'/rental-applications' as Route}>
+              <span>Theo dõi tiến trình hồ sơ của tôi</span>
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
+          </Button>
+        )}
       </div>
     </div>
   )

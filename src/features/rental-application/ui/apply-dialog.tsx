@@ -432,7 +432,7 @@ export function ApplyDialog({
                           <ExternalLink className="h-3 w-3 inline" />
                         </a>{' '}
                         được công bố theo Luật Nhà ở 2023, Luật Kinh doanh BĐS
-                        2023 và TTHC 6007.
+                        2023 và TTHC 1.004194.
                       </label>
                     </div>
                     <p className="text-[11px] text-muted pl-6 font-mono break-all">

@@ -30,7 +30,8 @@ export function useContractWorkspace({
   const [isDownloadingDocx, setIsDownloadingDocx] = useState(false)
   const [isVerifyingIntegrity, setIsVerifyingIntegrity] = useState(false)
   const [integrityResult, setIntegrityResult] = useState<{
-    isValid: boolean
+    isValid: boolean | null
+    verificationStatus?: 'valid' | 'invalid' | 'not-recorded' | 'unavailable'
     message?: string
   } | null>(null)
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null)
@@ -98,11 +99,16 @@ export function useContractWorkspace({
     }
   }, [contractId])
 
-  // Polling for status transitions
+  // Polling for status transitions and ledger convergence
   useEffect(() => {
     const status = data?.contract?.status
+    const ledgerStatus = data?.ledger?.status
     const shouldPoll =
-      status === 'deposit-pending' || status === 'awaiting-signature'
+      status === 'deposit-pending' ||
+      status === 'awaiting-signature' ||
+      ledgerStatus === 'pending' ||
+      ledgerStatus === 'processing' ||
+      ledgerStatus === 'failed-retryable'
 
     if (shouldPoll) {
       pollIntervalRef.current = setInterval(() => {
@@ -115,7 +121,7 @@ export function useContractWorkspace({
         clearInterval(pollIntervalRef.current)
       }
     }
-  }, [data?.contract?.status, loadData])
+  }, [data?.contract?.status, data?.ledger?.status, loadData])
 
   // Download PDF
   const handleDownloadPdf = async () => {
@@ -131,11 +137,10 @@ export function useContractWorkspace({
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-    } catch {
-      // Tech lead fail-closed notice
-      setNoticeMessage(
-        'Bản xuất PDF đang chờ phê duyệt Tech Lead (ARTIFACT_RENDERER_NOT_CONFIGURED). Vui lòng xem bản thể hiện điện tử trực tiếp trên màn hình hoặc tải bản DOCX.'
-      )
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Không thể tải bản PDF hợp đồng'
+      setNoticeMessage(msg)
     } finally {
       setIsDownloadingPdf(false)
     }
@@ -156,35 +161,53 @@ export function useContractWorkspace({
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể tải bản DOCX'
+      const msg =
+        err instanceof Error ? err.message : 'Không thể tải bản DOCX hợp đồng'
       setNoticeMessage(msg)
     } finally {
       setIsDownloadingDocx(false)
     }
   }
 
-  // Verify integrity
+  // Verify integrity with explicit tri-state preservation
   const handleVerifyIntegrity = async () => {
     try {
       setIsVerifyingIntegrity(true)
       const res: ContractIntegrityResult =
         await verifyContractIntegrity(contractId)
-      if (res.isValid) {
+      if (res.isValid === true || res.verificationStatus === 'valid') {
         setIntegrityResult({
           isValid: true,
+          verificationStatus: 'valid',
           message:
             'Tính toàn vẹn hợp lệ: Hash đối soát khớp tuyệt đối với sổ cái Hyperledger Fabric.',
+        })
+      } else if (res.verificationStatus === 'not-recorded') {
+        setIntegrityResult({
+          isValid: null,
+          verificationStatus: 'not-recorded',
+          message:
+            'Chưa ghi nhận trên sổ cái: Hợp đồng chưa có bản ghi xác nhận trên blockchain.',
+        })
+      } else if (res.verificationStatus === 'unavailable') {
+        setIntegrityResult({
+          isValid: null,
+          verificationStatus: 'unavailable',
+          message:
+            'Hệ thống sổ cái tạm thời không khả dụng: Không thể kết nối tới nút mạng Hyperledger Fabric.',
         })
       } else {
         setIntegrityResult({
           isValid: false,
+          verificationStatus: 'invalid',
           message:
             'Cảnh báo: Phát hiện sai lệch giữa mã băm hiện tại và bản ghi trên sổ cái!',
         })
       }
     } catch {
       setIntegrityResult({
-        isValid: false,
+        isValid: null,
+        verificationStatus: 'unavailable',
         message: 'Không thể kết nối đến node sổ cái để đối soát mã băm.',
       })
     } finally {
@@ -192,16 +215,22 @@ export function useContractWorkspace({
     }
   }
 
-  // Determine signer name and role
-  const isTenant =
-    Boolean(currentUserId && data?.parties?.tenant?.id === currentUserId) ||
-    (!currentUserId && true) // Default tenant in simulation view if unauthenticated
+  // Determine signer name and role based on authenticated currentUserId
+  const isTenant = Boolean(
+    currentUserId && data?.parties?.tenant?.id === currentUserId
+  )
+  const isLandlord = Boolean(
+    currentUserId && data?.parties?.landlord?.id === currentUserId
+  )
   const currentParty = isTenant
     ? data?.parties?.tenant
-    : data?.parties?.landlord
+    : isLandlord
+      ? data?.parties?.landlord
+      : (data?.parties?.tenant ?? null)
   const signerName =
-    currentParty?.name || (isTenant ? 'Bên thuê' : 'Bên cho thuê')
-  const signerRole: 'tenant' | 'landlord' = isTenant ? 'tenant' : 'landlord'
+    currentParty?.name ||
+    (isTenant ? 'Bên thuê' : isLandlord ? 'Bên cho thuê' : 'Bên tham gia')
+  const signerRole: 'tenant' | 'landlord' = isLandlord ? 'landlord' : 'tenant'
 
   return {
     data,

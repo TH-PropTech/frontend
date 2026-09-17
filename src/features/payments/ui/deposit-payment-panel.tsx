@@ -47,9 +47,9 @@ export function DepositPaymentPanel({
   }).format(deposit.amount)
 
   const handleInitPayment = async () => {
-    const targetAgreementId = deposit.depositAgreementId || contractId
+    const targetAgreementId = deposit.agreementId
     if (!targetAgreementId) {
-      setErrorMsg('Không tìm thấy mã thỏa thuận đặt cọc')
+      setErrorMsg('Không tìm thấy mã thỏa thuận đặt cọc hợp lệ')
       return
     }
     try {
@@ -76,6 +76,7 @@ export function DepositPaymentPanel({
   return (
     <div
       data-testid="deposit-payment-panel"
+      data-contract-id={contractId}
       className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm flex flex-col gap-4"
     >
       {/* Header */}

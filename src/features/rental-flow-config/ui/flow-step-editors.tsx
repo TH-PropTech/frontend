@@ -348,10 +348,13 @@ export function StepEditors({
                         }}
                         className="w-full px-2 py-1 text-xs rounded bg-surface border border-border text-fg"
                       >
-                        <option value={1}>1 tháng</option>
+                        <option value={1} disabled>
+                          1 tháng (legacy)
+                        </option>
                         <option value={3}>3 tháng</option>
                         <option value={6}>6 tháng</option>
                         <option value={12}>12 tháng</option>
+                        <option value={24}>24 tháng</option>
                       </select>
                     </div>
 

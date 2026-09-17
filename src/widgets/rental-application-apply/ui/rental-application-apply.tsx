@@ -491,7 +491,7 @@ export function RentalApplicationApply({
                   • Tiền đặt cọc được hoàn trả trong vòng 15 ngày khi thanh lý.
                 </li>
                 <li>
-                  • Hỗ trợ xác nhận đăng ký tạm trú trực tuyến (DVC 6007).
+                  • Hỗ trợ xác nhận đăng ký tạm trú trực tuyến (DVC 1.004194).
                 </li>
               </ul>
             </div>

@@ -1,4 +1,4 @@
-export type RentalPackageDuration = 1 | 3 | 6 | 12
+export type RentalPackageDuration = 1 | 3 | 6 | 12 | 24
 
 export interface RentalPackageItem {
   packageId: string
@@ -62,6 +62,12 @@ export interface ApartmentItem {
   pricingMode?: 'packages' | 'legacy'
   pricingRevision?: number
   rentalPackages?: RentalPackageItem[]
+  rentalAvailabilityStatus?:
+    | 'available'
+    | 'reserved'
+    | 'deposit-paid'
+    | 'rented'
+  rentalAvailabilityLabel?: string
 }
 
 export interface ProjectUnit {

@@ -12,6 +12,10 @@ import { useSigningCeremony } from '../model/use-signing-ceremony'
 import { FaceVerifyCamera } from './face-verify-camera'
 import { SmartOtpStep } from './smart-otp-step'
 import { SignatureAnimation } from './signature-animation'
+import {
+  createSmartCaSigningSession,
+  type SmartCaSigningSession,
+} from '../api/contracts-api'
 
 export interface SigningCeremonyModalProps {
   isOpen: boolean
@@ -33,6 +37,10 @@ export function SigningCeremonyModal({
   onSigningSuccess,
 }: SigningCeremonyModalProps) {
   const [consentChecked, setConsentChecked] = useState(false)
+  const [smartCaSession, setSmartCaSession] =
+    useState<SmartCaSigningSession | null>(null)
+  const [smartCaLoading, setSmartCaLoading] = useState(false)
+  const [smartCaError, setSmartCaError] = useState<string | null>(null)
 
   const ceremony = useSigningCeremony({
     contractId,
@@ -43,7 +51,28 @@ export function SigningCeremonyModal({
 
   const handleClose = () => {
     ceremony.reset()
+    setSmartCaSession(null)
+    setSmartCaError(null)
     onClose()
+  }
+
+  const handleSmartCaStart = async (): Promise<void> => {
+    setSmartCaLoading(true)
+    setSmartCaError(null)
+    try {
+      const session = await createSmartCaSigningSession(contractId)
+      setSmartCaSession(session)
+      if (session.confirmationUrl)
+        window.open(session.confirmationUrl, '_blank', 'noopener,noreferrer')
+    } catch (error: unknown) {
+      setSmartCaError(
+        error instanceof Error
+          ? error.message
+          : 'Không thể khởi tạo phiên ký VNPT SmartCA.'
+      )
+    } finally {
+      setSmartCaLoading(false)
+    }
   }
 
   return (
@@ -185,6 +214,33 @@ export function SigningCeremonyModal({
                 <span>Bắt đầu xác thực ký hợp đồng</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
+
+              <div className="rounded-lg border border-[var(--primary)]/30 bg-[var(--primary-soft)] p-3 text-[11px] text-[var(--fg)]">
+                <p className="font-semibold">Ký số VNPT SmartCA</p>
+                <p className="mt-1 text-[var(--muted)]">
+                  SmartCA tạo giao dịch ký riêng cho từng bên trên đúng mã băm
+                  hợp đồng. OTP/eKYC bên dưới chỉ là xác thực hỗ trợ.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void handleSmartCaStart()}
+                  disabled={!consentChecked || smartCaLoading}
+                  className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--primary)] px-3 py-2 font-semibold text-[var(--primary)] disabled:opacity-50"
+                >
+                  {smartCaLoading
+                    ? 'Đang kết nối SmartCA…'
+                    : 'Mở phiên ký VNPT SmartCA'}
+                </button>
+                {smartCaSession ? (
+                  <p className="mt-2 text-[var(--success)]">
+                    Đã tạo giao dịch {smartCaSession.providerTransactionId};
+                    trạng thái: {smartCaSession.status}.
+                  </p>
+                ) : null}
+                {smartCaError ? (
+                  <p className="mt-2 text-[var(--danger)]">{smartCaError}</p>
+                ) : null}
+              </div>
             </div>
           )}
 

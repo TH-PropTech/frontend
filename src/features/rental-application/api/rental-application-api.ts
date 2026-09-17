@@ -30,7 +30,7 @@ export interface RentalApplicationContext {
   packages: Array<{
     packageId: string
     version: number
-    durationMonths: 1 | 3 | 6 | 12
+    durationMonths: 1 | 3 | 6 | 12 | 24
     monthlyRent: number
     depositPolicy:
       | { type: 'MONTHS_OF_RENT'; months: number }
@@ -91,7 +91,7 @@ export interface RentalApplicationItem {
   packageSnapshot?: {
     packageId: string
     version: number
-    durationMonths: 1 | 3 | 6 | 12
+    durationMonths: 1 | 3 | 6 | 12 | 24
     monthlyRent: number
     resolvedDepositAmount: number
   } | null
@@ -100,6 +100,12 @@ export interface RentalApplicationItem {
   provisioningStatus?: 'not-started' | 'ready' | 'failed'
   provisioningErrorCode?: string | null
   applicationRevision?: number
+  contractHandoff?: {
+    state: 'pending' | 'provisioning' | 'ready' | 'failed' | 'rejected'
+    contractId: string | null
+    href: string | null
+    reasonCode: string | null
+  }
 }
 export interface RentalApplicationList {
   items: RentalApplicationItem[]

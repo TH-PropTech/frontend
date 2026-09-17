@@ -245,10 +245,13 @@ export function AssignmentManager({
                   onChange={e => setScopeValue(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg"
                 >
-                  <option value="1">1 tháng</option>
+                  <option value="1" disabled>
+                    1 tháng (legacy)
+                  </option>
                   <option value="3">3 tháng</option>
                   <option value="6">6 tháng</option>
                   <option value="12">12 tháng</option>
+                  <option value="24">24 tháng</option>
                 </select>
               </div>
             )}
@@ -430,10 +433,13 @@ export function AssignmentManager({
               onChange={e => setPreviewDuration(Number(e.target.value))}
               className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg"
             >
-              <option value={1}>1 tháng</option>
+              <option value={1} disabled>
+                1 tháng (legacy)
+              </option>
               <option value={3}>3 tháng</option>
               <option value={6}>6 tháng</option>
               <option value={12}>12 tháng</option>
+              <option value={24}>24 tháng</option>
             </select>
           </div>
 

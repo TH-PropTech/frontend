@@ -10,23 +10,19 @@ vi.mock('../api/payments-api', () => ({
 
 describe('DepositPaymentPanel', () => {
   const mockPendingDeposit: ContractDepositView = {
-    depositAgreementId: 'dpa-123',
+    agreementId: 'dpa-123',
     status: 'pending',
     amount: 15000000,
     paidAt: null,
-    paymentProofUrl: null,
     txHash: null,
-    mockSimulationNotice: 'Thanh toán cọc mô phỏng qua Mock Bank',
   }
 
   const mockPaidDeposit: ContractDepositView = {
-    depositAgreementId: 'dpa-123',
+    agreementId: 'dpa-123',
     status: 'paid',
     amount: 15000000,
     paidAt: '2026-03-14T02:00:00Z',
-    paymentProofUrl: null,
     txHash: '0xmockdepositpay123',
-    mockSimulationNotice: 'Thanh toán cọc mô phỏng qua Mock Bank',
   }
 
   it('renders empty notice when deposit is null', () => {

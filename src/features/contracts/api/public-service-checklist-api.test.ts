@@ -11,16 +11,16 @@ vi.mock('@/shared/api', () => ({
 describe('public service checklist API', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('requests the permanent-residence checklist through the scoped contract endpoint', async () => {
+  it('requests the temporary-residence checklist through the scoped contract endpoint', async () => {
     vi.mocked(apiClient.get).mockResolvedValue({
-      purpose: 'permanent-residence',
+      purpose: 'temporary-residence',
       externalProcedureCompleted: false,
     })
 
     await getPublicServiceChecklist('contract-1')
 
     expect(apiClient.get).toHaveBeenCalledWith(
-      '/contracts/contract-1/public-service-checklist?purpose=permanent-residence'
+      '/contracts/contract-1/public-service-checklist?purpose=temporary-residence'
     )
   })
 })

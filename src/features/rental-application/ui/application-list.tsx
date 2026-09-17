@@ -107,12 +107,16 @@ export function ApplicationList(): React.ReactElement {
           }
         })()
 
-        const hasContract = Boolean(item.contractId)
+        const hasContract = item.contractHandoff
+          ? item.contractHandoff.state === 'ready' &&
+            Boolean(item.contractHandoff.href)
+          : Boolean(item.contractId)
         const isAccepted = item.status === 'accepted'
         const isRejected = item.status === 'rejected'
         const isProvisioningFailed =
           isAccepted &&
-          (!item.contractId || item.provisioningStatus === 'failed')
+          (item.contractHandoff?.state === 'failed' ||
+            item.provisioningStatus === 'failed')
 
         return (
           <article

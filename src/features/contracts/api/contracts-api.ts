@@ -99,37 +99,32 @@ export interface ContractPartyView {
   address: string | null
   kycStatus: 'unverified' | 'pending' | 'verified' | 'rejected'
   hasSigned: boolean
+  signedAt?: string | null
+  signatureHash?: string | null
 }
 
 export interface ContractDepositView {
-  depositAgreementId: string | null
-  status: 'draft' | 'pending' | 'signed' | 'paid' | 'transferred' | 'refunded'
+  agreementId: string | null
+  agreementCode?: string | null
   amount: number
+  currency?: string
+  status: 'draft' | 'pending' | 'paid' | 'transferred'
+  consentGiven?: boolean
   paidAt: string | null
-  paymentProofUrl: string | null
   txHash: string | null
-  mockSimulationNotice: string
+  paymentProofUrl?: string | null
+  mockSimulationNotice?: string
 }
 
-export type SigningEligibilityReasonCode =
-  | 'ELIGIBLE'
-  | 'NOT_PARTICIPANT'
-  | 'INVALID_STATUS'
-  | 'CONTENT_NOT_LOCKED'
-  | 'DEPOSIT_NOT_PAID'
-  | 'KYC_NOT_VERIFIED'
-  | 'ALREADY_SIGNED'
-
 export interface SigningEligibility {
-  canSign: boolean
-  reasonCode: SigningEligibilityReasonCode
-  requiresBiometric: boolean
-  requiresOtp: boolean
-  isContentLocked: boolean
+  eligible: boolean
+  reasonCode: string | null
+  message: string | null
 }
 
 export interface ContractLedgerSummary {
   networkMode: 'simulation' | 'fabric'
+  connectionState?: 'disabled' | 'connected' | 'unavailable'
   status:
     | 'not-requested'
     | 'pending'
@@ -157,6 +152,16 @@ export interface ContractOverviewSnapshot {
   notarizationStatus: string
 }
 
+export interface ContractActionsView {
+  canPayDeposit: boolean
+  paymentReasonCode: string | null
+  signingEligibility: SigningEligibility
+  canDownloadArtifact: boolean
+  artifactReasonCode: string | null
+  canEditContent?: boolean
+  canLockContent?: boolean
+}
+
 export interface ContractViewDto {
   contract: ContractOverviewSnapshot
   document: ContractDocumentView
@@ -165,20 +170,13 @@ export interface ContractViewDto {
     landlord: ContractPartyView
   }
   deposit: ContractDepositView | null
-  actions: {
-    canEditContent: boolean
-    canLockContent: boolean
-    canDownloadDraft: boolean
-    canDownloadSignedPdf: boolean
-    canDownloadDocx: boolean
-    signingEligibility: SigningEligibility
-  }
+  actions: ContractActionsView
   ledger: ContractLedgerSummary
 }
 
 export interface ContractAuditEventDto {
   id: string
-  category: 'ledger' | 'blockchain_log'
+  category: 'contract' | 'signature' | 'deposit' | 'payment' | 'ledger'
   eventType: string
   status: string
   occurredAt: string
@@ -225,10 +223,14 @@ export type PublicServiceChecklistItem = {
 }
 
 export interface PublicServiceChecklist {
-  purpose: 'permanent-residence'
+  purpose: 'temporary-residence' | 'permanent-residence'
   externalProcedureCompleted: false
   officialSourceUrl: string
-  executionMethod: 'WET_INK' | 'QUALIFIED_DIGITAL_SIGNATURE' | 'POC_ECONSENT'
+  executionMethod:
+    | 'WET_INK'
+    | 'QUALIFIED_DIGITAL_SIGNATURE'
+    | 'SMARTCA'
+    | 'POC_ECONSENT'
   notarizationStatus:
     | 'not-requested'
     | 'pending'
@@ -241,6 +243,19 @@ export interface PublicServiceChecklist {
 
 export interface SigningGrant {
   grantId: string
+  expiresAt: string
+}
+
+export interface SmartCaSigningSession {
+  id?: string
+  contractId: string
+  signerId: string
+  signerRole: 'tenant' | 'landlord'
+  artifactHash: string
+  providerTransactionId: string
+  status: 'pending' | 'signed' | 'rejected' | 'expired'
+  confirmationUrl?: string | null
+  certificateSerial?: string | null
   expiresAt: string
 }
 
@@ -278,6 +293,24 @@ export async function initiateContractOtp(
   )
 }
 
+export async function createSmartCaSigningSession(
+  contractId: string
+): Promise<SmartCaSigningSession> {
+  return apiClient.post<SmartCaSigningSession>(
+    `/contracts/${contractId}/smartca/signing-sessions`,
+    {}
+  )
+}
+
+export async function getSmartCaSigningSession(
+  contractId: string,
+  sessionId: string
+): Promise<SmartCaSigningSession> {
+  return apiClient.get<SmartCaSigningSession>(
+    `/contracts/${contractId}/smartca/signing-sessions/${sessionId}`
+  )
+}
+
 export async function verifyContractOtp(
   contractId: string,
   input: { sessionId: string; otpCode: string; signature?: string }
@@ -302,7 +335,7 @@ export async function verifySigner(
 
 export async function getPublicServiceChecklist(
   contractId: string,
-  purpose: PublicServiceChecklist['purpose'] = 'permanent-residence'
+  purpose: PublicServiceChecklist['purpose'] = 'temporary-residence'
 ): Promise<PublicServiceChecklist> {
   return apiClient.get<PublicServiceChecklist>(
     `/contracts/${contractId}/public-service-checklist?purpose=${purpose}`

@@ -18,6 +18,7 @@ import {
   ContractStatusTimeline,
   BlockchainVerifyBadge,
   SigningCeremonyModal,
+  PublicServiceCitationPanel,
 } from '@/features/contracts'
 import { DepositPaymentPanel } from '@/features/payments'
 import { useContractWorkspace } from './use-contract-workspace'
@@ -27,7 +28,7 @@ export interface ContractWorkspaceProps {
   currentUserId?: string
 }
 
-type MobileTab = 'document' | 'parties' | 'actions' | 'audit'
+type MobileTab = 'document' | 'parties' | 'actions' | 'public-service' | 'audit'
 
 export function ContractWorkspace({
   contractId,
@@ -102,9 +103,11 @@ export function ContractWorkspace({
   const { signingEligibility } = actions
   const isSimulation = ledger?.networkMode === 'simulation'
 
-  const getReasonMessage = (reason: string) => {
+  const getReasonMessage = (reason: string | null) => {
+    if (!reason) return `Hợp đồng đang ở trạng thái ${contract.status}.`
     switch (reason) {
       case 'DEPOSIT_NOT_PAID':
+      case 'DEPOSIT_REQUIRED':
         return 'Vui lòng thanh toán khoản tiền đặt cọc bảo đảm trước khi mở quyền ký hợp đồng.'
       case 'KYC_NOT_VERIFIED':
         return 'Tài khoản của bạn chưa hoàn tất định danh KYC hoặc hồ sơ chưa được duyệt.'
@@ -122,7 +125,7 @@ export function ContractWorkspace({
   return (
     <div
       data-testid="contract-workspace"
-      className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6"
+      className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6"
     >
       {/* Top Breadcrumb & Metadata Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
@@ -185,7 +188,7 @@ export function ContractWorkspace({
       <div
         data-testid="signing-eligibility-banner"
         className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
-          signingEligibility.canSign
+          signingEligibility.eligible
             ? 'bg-[var(--surface)] border-[var(--primary)] shadow-sm'
             : 'bg-[var(--surface-muted)] border-[var(--border)] text-[var(--muted)]'
         }`}
@@ -193,7 +196,7 @@ export function ContractWorkspace({
         <div className="flex items-start gap-3">
           <div
             className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border ${
-              signingEligibility.canSign
+              signingEligibility.eligible
                 ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
                 : 'bg-[var(--surface)] text-[var(--muted)] border-[var(--border)]'
             }`}
@@ -202,19 +205,20 @@ export function ContractWorkspace({
           </div>
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
-              {signingEligibility.canSign
+              {signingEligibility.eligible
                 ? 'Sẵn sàng ký hợp đồng điện tử'
                 : 'Trạng thái ký kết hợp đồng'}
             </h3>
             <p className="text-xs leading-relaxed mt-0.5 text-[var(--fg)]">
-              {signingEligibility.canSign
+              {signingEligibility.eligible
                 ? 'Toàn bộ điều kiện tiên quyết đã hoàn tất. Bạn có thể xác thực sinh trắc học và Smart OTP để ký số e-Consent.'
-                : getReasonMessage(signingEligibility.reasonCode)}
+                : signingEligibility.message ||
+                  getReasonMessage(signingEligibility.reasonCode)}
             </p>
           </div>
         </div>
 
-        {signingEligibility.canSign && (
+        {signingEligibility.eligible && (
           <button
             type="button"
             onClick={() => setIsSigningModalOpen(true)}
@@ -261,6 +265,17 @@ export function ContractWorkspace({
           }`}
         >
           Đặt cọc & Tiến trình
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveMobileTab('public-service')}
+          className={`px-3 py-1.5 rounded-md whitespace-nowrap ${
+            activeMobileTab === 'public-service'
+              ? 'bg-[var(--primary)] text-white'
+              : 'text-[var(--muted)] hover:text-[var(--fg)]'
+          }`}
+        >
+          Dịch vụ công & Pháp lý
         </button>
         <button
           type="button"
@@ -353,6 +368,21 @@ export function ContractWorkspace({
               />
             </div>
           )}
+
+          {/* Public Service & Legal Citation Panel */}
+          <div
+            className={
+              activeMobileTab === 'public-service' ||
+              activeMobileTab === 'document'
+                ? 'block'
+                : 'hidden lg:block'
+            }
+          >
+            <PublicServiceCitationPanel
+              contractId={contractId}
+              contractCode={contract.code}
+            />
+          </div>
 
           {/* Blockchain & Ledger Verification Card */}
           {(activeMobileTab === 'audit' || true) && (

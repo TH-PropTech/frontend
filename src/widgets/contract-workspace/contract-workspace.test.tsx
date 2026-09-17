@@ -14,6 +14,7 @@ vi.mock('@/features/contracts/api/contracts-api', async () => {
     downloadContractArtifact: vi.fn(),
     verifyContractIntegrity: vi.fn(),
     initDepositPayment: vi.fn(),
+    getPublicServiceChecklist: vi.fn(),
   }
 })
 
@@ -92,26 +93,24 @@ describe('ContractWorkspace', () => {
       },
     },
     deposit: {
-      depositAgreementId: 'dpa-555',
+      agreementId: 'dpa-555',
+      agreementCode: 'DA-555',
       status: 'paid',
       amount: 30000000,
+      currency: 'VND',
+      consentGiven: true,
       paidAt: '2026-03-14T02:00:00Z',
-      paymentProofUrl: null,
       txHash: '0xpay123',
-      mockSimulationNotice: 'Thanh toán mô phỏng Mock Bank',
     },
     actions: {
-      canEditContent: false,
-      canLockContent: false,
-      canDownloadDraft: true,
-      canDownloadSignedPdf: true,
-      canDownloadDocx: true,
+      canPayDeposit: false,
+      paymentReasonCode: 'DEPOSIT_ALREADY_PAID',
+      canDownloadArtifact: true,
+      artifactReasonCode: null,
       signingEligibility: {
-        canSign: true,
-        reasonCode: 'ELIGIBLE',
-        requiresBiometric: true,
-        requiresOtp: true,
-        isContentLocked: true,
+        eligible: true,
+        reasonCode: null,
+        message: null,
       },
     },
     ledger: {
@@ -143,6 +142,24 @@ describe('ContractWorkspace', () => {
         description: 'Đã khóa nội dung hợp đồng',
       },
     ])
+    vi.mocked(contractsApi.getPublicServiceChecklist).mockResolvedValue({
+      purpose: 'temporary-residence',
+      externalProcedureCompleted: false,
+      officialSourceUrl:
+        'https://thutuc.dichvucong.gov.vn/p/home/dvc-chi-tiet-thu-tuc-hanh-chinh.html?ma_thu_tuc=1.004194',
+      executionMethod: 'POC_ECONSENT',
+      notarizationStatus: 'not-requested',
+      disclaimer: 'Hệ thống chỉ xuất checklist và bằng chứng hiện có.',
+      items: [
+        { id: 'locked-contract-copy', status: 'available', required: true },
+        { id: 'signing-evidence', status: 'evidence-present', required: true },
+        {
+          id: 'notarization-or-authentication',
+          status: 'required-before-submission',
+          required: true,
+        },
+      ],
+    })
   })
 
   it('renders loading indicator initially then displays full workspace', async () => {
@@ -196,6 +213,24 @@ describe('ContractWorkspace', () => {
     await waitFor(() => {
       expect(screen.getByTestId('contract-workspace-error')).toBeInTheDocument()
       expect(screen.getByText('Lỗi kết nối cơ sở dữ liệu')).toBeInTheDocument()
+    })
+  })
+
+  it('displays public service citation panel with direct links to portals', async () => {
+    render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId('public-service-citation-panel')
+      ).toBeInTheDocument()
+      expect(screen.getByTestId('link-dvc-residence-1004194')).toHaveAttribute(
+        'href',
+        expect.stringContaining('thutuc.dichvucong.gov.vn')
+      )
+      expect(screen.getByTestId('link-dvc-tax-1007689')).toHaveAttribute(
+        'href',
+        expect.stringContaining('vpcp.dichvucong.gov.vn')
+      )
     })
   })
 })

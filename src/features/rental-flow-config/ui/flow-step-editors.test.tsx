@@ -73,6 +73,17 @@ describe('StepEditors Component', () => {
     ).toBeInTheDocument()
   })
 
+  it('offers the 24-month duration while keeping the legacy one-month option disabled', () => {
+    const onChange = vi.fn()
+    render(<StepEditors steps={mockSteps} onChange={onChange} />)
+
+    fireEvent.click(screen.getByText(/Bước 2:/))
+    expect(screen.getByRole('option', { name: /24/ })).toBeInTheDocument()
+    expect(
+      screen.getByRole('option', { name: /1 tháng \(legacy\)/ })
+    ).toBeDisabled()
+  })
+
   it('triggers onChange when updating step 1 inputs', () => {
     const onChange = vi.fn()
     render(<StepEditors steps={mockSteps} onChange={onChange} />)

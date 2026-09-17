@@ -1,0 +1,104 @@
+{
+  "contract": {
+    "id": "658c149d5a892b112c3d4e5f",
+    "code": "HD-2026-00123",
+    "status": "awaiting-signature",
+    "property": {
+      "id": "prop-101",
+      "title": "Căn hộ Vinhomes Central Park - Park 5",
+      "address": "208 Nguyễn Hữu Cảnh, Phường 22, Bình Thạnh, TP.HCM",
+      "area": 75,
+      "furniture": "Đầy đủ nội thất cao cấp",
+      "value": 18000000
+    },
+    "commercial": {
+      "monthlyRent": 18000000,
+      "deposit": 36000000,
+      "paymentDay": 5,
+      "durationMonths": 12,
+      "latePenaltyRate": 10,
+      "terminationNoticeDays": 30
+    },
+    "startDate": "2026-10-01T00:00:00.000Z",
+    "endDate": "2027-10-01T00:00:00.000Z",
+    "executionMethod": "POC_ECONSENT",
+    "notarizationStatus": "not-requested"
+  },
+  "document": {
+    "mode": "locked",
+    "revision": 1,
+    "lockedAt": "2026-09-15T08:00:00.000Z",
+    "lockedHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "hashSchemaVersion": 1,
+    "legalProfile": null,
+    "templateVersion": "v2.0-dvc",
+    "sections": [
+      {
+        "id": "sec-1",
+        "number": 1,
+        "title": "ĐIỀU 1: ĐỐI TƯỢNG HỢP ĐỒNG",
+        "content": "Bên A đồng ý cho Bên B thuê căn hộ Vinhomes Central Park...",
+        "protected": true,
+        "hash": "hash-sec-1"
+      }
+    ],
+    "annexes": [],
+    "integrity": "valid"
+  },
+  "parties": {
+    "tenant": {
+      "id": "user-tenant-1",
+      "name": "Nguyễn Văn Thuê",
+      "role": "tenant",
+      "maskedCccd": "079***789",
+      "address": "TP. Hồ Chí Minh",
+      "kycStatus": "verified",
+      "hasSigned": false,
+      "signedAt": null,
+      "signatureHash": null
+    },
+    "landlord": {
+      "id": "user-landlord-1",
+      "name": "Trần Thị Chủ",
+      "role": "landlord",
+      "maskedCccd": "079***321",
+      "address": "TP. Hồ Chí Minh",
+      "kycStatus": "verified",
+      "hasSigned": true,
+      "signedAt": "2026-09-15T09:00:00.000Z",
+      "signatureHash": "sig-hash-landlord-123"
+    }
+  },
+  "deposit": {
+    "agreementId": "dep-agree-999",
+    "agreementCode": "DA-2026-001",
+    "amount": 36000000,
+    "currency": "VND",
+    "status": "paid",
+    "consentGiven": true,
+    "paidAt": "2026-09-15T07:30:00.000Z",
+    "txHash": "0xdeposit_tx_hash_123"
+  },
+  "actions": {
+    "canPayDeposit": false,
+    "paymentReasonCode": "DEPOSIT_ALREADY_PAID",
+    "signingEligibility": {
+      "eligible": true,
+      "reasonCode": null,
+      "message": null
+    },
+    "canDownloadArtifact": true,
+    "artifactReasonCode": null,
+    "canEditContent": false,
+    "canLockContent": false
+  },
+  "ledger": {
+    "networkMode": "fabric",
+    "connectionState": "connected",
+    "status": "confirmed-fabric",
+    "txHash": "0xfabric_tx_confirmed_abc123",
+    "blockNumber": 105,
+    "verifiedAt": "2026-09-15T09:15:00.000Z",
+    "onChainValid": true
+  }
+}

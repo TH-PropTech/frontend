@@ -94,7 +94,7 @@ const COMMON_OCCUPATIONS = [
 
 const QUICK_NOTE_SUGGESTIONS = [
   'Cần chỗ đỗ xe ô tô',
-  'Mong muốn đăng ký tạm trú sớm (DVC 6007)',
+  'Mong muốn đăng ký tạm trú sớm (DVC 1.004194)',
   'Dọn vào bàn giao buổi sáng (08h - 12h)',
   'Có nhu cầu lắp thêm rèm / lưới an toàn ban công',
 ]
