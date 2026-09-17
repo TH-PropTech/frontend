@@ -6,6 +6,7 @@ export interface Property {
   status: 'Đang thuê' | 'Đang chờ cọc' | 'Trống'
   code: string
   price: number
+  contractId?: string
 }
 
 export interface BlockchainLog {

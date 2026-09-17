@@ -1,6 +1,8 @@
 'use client'
 
 import * as React from 'react'
+import { useRouter } from 'next/navigation'
+import type { Route } from 'next'
 import { toast } from 'sonner'
 import type {
   Property,
@@ -41,6 +43,7 @@ const EMPTY_KYC = {
 }
 
 export function useProfile(): UseProfileReturn {
+  const router = useRouter()
   const [role, setRole] = React.useState<'tenant' | 'landlord'>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
@@ -88,7 +91,7 @@ export function useProfile(): UseProfileReturn {
 
   // Modals
   const [showContractModal, setShowContractModal] = React.useState(false)
-  const [contractViewOnly, setContractViewOnly] = React.useState(false)
+  const [contractViewOnly] = React.useState(false)
   const [showHandoverArchiveModal, setShowHandoverArchiveModal] =
     React.useState(false)
 
@@ -395,8 +398,19 @@ export function useProfile(): UseProfileReturn {
       )
       return
     }
-    setContractViewOnly(false)
-    setShowContractModal(true)
+    const realContractId =
+      activeProperty?.contractId ||
+      (activeProperty?.id && activeProperty.id.length === 24
+        ? activeProperty.id
+        : null)
+    if (realContractId) {
+      router.push(`/contracts/${realContractId}` as Route)
+    } else {
+      toast.info(
+        'Đang chuyển hướng tới danh sách hồ sơ thuê để xem và ký hợp đồng thật...'
+      )
+      router.push('/rental-applications' as Route)
+    }
   }
 
   const handlePropertyChange = (propertyId: string): void => {
@@ -437,8 +451,19 @@ export function useProfile(): UseProfileReturn {
   }
 
   const handleViewSignedContract = (): void => {
-    setContractViewOnly(true)
-    setShowContractModal(true)
+    const realContractId =
+      activeProperty?.contractId ||
+      (activeProperty?.id && activeProperty.id.length === 24
+        ? activeProperty.id
+        : null)
+    if (realContractId) {
+      router.push(`/contracts/${realContractId}` as Route)
+    } else {
+      toast.info(
+        'Đang chuyển hướng tới danh sách hồ sơ thuê để xem hợp đồng đã cấp...'
+      )
+      router.push('/rental-applications' as Route)
+    }
   }
 
   return {

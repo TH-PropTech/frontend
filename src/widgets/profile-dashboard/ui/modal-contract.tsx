@@ -178,11 +178,18 @@ export function ModalContract({
 
     setIsVerifying(true)
     try {
-      // Safe default fallback ObjectID if current activeProperty.id is not 24 chars
       const contractId =
         activeProperty.id && activeProperty.id.length === 24
           ? activeProperty.id
-          : '658c149d5a892b112c3d4e5f'
+          : null
+
+      if (!contractId) {
+        toast.error(
+          'Không tìm thấy mã hợp đồng thật hợp lệ để xác thực người ký!'
+        )
+        setIsVerifying(false)
+        return
+      }
 
       const selfieBlob = base64ToBlob(selfiePreview)
       const formData = new FormData()

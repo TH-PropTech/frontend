@@ -44,8 +44,169 @@ export interface ContractItem {
   landlordSignature?: ContractSignature | null
 }
 
+export interface ContractPropertySnapshot {
+  id: string
+  title: string
+  address: string | null
+  area: number | null
+  furniture: string | null
+  value: number
+}
+
+export interface ContractCommercialSnapshot {
+  monthlyRent: number
+  deposit: number
+  paymentDay: number
+  durationMonths?: number | null
+  latePenaltyRate: number
+  terminationNoticeDays: number
+}
+
+export interface ContractDocumentSection {
+  id: string
+  number: number
+  title: string
+  content: string
+  protected: boolean
+  hash: string
+}
+
+export interface ContractDocumentAnnex {
+  id: string
+  title: string
+  description?: string
+  required: boolean
+}
+
+export interface ContractDocumentView {
+  mode: 'draft' | 'locked'
+  revision: number
+  lockedAt: string | null
+  lockedHash: string | null
+  hashSchemaVersion: number
+  legalProfile: unknown | null
+  templateVersion: string | null
+  sections: ContractDocumentSection[]
+  annexes: ContractDocumentAnnex[]
+  integrity: 'not-locked' | 'valid' | 'mismatch' | 'unavailable'
+}
+
+export interface ContractPartyView {
+  id: string
+  name: string
+  role: 'tenant' | 'landlord'
+  maskedCccd: string | null
+  address: string | null
+  kycStatus: 'unverified' | 'pending' | 'verified' | 'rejected'
+  hasSigned: boolean
+  signedAt?: string | null
+  signatureHash?: string | null
+}
+
+export interface ContractDepositView {
+  agreementId: string | null
+  agreementCode?: string | null
+  amount: number
+  currency?: string
+  status: 'draft' | 'pending' | 'paid' | 'transferred'
+  consentGiven?: boolean
+  paidAt: string | null
+  txHash: string | null
+  paymentProofUrl?: string | null
+  mockSimulationNotice?: string
+}
+
+export interface SigningEligibility {
+  eligible: boolean
+  reasonCode: string | null
+  message: string | null
+}
+
+export interface ContractLedgerSummary {
+  networkMode: 'simulation' | 'fabric'
+  connectionState?: 'disabled' | 'connected' | 'unavailable'
+  status:
+    | 'not-requested'
+    | 'pending'
+    | 'processing'
+    | 'confirmed-simulation'
+    | 'confirmed-fabric'
+    | 'failed-retryable'
+    | 'failed-terminal'
+    | 'integrity-mismatch'
+  txHash: string | null
+  blockNumber: number | null
+  verifiedAt: string | null
+  onChainValid?: boolean | null
+}
+
+export interface ContractOverviewSnapshot {
+  id: string
+  code: string
+  status: ContractStatus
+  property: ContractPropertySnapshot
+  commercial: ContractCommercialSnapshot
+  startDate: string
+  endDate: string
+  executionMethod: string
+  notarizationStatus: string
+}
+
+export interface ContractActionsView {
+  canPayDeposit: boolean
+  paymentReasonCode: string | null
+  signingEligibility: SigningEligibility
+  canDownloadArtifact: boolean
+  artifactReasonCode: string | null
+  canEditContent?: boolean
+  canLockContent?: boolean
+}
+
+export interface ContractViewDto {
+  contract: ContractOverviewSnapshot
+  document: ContractDocumentView
+  parties: {
+    tenant: ContractPartyView
+    landlord: ContractPartyView
+  }
+  deposit: ContractDepositView | null
+  actions: ContractActionsView
+  ledger: ContractLedgerSummary
+}
+
+export interface ContractAuditEventDto {
+  id: string
+  category: 'contract' | 'signature' | 'deposit' | 'payment' | 'ledger'
+  eventType: string
+  status: string
+  occurredAt: string
+  actorRole: string
+  networkMode: 'simulation' | 'fabric'
+  txHash: string | null
+  blockNumber: number | null
+  retryable: boolean
+  displayCode: string
+  description: string
+}
+
+export interface VerifySignerResponseDto {
+  verified: boolean
+  faceMatch: boolean
+  liveness: boolean
+  spoofScore: number | null
+  biometricEvidenceId?: string
+}
+
+export interface OtpChallengeResponseDto {
+  sessionId: string
+  challenge: string
+  expiredAt: string
+  otpCode?: string
+}
+
 export interface ContractIntegrityResult {
-  isValid: boolean
+  isValid: boolean | null
+  verificationStatus: 'valid' | 'invalid' | 'not-recorded' | 'unavailable'
   currentHash: string
   storedHash: string | null
   blockchainAddress: string | null
@@ -62,10 +223,14 @@ export type PublicServiceChecklistItem = {
 }
 
 export interface PublicServiceChecklist {
-  purpose: 'permanent-residence'
+  purpose: 'temporary-residence' | 'permanent-residence'
   externalProcedureCompleted: false
   officialSourceUrl: string
-  executionMethod: 'WET_INK' | 'QUALIFIED_DIGITAL_SIGNATURE' | 'POC_ECONSENT'
+  executionMethod:
+    | 'WET_INK'
+    | 'QUALIFIED_DIGITAL_SIGNATURE'
+    | 'SMARTCA'
+    | 'POC_ECONSENT'
   notarizationStatus:
     | 'not-requested'
     | 'pending'
@@ -81,6 +246,21 @@ export interface SigningGrant {
   expiresAt: string
 }
 
+export interface SmartCaSigningSession {
+  id?: string
+  contractId: string
+  signerId: string
+  signerRole: 'tenant' | 'landlord'
+  artifactHash: string
+  providerTransactionId: string
+  status: 'pending' | 'signed' | 'rejected' | 'expired'
+  confirmationUrl?: string | null
+  certificateSerial?: string | null
+  expiresAt: string
+}
+
+// ── API Functions ──
+
 export async function getMyContracts(): Promise<ContractItem[]> {
   return apiClient.get<ContractItem[]>('/contracts')
 }
@@ -89,9 +269,73 @@ export async function getContract(contractId: string): Promise<ContractItem> {
   return apiClient.get<ContractItem>(`/contracts/${contractId}`)
 }
 
+export async function getContractView(
+  contractId: string
+): Promise<ContractViewDto> {
+  return apiClient.get<ContractViewDto>(`/contracts/${contractId}/view`)
+}
+
+export async function getContractAuditEvents(
+  contractId: string
+): Promise<ContractAuditEventDto[]> {
+  return apiClient.get<ContractAuditEventDto[]>(
+    `/contracts/${contractId}/audit-events`
+  )
+}
+
+export async function initiateContractOtp(
+  contractId: string,
+  deviceId?: string
+): Promise<OtpChallengeResponseDto> {
+  return apiClient.post<OtpChallengeResponseDto>(
+    `/contracts/${contractId}/otp-challenge`,
+    { deviceId }
+  )
+}
+
+export async function createSmartCaSigningSession(
+  contractId: string
+): Promise<SmartCaSigningSession> {
+  return apiClient.post<SmartCaSigningSession>(
+    `/contracts/${contractId}/smartca/signing-sessions`,
+    {}
+  )
+}
+
+export async function getSmartCaSigningSession(
+  contractId: string,
+  sessionId: string
+): Promise<SmartCaSigningSession> {
+  return apiClient.get<SmartCaSigningSession>(
+    `/contracts/${contractId}/smartca/signing-sessions/${sessionId}`
+  )
+}
+
+export async function verifyContractOtp(
+  contractId: string,
+  input: { sessionId: string; otpCode: string; signature?: string }
+): Promise<{ success: boolean; message: string }> {
+  return apiClient.post<{ success: boolean; message: string }>(
+    `/contracts/${contractId}/verify-otp`,
+    input
+  )
+}
+
+export async function verifySigner(
+  contractId: string,
+  file: File | Blob
+): Promise<VerifySignerResponseDto> {
+  const formData = new FormData()
+  formData.append('selfie', file)
+  return apiClient.post<VerifySignerResponseDto>(
+    `/contracts/${contractId}/verify-signer`,
+    formData
+  )
+}
+
 export async function getPublicServiceChecklist(
   contractId: string,
-  purpose: PublicServiceChecklist['purpose'] = 'permanent-residence'
+  purpose: PublicServiceChecklist['purpose'] = 'temporary-residence'
 ): Promise<PublicServiceChecklist> {
   return apiClient.get<PublicServiceChecklist>(
     `/contracts/${contractId}/public-service-checklist?purpose=${purpose}`

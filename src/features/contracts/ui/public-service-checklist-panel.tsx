@@ -49,7 +49,7 @@ export function PublicServiceChecklistPanel({
     setError(null)
     try {
       setChecklist(
-        await getPublicServiceChecklist(contractId, 'permanent-residence')
+        await getPublicServiceChecklist(contractId, 'temporary-residence')
       )
     } catch (loadError) {
       setError(

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { AlertCircle, CheckCircle2, FileText } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ExternalLink, FileText } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -14,11 +14,28 @@ import {
 import {
   createRentalApplication,
   getRentalApplicationContext,
+  isRentalTermsStaleError,
   type RentalApplicationContext,
 } from '../api/rental-application-api'
 import type { RentalPackageItem } from '@/entities/properties'
 
 type Step = 1 | 2 | 3 | 4
+
+interface RentalDetails {
+  occupants: string
+  moveInDate: string
+  occupation: string
+  hasPets: boolean
+  notes: string
+}
+
+const INITIAL_RENTAL_DETAILS: RentalDetails = {
+  occupants: '1',
+  moveInDate: '',
+  occupation: '',
+  hasPets: false,
+  notes: '',
+}
 
 export function ApplyDialog({
   apartmentId,
@@ -36,6 +53,10 @@ export function ApplyDialog({
   const [error, setError] = React.useState<string | null>(null)
   const [selectedPackageId, setSelectedPackageId] = React.useState('')
   const [acknowledged, setAcknowledged] = React.useState<string[]>([])
+  const [termsAccepted, setTermsAccepted] = React.useState(false)
+  const [details, setDetails] = React.useState<RentalDetails>(
+    INITIAL_RENTAL_DETAILS
+  )
 
   const handleOpenChange = (nextOpen: boolean): void => {
     if (nextOpen) {
@@ -44,6 +65,8 @@ export function ApplyDialog({
       setContext(null)
       setSelectedPackageId('')
       setAcknowledged([])
+      setTermsAccepted(false)
+      setDetails(INITIAL_RENTAL_DETAILS)
       setLoading(true)
     }
     setOpen(nextOpen)
@@ -81,37 +104,98 @@ export function ApplyDialog({
   const allDisclosuresAcknowledged = requiredDisclosureIds.every(id =>
     acknowledged.includes(id)
   )
+  const isTermsSatisfied = !context?.terms || termsAccepted
+  const occupants = Number(details.occupants)
+  const detailsValid =
+    Number.isInteger(occupants) &&
+    occupants >= 1 &&
+    occupants <= 20 &&
+    /^\d{4}-\d{2}-\d{2}$/.test(details.moveInDate) &&
+    details.occupation.trim().length > 0
+
+  const handleOccupantsChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    setDetails(current => ({ ...current, occupants: event.target.value }))
+  }
+
+  const handleMoveInDateChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    setDetails(current => ({ ...current, moveInDate: event.target.value }))
+  }
+
+  const handleOccupationChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    setDetails(current => ({ ...current, occupation: event.target.value }))
+  }
+
+  const handleHasPetsChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    setDetails(current => ({ ...current, hasPets: event.target.checked }))
+  }
+
+  const handleNotesChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ): void => {
+    setDetails(current => ({ ...current, notes: event.target.value }))
+  }
 
   const submit = async (
     event: React.FormEvent<HTMLFormElement>
   ): Promise<void> => {
     event.preventDefault()
-    if (!context || !selectedPackage || !allDisclosuresAcknowledged) return
+    if (!detailsValid) {
+      setStep(1)
+      return
+    }
+    if (
+      !context ||
+      !selectedPackage ||
+      !allDisclosuresAcknowledged ||
+      !isTermsSatisfied
+    )
+      return
     setSubmitting(true)
     setError(null)
-    const form = new FormData(event.currentTarget)
     try {
       await createRentalApplication({
         apartmentId,
         packageId: selectedPackage.packageId,
         packageVersion: selectedPackage.version,
-        occupants: Number(form.get('occupants')),
-        moveInDate: String(form.get('moveInDate')),
-        occupation: String(form.get('occupation')).trim(),
-        hasPets: form.get('hasPets') === 'on',
-        ...(String(form.get('notes')).trim()
-          ? { notes: String(form.get('notes')).trim() }
-          : {}),
+        occupants,
+        moveInDate: details.moveInDate,
+        occupation: details.occupation.trim(),
+        hasPets: details.hasPets,
+        ...(details.notes.trim() ? { notes: details.notes.trim() } : {}),
         disclosureVersion: context.disclosure.version,
         acknowledgedDisclosureIds: acknowledged,
+        ...(context.terms
+          ? {
+              acceptedTermsVersion: context.terms.version,
+              acceptedTermsHash: context.terms.hash,
+            }
+          : {}),
       })
       setStep(4)
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : 'Không thể gửi hồ sơ thuê căn hộ'
-      )
+      if (isRentalTermsStaleError(submitError)) {
+        setError(
+          'Điều khoản dịch vụ vừa được cập nhật phiên bản mới. Vui lòng xem lại và xác nhận để tiếp tục.'
+        )
+        setTermsAccepted(false)
+        void getRentalApplicationContext(apartmentId).then(refreshed => {
+          setContext(refreshed)
+        })
+      } else {
+        setError(
+          submitError instanceof Error
+            ? submitError.message
+            : 'Không thể gửi hồ sơ thuê căn hộ'
+        )
+      }
     } finally {
       setSubmitting(false)
     }
@@ -183,7 +267,8 @@ export function ApplyDialog({
                     type="number"
                     min="1"
                     max="20"
-                    defaultValue="1"
+                    value={details.occupants}
+                    onChange={handleOccupantsChange}
                     className={fieldClass}
                   />
                 </label>
@@ -194,6 +279,8 @@ export function ApplyDialog({
                     aria-label="Ngày dự kiến vào ở"
                     name="moveInDate"
                     type="date"
+                    value={details.moveInDate}
+                    onChange={handleMoveInDateChange}
                     className={fieldClass}
                   />
                 </label>
@@ -204,21 +291,35 @@ export function ApplyDialog({
                     aria-label="Nghề nghiệp"
                     name="occupation"
                     maxLength={200}
+                    value={details.occupation}
+                    onChange={handleOccupationChange}
                     className={fieldClass}
                   />
                 </label>
                 <label className="flex items-center gap-2 text-sm text-fg">
-                  <input name="hasPets" type="checkbox" /> Có vật nuôi
+                  <input
+                    name="hasPets"
+                    type="checkbox"
+                    checked={details.hasPets}
+                    onChange={handleHasPetsChange}
+                  />{' '}
+                  Có vật nuôi
                 </label>
                 <label className="block text-xs text-muted">
                   Ghi chú
                   <textarea
                     name="notes"
                     maxLength={1000}
+                    value={details.notes}
+                    onChange={handleNotesChange}
                     className="mt-1 min-h-20 w-full rounded-lg border border-border bg-bg p-3 text-sm text-fg"
                   />
                 </label>
-                <Button type="button" onClick={() => setStep(2)}>
+                <Button
+                  type="button"
+                  disabled={!detailsValid}
+                  onClick={() => setStep(2)}
+                >
                   Tiếp tục chọn gói
                 </Button>
               </>
@@ -302,6 +403,43 @@ export function ApplyDialog({
                     </label>
                   ))}
                 </div>
+                {context.terms ? (
+                  <div className="rounded-lg border border-border bg-surface-muted p-3.5 space-y-2">
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        type="checkbox"
+                        id="terms-accepted-checkbox"
+                        data-testid="terms-accepted-checkbox"
+                        checked={termsAccepted}
+                        onChange={event =>
+                          setTermsAccepted(event.target.checked)
+                        }
+                        className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                      />
+                      <label
+                        htmlFor="terms-accepted-checkbox"
+                        className="text-xs text-fg leading-relaxed cursor-pointer"
+                      >
+                        Tôi đã đọc, hiểu rõ và đồng ý tuân thủ{' '}
+                        <a
+                          href="/terms"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-primary underline underline-offset-2 hover:text-primary-hover inline-flex items-center gap-1"
+                        >
+                          Quy định dịch vụ công và Điều khoản thuê căn hộ (phiên
+                          bản {context.terms.version})
+                          <ExternalLink className="h-3 w-3 inline" />
+                        </a>{' '}
+                        được công bố theo Luật Nhà ở 2023, Luật Kinh doanh BĐS
+                        2023 và TTHC 1.004194.
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-muted pl-6 font-mono break-all">
+                      Mã xác thực cam kết: {context.terms.hash.slice(0, 16)}…
+                    </p>
+                  </div>
+                ) : null}
                 {error ? <p className="text-xs text-danger">{error}</p> : null}
                 <div className="flex gap-2">
                   <Button
@@ -314,7 +452,7 @@ export function ApplyDialog({
                   <Button
                     type="submit"
                     loading={submitting}
-                    disabled={!allDisclosuresAcknowledged}
+                    disabled={!allDisclosuresAcknowledged || !isTermsSatisfied}
                     data-testid="rental-application-submit"
                   >
                     Gửi yêu cầu thuê
@@ -330,6 +468,11 @@ export function ApplyDialog({
             <p className="font-semibold text-fg">Đã gửi yêu cầu thuê</p>
             <p className="text-sm text-muted">
               Chủ nhà sẽ xem xét trước khi hệ thống tạo bản nháp hợp đồng.
+            </p>
+            <p className="text-xs text-muted max-w-sm">
+              Cam kết điều khoản và chữ ký số được lưu giữ toàn vẹn và sẽ được
+              đồng bộ lên mạng lưới Hyperledger Fabric khi hợp đồng thuê chính
+              thức có hiệu lực.
             </p>
             <Button type="button" onClick={() => setOpen(false)}>
               Đóng

@@ -15,12 +15,12 @@ describe('PublicServiceChecklistPanel', () => {
 
   it('shows the disclaimer and keeps the external procedure incomplete', async () => {
     getChecklist.mockResolvedValue({
-      purpose: 'permanent-residence',
+      purpose: 'temporary-residence',
       externalProcedureCompleted: false,
       executionMethod: 'POC_ECONSENT',
       notarizationStatus: 'not-requested',
       officialSourceUrl:
-        'https://thutuc.dichvucong.gov.vn/p/home/dvc-tthc-thu-tuc-hanh-chinh-chi-tiet.html?ma_thu_tuc=6007',
+        'https://thutuc.dichvucong.gov.vn/p/home/dvc-chi-tiet-thu-tuc-hanh-chinh.html?ma_thu_tuc=1.004194',
       disclaimer:
         'POC_ECONSENT không phải chữ ký số có chứng thư và không thay thế công chứng/chứng thực.',
       items: [
@@ -47,13 +47,13 @@ describe('PublicServiceChecklistPanel', () => {
     expect(screen.getByText('Thủ tục bên ngoài chưa hoàn tất')).toBeTruthy()
     expect(getChecklist).toHaveBeenCalledWith(
       'contract-1',
-      'permanent-residence'
+      'temporary-residence'
     )
     expect(
       screen.getByRole('link', { name: /hướng dẫn chính thức/ })
     ).toHaveAttribute(
       'href',
-      'https://thutuc.dichvucong.gov.vn/p/home/dvc-tthc-thu-tuc-hanh-chinh-chi-tiet.html?ma_thu_tuc=6007'
+      'https://thutuc.dichvucong.gov.vn/p/home/dvc-chi-tiet-thu-tuc-hanh-chinh.html?ma_thu_tuc=1.004194'
     )
   })
 
