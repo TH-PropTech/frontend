@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/shared/ui/select'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { RentalPackagesConfigSection } from './rental-packages-config-section'
 import {
   FileText,
   DollarSign,
@@ -207,6 +208,9 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           )}
         </div>
       </div>
+
+      {/* Gói thuê linh hoạt & Chính sách cọc */}
+      <RentalPackagesConfigSection form={form} />
 
       {/* Số lượng phòng */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

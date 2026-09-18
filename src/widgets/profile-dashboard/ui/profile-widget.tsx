@@ -16,6 +16,7 @@ import { TabMaintenance } from './tab-maintenance'
 import { TabBlockchain } from './tab-blockchain'
 import { TabSecurity } from './tab-security'
 import { TabMyListings } from './tab-my-listings'
+import { TabLandlordApplications } from './tab-landlord-applications'
 import { ModalKyc } from './modal-kyc'
 import { ModalHandover } from './modal-handover'
 import { ModalContract } from './modal-contract'
@@ -33,6 +34,7 @@ import {
   Calculator,
   ShieldCheck,
   ChevronDown,
+  Users,
 } from 'lucide-react'
 
 type TabKey =
@@ -46,6 +48,7 @@ type TabKey =
   | 'living-cost'
   | 'safety-reports'
   | 'support-tickets'
+  | 'rental-applications'
 
 const TRIGGER_CLASS =
   'pb-3 rounded-none border-b-2 border-transparent bg-transparent px-0 font-semibold text-muted hover:text-fg data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-bold data-[state=active]:bg-transparent shadow-none transition-all cursor-pointer inline-flex items-center'
@@ -103,10 +106,19 @@ export function ProfileWidget(): React.ReactElement {
           </TabsTrigger>
 
           {role === 'landlord' && (
-            <TabsTrigger value="listings" className={TRIGGER_CLASS}>
-              <Building className="h-4 w-4 mr-1.5 shrink-0" />
-              Tin đăng của tôi
-            </TabsTrigger>
+            <>
+              <TabsTrigger value="listings" className={TRIGGER_CLASS}>
+                <Building className="h-4 w-4 mr-1.5 shrink-0" />
+                Tin đăng của tôi
+              </TabsTrigger>
+              <TabsTrigger
+                value="rental-applications"
+                className={TRIGGER_CLASS}
+              >
+                <Users className="h-4 w-4 mr-1.5 shrink-0" />
+                Hồ sơ đặt thuê
+              </TabsTrigger>
+            </>
           )}
 
           <TabsTrigger value="saved-searches" className={TRIGGER_CLASS}>
@@ -212,9 +224,14 @@ export function ProfileWidget(): React.ReactElement {
         </TabsContent>
 
         {role === 'landlord' && (
-          <TabsContent value="listings" className="outline-none">
-            <TabMyListings />
-          </TabsContent>
+          <>
+            <TabsContent value="listings" className="outline-none">
+              <TabMyListings />
+            </TabsContent>
+            <TabsContent value="rental-applications" className="outline-none">
+              <TabLandlordApplications />
+            </TabsContent>
+          </>
         )}
       </Tabs>
 

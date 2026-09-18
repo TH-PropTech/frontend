@@ -3,23 +3,28 @@
 import * as React from 'react'
 import {
   ArrowLeft,
+  FileText,
   Flame,
   Gavel,
+  Landmark,
   Loader2,
-  Lock,
   Scale,
   Send,
+  ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/shared/ui/accordion'
-import { TermsSummary } from '@/features/legal-terms'
 import type { PublicLegalTermsResponse } from '@/features/legal-terms'
-import type { RentalApplicationDisclosure } from '../api/rental-application-api'
+import type {
+  RentalApplicationDisclosure,
+  RentalExecutionPolicyRef,
+} from '../api/rental-application-api'
 
 export interface ApplyStepConsentProps {
   disclosure: RentalApplicationDisclosure
@@ -28,9 +33,12 @@ export interface ApplyStepConsentProps {
   termsError?: string | null
   acknowledgedDisclosures: string[]
   termsAccepted: boolean
+  executionPolicy?: RentalExecutionPolicyRef | null
+  executionPolicyAccepted?: boolean
   submitting?: boolean
   onToggleDisclosure: (id: string) => void
   onToggleTermsAccepted: (accepted: boolean) => void
+  onToggleExecutionPolicyAccepted?: (accepted: boolean) => void
   onBack: () => void
   onSubmit: () => void
 }
@@ -72,9 +80,12 @@ export function ApplyStepConsent({
   termsError = null,
   acknowledgedDisclosures,
   termsAccepted,
+  executionPolicy = null,
+  executionPolicyAccepted = false,
   submitting = false,
   onToggleDisclosure,
   onToggleTermsAccepted,
+  onToggleExecutionPolicyAccepted = () => undefined,
   onBack,
   onSubmit,
 }: ApplyStepConsentProps): React.ReactElement {
@@ -91,55 +102,118 @@ export function ApplyStepConsent({
     !loadingTerms &&
     allRequiredAcknowledged &&
     termsAccepted &&
+    (!executionPolicy || executionPolicyAccepted) &&
     !submitting
 
-  const shortHash = terms?.contentHash
-    ? terms.contentHash.length > 12
-      ? `${terms.contentHash.slice(0, 8)}…${terms.contentHash.slice(-4)}`
-      : terms.contentHash
-    : ''
+  const policyLabel =
+    executionPolicy?.strategy === 'DEPOSIT_FIRST'
+      ? 'Cọc trước, sau đó ký hợp đồng'
+      : 'Ký hợp đồng trước, sau đó thanh toán cọc'
 
   return (
-    <div data-testid="apply-step-consent" className="space-y-8">
-      <header className="border-b border-border/80 pb-5">
+    <div data-testid="apply-step-consent" className="space-y-6">
+      <header className="border-b border-border/80 pb-4">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
           <Scale aria-hidden="true" className="h-4 w-4" />
-          <span>Giai đoạn 3 / 4: Điều khoản pháp lý & Cam kết người thuê</span>
+          <span>Bước 3/4: Điều khoản pháp lý & Cam kết người thuê</span>
         </div>
-        <h2 className="mt-1.5 font-display text-xl font-bold text-fg sm:text-2xl">
+        <h2 className="mt-1 font-display text-xl font-bold text-fg sm:text-2xl">
           Quy chế pháp lý & Cam kết trách nhiệm
         </h2>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1 text-xs text-muted">
           Vui lòng đọc kỹ các điều khoản dịch vụ, an toàn PCCC và xác nhận cam
           kết trước khi gửi hồ sơ chính thức cho chủ nhà.
         </p>
       </header>
 
-      {/* 1. Terms of Service Summary with Canonical SHA-256 */}
+      {executionPolicy ? (
+        <section
+          data-testid="selected-execution-policy"
+          className="flex items-start gap-3 rounded-2xl border border-primary/25 bg-primary-soft/10 p-4"
+        >
+          <Landmark
+            aria-hidden="true"
+            className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+          />
+          <div className="space-y-1 text-xs">
+            <h3 className="font-bold text-fg">Trình tự đã chọn cho hồ sơ</h3>
+            <p className="font-semibold text-primary">{policyLabel}</p>
+            <p className="leading-relaxed text-muted">
+              Lựa chọn này được chụp cùng hồ sơ.{' '}
+              {executionPolicy.strategy === 'DEPOSIT_FIRST'
+                ? 'Bạn cần hoàn tất xác nhận tiền cọc trước khi bắt đầu ký SmartCA.'
+                : 'Hai bên có thể ký trước; hợp đồng chỉ kích hoạt sau khi khoản cọc được xác nhận.'}
+            </p>
+            <div
+              className="mt-3 flex cursor-pointer items-start gap-2 rounded-xl border border-border bg-surface p-3"
+              onClick={() =>
+                onToggleExecutionPolicyAccepted(!executionPolicyAccepted)
+              }
+            >
+              <Checkbox
+                data-testid="execution-policy-acceptance-checkbox"
+                checked={executionPolicyAccepted}
+                onCheckedChange={checked =>
+                  onToggleExecutionPolicyAccepted(checked === true)
+                }
+                onClick={event => event.stopPropagation()}
+                className="mt-0.5"
+              />
+              <span className="text-[11px] leading-relaxed text-fg">
+                Tôi đã đọc và đồng ý với trình tự cọc, ký và điều kiện để hợp
+                đồng có hiệu lực.
+              </span>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* 1. Terms of Service Summary with User-friendly Digital Seal */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
             1. Quy chế & Điều khoản dịch vụ thuê nhà
           </h3>
-          {shortHash ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-muted px-2.5 py-0.5 text-[11px] font-mono text-muted">
-              <Lock aria-hidden="true" className="h-3 w-3 text-success" />
-              SHA-256: {shortHash}
+          {terms ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success-soft/30 px-3 py-1 text-xs font-semibold text-success">
+              <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5" />
+              <span>Chứng thực số v{terms.version}</span>
             </span>
           ) : null}
         </div>
 
-        <TermsSummary terms={terms} loading={loadingTerms} error={termsError} />
+        {loadingTerms ? (
+          <div className="animate-pulse space-y-3 rounded-2xl border border-border bg-surface-muted/50 p-4">
+            <div className="h-4 w-1/3 rounded bg-border" />
+            <div className="h-3 w-3/4 rounded bg-border" />
+          </div>
+        ) : termsError || !terms ? (
+          <div className="rounded-2xl border border-danger/30 bg-danger-soft p-4 text-xs text-danger">
+            {termsError || 'Không tải được nội dung điều khoản áp dụng.'}
+          </div>
+        ) : (
+          <article className="space-y-3 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+            <div className="flex items-center gap-2">
+              <FileText aria-hidden="true" className="h-4 w-4 text-primary" />
+              <h4 className="font-display text-sm font-bold text-fg">
+                {terms.title} (Phiên bản {terms.version})
+              </h4>
+            </div>
+            <p className="text-xs leading-relaxed text-muted">
+              {terms.summary}
+            </p>
+          </article>
+        )}
       </section>
 
       {/* 2. Interactive Statutory Legal Accordion */}
       <section className="space-y-3 rounded-2xl border border-border bg-surface p-5 shadow-sm">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
           2. Các quy định pháp luật trọng yếu
         </h3>
         <p className="text-xs text-muted">
-          Bấm vào từng điều khoản để đọc chi tiết quy định và trách nhiệm pháp
-          lý:
+          Các điều khoản then chốt bảo vệ quyền lợi hai bên theo quy định hiện
+          hành:
         </p>
 
         <Accordion type="single" collapsible className="w-full">
@@ -151,13 +225,16 @@ export function ApplyStepConsent({
                 value={sec.id}
                 className="border-border"
               >
-                <AccordionTrigger className="text-left text-xs font-semibold text-fg hover:no-underline py-3">
+                <AccordionTrigger className="text-left text-xs font-semibold text-fg hover:no-underline py-2.5">
                   <div className="flex items-center gap-2">
-                    <Icon aria-hidden="true" className="h-4 w-4 text-primary" />
+                    <Icon
+                      aria-hidden="true"
+                      className="h-3.5 w-3.5 text-primary"
+                    />
                     <span>{sec.title}</span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="text-xs text-muted leading-relaxed pt-1 pb-3 pl-6">
+                <AccordionContent className="text-xs text-muted leading-relaxed pt-1 pb-3 pl-5">
                   <p className="font-medium text-fg mb-1">{sec.summary}</p>
                   <p>{sec.content}</p>
                 </AccordionContent>
@@ -169,35 +246,36 @@ export function ApplyStepConsent({
 
       {/* 3. Statutory Disclosures Checklist */}
       <section className="space-y-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
           3. Cam kết xác nhận từ người thuê (Bắt buộc)
         </h3>
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {disclosure.items.map(item => {
             const isChecked = acknowledgedDisclosures.includes(item.id)
 
             return (
-              <label
+              <div
                 key={item.id}
                 data-testid={`disclosure-item-${item.id}`}
-                className={`flex cursor-pointer items-start gap-3.5 rounded-2xl border p-4.5 transition-all ${
+                onClick={() => onToggleDisclosure(item.id)}
+                className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all ${
                   isChecked
                     ? 'border-primary/40 bg-surface shadow-sm'
                     : 'border-border bg-surface-muted/30 hover:border-border-strong'
                 }`}
               >
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={isChecked}
-                  onChange={() => onToggleDisclosure(item.id)}
-                  className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                  onCheckedChange={() => onToggleDisclosure(item.id)}
+                  onClick={e => e.stopPropagation()}
+                  className="mt-0.5"
                 />
                 <div className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-fg">{item.title}</span>
                     {item.required ? (
-                      <span className="rounded-full bg-danger-soft px-2.5 py-0.5 text-[10px] font-semibold text-danger">
-                        Bắt buộc xác nhận
+                      <span className="rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-semibold text-danger">
+                        Bắt buộc
                       </span>
                     ) : (
                       <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] text-subtle">
@@ -207,50 +285,53 @@ export function ApplyStepConsent({
                   </div>
                   <p className="leading-relaxed text-muted">{item.body}</p>
                 </div>
-              </label>
+              </div>
             )
           })}
         </div>
       </section>
 
-      {/* 4. Explicit Cryptographic Terms Acceptance */}
+      {/* 4. Terms Acceptance */}
       {terms ? (
         <section className="rounded-2xl border border-primary/30 bg-primary-soft/15 p-5 shadow-sm">
-          <label className="flex cursor-pointer items-start gap-3.5">
-            <input
-              type="checkbox"
+          <div
+            onClick={() => onToggleTermsAccepted(!termsAccepted)}
+            className="flex cursor-pointer items-start gap-3"
+          >
+            <Checkbox
               data-testid="terms-acceptance-checkbox"
               checked={termsAccepted}
-              onChange={e => onToggleTermsAccepted(e.target.checked)}
-              className="mt-1 h-5 w-5 rounded border-border text-primary focus:ring-primary"
+              onCheckedChange={checked =>
+                onToggleTermsAccepted(checked === true)
+              }
+              onClick={e => e.stopPropagation()}
+              className="mt-0.5"
             />
-            <div className="space-y-1.5 text-xs">
-              <span className="font-display text-sm font-bold text-fg">
+            <div className="space-y-1 text-xs">
+              <span className="font-display text-xs font-bold text-fg">
                 Tôi đồng thuận toàn bộ Quy chế Điều khoản thuê nhà (Phiên bản{' '}
-                {terms.version}
-                {shortHash ? ` · Khóa băm: ${shortHash}` : ''})
+                {terms.version})
               </span>
-              <p className="leading-relaxed text-muted">
+              <p className="leading-relaxed text-muted text-[11px]">
                 Bằng việc đánh dấu ô này, bạn xác nhận rằng mọi thông tin kê
-                khai là hoàn toàn đúng sự thật. Bản xác nhận này được mã hóa và
-                tạo dấu vết toàn vẹn trên sổ cái Hyperledger Fabric khi hợp đồng
-                số được ký kết.
+                khai là hoàn toàn đúng sự thật và đồng thuận các cam kết pháp lý
+                để tiến tới xác lập hợp đồng thuê nhà điện tử.
               </p>
             </div>
-          </label>
+          </div>
         </section>
       ) : null}
 
       {/* Navigation actions */}
-      <div className="flex items-center justify-between border-t border-border/80 pt-5">
+      <div className="flex items-center justify-between border-t border-border/80 pt-4">
         <Button
           type="button"
           variant="outline"
           disabled={submitting}
           onClick={onBack}
-          className="flex items-center gap-2 border-border"
+          className="flex items-center gap-2 border-border text-xs"
         >
-          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+          <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
           <span>Quay lại chọn gói thuê</span>
         </Button>
 
@@ -258,16 +339,19 @@ export function ApplyStepConsent({
           type="button"
           disabled={!canSubmit}
           onClick={onSubmit}
-          className="flex items-center gap-2 bg-control px-6 py-2.5 text-sm font-semibold text-on-control shadow-sm hover:opacity-90 disabled:opacity-50"
+          className="flex items-center gap-2 bg-control px-6 py-2 text-xs font-semibold text-on-control shadow-sm hover:opacity-90 disabled:opacity-50"
         >
           {submitting ? (
             <>
-              <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+              <Loader2
+                aria-hidden="true"
+                className="h-3.5 w-3.5 animate-spin"
+              />
               <span>Đang gửi hồ sơ…</span>
             </>
           ) : (
             <>
-              <Send aria-hidden="true" className="h-4 w-4" />
+              <Send aria-hidden="true" className="h-3.5 w-3.5" />
               <span>Gửi hồ sơ đặt thuê</span>
             </>
           )}

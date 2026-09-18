@@ -1,6 +1,14 @@
 import { apiClient, ApiClientError } from '@/shared/api'
 
 export type RentalApplicationStatus = 'pending' | 'accepted' | 'rejected'
+export type RentalExecutionStrategy = 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+
+export interface RentalExecutionPolicyRef {
+  policyId: string
+  version: number
+  strategy: RentalExecutionStrategy
+  contentHash: string
+}
 export type RentalApplicationContextReason =
   | 'RENTAL_FLOW_DISABLED'
   | 'LISTING_UNAVAILABLE'
@@ -38,6 +46,8 @@ export interface RentalApplicationContext {
     resolvedDepositAmount: number
     status: 'active' | 'inactive'
     currency: 'VND'
+    allowedExecutionPolicies?: RentalExecutionPolicyRef[]
+    defaultExecutionPolicy?: RentalExecutionPolicyRef
   }>
   disclosure: RentalApplicationDisclosure
   terms?: {
@@ -71,6 +81,7 @@ export interface CreateRentalApplicationInput {
   acceptedTermsHash?: string | undefined
   flowProfileVersion?: number | undefined
   flowProfileHash?: string | undefined
+  selectedExecutionPolicy?: RentalExecutionPolicyRef | undefined
 }
 export interface RentalApplicationItem {
   _id: string
@@ -94,7 +105,10 @@ export interface RentalApplicationItem {
     durationMonths: 1 | 3 | 6 | 12 | 24
     monthlyRent: number
     resolvedDepositAmount: number
+    allowedExecutionPolicies?: RentalExecutionPolicyRef[]
+    defaultExecutionPolicy?: RentalExecutionPolicyRef
   } | null
+  executionPolicySnapshot?: RentalExecutionPolicyRef | null
   contractId?: string | null
   depositAgreementId?: string | null
   provisioningStatus?: 'not-started' | 'ready' | 'failed'
@@ -141,9 +155,9 @@ export async function respondToRentalApplication(
   input: {
     status: 'accepted' | 'rejected'
     reasonCode: string
-    expectedRevision?: number
-    idempotencyKey?: string
-    note?: string
+    expectedRevision?: number | undefined
+    idempotencyKey?: string | undefined
+    note?: string | undefined
   }
 ): Promise<RentalApplicationItem> {
   return apiClient.patch<RentalApplicationItem>(
@@ -172,5 +186,24 @@ export function isFlowConfigStaleError(error: unknown): boolean {
   return (
     error.message.includes('FLOW_CONFIG_STALE') ||
     error.body?.code === 'FLOW_CONFIG_STALE'
+  )
+}
+
+export function isRentalExecutionPolicyStaleError(error: unknown): boolean {
+  if (!(error instanceof ApiClientError)) return false
+  return (
+    error.message.includes('RENTAL_EXECUTION_POLICY_INVALID') ||
+    error.message.includes('RENTAL_EXECUTION_POLICY_SELECTION_REQUIRED') ||
+    error.body?.code === 'RENTAL_EXECUTION_POLICY_INVALID' ||
+    error.body?.code === 'RENTAL_EXECUTION_POLICY_SELECTION_REQUIRED'
+  )
+}
+
+export function isApplicationRevisionStaleError(error: unknown): boolean {
+  if (!(error instanceof ApiClientError)) return false
+  return (
+    error.status === 409 ||
+    error.message.includes('APPLICATION_REVISION_STALE') ||
+    error.body?.code === 'APPLICATION_REVISION_STALE'
   )
 }

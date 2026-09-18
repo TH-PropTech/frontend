@@ -13,6 +13,26 @@ const mockPackages: RentalApplicationContext['packages'] = [
     resolvedDepositAmount: 15000000,
     status: 'active',
     currency: 'VND',
+    allowedExecutionPolicies: [
+      {
+        policyId: 'deposit-first',
+        version: 1,
+        strategy: 'DEPOSIT_FIRST',
+        contentHash: 'hash-deposit',
+      },
+      {
+        policyId: 'sign-first',
+        version: 1,
+        strategy: 'SIGN_FIRST',
+        contentHash: 'hash-sign',
+      },
+    ],
+    defaultExecutionPolicy: {
+      policyId: 'deposit-first',
+      version: 1,
+      strategy: 'DEPOSIT_FIRST',
+      contentHash: 'hash-deposit',
+    },
   },
   {
     packageId: 'pkg-12m',
@@ -147,5 +167,30 @@ describe('ApplyStepPackage Component', () => {
     )
 
     expect(screen.getByTestId('no-active-packages')).toBeInTheDocument()
+  })
+
+  it('renders admin-approved execution policies and emits the selected policy', () => {
+    const onSelectPolicy = vi.fn()
+    render(
+      <ApplyStepPackage
+        packages={mockPackages}
+        selectedPackageId="pkg-6m"
+        selectedExecutionPolicy={null}
+        onSelectPackage={vi.fn()}
+        onSelectExecutionPolicy={onSelectPolicy}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+      />
+    )
+
+    expect(screen.getByTestId('execution-policy-selection')).toBeInTheDocument()
+    const signFirst = screen.getByTestId('execution-policy-SIGN_FIRST')
+    fireEvent.click(signFirst)
+    expect(onSelectPolicy).toHaveBeenCalledWith({
+      policyId: 'sign-first',
+      version: 1,
+      strategy: 'SIGN_FIRST',
+      contentHash: 'hash-sign',
+    })
   })
 })

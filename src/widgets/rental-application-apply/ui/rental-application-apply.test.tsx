@@ -75,6 +75,8 @@ const baseMockState: flowModule.FlowState = {
     notes: '',
   },
   selectedPackageId: 'pkg-12',
+  selectedExecutionPolicy: null,
+  executionPolicyAccepted: false,
   acknowledgedDisclosures: ['d-1'],
   termsAccepted: true,
   submittedApplication: null,
@@ -84,6 +86,8 @@ const mockActions = {
   loadContext: vi.fn(),
   updateDetails: vi.fn(),
   selectPackage: vi.fn(),
+  selectExecutionPolicy: vi.fn(),
+  setExecutionPolicyAccepted: vi.fn(),
   toggleDisclosure: vi.fn(),
   setTermsAccepted: vi.fn(),
   goToStep2: vi.fn(),
@@ -240,5 +244,41 @@ describe('RentalApplicationApply Widget', () => {
 
     fireEvent.click(screen.getByText('✕'))
     expect(mockActions.clearError).toHaveBeenCalled()
+  })
+
+  it('renders horizontal stepper navigation and consolidated 2-card sidebar without raw hashes', () => {
+    vi.mocked(flowModule.useRentalApplicationFlow).mockReturnValue({
+      state: { ...baseMockState, step: 1 },
+      actions: mockActions,
+    })
+
+    render(<RentalApplicationApply apartmentId="apt-101" />)
+
+    // Stepper navigation
+    const stepperNav = screen.getByRole('navigation', {
+      name: /Tiến trình 4 bước hoàn thành hồ sơ/i,
+    })
+    expect(stepperNav).toBeInTheDocument()
+    expect(screen.getByText('1. Thông tin người thuê')).toBeInTheDocument()
+    expect(screen.getByText('2. Gói thuê & Đặt cọc')).toBeInTheDocument()
+    expect(screen.getByText('3. Điều khoản & Cam kết')).toBeInTheDocument()
+    expect(screen.getByText('4. Xác nhận hồ sơ')).toBeInTheDocument()
+
+    // Sidebar: Card 1 - Property Dossier & Financial Summary
+    expect(screen.getByText('Hồ sơ căn hộ & Chi phí')).toBeInTheDocument()
+    expect(screen.getByText('70 m²')).toBeInTheDocument()
+    expect(screen.getByText('15.000.000 ₫')).toBeInTheDocument()
+    expect(screen.getByText('30.000.000 ₫')).toBeInTheDocument()
+
+    // Sidebar: Card 2 - Tenant Protection Guarantee
+    expect(screen.getByText('Bảo vệ quyền lợi người thuê')).toBeInTheDocument()
+    expect(screen.getByText('Chứng thực số an toàn')).toBeInTheDocument()
+    expect(
+      screen.getByText(/Giá thuê cam kết cố định theo gói niêm yết/i)
+    ).toBeInTheDocument()
+
+    // Verify raw cryptographic technical hashes are NOT exposed
+    expect(screen.queryByText(/SHA-256/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Khóa băm quy chế/i)).not.toBeInTheDocument()
   })
 })

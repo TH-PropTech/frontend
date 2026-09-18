@@ -1,5 +1,5 @@
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApplyStepSubmitted } from './apply-step-submitted'
 import type { RentalApplicationItem } from '../api/rental-application-api'
 
@@ -30,7 +30,7 @@ const mockApplication: RentalApplicationItem = {
 describe('ApplyStepSubmitted Component', () => {
   afterEach(() => cleanup())
 
-  it('renders application confirmation, ID, pending status, and snapshot metrics', () => {
+  it('renders application confirmation, reference code, pending status, and snapshot metrics', () => {
     render(
       <ApplyStepSubmitted
         application={mockApplication}
@@ -42,7 +42,7 @@ describe('ApplyStepSubmitted Component', () => {
     expect(
       screen.getByText('Hồ sơ đặt thuê đã được gửi thành công')
     ).toBeInTheDocument()
-    expect(screen.getByText('app-998877')).toBeInTheDocument()
+    expect(screen.getByText('#HS-998877')).toBeInTheDocument()
     expect(screen.getByText('Đang chờ chủ nhà phản hồi')).toBeInTheDocument()
     expect(screen.getByText('Căn hộ Landmark 81')).toBeInTheDocument()
     expect(screen.getByText('12.000.000 ₫/tháng')).toBeInTheDocument()
@@ -51,7 +51,7 @@ describe('ApplyStepSubmitted Component', () => {
     expect(screen.getByText('144.000.000 ₫')).toBeInTheDocument()
   })
 
-  it('renders the 12-article reference framework based on Decree 96/2024/ND-CP', () => {
+  it('renders and expands the 12-article reference framework based on Decree 96/2024/ND-CP', () => {
     render(
       <ApplyStepSubmitted
         application={mockApplication}
@@ -59,11 +59,12 @@ describe('ApplyStepSubmitted Component', () => {
       />
     )
 
-    expect(
-      screen.getByText(
-        /12 Điều khoản chuẩn theo Phụ lục II Nghị định 96\/2024\/NĐ-CP/i
-      )
-    ).toBeInTheDocument()
+    const trigger = screen.getByText(
+      /12 Điều khoản chuẩn theo Phụ lục II Nghị định 96\/2024\/NĐ-CP/i
+    )
+    expect(trigger).toBeInTheDocument()
+    fireEvent.click(trigger)
+
     expect(
       screen.getByText(/Điều 1: Thông tin các bên ký kết/i)
     ).toBeInTheDocument()
@@ -73,6 +74,28 @@ describe('ApplyStepSubmitted Component', () => {
     expect(
       screen.getByText(/Ghi nhận sổ cái Hyperledger Fabric/i)
     ).toBeInTheDocument()
+  })
+
+  it('allows copying full application ID to clipboard', async () => {
+    const writeTextMock = vi.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    })
+
+    render(
+      <ApplyStepSubmitted
+        application={mockApplication}
+        apartmentId="apartment-demo-1"
+      />
+    )
+
+    const copyBtn = screen.getByRole('button', { name: /Sao chép mã hồ sơ/i })
+    fireEvent.click(copyBtn)
+
+    expect(writeTextMock).toHaveBeenCalledWith('app-998877')
+    expect(await screen.findByText('Đã sao chép')).toBeInTheDocument()
   })
 
   it('provides navigation links to /rental-applications and /properties/:id', () => {
@@ -107,7 +130,7 @@ describe('ApplyStepSubmitted Component', () => {
       />
     )
 
-    expect(screen.getByText('app-998877')).toBeInTheDocument()
+    expect(screen.getByText('#HS-998877')).toBeInTheDocument()
     expect(screen.getByText('0 ₫/tháng')).toBeInTheDocument()
   })
 

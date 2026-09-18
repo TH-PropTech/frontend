@@ -4,7 +4,10 @@ import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { apartmentPostingSchema } from '../model/apartment-posting-schema'
+import {
+  apartmentPostingSchema,
+  ensureRentalPackagesFallback,
+} from '../model/apartment-posting-schema'
 import type { ApartmentFormValues, LandlordApartmentItem } from '../model/types'
 import {
   createApartment,
@@ -74,6 +77,7 @@ export function ApartmentPostingForm({
         projectId: initialData.projectId || null,
         buildingName: initialData.buildingName || '',
         buildingId: initialData.buildingId || null,
+        rentalPackages: initialData.rentalPackages || [],
       }
     }
 
@@ -88,6 +92,7 @@ export function ApartmentPostingForm({
       street: '',
       address: '',
       priceMonthly: 0,
+      rentalPackages: [],
       area: 0,
       bedrooms: 1,
       bathrooms: 1,
@@ -160,7 +165,15 @@ export function ApartmentPostingForm({
   }
 
   const onSubmitForm = async () => {
-    const values = getValues()
+    const rawValues = getValues()
+    const packagesWithFallback = ensureRentalPackagesFallback(
+      rawValues.priceMonthly,
+      rawValues.rentalPackages
+    )
+    const values: ApartmentFormValues = {
+      ...rawValues,
+      rentalPackages: packagesWithFallback,
+    }
     setIsSubmitting(true)
     const toastId = toast.loading(
       mode === 'edit' ? 'Đang cập nhật bài đăng...' : 'Đang tạo bài đăng mới...'

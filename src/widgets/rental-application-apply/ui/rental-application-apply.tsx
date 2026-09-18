@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Coins,
   FileSignature,
-  Lock,
   RotateCcw,
   Scale,
   ShieldAlert,
@@ -201,10 +200,6 @@ export function RentalApplicationApply({
   const deposit = selectedPkg?.resolvedDepositAmount ?? 0
   const totalEstimate = monthlyRent * durationMonths
 
-  const shortTermsHash = state.context?.terms?.hash
-    ? state.context.terms.hash.slice(0, 10)
-    : ''
-
   return (
     <main
       data-testid="rental-application-apply-page"
@@ -252,7 +247,7 @@ export function RentalApplicationApply({
         aria-label="Tiến trình 4 bước hoàn thành hồ sơ"
         className="mb-8 rounded-3xl border border-border bg-surface p-3.5 shadow-sm"
       >
-        <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <ol className="flex gap-2 overflow-x-auto pb-1 no-scrollbar sm:grid sm:grid-cols-4 sm:pb-0">
           {STEP_DEFINITIONS.map(({ step, label, sublabel, icon: Icon }) => {
             const isCurrent = state.step === step
             const isCompleted = state.step > step
@@ -261,7 +256,7 @@ export function RentalApplicationApply({
               <li
                 key={step}
                 aria-current={isCurrent ? 'step' : undefined}
-                className={`relative flex items-center gap-3 rounded-2xl p-3 text-xs transition-all ${
+                className={`relative flex min-w-[200px] flex-1 shrink-0 items-center gap-3 rounded-2xl p-3 text-xs transition-all sm:min-w-0 ${
                   isCurrent
                     ? 'bg-primary-soft/30 font-bold text-primary ring-1 ring-primary/40 shadow-sm'
                     : isCompleted
@@ -340,7 +335,9 @@ export function RentalApplicationApply({
               <ApplyStepPackage
                 packages={state.context.packages}
                 selectedPackageId={state.selectedPackageId}
+                selectedExecutionPolicy={state.selectedExecutionPolicy}
                 onSelectPackage={actions.selectPackage}
+                onSelectExecutionPolicy={actions.selectExecutionPolicy}
                 onBack={() => actions.backToStep(1)}
                 onNext={actions.goToStep3}
               />
@@ -354,9 +351,14 @@ export function RentalApplicationApply({
                 termsError={state.termsError}
                 acknowledgedDisclosures={state.acknowledgedDisclosures}
                 termsAccepted={state.termsAccepted}
+                executionPolicy={state.selectedExecutionPolicy}
+                executionPolicyAccepted={state.executionPolicyAccepted}
                 submitting={state.submitting}
                 onToggleDisclosure={actions.toggleDisclosure}
                 onToggleTermsAccepted={actions.setTermsAccepted}
+                onToggleExecutionPolicyAccepted={
+                  actions.setExecutionPolicyAccepted
+                }
                 onBack={() => actions.backToStep(2)}
                 onSubmit={actions.submitApplication}
               />
@@ -375,11 +377,11 @@ export function RentalApplicationApply({
         {/* Right Column: Sticky Live Dossier & Protection Sidebar (4 cols) */}
         <aside className="space-y-6 lg:col-span-4">
           <div className="sticky top-6 space-y-6">
-            {/* 1. Apartment Overview Dossier */}
+            {/* 1. Apartment Overview & Financial Dossier */}
             <div className="space-y-4 rounded-3xl border border-border bg-surface p-6 shadow-sm">
               <div className="flex items-center justify-between border-b border-border/80 pb-3.5">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted">
-                  Hồ sơ căn hộ cho thuê
+                  Hồ sơ căn hộ & Chi phí
                 </span>
                 <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-semibold text-fg">
                   {apartmentArea} m²
@@ -398,27 +400,15 @@ export function RentalApplicationApply({
               </div>
 
               {listing?.landlordDisplayName ? (
-                <div className="flex items-center justify-between rounded-xl bg-surface-muted/50 p-3 text-xs">
+                <div className="flex items-center justify-between rounded-xl bg-surface-muted/50 p-2.5 text-xs">
                   <span className="text-muted">Chủ sở hữu:</span>
                   <strong className="text-fg">
                     {listing.landlordDisplayName}
                   </strong>
                 </div>
               ) : null}
-            </div>
 
-            {/* 2. Live Calculation & Progress Snapshot */}
-            <div className="space-y-4 rounded-3xl border border-border bg-surface p-6 shadow-sm">
-              <div className="flex items-center justify-between border-b border-border/80 pb-3.5">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted">
-                  Bảng tính & Lịch thanh toán
-                </span>
-                <span className="font-mono text-xs font-bold text-primary">
-                  {durationMonths} tháng
-                </span>
-              </div>
-
-              <div className="space-y-2.5 text-xs">
+              <div className="space-y-2.5 border-t border-border/80 pt-3 text-xs">
                 <div className="flex items-center justify-between text-muted">
                   <span className="inline-flex items-center gap-1.5">
                     <Calendar
@@ -442,6 +432,13 @@ export function RentalApplicationApply({
                   </span>
                   <strong className="text-fg">
                     {state.details.occupants} người
+                  </strong>
+                </div>
+
+                <div className="flex items-center justify-between text-muted">
+                  <span>Kỳ hạn cam kết:</span>
+                  <strong className="font-mono font-semibold text-primary">
+                    {durationMonths} tháng
                   </strong>
                 </div>
 
@@ -479,47 +476,54 @@ export function RentalApplicationApply({
               </div>
             </div>
 
-            {/* 3. Legal & Tenant Protection Seal */}
-            <div className="space-y-3 rounded-3xl border border-success/30 bg-success-soft/20 p-5 text-xs text-muted shadow-sm">
+            {/* 2. Tenant Protection Guarantee */}
+            <div className="space-y-4 rounded-3xl border border-success/30 bg-success-soft/20 p-6 text-xs text-muted shadow-sm">
               <div className="flex items-center gap-2 font-semibold text-success">
                 <ShieldCheck aria-hidden="true" className="h-4 w-4" />
                 <span>Bảo vệ quyền lợi người thuê</span>
               </div>
-              <ul className="space-y-1.5 leading-relaxed text-fg">
-                <li>• Giá thuê cam kết cố định theo gói niêm yết.</li>
-                <li>
-                  • Tiền đặt cọc được hoàn trả trong vòng 15 ngày khi thanh lý.
+              <ul className="space-y-2 leading-relaxed text-fg">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2
+                    aria-hidden="true"
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success"
+                  />
+                  <span>Giá thuê cam kết cố định theo gói niêm yết.</span>
                 </li>
-                <li>
-                  • Hỗ trợ xác nhận đăng ký tạm trú trực tuyến (DVC 1.004194).
+                <li className="flex items-start gap-2">
+                  <CheckCircle2
+                    aria-hidden="true"
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success"
+                  />
+                  <span>
+                    Tiền đặt cọc được hoàn trả trong vòng 15 ngày khi thanh lý.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2
+                    aria-hidden="true"
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success"
+                  />
+                  <span>
+                    Hỗ trợ xác nhận đăng ký tạm trú trực tuyến (DVC 1.004194).
+                  </span>
                 </li>
               </ul>
-            </div>
 
-            {/* 4. Hyperledger Fabric Blockchain Seal */}
-            <div className="space-y-2.5 rounded-3xl border border-border bg-surface p-5 text-xs text-muted shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 font-semibold text-fg">
-                  <Lock
+              <div className="rounded-2xl border border-border/70 bg-surface/80 p-3 text-[11px] leading-relaxed text-muted">
+                <div className="mb-1 flex items-center gap-1.5 font-semibold text-fg">
+                  <ShieldCheck
                     aria-hidden="true"
                     className="h-3.5 w-3.5 text-primary"
                   />
-                  <span>Xác thực Hyperledger Fabric</span>
+                  <span>Chứng thực số an toàn</span>
                 </div>
-                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-mono text-muted">
-                  SHA-256
-                </span>
+                <p>
+                  Hồ sơ và thỏa thuận đặt thuê được bảo đảm tính pháp lý và lưu
+                  trữ toàn vẹn, bảo vệ tối đa quyền lợi chính đáng của người
+                  thuê.
+                </p>
               </div>
-              <p className="text-[11px] leading-relaxed text-muted">
-                Toàn bộ nội dung điều khoản, bản ghi cam kết và chữ ký số sẽ
-                được neo vĩnh viễn trên sổ cái Fabric ngay sau khi hai bên ký
-                kết.
-              </p>
-              {shortTermsHash ? (
-                <div className="rounded-lg bg-surface-muted p-2 font-mono text-[10px] text-fg">
-                  Khóa băm quy chế: {shortTermsHash}…
-                </div>
-              ) : null}
             </div>
           </div>
         </aside>

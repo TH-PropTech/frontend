@@ -2,7 +2,10 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApplyStepConsent } from './apply-step-consent'
 import type { PublicLegalTermsResponse } from '@/features/legal-terms'
-import type { RentalApplicationDisclosure } from '../api/rental-application-api'
+import type {
+  RentalApplicationDisclosure,
+  RentalExecutionPolicyRef,
+} from '../api/rental-application-api'
 
 const mockDisclosure: RentalApplicationDisclosure = {
   version: 'disclosure-v1',
@@ -31,6 +34,13 @@ const mockTerms: PublicLegalTermsResponse = {
   contentHash: 'hash333444555666777',
   publishedAt: '2026-09-01T00:00:00Z',
   sections: [],
+}
+
+const mockExecutionPolicy: RentalExecutionPolicyRef = {
+  policyId: 'sign-first',
+  version: 1,
+  strategy: 'SIGN_FIRST',
+  contentHash: 'policy-hash',
 }
 
 describe('ApplyStepConsent Component', () => {
@@ -142,5 +152,28 @@ describe('ApplyStepConsent Component', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Quay lại chọn gói/i }))
     expect(onBack).toHaveBeenCalledTimes(1)
+  })
+
+  it('requires explicit execution-policy consent before submission', () => {
+    const onTogglePolicy = vi.fn()
+    render(
+      <ApplyStepConsent
+        disclosure={mockDisclosure}
+        terms={mockTerms}
+        executionPolicy={mockExecutionPolicy}
+        executionPolicyAccepted={false}
+        acknowledgedDisclosures={['req-1']}
+        termsAccepted={true}
+        onToggleDisclosure={vi.fn()}
+        onToggleTermsAccepted={vi.fn()}
+        onToggleExecutionPolicyAccepted={onTogglePolicy}
+        onBack={vi.fn()}
+        onSubmit={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: /Gửi hồ sơ/i })).toBeDisabled()
+    fireEvent.click(screen.getByTestId('execution-policy-acceptance-checkbox'))
+    expect(onTogglePolicy).toHaveBeenCalledWith(true)
   })
 })

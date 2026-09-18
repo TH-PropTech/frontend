@@ -43,6 +43,14 @@ describe('ContractWorkspace', () => {
       endDate: '2027-04-01T00:00:00Z',
       executionMethod: 'POC_ECONSENT',
       notarizationStatus: 'not-requested',
+      executionPolicy: {
+        policyId: 'sign-first',
+        version: 1,
+        strategy: 'SIGN_FIRST',
+        depositConfirmed: false,
+        activationReady: false,
+        nextAction: 'Chờ xác nhận tiền cọc để kích hoạt hợp đồng.',
+      },
     },
     document: {
       mode: 'locked',
@@ -171,6 +179,9 @@ describe('ContractWorkspace', () => {
       expect(screen.getByTestId('contract-workspace')).toBeInTheDocument()
       expect(screen.getAllByText('HD-2026-100').length).toBeGreaterThan(0)
       expect(screen.getByText('v2')).toBeInTheDocument()
+      expect(
+        screen.getByTestId('contract-execution-policy')
+      ).toBeInTheDocument()
       expect(screen.getByText('Mô phỏng PoC')).toBeInTheDocument()
     })
   })
@@ -231,6 +242,20 @@ describe('ContractWorkspace', () => {
         'href',
         expect.stringContaining('vpcp.dichvucong.gov.vn')
       )
+    })
+  })
+
+  it('displays bilateral signing timeline and fabric ledger evidence card in workspace', async () => {
+    render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId('bilateral-signing-timeline')
+      ).toBeInTheDocument()
+      expect(
+        screen.getByTestId('fabric-ledger-evidence-card')
+      ).toBeInTheDocument()
+      expect(screen.getByText('Chờ đối ứng (1/2)')).toBeInTheDocument()
     })
   })
 })

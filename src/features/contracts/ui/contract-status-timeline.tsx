@@ -35,7 +35,9 @@ export function ContractStatusTimeline({
 }: ContractStatusTimelineProps) {
   // Determine state of each step
   const isDraft = status === 'draft'
-  const isDepositPending = status === 'deposit-pending'
+  const isFullySignedPendingDeposit = status === 'fully-signed-pending-deposit'
+  const isDepositPending =
+    status === 'deposit-pending' || isFullySignedPendingDeposit
   const isDepositPaid =
     depositStatus === 'paid' ||
     depositStatus === 'transferred' ||
@@ -44,7 +46,8 @@ export function ContractStatusTimeline({
     status === 'active' ||
     status === 'completed'
   const isAwaitingSig = status === 'awaiting-signature'
-  const isBothSigned = signedByTenant && signedByLandlord
+  const isBothSigned =
+    (signedByTenant && signedByLandlord) || isFullySignedPendingDeposit
   const isActive = status === 'active' || status === 'completed'
   const isTerminated = status === 'terminated' || status === 'cancelled'
 

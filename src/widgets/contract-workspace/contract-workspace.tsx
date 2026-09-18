@@ -9,6 +9,7 @@ import {
   AlertCircle,
   History,
   Info,
+  Landmark,
   Sparkles,
   X,
 } from 'lucide-react'
@@ -16,9 +17,10 @@ import {
   ContractDocumentViewer,
   PartyInfoCards,
   ContractStatusTimeline,
-  BlockchainVerifyBadge,
   SigningCeremonyModal,
   PublicServiceCitationPanel,
+  BilateralSigningTimeline,
+  FabricLedgerEvidenceCard,
 } from '@/features/contracts'
 import { DepositPaymentPanel } from '@/features/payments'
 import { useContractWorkspace } from './use-contract-workspace'
@@ -333,6 +335,33 @@ export function ContractWorkspace({
           )}
 
           {/* Deposit Payment Panel */}
+          {contract.executionPolicy ? (
+            <section
+              data-testid="contract-execution-policy"
+              className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-5 shadow-sm"
+            >
+              <div className="flex items-start gap-3">
+                <Landmark
+                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)]"
+                  aria-hidden="true"
+                />
+                <div className="space-y-1 text-xs">
+                  <h3 className="font-bold text-[var(--fg)]">
+                    Trình tự cọc và ký đã chốt
+                  </h3>
+                  <p className="font-semibold text-[var(--primary)]">
+                    {contract.executionPolicy.strategy === 'DEPOSIT_FIRST'
+                      ? 'Cọc trước, sau đó ký hợp đồng'
+                      : 'Ký hợp đồng trước, sau đó thanh toán cọc'}
+                  </p>
+                  <p className="leading-relaxed text-[var(--muted)]">
+                    {contract.executionPolicy.nextAction}
+                  </p>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
           {(activeMobileTab === 'actions' || true) && (
             <div
               className={
@@ -346,6 +375,27 @@ export function ContractWorkspace({
                 isTenant={isTenant}
                 contractId={contractId}
                 onPaymentSuccess={() => loadData(false)}
+              />
+            </div>
+          )}
+
+          {/* Bilateral Signing Stepper */}
+          {(activeMobileTab === 'actions' || true) && (
+            <div
+              className={
+                activeMobileTab === 'actions' || activeMobileTab === 'document'
+                  ? 'block'
+                  : 'hidden lg:block'
+              }
+            >
+              <BilateralSigningTimeline
+                tenant={parties.tenant}
+                landlord={parties.landlord}
+                contractStatus={contract.status}
+                currentUserId={currentUserId}
+                userRole={signerRole}
+                isEligibleToSign={signingEligibility.eligible}
+                onSignClick={() => setIsSigningModalOpen(true)}
               />
             </div>
           )}
@@ -384,7 +434,7 @@ export function ContractWorkspace({
             />
           </div>
 
-          {/* Blockchain & Ledger Verification Card */}
+          {/* Fabric Ledger Evidence Card */}
           {(activeMobileTab === 'audit' || true) && (
             <div
               className={
@@ -393,9 +443,15 @@ export function ContractWorkspace({
                   : 'hidden lg:block'
               }
             >
-              <BlockchainVerifyBadge
-                ledger={ledger}
+              <FabricLedgerEvidenceCard
                 contractId={contractId}
+                contractCode={contract.code}
+                contractHash={document.lockedHash}
+                blockNumber={ledger.blockNumber}
+                txHash={ledger.txHash}
+                verifiedAt={ledger.verifiedAt}
+                networkMode={ledger.networkMode}
+                status={ledger.status}
                 onVerifyIntegrity={handleVerifyIntegrity}
                 isVerifying={isVerifyingIntegrity}
                 integrityResult={integrityResult}

@@ -30,6 +30,7 @@ export interface UseProfileReturn {
     | 'living-cost'
     | 'safety-reports'
     | 'support-tickets'
+    | 'rental-applications'
   setActiveTab: React.Dispatch<
     React.SetStateAction<
       | 'progress'
@@ -42,6 +43,7 @@ export interface UseProfileReturn {
       | 'living-cost'
       | 'safety-reports'
       | 'support-tickets'
+      | 'rental-applications'
     >
   >
   activePropertyId: string

@@ -37,4 +37,5 @@ export interface LandlordApartmentItem {
   projectId: string | null
   buildingName: string
   buildingId: string | null
+  rentalPackages?: ApartmentPostingSchemaType['rentalPackages']
 }

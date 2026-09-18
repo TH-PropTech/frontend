@@ -47,7 +47,10 @@ export function useProfile(): UseProfileReturn {
   const [role, setRole] = React.useState<'tenant' | 'landlord'>(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
-      if (params.get('tab') === 'listings') {
+      if (
+        params.get('tab') === 'listings' ||
+        params.get('tab') === 'rental-applications'
+      ) {
         return 'landlord'
       }
     }
@@ -64,12 +67,15 @@ export function useProfile(): UseProfileReturn {
     | 'living-cost'
     | 'safety-reports'
     | 'support-tickets'
+    | 'rental-applications'
   >(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const tab = params.get('tab')
       if (tab === 'listings') {
         return 'listings'
+      } else if (tab === 'rental-applications') {
+        return 'rental-applications'
       } else if (
         tab === 'progress' ||
         tab === 'bills' ||

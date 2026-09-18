@@ -5,6 +5,7 @@ export type ContractStatus =
   | 'deposit-pending'
   | 'deposit-paid'
   | 'awaiting-signature'
+  | 'fully-signed-pending-deposit'
   | 'active'
   | 'terminated'
   | 'cancelled'
@@ -150,6 +151,16 @@ export interface ContractOverviewSnapshot {
   endDate: string
   executionMethod: string
   notarizationStatus: string
+  executionPolicy?: ContractExecutionPolicyView | null
+}
+
+export interface ContractExecutionPolicyView {
+  policyId: string
+  version: number
+  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+  depositConfirmed: boolean
+  activationReady: boolean
+  nextAction: string | null
 }
 
 export interface ContractActionsView {
