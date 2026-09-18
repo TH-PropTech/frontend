@@ -7,9 +7,11 @@ import {
   isRentalPackageStaleError,
   isRentalTermsStaleError,
   isFlowConfigStaleError,
+  isRentalExecutionPolicyStaleError,
   type CreateRentalApplicationInput,
   type RentalApplicationContext,
   type RentalApplicationItem,
+  type RentalExecutionPolicyRef,
 } from '@/features/rental-application'
 import {
   getLegalTermsVersion,
@@ -35,6 +37,8 @@ export interface FlowState {
   termsError: string | null
   details: ApplyStepInfoValues
   selectedPackageId: string
+  selectedExecutionPolicy: RentalExecutionPolicyRef | null
+  executionPolicyAccepted: boolean
   acknowledgedDisclosures: string[]
   termsAccepted: boolean
   submittedApplication: RentalApplicationItem | null
@@ -54,12 +58,15 @@ export type FlowAction =
   | { type: 'UPDATE_DETAILS'; details: Partial<ApplyStepInfoValues> }
   | { type: 'SET_STEP'; step: FlowStep }
   | { type: 'SELECT_PACKAGE'; packageId: string }
+  | { type: 'SELECT_EXECUTION_POLICY'; policy: RentalExecutionPolicyRef }
+  | { type: 'SET_EXECUTION_POLICY_ACCEPTED'; accepted: boolean }
   | { type: 'TOGGLE_DISCLOSURE'; id: string }
   | { type: 'SET_TERMS_ACCEPTED'; accepted: boolean }
   | { type: 'SUBMIT_START' }
   | { type: 'SUBMIT_SUCCESS'; application: RentalApplicationItem }
   | { type: 'SUBMIT_ERROR'; error: string }
   | { type: 'HANDLE_PACKAGE_STALE'; error: string }
+  | { type: 'HANDLE_EXECUTION_POLICY_STALE'; error: string }
   | { type: 'HANDLE_TERMS_STALE'; error: string }
   | { type: 'CLEAR_ERROR' }
 
@@ -73,6 +80,24 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
       const packageStillValid = action.context.packages.some(
         p => p.packageId === currentSelected && p.status === 'active'
       )
+      const selectedPackage = action.context.packages.find(
+        p =>
+          p.packageId ===
+          (packageStillValid ? currentSelected : action.defaultPackageId)
+      )
+      const availablePolicies = selectedPackage?.allowedExecutionPolicies ?? []
+      const defaultPolicy =
+        availablePolicies.length === 1
+          ? (selectedPackage?.defaultExecutionPolicy ??
+            availablePolicies[0] ??
+            null)
+          : null
+      const currentPolicyStillValid = availablePolicies.some(
+        policy =>
+          policy.policyId === state.selectedExecutionPolicy?.policyId &&
+          policy.version === state.selectedExecutionPolicy?.version &&
+          policy.contentHash === state.selectedExecutionPolicy?.contentHash
+      )
       return {
         ...state,
         loadingContext: false,
@@ -80,6 +105,10 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         selectedPackageId: packageStillValid
           ? currentSelected
           : action.defaultPackageId,
+        selectedExecutionPolicy: currentPolicyStillValid
+          ? state.selectedExecutionPolicy
+          : defaultPolicy,
+        executionPolicyAccepted: false,
         error: null,
       }
     }
@@ -110,8 +139,31 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
     case 'SET_STEP':
       return { ...state, step: action.step }
 
-    case 'SELECT_PACKAGE':
-      return { ...state, selectedPackageId: action.packageId }
+    case 'SELECT_PACKAGE': {
+      const selectedPackage = state.context?.packages.find(
+        pkg => pkg.packageId === action.packageId
+      )
+      const policies = selectedPackage?.allowedExecutionPolicies ?? []
+      return {
+        ...state,
+        selectedPackageId: action.packageId,
+        selectedExecutionPolicy:
+          policies.length === 1
+            ? (selectedPackage?.defaultExecutionPolicy ?? policies[0] ?? null)
+            : null,
+        executionPolicyAccepted: false,
+      }
+    }
+
+    case 'SELECT_EXECUTION_POLICY':
+      return {
+        ...state,
+        selectedExecutionPolicy: action.policy,
+        executionPolicyAccepted: false,
+      }
+
+    case 'SET_EXECUTION_POLICY_ACCEPTED':
+      return { ...state, executionPolicyAccepted: action.accepted }
 
     case 'TOGGLE_DISCLOSURE': {
       const exists = state.acknowledgedDisclosures.includes(action.id)
@@ -146,6 +198,8 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         ...state,
         submitting: false,
         selectedPackageId: '',
+        selectedExecutionPolicy: null,
+        executionPolicyAccepted: false,
         step: 2,
         error: action.error,
       }
@@ -156,6 +210,16 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         submitting: false,
         termsAccepted: false,
         step: 3,
+        error: action.error,
+      }
+
+    case 'HANDLE_EXECUTION_POLICY_STALE':
+      return {
+        ...state,
+        submitting: false,
+        selectedExecutionPolicy: null,
+        executionPolicyAccepted: false,
+        step: 2,
         error: action.error,
       }
 
@@ -187,6 +251,8 @@ export function useRentalApplicationFlow(apartmentId: string) {
         notes: '',
       },
       selectedPackageId: '',
+      selectedExecutionPolicy: null,
+      executionPolicyAccepted: false,
       acknowledgedDisclosures: [],
       termsAccepted: false,
       submittedApplication: null,
@@ -268,17 +334,30 @@ export function useRentalApplicationFlow(apartmentId: string) {
   }, [state.details])
 
   const goToStep3 = React.useCallback(() => {
-    if (!state.selectedPackageId) return false
+    const selectedPackage = state.context?.packages.find(
+      pkg => pkg.packageId === state.selectedPackageId
+    )
+    const availablePolicies = selectedPackage?.allowedExecutionPolicies ?? []
+    if (
+      !state.selectedPackageId ||
+      (availablePolicies.length > 1 && !state.selectedExecutionPolicy)
+    )
+      return false
     dispatch({ type: 'SET_STEP', step: 3 })
     return true
-  }, [state.selectedPackageId])
+  }, [state.context, state.selectedExecutionPolicy, state.selectedPackageId])
 
   const backToStep = React.useCallback((targetStep: FlowStep) => {
     dispatch({ type: 'SET_STEP', step: targetStep })
   }, [])
 
   const submitApplication = React.useCallback(async () => {
-    if (!state.context || !state.selectedPackageId) return
+    if (
+      !state.context ||
+      !state.selectedPackageId ||
+      (state.selectedExecutionPolicy && !state.executionPolicyAccepted)
+    )
+      return
 
     const selectedPkg = state.context.packages.find(
       p => p.packageId === state.selectedPackageId
@@ -303,12 +382,24 @@ export function useRentalApplicationFlow(apartmentId: string) {
       acceptedTermsHash: state.context.terms?.hash,
       flowProfileVersion: state.context.flowProfile?.version,
       flowProfileHash: state.context.flowProfile?.hash,
+      ...(state.selectedExecutionPolicy
+        ? { selectedExecutionPolicy: state.selectedExecutionPolicy }
+        : {}),
     }
 
     try {
       const application = await createRentalApplication(payload)
       dispatch({ type: 'SUBMIT_SUCCESS', application })
     } catch (err: unknown) {
+      if (isRentalExecutionPolicyStaleError(err)) {
+        await loadContext()
+        dispatch({
+          type: 'HANDLE_EXECUTION_POLICY_STALE',
+          error:
+            'Trình tự cọc/ký đã được cập nhật hoặc không còn hiệu lực. Vui lòng chọn lại policy đang được phép.',
+        })
+        return
+      }
       if (isRentalPackageStaleError(err)) {
         await loadContext()
         dispatch({
@@ -357,6 +448,10 @@ export function useRentalApplicationFlow(apartmentId: string) {
         dispatch({ type: 'UPDATE_DETAILS', details }),
       selectPackage: (packageId: string) =>
         dispatch({ type: 'SELECT_PACKAGE', packageId }),
+      selectExecutionPolicy: (policy: RentalExecutionPolicyRef) =>
+        dispatch({ type: 'SELECT_EXECUTION_POLICY', policy }),
+      setExecutionPolicyAccepted: (accepted: boolean) =>
+        dispatch({ type: 'SET_EXECUTION_POLICY_ACCEPTED', accepted }),
       toggleDisclosure: (id: string) =>
         dispatch({ type: 'TOGGLE_DISCLOSURE', id }),
       setTermsAccepted: (accepted: boolean) =>

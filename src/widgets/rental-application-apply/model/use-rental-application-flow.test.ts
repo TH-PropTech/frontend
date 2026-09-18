@@ -113,6 +113,8 @@ describe('use-rental-application-flow reducer & hook', () => {
         hasPets: false,
       },
       selectedPackageId: '',
+      selectedExecutionPolicy: null,
+      executionPolicyAccepted: false,
       acknowledgedDisclosures: [],
       termsAccepted: false,
       submittedApplication: null,
@@ -196,6 +198,53 @@ describe('use-rental-application-flow reducer & hook', () => {
       expect(result.current.state.termsError).toBe(
         'Mã băm nội dung điều khoản không khớp với thỏa thuận yêu cầu thuê.'
       )
+    })
+
+    it('requires an explicit policy choice when a package exposes two policies', async () => {
+      const policies = [
+        {
+          policyId: 'deposit-first',
+          version: 1,
+          strategy: 'DEPOSIT_FIRST' as const,
+          contentHash: 'hash-deposit',
+        },
+        {
+          policyId: 'sign-first',
+          version: 1,
+          strategy: 'SIGN_FIRST' as const,
+          contentHash: 'hash-sign',
+        },
+      ]
+      vi.mocked(getRentalApplicationContext).mockResolvedValue({
+        ...mockContext,
+        packages: [
+          {
+            ...mockContext.packages[0]!,
+            allowedExecutionPolicies: policies,
+            defaultExecutionPolicy: policies[0]!,
+          },
+        ],
+      })
+
+      const { result } = renderHook(() => useRentalApplicationFlow('apt-1'))
+      await waitFor(() => {
+        expect(result.current.state.loadingContext).toBe(false)
+      })
+
+      expect(result.current.state.selectedExecutionPolicy).toBeNull()
+      let canAdvance = true
+      act(() => {
+        canAdvance = result.current.actions.goToStep3()
+      })
+      expect(canAdvance).toBe(false)
+
+      act(() => {
+        result.current.actions.selectExecutionPolicy(policies[1]!)
+      })
+      act(() => {
+        canAdvance = result.current.actions.goToStep3()
+      })
+      expect(canAdvance).toBe(true)
     })
 
     it('navigates through steps and submits application successfully', async () => {

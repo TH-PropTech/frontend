@@ -1,5 +1,32 @@
 import { z } from 'zod'
 
+export const rentalPackagePostingSchema = z.object({
+  packageId: z.string().min(1),
+  version: z.number().int().min(1).default(1),
+  durationMonths: z.union([
+    z.literal(3),
+    z.literal(6),
+    z.literal(12),
+    z.literal(24),
+  ]),
+  monthlyRent: z.number().gt(0, 'Giá thuê gói phải lớn hơn 0'),
+  depositPolicy: z.discriminatedUnion('type', [
+    z.object({
+      type: z.literal('MONTHS_OF_RENT'),
+      months: z.number().int().min(1, 'Số tháng cọc tối thiểu là 1'),
+    }),
+    z.object({
+      type: z.literal('FIXED_AMOUNT'),
+      amount: z.number().gt(0, 'Số tiền cọc cố định phải lớn hơn 0'),
+    }),
+  ]),
+  status: z.enum(['active', 'inactive']).default('active'),
+})
+
+export type RentalPackagePostingSchemaType = z.infer<
+  typeof rentalPackagePostingSchema
+>
+
 export const apartmentPostingSchema = z.object({
   title: z
     .string()
@@ -17,6 +44,7 @@ export const apartmentPostingSchema = z.object({
   street: z.string().min(1, 'Vui lòng nhập Tên đường/phố'),
   address: z.string().min(1, 'Vui lòng nhập địa chỉ hiển thị'),
   priceMonthly: z.number().gt(0, 'Giá thuê phải lớn hơn 0'),
+  rentalPackages: z.array(rentalPackagePostingSchema).optional().default([]),
   area: z.number().gt(0, 'Diện tích phải lớn hơn 0'),
   bedrooms: z.number().nonnegative('Số phòng ngủ phải từ 0 trở lên'),
   bathrooms: z.number().nonnegative('Số phòng vệ sinh phải từ 0 trở lên'),
@@ -38,3 +66,29 @@ export const apartmentPostingSchema = z.object({
 })
 
 export type ApartmentPostingSchemaType = z.infer<typeof apartmentPostingSchema>
+
+export function ensureRentalPackagesFallback(
+  priceMonthlyMillion: number,
+  existingPackages?: RentalPackagePostingSchemaType[]
+): RentalPackagePostingSchemaType[] {
+  const activePackages = (existingPackages || []).filter(
+    p => p.status === 'active'
+  )
+  if (activePackages.length > 0) {
+    return existingPackages!
+  }
+  const rentVnd = Math.round(priceMonthlyMillion * 1_000_000)
+  return [
+    {
+      packageId: 'pkg-default-12m',
+      version: 1,
+      durationMonths: 12,
+      monthlyRent: rentVnd > 0 ? rentVnd : 10_000_000,
+      depositPolicy: {
+        type: 'MONTHS_OF_RENT',
+        months: 1,
+      },
+      status: 'active',
+    },
+  ]
+}
