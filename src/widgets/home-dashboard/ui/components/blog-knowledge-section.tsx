@@ -18,7 +18,7 @@ export function BlogKnowledgeSection(): React.ReactElement {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:pb-0">
         {[
           {
             title: '5 điều cần lưu ý kỹ trước khi ký hợp đồng đặt cọc căn hộ',
@@ -44,17 +44,17 @@ export function BlogKnowledgeSection(): React.ReactElement {
         ].map((blog, idx) => (
           <div
             key={idx}
-            className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-white shadow-sm transition-all duration-300 hover:shadow-md"
+            className="snap-start shrink-0 w-[84vw] max-w-[320px] sm:w-auto group flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all duration-300 hover:shadow-md"
           >
             <div
-              className={`h-40 w-full bg-gradient-to-br ${blog.bg} flex items-center justify-center p-6 text-center`}
+              className={`h-36 sm:h-40 w-full bg-gradient-to-br ${blog.bg} flex items-center justify-center p-5 text-center`}
             >
               <span className="font-marketing text-base font-bold text-primary/80 line-clamp-2">
                 {blog.title}
               </span>
             </div>
-            <div className="p-6 flex flex-col justify-between flex-1 space-y-4">
-              <div className="space-y-2">
+            <div className="p-5 flex flex-col justify-between flex-1 space-y-3">
+              <div className="space-y-1.5">
                 <div className="flex items-center gap-2 font-mono text-[10px] text-muted">
                   <span>{blog.date}</span>
                   <span>•</span>
@@ -88,6 +88,11 @@ export function BlogKnowledgeSection(): React.ReactElement {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Mobile Swipe Hint */}
+      <div className="mt-3 flex sm:hidden items-center justify-center gap-1 text-[11px] font-medium text-muted">
+        <span>← Vuốt sang để đọc thêm bài viết →</span>
       </div>
     </section>
   )

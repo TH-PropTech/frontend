@@ -2,9 +2,7 @@
 
 import * as React from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
-import type { Route } from 'next'
-import { Button } from '@/shared/ui/button'
+import { HeroQuickSearchBar } from './hero-quick-search-bar'
 
 export function HeroSection(): React.ReactElement {
   return (
@@ -38,17 +36,9 @@ export function HeroSection(): React.ReactElement {
             TH-PropTech giúp khách thuê lọc căn hộ, đặt lịch xem, theo dõi đặt
             cọc, hợp đồng và thanh toán trong một luồng vận hành rõ trạng thái.
           </p>
-          <div className="flex flex-wrap gap-4 pt-2">
-            <Link href={'/properties' as Route}>
-              <Button
-                variant="primary"
-                size="lg"
-                className="rounded-full shadow-[0_14px_32px_rgba(198,90,58,0.25)] bg-primary hover:bg-primary-hover text-white font-bold transition-all hover:-translate-y-0.5"
-              >
-                Tìm căn hộ ngay
-              </Button>
-            </Link>
-          </div>
+
+          {/* Quick Search Console with Location, Price, Bedroom & Popular Suggestions */}
+          <HeroQuickSearchBar />
         </div>
       </div>
     </section>

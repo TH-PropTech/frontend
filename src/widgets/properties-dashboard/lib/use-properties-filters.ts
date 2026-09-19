@@ -76,11 +76,21 @@ export function usePropertiesFilters() {
   const searchParams = useSearchParams()
   const tabParam = searchParams?.get('tab')
   const buildingParam = searchParams?.get('building')
+  const districtParam = searchParams?.get('district')
+  const minPriceParam = searchParams?.get('minPrice')
+  const maxPriceParam = searchParams?.get('maxPrice')
+  const bedroomsParam = searchParams?.get('bedrooms')
+  const searchParam = searchParams?.get('search')
+
+  const parsedInitialBedrooms: number | 'all' =
+    bedroomsParam && !isNaN(Number(bedroomsParam))
+      ? Number(bedroomsParam)
+      : 'all'
 
   const [activeTab, setActiveTab] = React.useState<'single' | 'project'>(
     tabParam === 'project' ? 'project' : 'single'
   )
-  const [searchKeyword, setSearchKeyword] = React.useState('')
+  const [searchKeyword, setSearchKeyword] = React.useState(searchParam || '')
   const [searchStatus, setSearchStatus] = React.useState('')
 
   // Building filter state
@@ -99,7 +109,9 @@ export function usePropertiesFilters() {
 
   // Detailed Cascade Location States
   const [selectedCity, setSelectedCity] = React.useState('')
-  const [selectedDistrict, setSelectedDistrict] = React.useState('')
+  const [selectedDistrict, setSelectedDistrict] = React.useState(
+    districtParam || ''
+  )
   const [selectedWard, setSelectedWard] = React.useState('')
   const [selectedStreet, setSelectedStreet] = React.useState('')
   const [selectedProject, setSelectedProject] = React.useState('')
@@ -113,21 +125,27 @@ export function usePropertiesFilters() {
   >(null)
 
   const [appliedCity, setAppliedCity] = React.useState('')
-  const [appliedDistrict, setAppliedDistrict] = React.useState('')
+  const [appliedDistrict, setAppliedDistrict] = React.useState(
+    districtParam || ''
+  )
   const [appliedWard, setAppliedWard] = React.useState('')
   const [appliedStreet, setAppliedStreet] = React.useState('')
   const [appliedProject, setAppliedProject] = React.useState('')
 
   // Price & Area Range States
-  const [minPrice, setMinPrice] = React.useState<number | ''>('')
-  const [maxPrice, setMaxPrice] = React.useState<number | ''>('')
+  const [minPrice, setMinPrice] = React.useState<number | ''>(
+    minPriceParam && !isNaN(Number(minPriceParam)) ? Number(minPriceParam) : ''
+  )
+  const [maxPrice, setMaxPrice] = React.useState<number | ''>(
+    maxPriceParam && !isNaN(Number(maxPriceParam)) ? Number(maxPriceParam) : ''
+  )
   const [minArea, setMinArea] = React.useState<number | ''>('')
   const [maxArea, setMaxArea] = React.useState<number | ''>('')
 
   // Advanced Drawer States
   const [isVerifiedOnly, setIsVerifiedOnly] = React.useState(false)
   const [bedroomsFilter, setBedroomsFilter] = React.useState<number | 'all'>(
-    'all'
+    parsedInitialBedrooms
   )
   const [bathroomsFilter, setBathroomsFilter] = React.useState<number | 'all'>(
     'all'
@@ -148,7 +166,46 @@ export function usePropertiesFilters() {
   // Applied Advanced Drawer States (Only updated when Apply button is clicked)
   const [appliedBedroomsFilter, setAppliedBedroomsFilter] = React.useState<
     number | 'all'
-  >('all')
+  >(parsedInitialBedrooms)
+
+  // Synchronize state when search params change during navigation without effect cascading renders
+  const [prevParamsKey, setPrevParamsKey] = React.useState(
+    `${districtParam || ''}_${minPriceParam || ''}_${maxPriceParam || ''}_${bedroomsParam || ''}_${searchParam || ''}`
+  )
+  const currentParamsKey = `${districtParam || ''}_${minPriceParam || ''}_${maxPriceParam || ''}_${bedroomsParam || ''}_${searchParam || ''}`
+
+  if (prevParamsKey !== currentParamsKey) {
+    setPrevParamsKey(currentParamsKey)
+    if (districtParam !== null && districtParam !== undefined) {
+      setSelectedDistrict(districtParam)
+      setAppliedDistrict(districtParam)
+    }
+    if (minPriceParam !== null && minPriceParam !== undefined) {
+      setMinPrice(
+        minPriceParam && !isNaN(Number(minPriceParam))
+          ? Number(minPriceParam)
+          : ''
+      )
+    }
+    if (maxPriceParam !== null && maxPriceParam !== undefined) {
+      setMaxPrice(
+        maxPriceParam && !isNaN(Number(maxPriceParam))
+          ? Number(maxPriceParam)
+          : ''
+      )
+    }
+    if (bedroomsParam !== null && bedroomsParam !== undefined) {
+      const parsed =
+        bedroomsParam && !isNaN(Number(bedroomsParam))
+          ? Number(bedroomsParam)
+          : 'all'
+      setBedroomsFilter(parsed)
+      setAppliedBedroomsFilter(parsed)
+    }
+    if (searchParam !== null && searchParam !== undefined) {
+      setSearchKeyword(searchParam)
+    }
+  }
   const [appliedBathroomsFilter, setAppliedBathroomsFilter] = React.useState<
     number | 'all'
   >('all')
