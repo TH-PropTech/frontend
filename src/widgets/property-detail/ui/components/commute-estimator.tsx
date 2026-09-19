@@ -3,7 +3,35 @@
 import * as React from 'react'
 import { CommuteExplainModal } from './commute-explain-modal'
 
-const APT_COORDS: [number, number] = [10.7947, 106.7218] // lat, lng of Vinhomes Central Park
+const DEFAULT_APT_COORDS: [number, number] = [10.7947, 106.7218] // lat, lng of Vinhomes Central Park
+
+function getCoordsForDistrict(district?: string): [number, number] {
+  if (!district) return DEFAULT_APT_COORDS
+  const d = district.toLowerCase()
+  if (d.includes('quận 7') || d.includes('quan 7') || d.includes('7')) {
+    return [10.7554, 106.7025]
+  }
+  if (
+    d.includes('thủ đức') ||
+    d.includes('thu duc') ||
+    d.includes('quận 2') ||
+    d.includes('quan 2') ||
+    d.includes('quận 9')
+  ) {
+    return [10.7981, 106.7456]
+  }
+  if (d.includes('quận 1') || d.includes('quan 1')) {
+    return [10.7769, 106.7009]
+  }
+  return DEFAULT_APT_COORDS
+}
+
+export interface CommuteEstimatorProps {
+  property?: {
+    district?: string
+    title?: string
+  }
+}
 
 const PRESETS = [
   {
@@ -74,9 +102,25 @@ function getTransitTimes(distance: number) {
   }
 }
 
-export function CommuteEstimator(): React.ReactElement {
+export function CommuteEstimator({
+  property,
+}: CommuteEstimatorProps = {}): React.ReactElement {
+  const aptCoords = React.useMemo(
+    () => getCoordsForDistrict(property?.district),
+    [property?.district]
+  )
   const [mapLoaded, setMapLoaded] = React.useState(false)
-  const [distanceKm, setDistanceKm] = React.useState<number>(5.8) // Default Q1 distance
+  const initialDist = React.useMemo(() => {
+    return Number(
+      calculateDistance(
+        aptCoords[0],
+        aptCoords[1],
+        PRESETS[0]!.coords[0],
+        PRESETS[0]!.coords[1]
+      ).toFixed(1)
+    )
+  }, [aptCoords])
+  const [distanceKm, setDistanceKm] = React.useState<number>(initialDist)
   const [selectedPreset, setSelectedPreset] = React.useState<string>('Q1')
 
   const mapContainerRef = React.useRef<HTMLDivElement>(null)
@@ -133,7 +177,7 @@ export function CommuteEstimator(): React.ReactElement {
     const map = L.map(mapContainerRef.current, {
       zoomControl: true,
       scrollWheelZoom: false,
-    }).setView(APT_COORDS, 12)
+    }).setView(aptCoords, 12)
     mapInstanceRef.current = map
 
     // CartoDB Positron Premium Light Tiles
@@ -179,9 +223,10 @@ export function CommuteEstimator(): React.ReactElement {
     })
 
     // Add Markers
-    L.marker(APT_COORDS, { icon: aptIcon })
+    const aptLabel = property?.title ? property.title : 'Vị trí căn hộ'
+    L.marker(aptCoords, { icon: aptIcon })
       .addTo(map)
-      .bindPopup('<b>Căn hộ Vinhomes Central Park</b>')
+      .bindPopup(`<b>${aptLabel}</b>`)
       .openPopup()
 
     const initialPreset = PRESETS[0]
@@ -194,7 +239,7 @@ export function CommuteEstimator(): React.ReactElement {
     destMarkerRef.current = destMarker
 
     // Connection Polyline
-    const polyline = L.polyline([APT_COORDS, initialPreset.coords], {
+    const polyline = L.polyline([aptCoords, initialPreset.coords], {
       color: '#C65A3A',
       weight: 3,
       dashArray: '6, 8',
@@ -205,14 +250,14 @@ export function CommuteEstimator(): React.ReactElement {
     // Trigger state synchronization helper
     const syncState = (latlng: { lat: number; lng: number }): void => {
       const dist = calculateDistance(
-        APT_COORDS[0],
-        APT_COORDS[1],
+        aptCoords[0],
+        aptCoords[1],
         latlng.lat,
         latlng.lng
       )
       setDistanceKm(Number(dist.toFixed(1)))
       destMarker.setLatLng(latlng)
-      polyline.setLatLngs([APT_COORDS, latlng])
+      polyline.setLatLngs([aptCoords, latlng])
     }
 
     // Map click selection
@@ -227,7 +272,7 @@ export function CommuteEstimator(): React.ReactElement {
       (e: {
         target: { getLatLng: () => { lat: number; lng: number } }
       }): void => {
-        polyline.setLatLngs([APT_COORDS, e.target.getLatLng()])
+        polyline.setLatLngs([aptCoords, e.target.getLatLng()])
       }
     )
     destMarker.on(
@@ -247,7 +292,7 @@ export function CommuteEstimator(): React.ReactElement {
         mapInstanceRef.current = null
       }
     }
-  }, [mapLoaded])
+  }, [mapLoaded, aptCoords, property?.title])
 
   // Preset Selection Action
   const handlePresetSelect = (
@@ -256,8 +301,8 @@ export function CommuteEstimator(): React.ReactElement {
   ): void => {
     setSelectedPreset(presetId)
     const dist = calculateDistance(
-      APT_COORDS[0],
-      APT_COORDS[1],
+      aptCoords[0],
+      aptCoords[1],
       coords[0],
       coords[1]
     )
@@ -269,7 +314,7 @@ export function CommuteEstimator(): React.ReactElement {
       mapInstanceRef.current
     ) {
       destMarkerRef.current.setLatLng(coords)
-      polylineRef.current.setLatLngs([APT_COORDS, coords])
+      polylineRef.current.setLatLngs([aptCoords, coords])
       mapInstanceRef.current.panTo(coords)
     }
   }

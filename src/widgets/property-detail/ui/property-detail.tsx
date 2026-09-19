@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Image from 'next/image'
 import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
@@ -8,17 +9,34 @@ import { Footer } from '@/shared/ui/footer'
 import { mockApartments, type ApartmentItem } from '@/entities/properties'
 import { PropertyDetailHero } from './components/property-detail-hero'
 import { BookingWidget } from './components/booking-widget'
-import { PropertyAnalytics } from './components/property-analytics'
 import { PropertyGallery } from './components/property-gallery'
 import { Property360Modal } from './components/property-360-modal'
 import { PropertyReviews } from './components/property-reviews'
 import { LandlordChatModal } from './components/landlord-chat-modal'
 import { PropertyDecisionActions } from './components/property-decision-actions'
+import { PriceTrendPanel } from './components/price-trend-panel'
+import { CostBreakdownPanel } from './components/cost-breakdown-panel'
+import { RentCalculator } from './components/rent-calculator'
+import { CommuteEstimator } from './components/commute-estimator'
+import { AmbientRadarPanel } from './components/ambient-radar-panel'
+import { EnergyEfficiencyPanel } from './components/energy-efficiency-panel'
+import { PropertyComparison } from './components/property-comparison'
+import { AnalyticsExplainModal } from './components/analytics-explain-modal'
 import { apiClient } from '@/shared/api/api-client'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { Button } from '@/shared/ui/button'
-import { Compass, CheckCircle2, Phone, Mail, FileText } from 'lucide-react'
+import {
+  Compass,
+  CheckCircle2,
+  Phone,
+  Mail,
+  FileText,
+  Coins,
+  MapPin,
+  Sparkles,
+  Scale,
+} from 'lucide-react'
 import { FreshnessBadge } from '@/features/listing-freshness'
 import { PriceBenchmarkCard } from '@/features/price-benchmark'
 import { ViewingNoteEditor } from '@/features/viewing-notes'
@@ -34,6 +52,35 @@ import {
 import { ConditionAnalysisPanel } from '@/features/condition-analysis'
 import { LocationRiskPanel } from '@/features/location-risk'
 import { ApartmentFloorplanSection } from '@/features/apartment-floorplan'
+
+const DETAIL_TABS = [
+  {
+    id: 'finance',
+    label: 'Tài chính & Chi phí',
+    icon: Coins,
+  },
+  {
+    id: 'location',
+    label: 'Vị trí & Kết nối',
+    icon: MapPin,
+  },
+  {
+    id: 'living',
+    label: 'Môi trường sống',
+    icon: Sparkles,
+  },
+  {
+    id: 'reviews',
+    label: 'Đánh giá & So sánh',
+    icon: Scale,
+  },
+] as const
+
+type DetailTabId = (typeof DETAIL_TABS)[number]['id']
+
+const formatCurrency = (val: number): string => {
+  return val.toLocaleString('vi-VN') + ' đ'
+}
 
 function subscribeToSession(onStoreChange: () => void): () => void {
   window.addEventListener('storage', onStoreChange)
@@ -140,6 +187,14 @@ export function PropertyDetail(): React.ReactElement {
   const [loading, setLoading] = React.useState(true)
   const [isOpen360, setIsOpen360] = React.useState(false)
   const [showChat, setShowChat] = React.useState(false)
+  const [activeTab, setActiveTab] = React.useState<DetailTabId>('finance')
+  const [explainData, setExplainData] = React.useState<{
+    title: string
+    description: string
+    formula?: string
+    visualExample?: string
+    steps?: string[]
+  } | null>(null)
 
   React.useEffect(() => {
     let active = true
@@ -189,6 +244,11 @@ export function PropertyDetail(): React.ReactElement {
   }
 
   const apartmentResourceId = propertyId || property.id
+  const price = property.priceNum ? property.priceNum * 1_000_000 : 18_000_000
+  const bookingDeposit = price
+  const escrowDeposit = price * 2
+  const firstMonthRent = price
+  const totalInitial = bookingDeposit + escrowDeposit + firstMonthRent
 
   return (
     <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative">
@@ -432,6 +492,9 @@ export function PropertyDetail(): React.ReactElement {
             {/* Visit Booking Widget */}
             <BookingWidget propertyId={apartmentResourceId} />
 
+            {/* Personal Viewing Notes (Ghi chú xem phòng cá nhân) */}
+            <ViewingNoteEditor apartmentId={apartmentResourceId} />
+
             {/* Landlord Info Card */}
             {property.landlord && (
               <div className="bg-white border border-border rounded-3xl p-6 shadow-sm space-y-4">
@@ -440,12 +503,15 @@ export function PropertyDetail(): React.ReactElement {
                   Thông tin chủ nhà
                 </h3>
                 <div className="flex items-center gap-4">
-                  <img
+                  <Image
                     src={
                       property.landlord.avatar ||
                       'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e'
                     }
                     alt={property.landlord.fullName}
+                    width={56}
+                    height={56}
+                    unoptimized
                     className="w-14 h-14 rounded-full object-cover border-2 border-primary/15 shadow-sm"
                   />
                   <div className="space-y-1 text-left">
@@ -454,8 +520,8 @@ export function PropertyDetail(): React.ReactElement {
                         {property.landlord.fullName}
                       </h4>
                       {property.landlord.kycStatus === 'verified' && (
-                        <span className="inline-flex items-center gap-1 bg-green-500/10 text-green-600 text-[9px] font-bold px-2 py-0.5 rounded-full border border-green-500/15">
-                          <CheckCircle2 className="h-2.5 w-2.5 text-green-600 animate-pulse" />
+                        <span className="inline-flex items-center gap-1 bg-success-soft text-success text-[9px] font-bold px-2 py-0.5 rounded-full border border-success/20">
+                          <CheckCircle2 className="h-2.5 w-2.5 text-success animate-pulse" />
                           Đã KYC
                         </span>
                       )}
@@ -486,16 +552,73 @@ export function PropertyDetail(): React.ReactElement {
             {/* Direct Landlord Chat Button */}
             <button
               onClick={() => setShowChat(true)}
-              className="w-full bg-accent-2 text-white text-xs font-bold rounded-2xl py-4 hover:bg-accent-2/90 transition-all active:scale-95 shadow-sm cursor-pointer"
+              className="w-full bg-primary text-white text-xs font-bold rounded-2xl py-4 hover:bg-primary-hover transition-all active:scale-95 shadow-sm cursor-pointer"
             >
               Trò chuyện trực tiếp với chủ nhà
             </button>
           </div>
         </section>
 
-        {/* Full-width Property Analytics and Data Visualizations */}
-        <section className="mx-auto max-w-6xl px-6 py-6 md:px-10 space-y-8">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Tabbed Property Intelligence & Decision Center */}
+        <section
+          className="mx-auto max-w-6xl px-6 py-10 md:px-10 space-y-6"
+          aria-label="Trung tâm thẩm định và phân tích căn hộ"
+        >
+          {/* Section Header */}
+          <div className="space-y-2 text-left border-b border-border/80 pb-5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary-soft text-primary border border-primary/20">
+              <Sparkles className="h-3 w-3" />
+              <span>PropTech Intelligence Suite</span>
+            </div>
+            <h3 className="font-marketing text-2xl md:text-3xl font-bold text-fg">
+              Dữ liệu phân tích & Thẩm định chuyên sâu
+            </h3>
+            <p className="text-xs md:text-sm text-muted max-w-2xl leading-relaxed">
+              Thông tin được chuẩn hóa và minh bạch hóa bằng chuỗi khối, giúp
+              bạn đối chiếu chi phí, vị trí và tiện nghi một cách toàn diện.
+            </p>
+          </div>
+
+          {/* Full-width Responsive Grid Tab Bar (No overflow, no text truncation) */}
+          <div
+            role="tablist"
+            aria-label="Nhóm dữ liệu phân tích căn hộ"
+            className="grid grid-cols-2 md:grid-cols-4 gap-2 p-1.5 rounded-2xl bg-surface-muted/70 border border-border shadow-sm"
+          >
+            {DETAIL_TABS.map(tab => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  id={`tab-${tab.id}`}
+                  aria-controls={`tabpanel-${tab.id}`}
+                  aria-selected={isActive}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-white text-primary shadow-sm border border-border ring-1 ring-primary/10'
+                      : 'text-muted hover:text-fg hover:bg-white/50'
+                  }`}
+                >
+                  <Icon
+                    className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted'}`}
+                  />
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Tab 1: Finance Panel */}
+          <div
+            role="tabpanel"
+            id="tabpanel-finance"
+            aria-labelledby="tab-finance"
+            className={activeTab === 'finance' ? 'space-y-8' : 'hidden'}
+          >
             <PriceBenchmarkCard
               criteria={{
                 district: property.district,
@@ -505,27 +628,69 @@ export function PropertyDetail(): React.ReactElement {
                 furniture: property.furniture,
               }}
             />
-            <ViewingNoteEditor apartmentId={apartmentResourceId} />
+            <PriceTrendPanel property={property} onExplain={setExplainData} />
+            <CostBreakdownPanel
+              bookingDeposit={bookingDeposit}
+              escrowDeposit={escrowDeposit}
+              firstMonthRent={firstMonthRent}
+              totalInitial={totalInitial}
+              formatCurrency={formatCurrency}
+              onExplain={setExplainData}
+            />
+            <RentCalculator price={price} />
           </div>
-          <AreaProfileSection apartmentId={apartmentResourceId} />
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+          {/* Tab 2: Location Panel */}
+          <div
+            role="tabpanel"
+            id="tabpanel-location"
+            aria-labelledby="tab-location"
+            className={activeTab === 'location' ? 'space-y-8' : 'hidden'}
+          >
+            <CommuteEstimator property={property} />
+            <AreaProfileSection apartmentId={apartmentResourceId} />
+            <LocationRiskPanel apartmentId={apartmentResourceId} />
+          </div>
+
+          {/* Tab 3: Living Environment Panel */}
+          <div
+            role="tabpanel"
+            id="tabpanel-living"
+            aria-labelledby="tab-living"
+            className={activeTab === 'living' ? 'space-y-8' : 'hidden'}
+          >
+            <AmbientRadarPanel onExplain={setExplainData} />
+            <EnergyEfficiencyPanel onExplain={setExplainData} />
             {viewer ? (
               <ConditionAnalysisPanel apartmentId={apartmentResourceId} />
             ) : null}
-            <LocationRiskPanel apartmentId={apartmentResourceId} />
           </div>
-          <OwnerQualitySection
-            apartmentId={apartmentResourceId}
-            enabled={Boolean(
-              viewer?.roles?.includes('landlord') &&
-              property.landlord?.id === (viewer.id ?? viewer._id)
-            )}
-          />
-          <PropertyAnalytics property={property} />
+
+          {/* Tab 4: Reviews & Comparison Panel */}
+          <div
+            role="tabpanel"
+            id="tabpanel-reviews"
+            aria-labelledby="tab-reviews"
+            className={activeTab === 'reviews' ? 'space-y-8' : 'hidden'}
+          >
+            <PropertyComparison property={property} />
+            <OwnerQualitySection
+              apartmentId={apartmentResourceId}
+              enabled={Boolean(
+                viewer?.roles?.includes('landlord') &&
+                property.landlord?.id === (viewer.id ?? viewer._id)
+              )}
+            />
+            <PropertyReviews />
+          </div>
         </section>
 
-        {/* Full-width Two-Way Reviews & Landlord Trust Score */}
-        <PropertyReviews />
+        {/* Logic Explanation Modal */}
+        <AnalyticsExplainModal
+          isOpen={explainData !== null}
+          onClose={() => setExplainData(null)}
+          data={explainData}
+        />
       </main>
 
       {/* Floating Chat Modal Overlay */}

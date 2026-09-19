@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ApartmentItem } from '@/entities/properties'
 import { PropertyDetail } from './property-detail'
@@ -167,5 +167,40 @@ describe('PropertyDetail backend resource identity', () => {
       'hover:bg-primary-hover',
       'rounded-2xl'
     )
+  })
+
+  it('renders 4 intelligence tabs and handles tab switching', async () => {
+    render(<PropertyDetail />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('tab', { name: /Tài chính & Chi phí/i })
+      ).toBeInTheDocument()
+    })
+
+    const financeTab = screen.getByRole('tab', { name: /Tài chính & Chi phí/i })
+    const locationTab = screen.getByRole('tab', { name: /Vị trí & Kết nối/i })
+    const livingTab = screen.getByRole('tab', { name: /Môi trường sống/i })
+    const reviewsTab = screen.getByRole('tab', { name: /Đánh giá & So sánh/i })
+
+    expect(financeTab).toHaveAttribute('aria-selected', 'true')
+    expect(locationTab).toHaveAttribute('aria-selected', 'false')
+    expect(livingTab).toHaveAttribute('aria-selected', 'false')
+    expect(reviewsTab).toHaveAttribute('aria-selected', 'false')
+
+    // Switch to Location tab
+    fireEvent.click(locationTab)
+    expect(locationTab).toHaveAttribute('aria-selected', 'true')
+    expect(financeTab).toHaveAttribute('aria-selected', 'false')
+
+    // Switch to Living tab
+    fireEvent.click(livingTab)
+    expect(livingTab).toHaveAttribute('aria-selected', 'true')
+    expect(locationTab).toHaveAttribute('aria-selected', 'false')
+
+    // Switch to Reviews tab
+    fireEvent.click(reviewsTab)
+    expect(reviewsTab).toHaveAttribute('aria-selected', 'true')
+    expect(livingTab).toHaveAttribute('aria-selected', 'false')
   })
 })

@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import type { Route } from 'next'
 import { ExternalLink, FileText, ShieldCheck } from 'lucide-react'
 import type { PublicLegalTermsResponse } from '../api/legal-terms-api'
 
@@ -95,7 +96,7 @@ export function TermsSummary({
 
       <div className="pt-1">
         <Link
-          href="/terms"
+          href={'/terms' as Route}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"

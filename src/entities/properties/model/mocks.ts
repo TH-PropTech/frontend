@@ -731,7 +731,7 @@ export const mockApartments: ApartmentItem[] = [
     district: 'Quận 7',
     ward: 'Phường Tân Hưng',
     street: 'Nguyễn Hữu Thọ',
-    projectName: '',
+    projectName: 'Sunrise City',
     bedrooms: 3,
     bathrooms: 2,
     direction: 'Tây Nam',
@@ -744,6 +744,15 @@ export const mockApartments: ApartmentItem[] = [
     amenities: ['pool', 'gym', 'parking', 'elevator', 'security', 'park'],
     isVerified: true,
     hasMedia: true,
+    landlord: {
+      id: 'usr-landlord-sunrise',
+      fullName: 'Hoàng Quốc Dũng',
+      phone: '0903 128 999',
+      email: 'quocdung.sunrise@gmail.com',
+      avatar:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      kycStatus: 'verified',
+    },
     image:
       'https://res.cloudinary.com/dehsnaot1/image/upload/v1786371997/khach_ukzdy7.png',
     gallery: [
