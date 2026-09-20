@@ -28,7 +28,7 @@ export interface LandlordApartmentItem {
   images360: string[]
   vrUrl: string
   amenities: string[]
-  status: 'pending' | 'available' | 'rejected' | 'unavailable'
+  status: 'pending' | 'available' | 'rejected' | 'expired' | 'unavailable'
   rejectedReason: string | null
   submittedAt: string | null
   approvedAt: string | null

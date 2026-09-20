@@ -2,18 +2,22 @@ import * as React from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import type { ApartmentFormValues } from '../model/types'
 import { uploadApartmentImages } from '../api/apartment-posting-api'
-import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { toast } from 'sonner'
-import { ImagePlus, Trash2, Video, Globe, Loader2 } from 'lucide-react'
+import { ImagePlus, Trash2, Loader2 } from 'lucide-react'
+
+// Khớp APARTMENT_IMAGE_MAX_COUNT / APARTMENT_IMAGE_MAX_BYTES ở backend.
+const MAX_FILES_PER_UPLOAD = 10
+const MAX_IMAGE_MB = 5
+const MAX_GALLERY_IMAGES = 20
+
 interface MediaStepProps {
   form: UseFormReturn<ApartmentFormValues, unknown, ApartmentFormValues>
 }
 
 export function MediaStep({ form }: MediaStepProps): React.ReactElement {
-  const { watch, setValue, register } = form
+  const { watch, setValue } = form
   const gallery = watch('gallery') || []
-  const images360 = watch('images360') || []
   const [isUploading, setIsUploading] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
@@ -21,9 +25,12 @@ export function MediaStep({ form }: MediaStepProps): React.ReactElement {
     const files = e.target.files ? Array.from(e.target.files) : []
     if (files.length === 0) return
 
-    // Limit to 20 images
-    if (gallery.length + files.length > 20) {
-      toast.error('Chỉ được tải lên tối đa 20 ảnh!')
+    if (files.length > MAX_FILES_PER_UPLOAD) {
+      toast.error(`Mỗi lần chỉ tải lên tối đa ${MAX_FILES_PER_UPLOAD} ảnh!`)
+      return
+    }
+    if (gallery.length + files.length > MAX_GALLERY_IMAGES) {
+      toast.error(`Chỉ được tải lên tối đa ${MAX_GALLERY_IMAGES} ảnh!`)
       return
     }
 
@@ -58,14 +65,14 @@ export function MediaStep({ form }: MediaStepProps): React.ReactElement {
     <div className="space-y-6">
       <div className="flex items-center gap-2 pb-2 border-b border-border">
         <ImagePlus className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold text-fg">
-          Hình ảnh & Trực quan 3D
-        </h3>
+        <h3 className="text-lg font-semibold text-fg">Hình ảnh căn hộ</h3>
       </div>
 
       {/* Upload Zone */}
       <div className="space-y-4">
-        <Label>Hình ảnh thực tế căn hộ (Tối đa 20 ảnh) *</Label>
+        <Label>
+          Hình ảnh thực tế căn hộ (Tối đa {MAX_GALLERY_IMAGES} ảnh) *
+        </Label>
 
         <div
           onClick={() => !isUploading && fileInputRef.current?.click()}
@@ -98,7 +105,8 @@ export function MediaStep({ form }: MediaStepProps): React.ReactElement {
                 Click để chọn ảnh từ máy tính hoặc kéo thả vào đây
               </p>
               <p className="text-xs text-muted">
-                Hỗ trợ định dạng JPG, PNG, WEBP tối đa 10MB/ảnh
+                Hỗ trợ định dạng JPG, PNG, WEBP tối đa {MAX_IMAGE_MB}MB/ảnh, mỗi
+                lần chọn tối đa {MAX_FILES_PER_UPLOAD} ảnh
               </p>
             </div>
           )}
@@ -133,51 +141,6 @@ export function MediaStep({ form }: MediaStepProps): React.ReactElement {
             ))}
           </div>
         )}
-      </div>
-
-      {/* Trực quan 3D & VR */}
-      <div className="space-y-4 pt-4 border-t border-border/60">
-        <Label className="flex items-center gap-1.5 font-medium text-fg">
-          <Globe className="h-4 w-4 text-primary" />
-          Tham quan ảo 3D & VR Tour (Tùy chọn)
-        </Label>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Link VR */}
-          <div className="space-y-2">
-            <Label htmlFor="vrUrl" className="flex items-center gap-1">
-              <Video className="h-4 w-4 text-muted-foreground" />
-              Liên kết Matterport / VR 3D Tour URL
-            </Label>
-            <Input
-              id="vrUrl"
-              placeholder="https://my.matterport.com/show/?m=..."
-              className="bg-background/50 backdrop-blur-sm border-border"
-              {...register('vrUrl')}
-            />
-          </div>
-
-          {/* Link hình 360 */}
-          <div className="space-y-2">
-            <Label htmlFor="images360" className="flex items-center gap-1">
-              <Globe className="h-4 w-4 text-muted-foreground" />
-              Ảnh chụp toàn cảnh 360° (Dải phân cách bằng dấu phẩy)
-            </Label>
-            <Input
-              id="images360"
-              placeholder="Nhập link ảnh 360 (ngăn cách bởi dấu phẩy)"
-              className="bg-background/50 backdrop-blur-sm border-border"
-              onChange={e => {
-                const urls = e.target.value
-                  .split(',')
-                  .map(s => s.trim())
-                  .filter(Boolean)
-                setValue('images360', urls)
-              }}
-              value={images360.join(', ')}
-            />
-          </div>
-        </div>
       </div>
     </div>
   )

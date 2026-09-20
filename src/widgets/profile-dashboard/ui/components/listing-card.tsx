@@ -27,7 +27,8 @@ export function ListingCard({
   onRenew,
   isRenewing,
 }: ListingCardProps): React.ReactElement {
-  const formattedPrice = item.priceMonthly.toLocaleString('vi-VN')
+  // priceMonthly là VND; hiển thị theo triệu/tháng.
+  const formattedPrice = (item.priceMonthly / 1_000_000).toLocaleString('vi-VN')
 
   const getStatusBadge = () => {
     switch (item.status) {
@@ -47,6 +48,12 @@ export function ListingCard({
         return (
           <Badge className="bg-rose-500 hover:bg-rose-600 text-white font-semibold">
             Bị từ chối
+          </Badge>
+        )
+      case 'expired':
+        return (
+          <Badge className="bg-zinc-500 hover:bg-zinc-600 text-white font-semibold">
+            Hết hạn
           </Badge>
         )
       case 'unavailable':
@@ -174,7 +181,7 @@ export function ListingCard({
             </Button>
           )}
 
-          {item.status === 'unavailable' && (
+          {(item.status === 'expired' || item.status === 'unavailable') && (
             <Button
               type="button"
               size="sm"
