@@ -1,9 +1,25 @@
 'use client'
 
 import * as React from 'react'
+import {
+  RotateCw,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  FileText,
+} from 'lucide-react'
 import { apiClient } from '@/shared/api/api-client'
 
-interface Appointment {
+export type FilterStatus =
+  | 'all'
+  | 'pending'
+  | 'confirmed'
+  | 'rejected'
+  | 'cancelled'
+  | 'completed'
+
+export interface Appointment {
   id: string
   propertyTitle: string
   tenantName: string
@@ -13,9 +29,11 @@ interface Appointment {
   dateTime: string
   type: 'vr_guide' | 'in_person'
   status: 'pending' | 'confirmed' | 'cancelled' | 'rejected' | 'completed'
+  rejectedReason?: string | null
+  note?: string | null
 }
 
-interface BackendBookingResponse {
+export interface BackendBookingResponse {
   _id: string
   apartmentId: string
   apartmentTitle: string
@@ -34,21 +52,47 @@ interface BackendBookingResponse {
   createdAt: string
 }
 
-interface BackendBookingListResult {
+export interface BookingStatusCounts {
+  pending: number
+  confirmed: number
+  rejected: number
+  cancelled: number
+  completed: number
+}
+
+export interface BackendBookingListResult {
   items: BackendBookingResponse[]
   total: number
   page: number
   limit: number
   totalPages: number
+  statusCounts?: BookingStatusCounts
 }
+
+const FILTERS: { id: FilterStatus; label: string }[] = [
+  { id: 'all', label: 'Tất cả' },
+  { id: 'pending', label: 'Chờ duyệt' },
+  { id: 'confirmed', label: 'Đã xác nhận' },
+  { id: 'rejected', label: 'Bị từ chối' },
+  { id: 'cancelled', label: 'Đã hủy' },
+  { id: 'completed', label: 'Hoàn thành' },
+]
 
 export function SchedulesView(): React.ReactElement {
   const [appointments, setAppointments] = React.useState<Appointment[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
-  const [filter, setFilter] = React.useState<
-    'all' | 'pending' | 'confirmed' | 'cancelled' | 'rejected' | 'completed'
-  >('pending')
+  const [filter, setFilter] = React.useState<FilterStatus>('pending')
+  const [page, setPage] = React.useState<number>(1)
+  const [totalPages, setTotalPages] = React.useState<number>(1)
+  const [total, setTotal] = React.useState<number>(0)
+  const [statusCounts, setStatusCounts] = React.useState<BookingStatusCounts>({
+    pending: 0,
+    confirmed: 0,
+    rejected: 0,
+    cancelled: 0,
+    completed: 0,
+  })
 
   const mapAppointment = React.useCallback(
     (b: BackendBookingResponse): Appointment => {
@@ -64,6 +108,8 @@ export function SchedulesView(): React.ReactElement {
           : 'Chưa cập nhật',
         type: b.method === 'video' ? 'vr_guide' : 'in_person',
         status: b.status,
+        rejectedReason: b.rejectedReason ?? null,
+        note: b.note ?? null,
       }
     },
     []
@@ -73,11 +119,23 @@ export function SchedulesView(): React.ReactElement {
     setLoading(true)
     setError(null)
     try {
+      const queryParams = new URLSearchParams()
+      if (filter !== 'all') {
+        queryParams.set('status', filter)
+      }
+      queryParams.set('page', String(page))
+      queryParams.set('limit', '20')
+
       const data = await apiClient.get<BackendBookingListResult>(
-        '/bookings?limit=100'
+        `/bookings?${queryParams.toString()}`
       )
-      if (data && data.items) {
+      if (data && Array.isArray(data.items)) {
         setAppointments(data.items.map(mapAppointment))
+        setTotal(data.total ?? 0)
+        setTotalPages(data.totalPages ?? 1)
+        if (data.statusCounts) {
+          setStatusCounts(data.statusCounts)
+        }
       }
     } catch (err) {
       console.error('Failed to load bookings:', err)
@@ -87,18 +145,26 @@ export function SchedulesView(): React.ReactElement {
     } finally {
       setLoading(false)
     }
-  }, [mapAppointment])
+  }, [filter, page, mapAppointment])
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadAppointments()
+    void loadAppointments()
   }, [loadAppointments])
 
-  const filteredAppointments = appointments.filter(
-    a => filter === 'all' || a.status === filter
-  )
+  const handleFilterChange = (newFilter: FilterStatus) => {
+    if (newFilter !== filter) {
+      setFilter(newFilter)
+      setPage(1)
+    }
+  }
 
-  if (loading) {
+  const getFilterCount = (id: FilterStatus): number => {
+    if (id === 'all') return total
+    return statusCounts[id] ?? 0
+  }
+
+  if (loading && appointments.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -106,10 +172,13 @@ export function SchedulesView(): React.ReactElement {
     )
   }
 
-  if (error) {
+  if (error && appointments.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
-        <p className="text-sm font-medium text-danger">⚠️ {error}</p>
+        <div className="flex items-center gap-1.5 text-sm font-medium text-danger">
+          <AlertCircle className="w-4 h-4" />
+          <span>{error}</span>
+        </div>
         <button
           onClick={() => {
             void loadAppointments()
@@ -135,59 +204,56 @@ export function SchedulesView(): React.ReactElement {
             thuê và chủ nhà.
           </p>
         </div>
-        <div className="flex flex-wrap rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
+        <div className="flex items-center gap-2 self-start flex-wrap">
+          <div className="flex flex-wrap rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold">
+            {FILTERS.map(f => {
+              const active = filter === f.id
+              const count = getFilterCount(f.id)
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => handleFilterChange(f.id)}
+                  className={`px-2.5 py-1.5 rounded-md transition-all ${
+                    active
+                      ? 'bg-primary text-on-control shadow-sm'
+                      : 'text-muted hover:text-fg'
+                  }`}
+                >
+                  {f.label} ({count})
+                </button>
+              )
+            })}
+          </div>
           <button
-            onClick={() => setFilter('all')}
-            className={`px-2.5 py-1.5 rounded-md transition-all ${filter === 'all' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
+            onClick={() => {
+              void loadAppointments()
+            }}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-line bg-surface hover:bg-surface-muted text-xs font-semibold text-fg transition-colors disabled:opacity-50"
+            title="Làm mới danh sách"
           >
-            Tất cả
-          </button>
-          <button
-            onClick={() => setFilter('pending')}
-            className={`px-2.5 py-1.5 rounded-md transition-all ${filter === 'pending' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
-          >
-            Chờ duyệt ({appointments.filter(a => a.status === 'pending').length}
-            )
-          </button>
-          <button
-            onClick={() => setFilter('confirmed')}
-            className={`px-2.5 py-1.5 rounded-md transition-all ${filter === 'confirmed' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
-          >
-            Đã xác nhận (
-            {appointments.filter(a => a.status === 'confirmed').length})
-          </button>
-          <button
-            onClick={() => setFilter('rejected')}
-            className={`px-2.5 py-1.5 rounded-md transition-all ${filter === 'rejected' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
-          >
-            Bị từ chối
-          </button>
-          <button
-            onClick={() => setFilter('cancelled')}
-            className={`px-2.5 py-1.5 rounded-md transition-all ${filter === 'cancelled' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
-          >
-            Đã hủy
-          </button>
-          <button
-            onClick={() => setFilter('completed')}
-            className={`px-2.5 py-1.5 rounded-md transition-all ${filter === 'completed' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
-          >
-            Hoàn thành
+            <RotateCw
+              className={`w-3.5 h-3.5 text-muted ${loading ? 'animate-spin' : ''}`}
+            />
+            <span>Làm mới</span>
           </button>
         </div>
       </div>
 
       {/* Appointment Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {filteredAppointments.map(app => (
+        {appointments.map(app => (
           <div
             key={app.id}
             className="bg-surface border border-line rounded-xl p-5 shadow-sm space-y-4 flex flex-col justify-between hover:translate-y-[-2px] hover:shadow-md transition-all duration-300"
           >
             <div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-bold text-muted bg-fg/5 px-2.5 py-0.5 rounded font-display uppercase">
-                  {app.id}
+                <span
+                  title={app.id}
+                  className="text-[10px] font-bold text-muted bg-fg/5 px-2.5 py-0.5 rounded font-display uppercase tracking-wider cursor-help"
+                >
+                  #{app.id.slice(-6)}
                 </span>
                 <div className="flex gap-2 items-center">
                   <span
@@ -217,23 +283,37 @@ export function SchedulesView(): React.ReactElement {
                   </span>
                 </div>
               </div>
+
               <h3 className="mt-3.5 text-sm font-bold text-fg font-marketing line-clamp-1">
                 {app.propertyTitle}
               </h3>
-              <p className="text-xs text-primary font-semibold font-body mt-1.5 flex items-center gap-1">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                Thời gian: {app.dateTime}
+
+              <p className="text-xs text-primary font-semibold font-body mt-1.5 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                <span>Thời gian: {app.dateTime}</span>
               </p>
+
+              {/* Note if present */}
+              {app.note && (
+                <div className="mt-2.5 rounded-lg bg-surface-muted/60 p-2.5 text-xs text-muted flex items-start gap-1.5 border border-line/50">
+                  <FileText className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                  <div className="line-clamp-2">
+                    <span className="font-semibold text-fg">Ghi chú:</span>{' '}
+                    {app.note}
+                  </div>
+                </div>
+              )}
+
+              {/* Rejected reason banner */}
+              {app.status === 'rejected' && app.rejectedReason && (
+                <div className="mt-2.5 rounded-lg bg-danger/10 p-2.5 text-xs text-danger flex items-start gap-1.5 border border-danger/20">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold">Lý do từ chối:</span>{' '}
+                    {app.rejectedReason}
+                  </div>
+                </div>
+              )}
 
               {/* Parties info */}
               <div className="mt-4 grid grid-cols-2 gap-4 border-t border-line/50 pt-3 text-xs">
@@ -277,11 +357,37 @@ export function SchedulesView(): React.ReactElement {
             </div>
           </div>
         ))}
-        {filteredAppointments.length === 0 && (
+
+        {appointments.length === 0 && (
           <div className="col-span-2 bg-surface border border-line rounded-xl p-10 text-center text-subtle font-body">
             Không có lịch xem nhà nào trong danh sách.
           </div>
         )}
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-line/50 pt-4 text-xs font-medium text-muted">
+        <span>
+          Trang {page} / {Math.max(totalPages, 1)} (Tổng {total} lịch hẹn)
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage(p => Math.max(p - 1, 1))}
+            disabled={page <= 1 || loading}
+            className="flex items-center gap-1 rounded-md border border-line px-3 py-1.5 hover:bg-surface-muted text-fg disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>Trước</span>
+          </button>
+          <button
+            onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+            disabled={page >= totalPages || loading}
+            className="flex items-center gap-1 rounded-md border border-line px-3 py-1.5 hover:bg-surface-muted text-fg disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium"
+          >
+            <span>Sau</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   )
