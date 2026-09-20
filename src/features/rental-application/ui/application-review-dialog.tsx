@@ -28,13 +28,14 @@ import {
   Coins,
   FileSignature,
   FileText,
+  Flame,
+  Gavel,
   Home,
   Info,
   Landmark,
   Loader2,
   PawPrint,
   Scale,
-  Shield,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
@@ -79,6 +80,14 @@ const QUICK_APPROVAL_TEMPLATES = [
   'Đồng ý đề nghị thuê, hẹn gặp bạn nhận bàn giao căn hộ.',
 ] as const
 
+const STEP_TABS = [
+  { id: 'all', label: 'Tất cả các bước', badge: 'Toàn bộ' },
+  { id: 'step1', label: 'Bước 1: Người thuê & Cư trú', badge: '1' },
+  { id: 'step2', label: 'Bước 2: Gói thuê & Tài chính', badge: '2' },
+  { id: 'step3', label: 'Bước 3: Điều khoản & Cam kết', badge: '3' },
+  { id: 'step4', label: 'Bước 4: Quyết định thẩm định', badge: '4' },
+] as const
+
 function formatVnd(amount: number): string {
   return new Intl.NumberFormat('vi-VN').format(amount)
 }
@@ -96,6 +105,9 @@ function ApplicationReviewForm({
     | undefined
   isResponding?: boolean | undefined
 }) {
+  const [activeStepTab, setActiveStepTab] = React.useState<
+    'all' | 'step1' | 'step2' | 'step3' | 'step4'
+  >('all')
   const [decisionMode, setDecisionMode] = React.useState<'approve' | 'reject'>(
     'approve'
   )
@@ -150,55 +162,113 @@ function ApplicationReviewForm({
     onOpenChange(false)
   }
 
+  const showStep1 = activeStepTab === 'all' || activeStepTab === 'step1'
+  const showStep2 = activeStepTab === 'all' || activeStepTab === 'step2'
+  const showStep3 = activeStepTab === 'all' || activeStepTab === 'step3'
+  const showStep4 = activeStepTab === 'all' || activeStepTab === 'step4'
+
   return (
     <form
       onSubmit={handleSubmit}
       className="flex flex-col flex-1 overflow-hidden"
     >
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
-        <div className="grid gap-6 md:grid-cols-12">
-          {/* CỘT TRÁI (7 cols): Hồ sơ ứng viên & Cam kết pháp lý */}
-          <div className="space-y-6 md:col-span-7">
-            {/* Thẻ 1: Thông tin ứng viên & Nhân khẩu */}
-            <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-border/60 pb-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-2">
-                  <UserCheck className="h-4 w-4" />
-                  Hồ sơ ứng viên & Cư trú
-                </h3>
-                <span className="font-mono text-[11px] text-muted">
-                  ID: #{application.tenantId.slice(-8).toUpperCase()}
+      {/* Stepper Tabs Bar */}
+      <div className="border-b border-border bg-surface-muted/40 px-6 py-2.5 shrink-0">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {STEP_TABS.map(tab => {
+            const isActive = activeStepTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveStepTab(tab.id as typeof activeStepTab)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                  isActive
+                    ? 'bg-surface text-primary shadow-sm border border-border'
+                    : 'text-muted hover:text-fg hover:bg-surface/50'
+                }`}
+              >
+                <span
+                  className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${
+                    isActive
+                      ? 'bg-primary text-white'
+                      : 'bg-surface-muted text-muted'
+                  }`}
+                >
+                  {tab.badge}
                 </span>
-              </div>
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
-              {/* Huy hiệu xác thực định danh */}
-              <div className="flex flex-wrap items-center gap-2 rounded-xl bg-surface-muted/50 p-3 border border-border/50">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-xs">
-                  KT
-                </div>
-                <div className="flex-1 min-w-[200px]">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-fg">
-                      Khách thuê nộp hồ sơ
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-md bg-success-soft px-2 py-0.5 text-[10px] font-semibold text-success border border-success/30">
-                      <ShieldCheck className="h-3 w-3" />
-                      eKYC CCCD Gắn chip
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-muted mt-0.5 flex items-center gap-1">
-                    <Sparkles className="h-3 w-3 text-accent" />
-                    Chỉ số tín nhiệm cư dân:{' '}
-                    <strong className="text-fg font-semibold">
-                      98/100 (Uy tín cao)
-                    </strong>
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+        {/* =========================================================================
+            BƯỚC 1: THÔNG TIN NGƯỜI THUÊ & CƯ TRÚ
+           ========================================================================= */}
+        {showStep1 && (
+          <section className="rounded-2xl border border-border bg-surface shadow-sm overflow-hidden">
+            <div className="bg-surface-muted/50 border-b border-border/80 px-5 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-white font-bold text-xs">
+                  1
+                </span>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-fg">
+                    Bước 1: Thông tin người thuê & Mục đích cư trú
+                  </h3>
+                  <p className="text-[11px] text-muted">
+                    Dữ liệu nhân thân và điều kiện lưu trú do khách thuê tự kê
+                    khai
                   </p>
                 </div>
               </div>
+              <span className="inline-flex items-center gap-1 rounded-md bg-success-soft px-2.5 py-1 text-[11px] font-semibold text-success border border-success/30">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Đã xác thực eKYC
+              </span>
+            </div>
 
-              {/* Lưới 4 thông số cư trú */}
-              <div className="grid grid-cols-2 gap-3.5 text-xs">
-                <div className="rounded-xl bg-surface-muted/30 p-3 border border-border/40 space-y-1">
+            <div className="p-5 space-y-4">
+              {/* Thẻ định danh ứng viên */}
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-surface-muted/40 p-3.5 border border-border/50">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-sm">
+                    KT
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-fg">
+                        Ứng viên thuê căn hộ
+                      </span>
+                      <span className="font-mono text-xs text-muted">
+                        (#{application.tenantId.slice(-8).toUpperCase()})
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted flex items-center gap-1.5 mt-0.5">
+                      <Sparkles className="h-3.5 w-3.5 text-accent" />
+                      Chỉ số tín nhiệm cư dân:{' '}
+                      <strong className="text-fg font-semibold">
+                        98/100 (Uy tín cao)
+                      </strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-muted">
+                  <Home className="h-4 w-4 text-primary shrink-0" />
+                  <span>Mã căn hộ:</span>
+                  <strong className="font-mono text-fg">
+                    #{application.apartmentId.slice(-8).toUpperCase()}
+                  </strong>
+                </div>
+              </div>
+
+              {/* Lưới 4 thông số người thuê đã điền */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                <div className="rounded-xl bg-surface-muted/30 p-3.5 border border-border/40 space-y-1">
                   <span className="text-muted flex items-center gap-1.5 font-medium">
                     <Users className="h-3.5 w-3.5 text-primary" />
                     Số người cư trú
@@ -206,17 +276,23 @@ function ApplicationReviewForm({
                   <p className="font-bold text-fg text-sm">
                     {application.occupants} người
                   </p>
+                  <p className="text-[10px] text-muted">
+                    Đúng tiêu chuẩn sức chứa
+                  </p>
                 </div>
 
-                <div className="rounded-xl bg-surface-muted/30 p-3 border border-border/40 space-y-1">
+                <div className="rounded-xl bg-surface-muted/30 p-3.5 border border-border/40 space-y-1">
                   <span className="text-muted flex items-center gap-1.5 font-medium">
                     <Calendar className="h-3.5 w-3.5 text-primary" />
-                    Ngày dọn vào dự kiến
+                    Ngày mong muốn dọn vào
                   </span>
                   <p className="font-bold text-fg text-sm">{formattedDate}</p>
+                  <p className="text-[10px] text-muted">
+                    Dự kiến bắt đầu tính tiền
+                  </p>
                 </div>
 
-                <div className="rounded-xl bg-surface-muted/30 p-3 border border-border/40 space-y-1">
+                <div className="rounded-xl bg-surface-muted/30 p-3.5 border border-border/40 space-y-1">
                   <span className="text-muted flex items-center gap-1.5 font-medium">
                     <Briefcase className="h-3.5 w-3.5 text-primary" />
                     Nghề nghiệp / Đơn vị
@@ -224,9 +300,12 @@ function ApplicationReviewForm({
                   <p className="font-bold text-fg text-sm truncate">
                     {application.occupation || 'Chưa cung cấp'}
                   </p>
+                  <p className="text-[10px] text-muted">
+                    Nguồn thu nhập ổn định
+                  </p>
                 </div>
 
-                <div className="rounded-xl bg-surface-muted/30 p-3 border border-border/40 space-y-1">
+                <div className="rounded-xl bg-surface-muted/30 p-3.5 border border-border/40 space-y-1">
                   <span className="text-muted flex items-center gap-1.5 font-medium">
                     <PawPrint className="h-3.5 w-3.5 text-primary" />
                     Nuôi thú cưng
@@ -237,168 +316,231 @@ function ApplicationReviewForm({
                     </p>
                     {application.hasPets && (
                       <span className="rounded bg-warning-soft px-1.5 py-0.5 text-[9px] font-semibold text-warning">
-                        Cần tuân thủ nội quy
+                        Cam kết PCCC
                       </span>
                     )}
                   </div>
+                  <p className="text-[10px] text-muted">
+                    {application.hasPets
+                      ? 'Cần tuân thủ nội quy'
+                      : 'Không mang theo vật nuôi'}
+                  </p>
                 </div>
               </div>
 
-              {/* Ghi chú & nguyện vọng */}
+              {/* Ghi chú & nguyện vọng từ khách thuê */}
               {application.notes && (
-                <div className="rounded-xl border border-border/60 bg-surface-muted/20 p-3.5 space-y-1.5">
+                <div className="rounded-xl border border-border/70 bg-surface-muted/20 p-4 space-y-1.5">
                   <span className="text-xs font-semibold text-fg flex items-center gap-1.5">
                     <FileText className="h-3.5 w-3.5 text-primary" />
-                    Ghi chú & nguyện vọng từ khách thuê
+                    Ghi chú & nguyện vọng do khách thuê gửi khi nộp đơn:
                   </span>
-                  <p className="italic text-xs text-muted leading-relaxed pl-5 border-l-2 border-primary/40">
+                  <p className="italic text-xs text-muted leading-relaxed pl-4 border-l-2 border-primary">
                     &quot;{application.notes}&quot;
                   </p>
                 </div>
               )}
             </div>
+          </section>
+        )}
 
-            {/* Thẻ 2: Căn hộ & Điều khoản cam kết */}
-            <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-3.5">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-2">
-                <Scale className="h-4 w-4" />
-                Quy chuẩn cư trú & Cam kết pháp lý
-              </h3>
-              <p className="text-xs text-muted leading-relaxed">
-                Người thuê đã xác nhận đồng thuận với các quy chế bắt buộc trước
-                khi gửi hồ sơ:
-              </p>
-
-              <div className="space-y-2 text-xs">
-                <div className="flex items-start gap-2.5 rounded-lg bg-surface-muted/30 p-2.5 border border-border/40">
-                  <ShieldCheck className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-fg font-semibold block">
-                      An toàn PCCC & Lối thoát hiểm
-                    </strong>
-                    <span className="text-muted text-[11px]">
-                      Không tích trữ chất dễ cháy nổ, bảo đảm thông thoáng ban
-                      công theo Luật Nhà ở 2023.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 rounded-lg bg-surface-muted/30 p-2.5 border border-border/40">
-                  <ShieldCheck className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-fg font-semibold block">
-                      Khai báo lưu trú & Trật tự chung cư
-                    </strong>
-                    <span className="text-muted text-[11px]">
-                      Cung cấp thông tin nhân khẩu để chủ hộ khai báo lưu trú
-                      qua Cổng Dịch vụ công Quốc gia.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5 rounded-lg bg-surface-muted/30 p-2.5 border border-border/40">
-                  <ShieldCheck className="h-4 w-4 text-success shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-fg font-semibold block">
-                      Ký số Hợp đồng điện tử SmartCA
-                    </strong>
-                    <span className="text-muted text-[11px]">
-                      Đồng ý sử dụng chữ ký số bảo đảm giá trị pháp lý theo Nghị
-                      định 96/2024/NĐ-CP.
-                    </span>
-                  </div>
+        {/* =========================================================================
+            BƯỚC 2: GÓI THUÊ & NGHĨA VỤ TÀI CHÍNH
+           ========================================================================= */}
+        {showStep2 && (
+          <section className="rounded-2xl border border-border bg-surface shadow-sm overflow-hidden">
+            <div className="bg-surface-muted/50 border-b border-border/80 px-5 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-white font-bold text-xs">
+                  2
+                </span>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-fg">
+                    Bước 2: Gói thuê & Cam kết tài chính
+                  </h3>
+                  <p className="text-[11px] text-muted">
+                    Điều kiện thương mại, thời hạn thuê và số tiền đặt cọc thỏa
+                    thuận
+                  </p>
                 </div>
               </div>
-
-              <div className="rounded-xl border border-primary/20 bg-primary-soft/10 p-3 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <Home className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-muted">Căn hộ đăng ký thuê:</span>
-                  <strong className="font-mono text-fg">
-                    #{application.apartmentId.slice(-8).toUpperCase()}
-                  </strong>
-                </div>
-                <Link
-                  href={`/properties/${application.apartmentId}` as Route}
-                  target="_blank"
-                  className="text-primary hover:underline font-semibold text-[11px]"
-                >
-                  Xem chi tiết căn hộ →
-                </Link>
-              </div>
+              <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary border border-primary/20">
+                <Coins className="h-3.5 w-3.5" />
+                Gói {duration} tháng
+              </span>
             </div>
-          </div>
 
-          {/* CỘT PHẢI (5 cols): Gói thuê & Bảng điều khiển quyết định */}
-          <div className="space-y-6 md:col-span-5">
-            {/* Card Tài chính & Gói thuê */}
-            <div className="rounded-2xl border border-border bg-surface shadow-sm overflow-hidden">
-              <div className="bg-primary/5 border-b border-primary/10 p-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-2">
-                  <Coins className="h-4 w-4" />
-                  Tài chính & Gói thuê đã chọn
-                </h3>
-              </div>
-              <div className="p-4 space-y-3 text-xs">
-                <div className="flex items-center justify-between pb-2 border-b border-border/50">
-                  <span className="text-muted">Thời hạn cam kết:</span>
-                  <strong className="text-fg text-sm">{duration} tháng</strong>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                <div className="rounded-xl bg-surface-muted/30 p-3.5 border border-border/40 space-y-1">
+                  <span className="text-muted">Thời hạn thuê:</span>
+                  <p className="font-bold text-fg text-sm">{duration} tháng</p>
+                  <p className="text-[10px] text-muted">Cam kết thuê dài hạn</p>
                 </div>
 
                 {rent > 0 && (
-                  <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                  <div className="rounded-xl bg-primary-soft/10 p-3.5 border border-primary/20 space-y-1">
                     <span className="text-muted">Giá thuê thỏa thuận:</span>
-                    <strong className="text-fg font-display text-base text-primary">
+                    <p className="font-bold font-display text-primary text-base">
                       {formatVnd(rent)} ₫/tháng
-                    </strong>
+                    </p>
+                    <p className="text-[10px] text-primary/80">
+                      Khớp giá niêm yết
+                    </p>
                   </div>
                 )}
 
                 {deposit > 0 && (
-                  <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                  <div className="rounded-xl bg-surface-muted/30 p-3.5 border border-border/40 space-y-1">
                     <span className="text-muted">Số tiền cọc dự kiến:</span>
-                    <strong className="text-fg text-sm">
+                    <p className="font-bold text-fg text-sm">
                       {formatVnd(deposit)} ₫
-                    </strong>
+                    </p>
+                    <p className="text-[10px] text-muted">
+                      Khóa giữ chỗ căn hộ
+                    </p>
                   </div>
                 )}
 
                 {rent > 0 && duration > 0 && (
-                  <div className="rounded-xl bg-surface-muted p-2.5 flex justify-between items-center">
-                    <span className="text-[11px] text-muted">
-                      Tổng ước tính ({duration}T):
+                  <div className="rounded-xl bg-surface-muted/30 p-3.5 border border-border/40 space-y-1">
+                    <span className="text-muted">
+                      Tổng doanh thu ({duration}T):
                     </span>
-                    <strong className="text-xs text-primary">
+                    <p className="font-bold text-fg text-sm">
                       {formatVnd(rent * duration)} ₫
-                    </strong>
+                    </p>
+                    <p className="text-[10px] text-muted">
+                      Ước tính toàn hợp đồng
+                    </p>
                   </div>
                 )}
+              </div>
 
-                <div className="pt-1 flex items-start gap-2 text-[11px] text-muted">
-                  <Landmark className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                  <span>
-                    Trình tự:{' '}
-                    <strong className="text-fg">
-                      {executionStrategy === 'DEPOSIT_FIRST'
-                        ? 'Cọc trước, sau đó ký hợp đồng'
-                        : 'Ký hợp đồng trước, sau đó đóng cọc'}
-                    </strong>
-                  </span>
+              {/* Trình tự thực hiện hợp đồng */}
+              <div className="rounded-xl border border-primary/20 bg-primary-soft/10 p-4 flex items-start gap-3 text-xs">
+                <Landmark className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="text-fg font-semibold">
+                    Trình tự thực thi:{' '}
+                    {executionStrategy === 'DEPOSIT_FIRST'
+                      ? 'Cọc trước, sau đó ký hợp đồng'
+                      : 'Ký hợp đồng trước, sau đó thanh toán cọc'}
+                  </strong>
+                  <p className="text-muted text-[11px] leading-relaxed">
+                    {executionStrategy === 'DEPOSIT_FIRST'
+                      ? 'Khách thuê sẽ nộp tiền cọc khóa giữ chỗ phòng trước khi cả hai bên chính thức tiến hành ký số Hợp đồng thuê nhà.'
+                      : 'Hai bên sẽ thực hiện ký số Hợp đồng thuê nhà điện tử trước, sau đó người thuê mới tiến hành đóng tiền cọc.'}
+                  </p>
                 </div>
               </div>
             </div>
+          </section>
+        )}
 
-            {/* Bảng điều khiển Quyết định thẩm định */}
-            <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-2">
-                <FileSignature className="h-4 w-4" />
-                Quyết định của Chủ nhà
-              </h3>
+        {/* =========================================================================
+            BƯỚC 3: ĐIỀU KHOẢN & CAM KẾT PHÁP LÝ
+           ========================================================================= */}
+        {showStep3 && (
+          <section className="rounded-2xl border border-border bg-surface shadow-sm overflow-hidden">
+            <div className="bg-surface-muted/50 border-b border-border/80 px-5 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-white font-bold text-xs">
+                  3
+                </span>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-fg">
+                    Bước 3: Điều khoản & Cam kết pháp lý đã đồng thuận
+                  </h3>
+                  <p className="text-[11px] text-muted">
+                    Các cam kết và căn cứ pháp lý khách thuê đã chấp thuận 100%
+                    khi nộp đơn
+                  </p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-md bg-success-soft px-2.5 py-1 text-[11px] font-semibold text-success border border-success/30">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Đồng thuận 100%
+              </span>
+            </div>
 
+            <div className="p-5 space-y-3 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="rounded-xl bg-surface-muted/30 p-3.5 border border-border/40 space-y-1.5">
+                  <div className="flex items-center gap-2 font-semibold text-fg">
+                    <Flame className="h-4 w-4 text-primary" />
+                    <span>An toàn PCCC & Lối thoát hiểm</span>
+                  </div>
+                  <p className="text-muted text-[11px] leading-relaxed">
+                    Bảo đảm không tích trữ chất cháy nổ, không cản trở lối thoát
+                    ban công và hành lang tuân thủ{' '}
+                    <strong>Luật Nhà ở 2023</strong>.
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-surface-muted/30 p-3.5 border border-border/40 space-y-1.5">
+                  <div className="flex items-center gap-2 font-semibold text-fg">
+                    <Scale className="h-4 w-4 text-primary" />
+                    <span>Khai báo tạm trú DVC Quốc gia</span>
+                  </div>
+                  <p className="text-muted text-[11px] leading-relaxed">
+                    Sẵn sàng cung cấp bản chụp CCCD/thông tin để chủ nhà làm thủ
+                    tục khai báo tạm trú qua Cổng DVC 1.004194 Bộ Công An.
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-surface-muted/30 p-3.5 border border-border/40 space-y-1.5">
+                  <div className="flex items-center gap-2 font-semibold text-fg">
+                    <Gavel className="h-4 w-4 text-primary" />
+                    <span>Chữ ký số SmartCA bảo chứng</span>
+                  </div>
+                  <p className="text-muted text-[11px] leading-relaxed">
+                    Đồng thuận ký kết Hợp đồng số theo mẫu Phụ lục II{' '}
+                    <strong>Nghị định 96/2024/NĐ-CP</strong>, lưu vết bất biến
+                    trên Fabric Ledger.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-success/30 bg-success-soft/20 p-3 flex items-center gap-2.5 text-xs text-success">
+                <ShieldCheck className="h-4 w-4 text-success shrink-0" />
+                <span>
+                  Hệ thống tự động liên kết các điều khoản đã cam kết này trực
+                  tiếp vào dự thảo Hợp đồng thuê số khi bạn bấm chấp thuận.
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* =========================================================================
+            BƯỚC 4: THẨM ĐỊNH & QUYẾT ĐỊNH CỦA CHỦ NHÀ
+           ========================================================================= */}
+        {showStep4 && (
+          <section className="rounded-2xl border border-border bg-surface shadow-sm overflow-hidden">
+            <div className="bg-surface-muted/50 border-b border-border/80 px-5 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-white font-bold text-xs">
+                  4
+                </span>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-fg">
+                    Bước 4: Quyết định thẩm định của Chủ nhà
+                  </h3>
+                  <p className="text-[11px] text-muted">
+                    Phê duyệt để tự động sinh Hợp đồng số hoặc từ chối đề nghị
+                    thuê
+                  </p>
+                </div>
+              </div>
+              <ApplicationStatusBadge status={application.status} />
+            </div>
+
+            <div className="p-5 space-y-4">
               {isPending ? (
                 <div className="space-y-4">
                   {/* Switcher Phê duyệt / Từ chối */}
-                  <div className="flex rounded-xl bg-surface-muted p-1 border border-border">
+                  <div className="flex rounded-xl bg-surface-muted p-1 border border-border max-w-md">
                     <button
                       type="button"
                       onClick={() => setDecisionMode('approve')}
@@ -428,7 +570,7 @@ function ApplicationReviewForm({
                   </div>
 
                   {decisionMode === 'approve' ? (
-                    <div className="space-y-3 rounded-xl border border-success/30 bg-success-soft/30 p-3.5">
+                    <div className="space-y-3 rounded-xl border border-success/30 bg-success-soft/30 p-4">
                       <div className="flex items-start gap-2.5 text-xs text-fg">
                         <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
                         <div>
@@ -443,10 +585,10 @@ function ApplicationReviewForm({
                         </div>
                       </div>
 
-                      {/* Mẫu lời nhắn nhanh */}
+                      {/* Gợi ý phản hồi nhanh */}
                       <div className="space-y-1.5 pt-1">
                         <span className="text-[11px] font-medium text-muted block">
-                          Gợi ý phản hồi nhanh:
+                          Gợi ý phản hồi nhanh cho khách thuê:
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           {QUICK_APPROVAL_TEMPLATES.map(tpl => (
@@ -454,7 +596,7 @@ function ApplicationReviewForm({
                               key={tpl}
                               type="button"
                               onClick={() => setNote(tpl)}
-                              className="text-[10px] rounded-lg bg-surface border border-border px-2 py-1 text-fg hover:border-primary transition cursor-pointer text-left"
+                              className="text-[11px] rounded-lg bg-surface border border-border px-2.5 py-1 text-fg hover:border-primary transition cursor-pointer text-left"
                             >
                               + {tpl}
                             </button>
@@ -481,7 +623,7 @@ function ApplicationReviewForm({
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-3 rounded-xl border border-danger/30 bg-danger-soft/30 p-3.5">
+                    <div className="space-y-3 rounded-xl border border-danger/30 bg-danger-soft/30 p-4">
                       <div className="flex items-start gap-2.5 text-xs text-fg">
                         <ShieldAlert className="h-4 w-4 text-danger shrink-0 mt-0.5" />
                         <div>
@@ -562,7 +704,7 @@ function ApplicationReviewForm({
                     <Button
                       asChild
                       size="sm"
-                      className="w-full mt-2 bg-primary text-on-control shadow-sm text-xs"
+                      className="mt-2 bg-primary text-on-control shadow-sm text-xs"
                     >
                       <Link
                         href={`/contracts/${application.contractId}` as Route}
@@ -575,23 +717,13 @@ function ApplicationReviewForm({
                 </div>
               )}
             </div>
-
-            {/* Quy chuẩn an toàn */}
-            <div className="rounded-xl border border-success/30 bg-success-soft/15 p-3.5 text-xs text-muted flex items-start gap-2.5">
-              <Shield className="h-4 w-4 text-success shrink-0 mt-0.5" />
-              <p className="leading-relaxed text-[11px]">
-                Toàn bộ dữ liệu thẩm định được bảo chứng tính toàn vẹn và tuân
-                thủ quy chuẩn bảo vệ dữ liệu cá nhân theo{' '}
-                <strong>Nghị định 13/2023/NĐ-CP</strong>.
-              </p>
-            </div>
-          </div>
-        </div>
+          </section>
+        )}
       </div>
 
       <DialogFooter className="p-4 px-6 border-t border-border bg-surface shrink-0 flex items-center justify-between sm:justify-between">
         <span className="text-[11px] text-muted hidden sm:inline-block">
-          Hệ thống Thẩm định Cho thuê TH-PropTech v2.0
+          Hệ thống Thẩm định Cho thuê TH-PropTech v2.0 (4 Bước Chuẩn Hóa)
         </span>
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <Button
@@ -668,8 +800,8 @@ export function ApplicationReviewDialog({
                   <ApplicationStatusBadge status={application.status} />
                 </div>
                 <DialogDescription className="text-xs text-muted mt-0.5">
-                  Xem xét thông tin người thuê, năng lực tài chính và đưa ra
-                  quyết định chấp thuận hoặc từ chối đề nghị thuê.
+                  Xem xét chi tiết từng bước thông tin người thuê đã gửi và đưa
+                  ra quyết định thẩm định.
                 </DialogDescription>
               </div>
             </div>
