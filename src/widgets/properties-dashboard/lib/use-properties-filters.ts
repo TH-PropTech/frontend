@@ -10,6 +10,7 @@ import {
   type ApiBuildingItem,
 } from '@/entities/properties'
 import { apiClient } from '@/shared/api/api-client'
+import { env } from '@/shared/config/env'
 export function removeVietnameseTones(str: string): string {
   return str
     .normalize('NFD')
@@ -982,7 +983,7 @@ export function usePropertiesFilters() {
   }
 
   const [debouncedKeyword, setDebouncedKeyword] = React.useState(searchKeyword)
-  const [useMockFallback, setUseMockFallback] = React.useState(false)
+  const [useMockFallback, setUseMockFallback] = React.useState(env.enableMocks)
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -994,8 +995,12 @@ export function usePropertiesFilters() {
   }, [searchKeyword])
 
   // State for fetched apartments
-  const [apartments, setApartments] =
-    React.useState<ApartmentItem[]>(mockApartments)
+  const [apartments, setApartments] = React.useState<ApartmentItem[]>(() =>
+    env.enableMocks ? mockApartments : []
+  )
+  const [apartmentsError, setApartmentsError] = React.useState<Error | null>(
+    null
+  )
 
   React.useEffect(() => {
     let active = true
@@ -1047,19 +1052,23 @@ export function usePropertiesFilters() {
           if (data && Array.isArray(data)) {
             setApartments(data)
             setUseMockFallback(false)
+            setApartmentsError(null)
           } else {
-            setUseMockFallback(true)
+            throw new Error('Apartment API returned an invalid response')
           }
         }
       })
       .catch(err => {
+        const normalizedError =
+          err instanceof Error ? err : new Error('Failed to fetch apartments')
         console.error(
-          'Failed to fetch apartments from backend, falling back to mock data:',
-          err
+          'Failed to fetch apartments from backend:',
+          normalizedError
         )
         if (active) {
-          setUseMockFallback(true)
-          setApartments(mockApartments)
+          setApartmentsError(normalizedError)
+          setUseMockFallback(env.enableMocks)
+          setApartments(env.enableMocks ? mockApartments : [])
         }
       })
     return () => {
@@ -1136,7 +1145,7 @@ export function usePropertiesFilters() {
           err
         )
         if (active) {
-          setUseMockFallback(true)
+          setUseMockFallback(env.enableMocks)
         }
       })
       .finally(() => {
@@ -1871,6 +1880,7 @@ export function usePropertiesFilters() {
     filteredProjects,
     filteredApiProjects,
     filteredApartments,
+    apartmentsError,
     locationLabel,
     priceLabel,
     areaLabel,

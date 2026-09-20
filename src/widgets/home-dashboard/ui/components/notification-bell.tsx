@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { apiClient } from '@/shared/api/api-client'
+import { ApiClientError, apiClient } from '@/shared/api/api-client'
 import { toast } from 'sonner'
 import { Bell, Check, X, Clock } from 'lucide-react'
 import {
@@ -32,6 +32,8 @@ interface NotificationBellProps {
   isLightHeader: boolean
 }
 
+type NotificationError = 'network' | 'auth' | 'unknown'
+
 export function NotificationBell({
   isLightHeader,
 }: NotificationBellProps): React.ReactElement {
@@ -41,6 +43,8 @@ export function NotificationBell({
   const [unreadCount, setUnreadCount] = React.useState(0)
   const [isOpen, setIsOpen] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
+  const [notificationError, setNotificationError] =
+    React.useState<NotificationError | null>(null)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   const [rejectingBooking, setRejectingBooking] = React.useState<{
     notifId: string
@@ -63,8 +67,18 @@ export function NotificationBell({
         const unread = data.items.filter(n => !n.isRead).length
         // Fetch unread count specifically or calculate from current list
         setUnreadCount(unread)
+        setNotificationError(null)
       }
     } catch (err) {
+      if (err instanceof ApiClientError && err.status === 0) {
+        setNotificationError('network')
+        return
+      }
+      if (err instanceof ApiClientError && [401, 403].includes(err.status)) {
+        setNotificationError('auth')
+        return
+      }
+      setNotificationError('unknown')
       console.error('Failed to fetch notifications:', err)
     }
   }, [])
@@ -242,8 +256,21 @@ export function NotificationBell({
             )}
           </div>
 
+          {notificationError ? (
+            <p
+              role="alert"
+              className="mb-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-xs font-medium text-warning"
+            >
+              {notificationError === 'network'
+                ? 'Không thể kết nối máy chủ thông báo. Hệ thống sẽ thử lại tự động.'
+                : notificationError === 'auth'
+                  ? 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.'
+                  : 'Không thể tải thông báo lúc này. Vui lòng thử lại sau.'}
+            </p>
+          ) : null}
+
           <div className="max-h-80 overflow-y-auto space-y-2.5 pr-1 scrollbar-thin">
-            {notifications.length === 0 ? (
+            {notificationError ? null : notifications.length === 0 ? (
               <div className="py-8 text-center text-xs text-muted font-medium">
                 Bạn chưa có thông báo nào.
               </div>

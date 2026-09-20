@@ -80,6 +80,7 @@ const baseMockState: flowModule.FlowState = {
   acknowledgedDisclosures: ['d-1'],
   termsAccepted: true,
   submittedApplication: null,
+  pendingApplicationExists: false,
 }
 
 const mockActions = {
@@ -94,7 +95,9 @@ const mockActions = {
   goToStep3: vi.fn(),
   backToStep: vi.fn(),
   submitApplication: vi.fn(),
+  refreshSubmittedApplication: vi.fn().mockResolvedValue(undefined),
   clearError: vi.fn(),
+  dismissPendingApplicationModal: vi.fn(),
 }
 
 describe('RentalApplicationApply Widget', () => {
@@ -175,6 +178,50 @@ describe('RentalApplicationApply Widget', () => {
     expect(screen.getByTestId('apply-step-info-form')).toBeInTheDocument()
   })
 
+  it('renders Step 1 form with dynamic moveInDateLabel from context.flowProfile', () => {
+    vi.mocked(flowModule.useRentalApplicationFlow).mockReturnValue({
+      state: {
+        ...baseMockState,
+        step: 1,
+        context: {
+          ...baseMockState.context!,
+          flowProfile: {
+            profileId: 'p-custom',
+            name: 'Custom',
+            version: 1,
+            hash: 'hash-custom',
+            precedence: 'GLOBAL',
+            steps: {
+              step1: {
+                moveInDateLabel: 'Thời điểm nhận chìa khóa căn hộ',
+                minMoveInLeadDays: 2,
+                maxMoveInLeadDays: 45,
+                minOccupants: 1,
+                maxOccupants: 8,
+                allowNotes: true,
+                notesMaxLength: 800,
+              },
+              step2: { headerTitle: '', depositNoticeBody: '', badgeRules: [] },
+              step3: {
+                consentCheckboxLabel: '',
+                consentStatement: '',
+                disclosures: [],
+              },
+              step4: { heroSuccessTitle: '', timelineSteps: [] },
+            },
+          },
+        },
+      },
+      actions: mockActions,
+    })
+
+    render(<RentalApplicationApply apartmentId="apt-101" />)
+    expect(
+      screen.getByText('Thời điểm nhận chìa khóa căn hộ')
+    ).toBeInTheDocument()
+    expect(screen.getByText('+2 đến +45 ngày')).toBeInTheDocument()
+  })
+
   it('renders Step 2 package selector when step is 2', () => {
     vi.mocked(flowModule.useRentalApplicationFlow).mockReturnValue({
       state: { ...baseMockState, step: 2 },
@@ -225,6 +272,11 @@ describe('RentalApplicationApply Widget', () => {
 
     render(<RentalApplicationApply apartmentId="apt-101" />)
     expect(screen.getByTestId('apply-step-submitted')).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Kiểm tra phản hồi của chủ nhà' })
+    )
+    expect(mockActions.refreshSubmittedApplication).toHaveBeenCalledOnce()
   })
 
   it('renders recoverable error banner and allows clearing error', () => {
@@ -259,10 +311,10 @@ describe('RentalApplicationApply Widget', () => {
       name: /Tiến trình 4 bước hoàn thành hồ sơ/i,
     })
     expect(stepperNav).toBeInTheDocument()
-    expect(screen.getByText('1. Thông tin người thuê')).toBeInTheDocument()
-    expect(screen.getByText('2. Gói thuê & Đặt cọc')).toBeInTheDocument()
-    expect(screen.getByText('3. Điều khoản & Cam kết')).toBeInTheDocument()
-    expect(screen.getByText('4. Xác nhận hồ sơ')).toBeInTheDocument()
+    expect(screen.getByText('Thông tin người thuê')).toBeInTheDocument()
+    expect(screen.getByText('Gói thuê & Đặt cọc')).toBeInTheDocument()
+    expect(screen.getByText('Điều khoản & Cam kết')).toBeInTheDocument()
+    expect(screen.getByText('Xác nhận hồ sơ')).toBeInTheDocument()
 
     // Sidebar: Card 1 - Property Dossier & Financial Summary
     expect(screen.getByText('Hồ sơ căn hộ & Chi phí')).toBeInTheDocument()
@@ -280,5 +332,31 @@ describe('RentalApplicationApply Widget', () => {
     // Verify raw cryptographic technical hashes are NOT exposed
     expect(screen.queryByText(/SHA-256/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Khóa băm quy chế/i)).not.toBeInTheDocument()
+  })
+
+  it('renders pending application exists modal when pendingApplicationExists is true', () => {
+    vi.mocked(flowModule.useRentalApplicationFlow).mockReturnValue({
+      state: { ...baseMockState, pendingApplicationExists: true },
+      actions: mockActions,
+    })
+
+    render(<RentalApplicationApply apartmentId="apt-101" />)
+
+    expect(screen.getByText('Hồ sơ đang chờ phản hồi')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Bạn đã gửi hồ sơ cho căn hộ này rồi, vui lòng chờ chủ nhà phản hồi.'
+      )
+    ).toBeInTheDocument()
+
+    const viewApplicationsBtn = screen.getByRole('link', {
+      name: /Xem hồ sơ đã gửi/i,
+    })
+    expect(viewApplicationsBtn).toHaveAttribute('href', '/rental-applications')
+
+    const backToApartmentBtn = screen.getByRole('link', {
+      name: /Quay lại căn hộ/i,
+    })
+    expect(backToApartmentBtn).toHaveAttribute('href', '/properties/apt-101')
   })
 })

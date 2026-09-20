@@ -7,6 +7,7 @@ import {
 } from './use-rental-application-flow'
 import {
   createRentalApplication,
+  getMyRentalApplications,
   getRentalApplicationContext,
   type RentalApplicationItem,
 } from '@/features/rental-application'
@@ -18,6 +19,7 @@ vi.mock('@/features/rental-application', async importOriginal => {
   return {
     ...actual,
     createRentalApplication: vi.fn(),
+    getMyRentalApplications: vi.fn(),
     getRentalApplicationContext: vi.fn(),
     isRentalPackageStaleError: vi.fn(
       (err: unknown) =>
@@ -118,6 +120,7 @@ describe('use-rental-application-flow reducer & hook', () => {
       acknowledgedDisclosures: [],
       termsAccepted: false,
       submittedApplication: null,
+      pendingApplicationExists: false,
     }
 
     it('toggles disclosures in and out', () => {
@@ -165,6 +168,24 @@ describe('use-rental-application-flow reducer & hook', () => {
       expect(state.step).toBe(4)
       expect(state.submittedApplication).toBe(mockApp)
       expect(state.submitting).toBe(false)
+    })
+
+    it('updates the submitted application after a manual refresh', () => {
+      const refreshedApplication = {
+        _id: 'app-1',
+        status: 'accepted',
+      } as unknown as RentalApplicationItem
+
+      const state = flowReducer(
+        {
+          ...baseState,
+          step: 4,
+          submittedApplication: { _id: 'app-1' } as RentalApplicationItem,
+        },
+        { type: 'REFRESH_SUBMITTED_SUCCESS', application: refreshedApplication }
+      )
+
+      expect(state.submittedApplication).toBe(refreshedApplication)
     })
   })
 
@@ -313,6 +334,154 @@ describe('use-rental-application-flow reducer & hook', () => {
 
       expect(result.current.state.step).toBe(4)
       expect(result.current.state.submittedApplication).toEqual(mockCreated)
+    })
+
+    it('refreshes the submitted application from the latest application list', async () => {
+      const createdApplication = {
+        _id: 'app-created-123',
+        status: 'pending',
+        packageSnapshot: mockContext.packages[0],
+      }
+      const refreshedApplication = {
+        ...createdApplication,
+        status: 'accepted',
+        provisioningStatus: 'ready',
+        contractHandoff: {
+          state: 'ready',
+          contractId: 'contract-123',
+          href: '/contracts/contract-123',
+          reasonCode: null,
+        },
+      }
+      vi.mocked(createRentalApplication).mockResolvedValue(
+        createdApplication as unknown as RentalApplicationItem
+      )
+      vi.mocked(getMyRentalApplications).mockResolvedValue({
+        items: [refreshedApplication] as unknown as RentalApplicationItem[],
+        total: 1,
+        page: 1,
+        limit: 20,
+        totalPages: 1,
+      })
+
+      const { result } = renderHook(() => useRentalApplicationFlow('apt-1'))
+      await waitFor(() => {
+        expect(result.current.state.loadingContext).toBe(false)
+      })
+
+      act(() => {
+        result.current.actions.toggleDisclosure('req-item')
+        result.current.actions.setTermsAccepted(true)
+        result.current.actions.goToStep2()
+        result.current.actions.goToStep3()
+      })
+      await act(async () => {
+        await result.current.actions.submitApplication()
+      })
+      await act(async () => {
+        await result.current.actions.refreshSubmittedApplication()
+      })
+
+      expect(getMyRentalApplications).toHaveBeenCalledTimes(1)
+      expect(result.current.state.submittedApplication).toEqual(
+        refreshedApplication
+      )
+    })
+
+    it('sets pendingApplicationExists to true and clears error when duplicate pending application exists', async () => {
+      vi.mocked(createRentalApplication).mockRejectedValue(
+        new Error('A pending application already exists')
+      )
+
+      const { result } = renderHook(() => useRentalApplicationFlow('apt-1'))
+      await waitFor(() => {
+        expect(result.current.state.loadingContext).toBe(false)
+      })
+
+      act(() => {
+        result.current.actions.toggleDisclosure('req-item')
+        result.current.actions.setTermsAccepted(true)
+        result.current.actions.goToStep2()
+        result.current.actions.goToStep3()
+      })
+
+      await act(async () => {
+        await result.current.actions.submitApplication()
+      })
+
+      expect(result.current.state.pendingApplicationExists).toBe(true)
+      expect(result.current.state.error).toBeNull()
+
+      act(() => {
+        result.current.actions.dismissPendingApplicationModal()
+      })
+      expect(result.current.state.pendingApplicationExists).toBe(false)
+    })
+
+    it('enforces flowProfile.steps.step1 validation during goToStep2', async () => {
+      vi.mocked(getRentalApplicationContext).mockResolvedValue({
+        ...mockContext,
+        flowProfile: {
+          profileId: 'prof-strict',
+          name: 'Strict Profile',
+          version: 3,
+          hash: 'strict-hash',
+          precedence: 'GLOBAL',
+          steps: {
+            step1: {
+              moveInDateLabel: 'Ngày dọn vào',
+              minMoveInLeadDays: 7,
+              maxMoveInLeadDays: 60,
+              minOccupants: 3,
+              maxOccupants: 6,
+              allowNotes: true,
+              notesMaxLength: 500,
+            },
+            step2: {
+              headerTitle: 'Step 2',
+              depositNoticeBody: '',
+              badgeRules: [],
+            },
+            step3: {
+              consentCheckboxLabel: '',
+              consentStatement: '',
+              disclosures: [],
+            },
+            step4: { heroSuccessTitle: '', timelineSteps: [] },
+          },
+        },
+      })
+
+      const { result } = renderHook(() => useRentalApplicationFlow('apt-1'))
+      await waitFor(() => {
+        expect(result.current.state.loadingContext).toBe(false)
+      })
+
+      // Try with default details (occupants: 1, min is 3) -> fails
+      act(() => {
+        const ok = result.current.actions.goToStep2()
+        expect(ok).toBe(false)
+      })
+      expect(result.current.state.step).toBe(1)
+
+      // Update to valid occupants (3) and valid moveInDate (+10 days) -> succeeds
+      const now = new Date()
+      const validDate = new Date(now)
+      validDate.setDate(now.getDate() + 10)
+
+      act(() => {
+        result.current.actions.updateDetails({
+          occupants: 3,
+          moveInDate: validDate.toISOString().split('T')[0]!,
+          occupation: 'Engineer',
+        })
+      })
+
+      act(() => {
+        const ok = result.current.actions.goToStep2()
+        expect(ok).toBe(true)
+      })
+      expect(result.current.state.step).toBe(2)
     })
   })
 })

@@ -201,7 +201,7 @@ export function StaffOperationsDashboard({
   ]
 
   const handleSidebarItemClick = (type: TabType): void => {
-    router.push(`/staff/${type}` as Route)
+    router.push(`/admin/${type}` as Route)
     setIsSidebarOpen(false)
   }
 

@@ -76,7 +76,7 @@ export function BilateralSigningTimeline({
         <div className="flex items-center gap-2">
           <PenTool className="h-4 w-4 text-[var(--primary)]" />
           <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
-            Tiến trình ký số song phương e-Consent
+            Tiến trình ký số song phương VNPT SmartCA
           </h4>
         </div>
         <span
@@ -196,7 +196,7 @@ export function BilateralSigningTimeline({
               className="w-full mt-2 inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold bg-[var(--primary)] text-white hover:opacity-90 shadow-sm transition-opacity"
             >
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Ký số e-Consent ngay</span>
+              <span>Ký số VNPT SmartCA ngay</span>
             </button>
           )}
         </div>
@@ -303,7 +303,7 @@ export function BilateralSigningTimeline({
             ? 'Hợp đồng đã hoàn tất ký số song phương pháp lý. Sẵn sàng hoặc đã kích hoạt trên sổ cái Hyperledger Fabric.'
             : isOneSigned
               ? 'Đã ghi nhận chữ ký số của một bên. Bên còn lại vui lòng hoàn tất ký số để hợp đồng chính thức có hiệu lực.'
-              : 'Hai bên cần hoàn tất xác thực sinh trắc học và chữ ký số an toàn e-Consent để kích hoạt hợp đồng.'}
+              : 'Hai bên cần hoàn tất xác thực sinh trắc học và chữ ký số an toàn VNPT SmartCA để kích hoạt hợp đồng.'}
         </span>
       </div>
     </div>

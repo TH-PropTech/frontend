@@ -106,7 +106,7 @@ export function LoginForm(): React.ReactElement {
             successResp.user.roles.includes('staff') ||
             successResp.user.roles.includes('admin')
           ) {
-            router.push('/staff' as Route)
+            router.push('/admin' as Route)
           } else {
             router.push('/' as Route)
           }
@@ -184,7 +184,7 @@ export function LoginForm(): React.ReactElement {
             response.user.roles.includes('staff') ||
             response.user.roles.includes('admin')
           ) {
-            router.push('/staff' as Route)
+            router.push('/admin' as Route)
           } else {
             router.push('/' as Route)
           }

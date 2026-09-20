@@ -37,17 +37,22 @@ export function ProfileHeader({
     handleRoleChange,
   } = profile
 
-  const [userInfo] = React.useState<{
+  const [userInfo, setUserInfo] = React.useState<{
     name?: string
     email?: string
-  } | null>(() => {
+  } | null>(null)
+
+  React.useEffect(() => {
     try {
       const raw = localStorage.getItem('user')
-      return raw ? (JSON.parse(raw) as { name?: string; email?: string }) : null
+      if (raw) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setUserInfo(JSON.parse(raw) as { name?: string; email?: string })
+      }
     } catch {
-      return null
+      // ignore
     }
-  })
+  }, [])
 
   const userName =
     userInfo?.name || (role === 'tenant' ? 'Khách thuê' : 'Chủ nhà')
@@ -100,7 +105,10 @@ export function ProfileHeader({
           </div>
           <div className="space-y-1.5 text-left">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-marketing text-xl font-bold text-fg">
+              <h2
+                suppressHydrationWarning
+                className="font-marketing text-xl font-bold text-fg"
+              >
                 {userName}
               </h2>
               <Badge

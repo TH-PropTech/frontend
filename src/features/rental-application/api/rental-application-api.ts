@@ -1,4 +1,5 @@
 import { apiClient, ApiClientError } from '@/shared/api'
+import type { FlowProfileSteps } from '@/features/rental-flow-config'
 
 export type RentalApplicationStatus = 'pending' | 'accepted' | 'rejected'
 export type RentalExecutionStrategy = 'DEPOSIT_FIRST' | 'SIGN_FIRST'
@@ -62,7 +63,7 @@ export interface RentalApplicationContext {
     version: number
     hash: string
     precedence: string
-    steps: unknown
+    steps: FlowProfileSteps
   } | null
 }
 

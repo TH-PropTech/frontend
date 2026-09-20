@@ -26,6 +26,9 @@ describe('BilateralSigningTimeline', () => {
     )
 
     expect(screen.getByTestId('bilateral-signing-timeline')).toBeDefined()
+    expect(
+      screen.getByText('Tiến trình ký số song phương VNPT SmartCA')
+    ).toBeDefined()
     expect(screen.getByText('Chưa ký (0/2)')).toBeDefined()
     expect(screen.getByTestId('tenant-signed-badge').textContent).toBe(
       'Chưa ký'
@@ -102,6 +105,7 @@ describe('BilateralSigningTimeline', () => {
 
     const signBtn = screen.getByTestId('tenant-sign-now-btn')
     expect(signBtn).toBeDefined()
+    expect(screen.getByText('Ký số VNPT SmartCA ngay')).toBeDefined()
     fireEvent.click(signBtn)
     expect(onSignMock).toHaveBeenCalledTimes(1)
   })

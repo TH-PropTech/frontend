@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
 import { mockApartments, type ApartmentItem } from '@/entities/properties'
+import { env } from '@/shared/config/env'
 import { PropertyDetailHero } from './components/property-detail-hero'
 import { BookingWidget } from './components/booking-widget'
 import { PropertyGallery } from './components/property-gallery'
@@ -184,6 +185,7 @@ export function PropertyDetail(): React.ReactElement {
   }, [storedUser])
 
   const [property, setProperty] = React.useState<ApartmentItem | null>(null)
+  const [propertyError, setPropertyError] = React.useState<Error | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [isOpen360, setIsOpen360] = React.useState(false)
   const [showChat, setShowChat] = React.useState(false)
@@ -198,35 +200,60 @@ export function PropertyDetail(): React.ReactElement {
 
   React.useEffect(() => {
     let active = true
-    if (!propertyId) {
-      const timer = setTimeout(() => {
-        setProperty(mockApartments[0] || null)
-        setLoading(false)
-      }, 0)
-      return () => clearTimeout(timer)
-    }
-    apiClient
-      .get<ApartmentItem>(`/apartments/${propertyId}?format=web`)
-      .then(data => {
-        if (active && data) {
-          setProperty(data)
+    const requestTimer = setTimeout(() => {
+      if (!active) return
+      setLoading(true)
+      setProperty(null)
+      setPropertyError(null)
+      if (!propertyId) {
+        const demoProperty = env.enableMocks ? mockApartments[0] : null
+        setProperty(demoProperty || null)
+        if (!demoProperty) {
+          setPropertyError(new Error('Missing property resource id'))
         }
-      })
-      .catch(err => {
-        console.error('Failed to fetch property details:', err)
-        const fallback =
-          mockApartments.find(apt => apt.id === propertyId) || mockApartments[0]
-        if (active) setProperty(fallback || null)
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
+        setLoading(false)
+        return
+      }
+
+      const demoProperty = env.enableMocks
+        ? mockApartments.find(apt => apt.id === propertyId)
+        : undefined
+      if (demoProperty) {
+        setProperty(demoProperty)
+        setLoading(false)
+        return
+      }
+
+      apiClient
+        .get<ApartmentItem>(`/apartments/${propertyId}?format=web`)
+        .then(data => {
+          if (active && data) {
+            setProperty(data)
+          }
+        })
+        .catch(err => {
+          const normalizedError =
+            err instanceof Error
+              ? err
+              : new Error('Failed to fetch property details')
+          console.error('Failed to fetch property details:', normalizedError)
+          if (active) {
+            setProperty(null)
+            setPropertyError(normalizedError)
+          }
+        })
+        .finally(() => {
+          if (active) setLoading(false)
+        })
+    }, 0)
+
     return () => {
       active = false
+      clearTimeout(requestTimer)
     }
   }, [propertyId])
 
-  if (loading || !property) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-bg text-fg flex flex-col justify-between">
         <HomeHeader />
@@ -236,6 +263,30 @@ export function PropertyDetail(): React.ReactElement {
             <span className="text-sm font-bold text-muted">
               Đang tải thông tin căn hộ...
             </span>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-bg text-fg flex flex-col justify-between">
+        <HomeHeader />
+        <main className="flex-1 flex items-center justify-center px-6 py-20">
+          <div className="max-w-md space-y-4 text-center">
+            <p role="alert" className="text-sm font-semibold text-danger">
+              {propertyError
+                ? 'Không thể tải thông tin căn hộ này từ máy chủ.'
+                : 'Không tìm thấy thông tin căn hộ này.'}
+            </p>
+            <p className="text-sm text-muted">
+              Vui lòng quay lại danh sách và chọn một căn hộ đang có dữ liệu.
+            </p>
+            <Button asChild variant="primary" className="rounded-xl">
+              <Link href="/properties">Quay lại danh sách căn hộ</Link>
+            </Button>
           </div>
         </main>
         <Footer />
