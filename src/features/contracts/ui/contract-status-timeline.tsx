@@ -59,7 +59,7 @@ export function ContractStatusTimeline({
     id: 'step-draft',
     title: 'Khởi tạo dự thảo',
     description: 'Soạn thảo và chốt nội dung pháp lý',
-    state: 'completed',
+    state: isDraft ? 'current' : 'completed',
     icon: FileText,
   }
 

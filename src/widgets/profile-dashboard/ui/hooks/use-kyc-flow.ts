@@ -36,6 +36,21 @@ const base64ToBlob = (base64: string): Blob => {
   return new Blob([u8arr], { type: mime })
 }
 
+export function attachMediaStream(
+  video: HTMLVideoElement | null,
+  stream: MediaStream | null
+): void {
+  if (!video || !stream) return
+
+  video.srcObject = stream
+  const playPromise = video.play()
+  if (playPromise) {
+    void playPromise.catch(error => {
+      console.warn('Unable to autoplay KYC camera preview', error)
+    })
+  }
+}
+
 export function useKycFlow(profile: UseProfileReturn) {
   const { setShowKycModal, kycForm, setKycForm, refreshKycStatus } = profile
 
@@ -66,6 +81,18 @@ export function useKycFlow(profile: UseProfileReturn) {
   const [streamSelfie, setStreamSelfie] = React.useState<MediaStream | null>(
     null
   )
+
+  React.useEffect(() => {
+    attachMediaStream(videoRef1.current, stream1)
+  }, [stream1])
+
+  React.useEffect(() => {
+    attachMediaStream(videoRef2.current, stream2)
+  }, [stream2])
+
+  React.useEffect(() => {
+    attachMediaStream(videoRefSelfie.current, streamSelfie)
+  }, [streamSelfie])
 
   // Verification results
   const [verifyResults, setVerifyResults] = React.useState({

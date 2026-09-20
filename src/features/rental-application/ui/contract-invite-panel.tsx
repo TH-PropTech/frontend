@@ -134,7 +134,7 @@ export function ContractInvitePanel({
   return (
     <div
       data-testid="contract-invite-panel"
-      className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6"
+      className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6"
     >
       {/* Breadcrumb */}
       <nav

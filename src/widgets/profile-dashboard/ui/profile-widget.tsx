@@ -99,7 +99,7 @@ export function ProfileWidget(): React.ReactElement {
         onValueChange={val => setActiveTab(val as TabKey)}
         className="w-full"
       >
-        <TabsList className="flex items-center border-b border-border bg-transparent p-0 rounded-none mb-8 gap-6 text-sm font-semibold h-auto justify-start overflow-x-auto whitespace-nowrap scrollbar-none">
+        <TabsList className="flex flex-wrap items-center border-b border-border bg-transparent p-0 rounded-none mb-8 gap-x-6 gap-y-2 text-sm font-semibold h-auto justify-start">
           {/* === Primary Tabs === */}
           <TabsTrigger value="progress" className={TRIGGER_CLASS}>
             <Activity className="h-4 w-4 mr-1.5 shrink-0" />
