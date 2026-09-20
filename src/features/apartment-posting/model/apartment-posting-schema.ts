@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { APARTMENT_CATEGORIES } from './apartment-categories'
 
 export const rentalPackagePostingSchema = z.object({
   packageId: z.string().min(1),
@@ -32,7 +33,13 @@ export const apartmentPostingSchema = z.object({
     .string()
     .min(10, 'Tiêu đề phải dài tối thiểu 10 ký tự')
     .max(200, 'Tiêu đề không được vượt quá 200 ký tự'),
-  category: z.string().min(1, 'Vui lòng chọn loại căn hộ'),
+  category: z
+    .string()
+    .min(1, 'Vui lòng chọn loại căn hộ')
+    .refine(
+      value => (APARTMENT_CATEGORIES as readonly string[]).includes(value),
+      'Loại hình phải là căn hộ chung cư hoặc chung cư mini, căn hộ dịch vụ'
+    ),
   description: z
     .string()
     .min(50, 'Mô tả phải dài tối thiểu 50 ký tự')
@@ -56,8 +63,6 @@ export const apartmentPostingSchema = z.object({
   water: z.string().optional().default(''),
   internet: z.string().optional().default(''),
   gallery: z.array(z.string()).default([]),
-  images360: z.array(z.string()).default([]),
-  vrUrl: z.string().optional().default(''),
   amenities: z.array(z.string()).default([]),
   projectName: z.string().optional().default(''),
   projectId: z.string().nullable().default(null),

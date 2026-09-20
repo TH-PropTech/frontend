@@ -54,6 +54,48 @@ function renderDrawer(onMediaChange = vi.fn()): void {
   )
 }
 
+describe('DetailDrawer VR tour and editing', () => {
+  it('saves the VR tour link staff captured through the media endpoint', async () => {
+    const updated = {
+      ...apartment,
+      vrUrl: 'https://my.matterport.com/show/?m=abc',
+    }
+    vi.mocked(apiClient.patch).mockResolvedValue(updated)
+    const onMediaChange = vi.fn()
+    renderDrawer(onMediaChange)
+
+    fireEvent.change(screen.getByLabelText('Link VR Tour'), {
+      target: { value: '  https://my.matterport.com/show/?m=abc  ' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu link VR' }))
+
+    await waitFor(() =>
+      expect(apiClient.patch).toHaveBeenCalledWith(
+        `/apartments/${apartment.id}/media`,
+        { vrUrl: 'https://my.matterport.com/show/?m=abc' }
+      )
+    )
+    expect(onMediaChange).toHaveBeenCalledWith(updated)
+  })
+
+  it('disables saving the VR link until it changes', () => {
+    renderDrawer()
+
+    expect(
+      (screen.getByRole('button', { name: 'Lưu link VR' }) as HTMLButtonElement)
+        .disabled
+    ).toBe(true)
+  })
+
+  it('lets staff open the edit dialog for an approved listing', () => {
+    renderDrawer()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Chỉnh sửa thông tin' }))
+
+    expect(screen.getByText('Chỉnh sửa thông tin căn hộ')).toBeTruthy()
+  })
+})
+
 describe('DetailDrawer media views', () => {
   it('keeps normal and 360 images in separate views', () => {
     renderDrawer()

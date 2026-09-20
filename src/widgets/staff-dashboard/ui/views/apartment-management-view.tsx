@@ -165,9 +165,8 @@ export function ApartmentManagementView(): React.ReactElement {
   const loadApartments = React.useCallback(async (): Promise<void> => {
     setLoading(true)
     try {
-      const data = await apiClient.get<StaffApartment[]>(
-        '/apartments?format=web'
-      )
+      // GET /apartments là danh sách công khai (chỉ tin đang hiển thị); màn quản lý cần mọi trạng thái.
+      const data = await apiClient.get<StaffApartment[]>('/apartments/manage')
       setApartments(data)
     } catch (err) {
       console.warn('Không thể tải danh sách căn hộ:', err)
@@ -180,7 +179,7 @@ export function ApartmentManagementView(): React.ReactElement {
   React.useEffect(() => {
     let isMounted = true
     apiClient
-      .get<StaffApartment[]>('/apartments?format=web')
+      .get<StaffApartment[]>('/apartments/manage')
       .then(data => {
         if (isMounted) {
           setApartments(data)
@@ -204,11 +203,19 @@ export function ApartmentManagementView(): React.ReactElement {
     setSelected(prev => (prev?.id === id ? { ...prev, status } : prev))
   }
 
+  // Nhận bản cập nhật (ảnh, VR, thông tin) từ API; giữ thông tin chủ nhà vì PATCH không kèm theo.
   const handleMediaChange = (updated: StaffApartment): void => {
+    const merge = (current: StaffApartment): StaffApartment => ({
+      ...current,
+      ...updated,
+      landlord: updated.landlord ?? current.landlord ?? null,
+    })
     setApartments(prev =>
-      prev.map(apartment => (apartment.id === updated.id ? updated : apartment))
+      prev.map(apartment =>
+        apartment.id === updated.id ? merge(apartment) : apartment
+      )
     )
-    setSelected(updated)
+    setSelected(prev => (prev?.id === updated.id ? merge(prev) : prev))
   }
 
   const handleApprove = async (id: string): Promise<void> => {
@@ -303,14 +310,14 @@ export function ApartmentManagementView(): React.ReactElement {
           totalCount={apartments.length}
           onChange={setFilter}
         />
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[color:var(--muted)]" />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Tìm theo tên, địa chỉ, quận..."
-            className="w-full pl-9 pr-4 py-2 text-xs border border-[color:var(--border)] rounded-xl bg-[color:var(--surface)] text-[color:var(--fg)] placeholder:text-[color:var(--muted)] focus:outline-none focus:border-[color:var(--primary)] transition-colors"
+            className="h-full w-full pl-9 pr-4 py-2 text-xs border border-[color:var(--border)] rounded-xl bg-[color:var(--surface)] text-[color:var(--fg)] placeholder:text-[color:var(--muted)] focus:outline-none focus:border-[color:var(--primary)] transition-colors"
           />
         </div>
       </div>

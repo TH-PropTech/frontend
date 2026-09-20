@@ -6,6 +6,9 @@ import { VrPreviewPanel } from './components/vr-preview-panel'
 import { toast } from 'sonner'
 import { ListingReviewQueue } from '@/features/listing-freshness'
 
+// Khớp RejectApartmentDto.rejectedReason (@MinLength(10)) ở backend.
+const REJECT_REASON_MIN_LENGTH = 10
+
 interface Property {
   id: string
   title: string
@@ -75,11 +78,21 @@ export function PropertyApprovalsView(): React.ReactElement {
   const loadProperties = React.useCallback(async () => {
     setLoading(true)
     try {
-      const data =
-        await apiClient.get<BackendApartmentResponse[]>('/apartments')
-      setProperties(data.map(mapProperty))
+      // GET /apartments là danh sách công khai (chỉ 'available'), nên hàng chờ
+      // duyệt và bài bị từ chối phải lấy từ các endpoint dành cho staff/admin.
+      const [pending, approved, rejected] = await Promise.all([
+        apiClient.get<BackendApartmentResponse[]>(
+          '/apartments/pending?format=web'
+        ),
+        apiClient.get<BackendApartmentResponse[]>('/apartments?format=web'),
+        apiClient.get<BackendApartmentResponse[]>(
+          '/apartments/rejected?format=web'
+        ),
+      ])
+      setProperties([...pending, ...approved, ...rejected].map(mapProperty))
     } catch (err) {
       console.error('Failed to load apartments for moderation:', err)
+      toast.error('Không thể tải danh sách tin đăng. Vui lòng thử lại.')
     } finally {
       setLoading(false)
     }
@@ -441,6 +454,10 @@ export function PropertyApprovalsView(): React.ReactElement {
                 className="w-full h-24 p-3 mt-3 text-xs border border-line rounded-lg focus:outline-none focus:border-accent bg-bg/25 resize-none"
                 required
               />
+              <p className="text-[11px] text-muted mt-1">
+                Tối thiểu {REJECT_REASON_MIN_LENGTH} ký tự (
+                {rejectReason.trim().length}/{REJECT_REASON_MIN_LENGTH}).
+              </p>
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   onClick={() => {
@@ -453,7 +470,9 @@ export function PropertyApprovalsView(): React.ReactElement {
                 </button>
                 <button
                   onClick={() => handleReject(selectedProp.id)}
-                  disabled={!rejectReason.trim()}
+                  disabled={
+                    rejectReason.trim().length < REJECT_REASON_MIN_LENGTH
+                  }
                   className="px-4 py-2 bg-accent hover:bg-accent/95 text-white text-xs font-semibold rounded-lg shadow-sm disabled:opacity-50 transition-colors"
                 >
                   Xác nhận từ chối

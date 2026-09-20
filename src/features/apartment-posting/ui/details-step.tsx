@@ -13,6 +13,8 @@ import {
 } from '@/shared/ui/select'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { RentalPackagesConfigSection } from './rental-packages-config-section'
+import { APARTMENT_CATEGORIES } from '../model/apartment-categories'
+import { AMENITIES_LIST } from '../model/amenities'
 import {
   FileText,
   DollarSign,
@@ -27,17 +29,6 @@ interface DetailsStepProps {
   form: UseFormReturn<ApartmentFormValues, unknown, ApartmentFormValues>
 }
 
-const CATEGORIES = [
-  'Căn hộ chung cư',
-  'Chung cư mini, căn hộ dịch vụ',
-  'Nhà riêng',
-  'Nhà biệt thự, liền kề',
-  'Nhà trọ, phòng trọ',
-  'Shophouse, nhà phố thương mại',
-  'Văn phòng',
-  'Bất động sản khác',
-]
-
 const DIRECTIONS = [
   'Đông',
   'Tây',
@@ -51,36 +42,6 @@ const DIRECTIONS = [
 const FURNITURE_TYPES = ['Đầy đủ', 'Cơ bản', 'Không nội thất', 'Cao cấp']
 const UTILITIES_PRICING = ['Giá nhà nước', 'Giá kinh doanh', 'Tự thỏa thuận']
 const INTERNET_PRICING = ['Miễn phí', 'Cố định', 'Tự lắp']
-
-const AMENITIES_LIST = [
-  { id: 'pool', label: 'Bể bơi', description: 'Bể bơi nội khu hoặc trong nhà' },
-  { id: 'gym', label: 'Phòng gym', description: 'Trung tâm thể hình thể thao' },
-  {
-    id: 'parking',
-    label: 'Bãi đỗ xe',
-    description: 'Chỗ gửi xe ô tô/xe máy rộng rãi',
-  },
-  {
-    id: 'elevator',
-    label: 'Thang máy',
-    description: 'Hệ thống di chuyển nhanh chóng',
-  },
-  {
-    id: 'security',
-    label: 'An ninh 24/7',
-    description: 'Bảo vệ, camera giám sát',
-  },
-  {
-    id: 'pets',
-    label: 'Nuôi thú cưng',
-    description: 'Cho phép đem vật nuôi vào nhà',
-  },
-  {
-    id: 'park',
-    label: 'Công viên',
-    description: 'Không gian xanh dạo bộ, thư giãn',
-  },
-]
 
 export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
   const {
@@ -154,7 +115,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
               <SelectValue placeholder="Chọn loại hình" />
             </SelectTrigger>
             <SelectContent>
-              {CATEGORIES.map(cat => (
+              {APARTMENT_CATEGORIES.map(cat => (
                 <SelectItem key={cat} value={cat}>
                   {cat}
                 </SelectItem>
