@@ -17,6 +17,7 @@ import { TabBlockchain } from './tab-blockchain'
 import { TabSecurity } from './tab-security'
 import { TabMyListings } from './tab-my-listings'
 import { TabLandlordApplications } from './tab-landlord-applications'
+import { TabTenantApplications } from './tab-tenant-applications'
 import { ModalKyc } from './modal-kyc'
 import { ModalHandover } from './modal-handover'
 import { ModalContract } from './modal-contract'
@@ -106,20 +107,16 @@ export function ProfileWidget(): React.ReactElement {
           </TabsTrigger>
 
           {role === 'landlord' && (
-            <>
-              <TabsTrigger value="listings" className={TRIGGER_CLASS}>
-                <Building className="h-4 w-4 mr-1.5 shrink-0" />
-                Tin đăng của tôi
-              </TabsTrigger>
-              <TabsTrigger
-                value="rental-applications"
-                className={TRIGGER_CLASS}
-              >
-                <Users className="h-4 w-4 mr-1.5 shrink-0" />
-                Hồ sơ đặt thuê
-              </TabsTrigger>
-            </>
+            <TabsTrigger value="listings" className={TRIGGER_CLASS}>
+              <Building className="h-4 w-4 mr-1.5 shrink-0" />
+              Tin đăng của tôi
+            </TabsTrigger>
           )}
+
+          <TabsTrigger value="rental-applications" className={TRIGGER_CLASS}>
+            <Users className="h-4 w-4 mr-1.5 shrink-0" />
+            Hồ sơ đặt thuê
+          </TabsTrigger>
 
           <TabsTrigger value="saved-searches" className={TRIGGER_CLASS}>
             <Bookmark className="h-4 w-4 mr-1.5 shrink-0" />
@@ -224,15 +221,18 @@ export function ProfileWidget(): React.ReactElement {
         </TabsContent>
 
         {role === 'landlord' && (
-          <>
-            <TabsContent value="listings" className="outline-none">
-              <TabMyListings />
-            </TabsContent>
-            <TabsContent value="rental-applications" className="outline-none">
-              <TabLandlordApplications />
-            </TabsContent>
-          </>
+          <TabsContent value="listings" className="outline-none">
+            <TabMyListings />
+          </TabsContent>
         )}
+
+        <TabsContent value="rental-applications" className="outline-none">
+          {role === 'landlord' ? (
+            <TabLandlordApplications />
+          ) : (
+            <TabTenantApplications />
+          )}
+        </TabsContent>
       </Tabs>
 
       {/* Modals */}

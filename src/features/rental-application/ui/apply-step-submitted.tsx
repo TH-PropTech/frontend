@@ -592,11 +592,15 @@ export function ApplyStepSubmitted({
         {isContractReady && handoff.href ? (
           <Button
             asChild
-            className="flex items-center justify-center gap-2 bg-control px-6 py-2 text-xs font-semibold text-on-control shadow-sm hover:opacity-90"
+            className="flex items-center justify-center gap-2 bg-primary px-6 py-2 text-xs font-semibold text-on-control shadow-md hover:bg-primary-hover"
           >
-            <Link href={handoff.href as Route}>
+            <Link
+              href={
+                `/rental-applications/${application._id}/contract-invite` as Route
+              }
+            >
               <FileSignature aria-hidden="true" className="h-3.5 w-3.5" />
-              <span>Xem hợp đồng số</span>
+              <span>Xem &amp; Ký hợp đồng</span>
               <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
             </Link>
           </Button>

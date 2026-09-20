@@ -146,6 +146,11 @@ export async function getMyRentalApplications(): Promise<RentalApplicationList> 
     '/rental-applications/mine?page=1&limit=20'
   )
 }
+export async function getMyRentalApplicationById(
+  id: string
+): Promise<RentalApplicationItem> {
+  return apiClient.get<RentalApplicationItem>(`/rental-applications/${id}`)
+}
 export async function getReceivedRentalApplications(): Promise<RentalApplicationList> {
   return apiClient.get<RentalApplicationList>(
     '/rental-applications/received?page=1&limit=20'

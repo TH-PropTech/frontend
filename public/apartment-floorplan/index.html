@@ -209,7 +209,10 @@
         box-shadow: 0 4px 14px rgb(52 43 37 / 12%);
         backdrop-filter: blur(10px);
         cursor: pointer;
-        transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+        transition:
+          border-color 0.15s ease,
+          background-color 0.15s ease,
+          transform 0.15s ease;
         white-space: nowrap;
         user-select: none;
         touch-action: manipulation;
@@ -293,7 +296,12 @@
         <div id="room-list"></div>
       </aside>
       <div id="controls" class="panel" aria-label="Điều khiển sơ đồ">
-        <button id="overview-button" class="control-button" type="button" hidden>
+        <button
+          id="overview-button"
+          class="control-button"
+          type="button"
+          hidden
+        >
           Quay lại tổng quan
         </button>
         <button id="reset-button" class="control-button" type="button">
