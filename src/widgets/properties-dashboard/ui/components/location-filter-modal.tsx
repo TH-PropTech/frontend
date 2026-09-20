@@ -9,6 +9,10 @@ import {
   SelectValue,
 } from '@/shared/ui/select'
 import { useVietnamLocations } from '@/shared/lib/use-vietnam-locations'
+import {
+  resolveLocationFromParams,
+  removeVietnameseTones,
+} from '../../lib/use-properties-filters'
 
 interface LocationFilterModalProps {
   onClose: () => void
@@ -47,6 +51,100 @@ export function LocationFilterModal({
     isLoadingDistricts,
     isLoadingWards,
   } = useVietnamLocations(selectedProvinceCode, selectedDistrictCode)
+
+  // 1. Auto-resolve missing city/province from selectedDistrict
+  React.useEffect(() => {
+    if (selectedDistrict && (!selectedCity || !selectedProvinceCode)) {
+      const resolved = resolveLocationFromParams(selectedCity, selectedDistrict)
+      if (resolved.city && !selectedCity) {
+        setSelectedCity(resolved.city)
+      }
+      if (resolved.provinceCode && !selectedProvinceCode) {
+        setSelectedProvinceCode(resolved.provinceCode)
+      }
+      if (resolved.districtCode && !selectedDistrictCode) {
+        setSelectedDistrictCode(resolved.districtCode)
+      }
+    }
+  }, [
+    selectedDistrict,
+    selectedCity,
+    selectedProvinceCode,
+    selectedDistrictCode,
+    setSelectedCity,
+    setSelectedProvinceCode,
+    setSelectedDistrictCode,
+  ])
+
+  // 2. Auto-sync selectedCity with fetched provinces from API
+  React.useEffect(() => {
+    if (selectedCity && provinces.length > 0) {
+      const matchedProvince = provinces.find(
+        p =>
+          removeVietnameseTones(p.name) ===
+            removeVietnameseTones(selectedCity) ||
+          removeVietnameseTones(p.name).includes(
+            removeVietnameseTones(selectedCity)
+          ) ||
+          removeVietnameseTones(selectedCity).includes(
+            removeVietnameseTones(p.name)
+          )
+      )
+      if (matchedProvince) {
+        if (selectedProvinceCode !== matchedProvince.code) {
+          setSelectedProvinceCode(matchedProvince.code)
+        }
+        if (selectedCity !== matchedProvince.name) {
+          setSelectedCity(matchedProvince.name)
+        }
+      }
+    }
+  }, [
+    provinces,
+    selectedCity,
+    selectedProvinceCode,
+    setSelectedCity,
+    setSelectedProvinceCode,
+  ])
+
+  // 3. Auto-sync selectedDistrict with fetched districts from API
+  React.useEffect(() => {
+    if (selectedDistrict && districts.length > 0) {
+      const normSelected = removeVietnameseTones(selectedDistrict)
+        .replace(/^(quan|huyen|thanh pho|tp\.?)\s+/i, '')
+        .trim()
+      const matchedDistrict = districts.find(d => {
+        const normD = removeVietnameseTones(d.name)
+          .replace(/^(quan|huyen|thanh pho|tp\.?)\s+/i, '')
+          .trim()
+        return (
+          normD === normSelected ||
+          removeVietnameseTones(d.name).includes(normSelected) ||
+          normSelected.includes(normD)
+        )
+      })
+      if (matchedDistrict) {
+        if (selectedDistrictCode !== matchedDistrict.code) {
+          setSelectedDistrictCode(matchedDistrict.code)
+        }
+        if (
+          selectedDistrict !== matchedDistrict.name &&
+          normSelected ===
+            removeVietnameseTones(matchedDistrict.name)
+              .replace(/^(quan|huyen|thanh pho|tp\.?)\s+/i, '')
+              .trim()
+        ) {
+          setSelectedDistrict(matchedDistrict.name)
+        }
+      }
+    }
+  }, [
+    districts,
+    selectedDistrict,
+    selectedDistrictCode,
+    setSelectedDistrict,
+    setSelectedDistrictCode,
+  ])
 
   return (
     <div className="space-y-4">
@@ -96,6 +194,10 @@ export function LocationFilterModal({
               <SelectItem value="all">
                 {isLoadingProvinces ? 'Đang tải...' : 'Chọn Tỉnh/Thành phố'}
               </SelectItem>
+              {selectedCity &&
+                !provinces.some(p => p.name === selectedCity) && (
+                  <SelectItem value={selectedCity}>{selectedCity}</SelectItem>
+                )}
               {provinces.map(province => (
                 <SelectItem key={province.code} value={province.name}>
                   {province.name}
@@ -112,7 +214,7 @@ export function LocationFilterModal({
           </label>
           <Select
             value={selectedDistrict || 'all'}
-            disabled={!selectedCity}
+            disabled={!selectedCity && !selectedDistrict}
             onValueChange={val => {
               if (val === 'all') {
                 setSelectedDistrict('')
@@ -132,6 +234,12 @@ export function LocationFilterModal({
               <SelectItem value="all">
                 {isLoadingDistricts ? 'Đang tải...' : 'Chọn Quận/Huyện'}
               </SelectItem>
+              {selectedDistrict &&
+                !districts.some(d => d.name === selectedDistrict) && (
+                  <SelectItem value={selectedDistrict}>
+                    {selectedDistrict}
+                  </SelectItem>
+                )}
               {districts.map(district => (
                 <SelectItem key={district.code} value={district.name}>
                   {district.name}
@@ -160,6 +268,9 @@ export function LocationFilterModal({
               <SelectItem value="all">
                 {isLoadingWards ? 'Đang tải...' : 'Chọn Phường/Xã'}
               </SelectItem>
+              {selectedWard && !wards.some(w => w.name === selectedWard) && (
+                <SelectItem value={selectedWard}>{selectedWard}</SelectItem>
+              )}
               {wards.map(ward => (
                 <SelectItem key={ward.code} value={ward.name}>
                   {ward.name}

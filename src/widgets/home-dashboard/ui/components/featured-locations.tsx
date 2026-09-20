@@ -19,7 +19,7 @@ export function FeaturedLocations(): React.ReactElement {
           Minh.
         </p>
       </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+      <div className="flex overflow-x-auto pb-3 gap-3 snap-x snap-mandatory no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 md:grid-cols-6 sm:overflow-visible sm:pb-0">
         {[
           { name: 'Quận 1', count: 24, range: '12–25 Tr' },
           { name: 'Quận 2', count: 38, range: '10–20 Tr' },
@@ -30,8 +30,10 @@ export function FeaturedLocations(): React.ReactElement {
         ].map(area => (
           <Link
             key={area.name}
-            href={'/properties' as Route}
-            className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-white p-5 text-center shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
+            href={
+              `/properties?district=${encodeURIComponent(area.name)}` as Route
+            }
+            className="snap-start shrink-0 w-[140px] sm:w-auto group flex flex-col items-center gap-3 rounded-2xl border border-border bg-white p-4 sm:p-5 text-center shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary group-hover:bg-primary group-hover:text-white transition-colors">
               <svg
@@ -66,6 +68,10 @@ export function FeaturedLocations(): React.ReactElement {
             </div>
           </Link>
         ))}
+      </div>
+      {/* Mobile Swipe Hint */}
+      <div className="mt-3 flex sm:hidden items-center justify-center gap-1 text-[11px] font-medium text-muted">
+        <span>← Vuốt sang để xem thêm quận →</span>
       </div>
     </section>
   )

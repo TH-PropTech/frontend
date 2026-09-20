@@ -10,7 +10,7 @@ import {
   type ApiBuildingItem,
 } from '@/entities/properties'
 import { apiClient } from '@/shared/api/api-client'
-function removeVietnameseTones(str: string): string {
+export function removeVietnameseTones(str: string): string {
   return str
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -18,6 +18,81 @@ function removeVietnameseTones(str: string): string {
     .replace(/Đ/g, 'D')
     .toLowerCase()
     .trim()
+}
+
+export function parsePriceParam(val: string | null | undefined): number | '' {
+  if (!val) return ''
+  const num = Number(val)
+  if (isNaN(num) || num <= 0) return ''
+  // If value is >= 1,000,000 (e.g. legacy VND value 10000000), convert to millions (10)
+  if (num >= 1_000_000) {
+    return Math.round(num / 1_000_000)
+  }
+  return num
+}
+
+export function parseBedroomsParam(
+  val: string | null | undefined
+): number | 'all' {
+  if (!val || val === 'all') return 'all'
+  const clean = String(val).replace('+', '').trim()
+  const num = Number(clean)
+  if (isNaN(num) || num <= 0) return 'all'
+  return num
+}
+
+export function isAllDistrict(district?: string | null): boolean {
+  if (!district) return true
+  const norm = removeVietnameseTones(district)
+  return (
+    norm === '' ||
+    norm === 'all' ||
+    norm === 'tat ca' ||
+    norm === 'tat ca khu vuc'
+  )
+}
+
+export function matchDistrict(
+  itemDistrict?: string,
+  targetDistrict?: string | null
+): boolean {
+  if (isAllDistrict(targetDistrict)) return true
+  if (!itemDistrict) return false
+  return (
+    removeVietnameseTones(itemDistrict) ===
+    removeVietnameseTones(targetDistrict!)
+  )
+}
+
+export function matchBedrooms(
+  itemBedrooms: number | undefined,
+  targetFilter: number | 'all'
+): boolean {
+  if (targetFilter === 'all') return true
+  if (itemBedrooms === undefined) return false
+  if (targetFilter >= 4) {
+    return itemBedrooms >= targetFilter
+  }
+  return itemBedrooms === targetFilter
+}
+
+export function matchApartmentKeyword(
+  apt: ApartmentItem,
+  keyword: string
+): boolean {
+  if (!keyword.trim()) return true
+  const kw = removeVietnameseTones(keyword)
+  const fields = [
+    apt.title,
+    apt.description,
+    apt.location,
+    apt.projectName,
+    apt.buildingName,
+    apt.district,
+    apt.street,
+    apt.ward,
+  ]
+  return fields.some(f => f && removeVietnameseTones(f).includes(kw))
 }
 
 function normalizeCity(city?: string): string {
@@ -36,6 +111,642 @@ function normalizeCity(city?: string): string {
     return 'hn'
   }
   return norm
+}
+
+export function resolveProvinceFromCity(
+  city?: string | null
+): { name: string; code: number } | null {
+  if (!city) return null
+  const norm = removeVietnameseTones(city)
+  if (
+    norm.includes('ho chi minh') ||
+    norm.includes('tp.hcm') ||
+    norm.includes('tphcm') ||
+    norm.includes('hcm') ||
+    norm.includes('sai gon')
+  ) {
+    return { name: 'Thành phố Hồ Chí Minh', code: 79 }
+  }
+  if (norm.includes('ha noi') || norm === 'hn') {
+    return { name: 'Thành phố Hà Nội', code: 1 }
+  }
+  if (norm.includes('da nang') || norm === 'dn') {
+    return { name: 'Thành phố Đà Nẵng', code: 48 }
+  }
+  if (norm.includes('binh duong')) {
+    return { name: 'Tỉnh Bình Dương', code: 74 }
+  }
+  return null
+}
+
+export interface DistrictMapping {
+  provinceName: string
+  provinceCode: number
+  districtCode: number
+  officialDistrictName: string
+}
+
+export const DISTRICT_TO_PROVINCE_MAP: Record<string, DistrictMapping> = {
+  // TP. Hồ Chí Minh (Code: 79)
+  '1': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 760,
+    officialDistrictName: 'Quận 1',
+  },
+  'quan 1': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 760,
+    officialDistrictName: 'Quận 1',
+  },
+  '2': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 769,
+    officialDistrictName: 'Thành phố Thủ Đức',
+  },
+  'quan 2': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 769,
+    officialDistrictName: 'Thành phố Thủ Đức',
+  },
+  '3': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 770,
+    officialDistrictName: 'Quận 3',
+  },
+  'quan 3': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 770,
+    officialDistrictName: 'Quận 3',
+  },
+  '4': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 773,
+    officialDistrictName: 'Quận 4',
+  },
+  'quan 4': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 773,
+    officialDistrictName: 'Quận 4',
+  },
+  '5': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 774,
+    officialDistrictName: 'Quận 5',
+  },
+  'quan 5': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 774,
+    officialDistrictName: 'Quận 5',
+  },
+  '6': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 775,
+    officialDistrictName: 'Quận 6',
+  },
+  'quan 6': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 775,
+    officialDistrictName: 'Quận 6',
+  },
+  '7': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 778,
+    officialDistrictName: 'Quận 7',
+  },
+  'quan 7': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 778,
+    officialDistrictName: 'Quận 7',
+  },
+  '8': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 776,
+    officialDistrictName: 'Quận 8',
+  },
+  'quan 8': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 776,
+    officialDistrictName: 'Quận 8',
+  },
+  '9': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 769,
+    officialDistrictName: 'Thành phố Thủ Đức',
+  },
+  'quan 9': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 769,
+    officialDistrictName: 'Thành phố Thủ Đức',
+  },
+  '10': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 771,
+    officialDistrictName: 'Quận 10',
+  },
+  'quan 10': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 771,
+    officialDistrictName: 'Quận 10',
+  },
+  '11': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 772,
+    officialDistrictName: 'Quận 11',
+  },
+  'quan 11': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 772,
+    officialDistrictName: 'Quận 11',
+  },
+  '12': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 761,
+    officialDistrictName: 'Quận 12',
+  },
+  'quan 12': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 761,
+    officialDistrictName: 'Quận 12',
+  },
+  'binh thanh': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 765,
+    officialDistrictName: 'Quận Bình Thạnh',
+  },
+  'quan binh thanh': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 765,
+    officialDistrictName: 'Quận Bình Thạnh',
+  },
+  'thu duc': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 769,
+    officialDistrictName: 'Thành phố Thủ Đức',
+  },
+  'thanh pho thu duc': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 769,
+    officialDistrictName: 'Thành phố Thủ Đức',
+  },
+  'go vap': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 764,
+    officialDistrictName: 'Quận Gò Vấp',
+  },
+  'quan go vap': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 764,
+    officialDistrictName: 'Quận Gò Vấp',
+  },
+  'phu nhuan': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 768,
+    officialDistrictName: 'Quận Phú Nhuận',
+  },
+  'quan phu nhuan': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 768,
+    officialDistrictName: 'Quận Phú Nhuận',
+  },
+  'tan binh': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 766,
+    officialDistrictName: 'Quận Tân Bình',
+  },
+  'quan tan binh': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 766,
+    officialDistrictName: 'Quận Tân Bình',
+  },
+  'tan phu': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 767,
+    officialDistrictName: 'Quận Tân Phú',
+  },
+  'quan tan phu': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 767,
+    officialDistrictName: 'Quận Tân Phú',
+  },
+  'binh tan': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 777,
+    officialDistrictName: 'Quận Bình Tân',
+  },
+  'quan binh tan': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 777,
+    officialDistrictName: 'Quận Bình Tân',
+  },
+  'nha be': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 786,
+    officialDistrictName: 'Huyện Nhà Bè',
+  },
+  'huyen nha be': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 786,
+    officialDistrictName: 'Huyện Nhà Bè',
+  },
+  'hoc mon': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 784,
+    officialDistrictName: 'Huyện Hóc Môn',
+  },
+  'huyen hoc mon': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 784,
+    officialDistrictName: 'Huyện Hóc Môn',
+  },
+  'cu chi': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 783,
+    officialDistrictName: 'Huyện Củ Chi',
+  },
+  'huyen cu chi': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 783,
+    officialDistrictName: 'Huyện Củ Chi',
+  },
+  'binh chanh': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 785,
+    officialDistrictName: 'Huyện Bình Chánh',
+  },
+  'huyen binh chanh': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 785,
+    officialDistrictName: 'Huyện Bình Chánh',
+  },
+  'can gio': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 787,
+    officialDistrictName: 'Huyện Cần Giờ',
+  },
+  'huyen can gio': {
+    provinceName: 'Thành phố Hồ Chí Minh',
+    provinceCode: 79,
+    districtCode: 787,
+    officialDistrictName: 'Huyện Cần Giờ',
+  },
+
+  // Hà Nội (Code: 1)
+  'ba dinh': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 1,
+    officialDistrictName: 'Quận Ba Đình',
+  },
+  'quan ba dinh': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 1,
+    officialDistrictName: 'Quận Ba Đình',
+  },
+  'hoan kiem': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 2,
+    officialDistrictName: 'Quận Hoàn Kiếm',
+  },
+  'quan hoan kiem': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 2,
+    officialDistrictName: 'Quận Hoàn Kiếm',
+  },
+  'tay ho': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 3,
+    officialDistrictName: 'Quận Tây Hồ',
+  },
+  'quan tay ho': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 3,
+    officialDistrictName: 'Quận Tây Hồ',
+  },
+  'long bien': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 4,
+    officialDistrictName: 'Quận Long Biên',
+  },
+  'quan long bien': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 4,
+    officialDistrictName: 'Quận Long Biên',
+  },
+  'cau giay': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 5,
+    officialDistrictName: 'Quận Cầu Giấy',
+  },
+  'quan cau giay': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 5,
+    officialDistrictName: 'Quận Cầu Giấy',
+  },
+  'dong da': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 6,
+    officialDistrictName: 'Quận Đống Đa',
+  },
+  'quan dong da': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 6,
+    officialDistrictName: 'Quận Đống Đa',
+  },
+  'hai ba trung': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 7,
+    officialDistrictName: 'Quận Hai Bà Trưng',
+  },
+  'quan hai ba trung': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 7,
+    officialDistrictName: 'Quận Hai Bà Trưng',
+  },
+  'hoang mai': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 8,
+    officialDistrictName: 'Quận Hoàng Mai',
+  },
+  'quan hoang mai': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 8,
+    officialDistrictName: 'Quận Hoàng Mai',
+  },
+  'thanh xuan': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 9,
+    officialDistrictName: 'Quận Thanh Xuân',
+  },
+  'quan thanh xuan': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 9,
+    officialDistrictName: 'Quận Thanh Xuân',
+  },
+  'nam tu liem': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 19,
+    officialDistrictName: 'Quận Nam Từ Liêm',
+  },
+  'quan nam tu liem': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 19,
+    officialDistrictName: 'Quận Nam Từ Liêm',
+  },
+  'bac tu liem': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 21,
+    officialDistrictName: 'Quận Bắc Từ Liêm',
+  },
+  'quan bac tu liem': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 21,
+    officialDistrictName: 'Quận Bắc Từ Liêm',
+  },
+  'ha dong': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 268,
+    officialDistrictName: 'Quận Hà Đông',
+  },
+  'quan ha dong': {
+    provinceName: 'Thành phố Hà Nội',
+    provinceCode: 1,
+    districtCode: 268,
+    officialDistrictName: 'Quận Hà Đông',
+  },
+
+  // Đà Nẵng (Code: 48)
+  'hai chau': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 490,
+    officialDistrictName: 'Quận Hải Châu',
+  },
+  'quan hai chau': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 490,
+    officialDistrictName: 'Quận Hải Châu',
+  },
+  'thanh khe': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 491,
+    officialDistrictName: 'Quận Thanh Khê',
+  },
+  'quan thanh khe': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 491,
+    officialDistrictName: 'Quận Thanh Khê',
+  },
+  'son tra': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 492,
+    officialDistrictName: 'Quận Sơn Trà',
+  },
+  'quan son tra': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 492,
+    officialDistrictName: 'Quận Sơn Trà',
+  },
+  'ngu hanh son': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 493,
+    officialDistrictName: 'Quận Ngũ Hành Sơn',
+  },
+  'quan ngu hanh son': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 493,
+    officialDistrictName: 'Quận Ngũ Hành Sơn',
+  },
+  'lien chieu': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 494,
+    officialDistrictName: 'Quận Liên Chiểu',
+  },
+  'quan lien chieu': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 494,
+    officialDistrictName: 'Quận Liên Chiểu',
+  },
+  'cam le': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 495,
+    officialDistrictName: 'Quận Cẩm Lệ',
+  },
+  'quan cam le': {
+    provinceName: 'Thành phố Đà Nẵng',
+    provinceCode: 48,
+    districtCode: 495,
+    officialDistrictName: 'Quận Cẩm Lệ',
+  },
+
+  // Bình Dương (Code: 74)
+  'thu dau mot': {
+    provinceName: 'Tỉnh Bình Dương',
+    provinceCode: 74,
+    districtCode: 718,
+    officialDistrictName: 'Thành phố Thủ Dầu Một',
+  },
+  'thanh pho thu dau mot': {
+    provinceName: 'Tỉnh Bình Dương',
+    provinceCode: 74,
+    districtCode: 718,
+    officialDistrictName: 'Thành phố Thủ Dầu Một',
+  },
+  'di an': {
+    provinceName: 'Tỉnh Bình Dương',
+    provinceCode: 74,
+    districtCode: 724,
+    officialDistrictName: 'Thành phố Dĩ An',
+  },
+  'thanh pho di an': {
+    provinceName: 'Tỉnh Bình Dương',
+    provinceCode: 74,
+    districtCode: 724,
+    officialDistrictName: 'Thành phố Dĩ An',
+  },
+  'thuan an': {
+    provinceName: 'Tỉnh Bình Dương',
+    provinceCode: 74,
+    districtCode: 725,
+    officialDistrictName: 'Thành phố Thuận An',
+  },
+  'thanh pho thuan an': {
+    provinceName: 'Tỉnh Bình Dương',
+    provinceCode: 74,
+    districtCode: 725,
+    officialDistrictName: 'Thành phố Thuận An',
+  },
+}
+
+export interface ResolvedLocation {
+  city: string
+  provinceCode: number | null
+  district: string
+  districtCode: number | null
+}
+
+export function resolveLocationFromParams(
+  cityParam?: string | null,
+  districtParam?: string | null
+): ResolvedLocation {
+  const isDistrictAll = isAllDistrict(districtParam)
+  const normDistrict =
+    districtParam && !isDistrictAll ? removeVietnameseTones(districtParam) : ''
+
+  const mappedDistrict = normDistrict
+    ? DISTRICT_TO_PROVINCE_MAP[normDistrict]
+    : undefined
+  const resolvedProvinceFromCity = resolveProvinceFromCity(cityParam)
+
+  // 1. Resolve province name and code
+  let city = ''
+  let provinceCode: number | null = null
+
+  if (resolvedProvinceFromCity) {
+    city = resolvedProvinceFromCity.name
+    provinceCode = resolvedProvinceFromCity.code
+  } else if (mappedDistrict) {
+    city = mappedDistrict.provinceName
+    provinceCode = mappedDistrict.provinceCode
+  } else if (cityParam && cityParam.trim() !== '') {
+    city = cityParam.trim()
+  }
+
+  // 2. Resolve district name and code
+  let district = ''
+  let districtCode: number | null = null
+
+  if (!isDistrictAll && districtParam && districtParam.trim() !== '') {
+    district = districtParam.trim()
+    if (mappedDistrict) {
+      districtCode = mappedDistrict.districtCode
+    }
+  }
+
+  return {
+    city,
+    provinceCode,
+    district,
+    districtCode,
+  }
 }
 
 const AMENITY_MAP_TO_DB: Record<string, string> = {
@@ -76,11 +787,24 @@ export function usePropertiesFilters() {
   const searchParams = useSearchParams()
   const tabParam = searchParams?.get('tab')
   const buildingParam = searchParams?.get('building')
+  const cityParam = searchParams?.get('city')
+  const districtParam = searchParams?.get('district')
+  const minPriceParam = searchParams?.get('minPrice')
+  const maxPriceParam = searchParams?.get('maxPrice')
+  const bedroomsParam = searchParams?.get('bedrooms')
+  const searchParam = searchParams?.get('search')
+
+  const initialLocation = resolveLocationFromParams(cityParam, districtParam)
+
+  const parsedInitialBedrooms: number | 'all' =
+    parseBedroomsParam(bedroomsParam)
+  const parsedInitialMinPrice: number | '' = parsePriceParam(minPriceParam)
+  const parsedInitialMaxPrice: number | '' = parsePriceParam(maxPriceParam)
 
   const [activeTab, setActiveTab] = React.useState<'single' | 'project'>(
     tabParam === 'project' ? 'project' : 'single'
   )
-  const [searchKeyword, setSearchKeyword] = React.useState('')
+  const [searchKeyword, setSearchKeyword] = React.useState(searchParam || '')
   const [searchStatus, setSearchStatus] = React.useState('')
 
   // Building filter state
@@ -98,8 +822,10 @@ export function usePropertiesFilters() {
   }, [buildingParam])
 
   // Detailed Cascade Location States
-  const [selectedCity, setSelectedCity] = React.useState('')
-  const [selectedDistrict, setSelectedDistrict] = React.useState('')
+  const [selectedCity, setSelectedCity] = React.useState(initialLocation.city)
+  const [selectedDistrict, setSelectedDistrict] = React.useState(
+    initialLocation.district
+  )
   const [selectedWard, setSelectedWard] = React.useState('')
   const [selectedStreet, setSelectedStreet] = React.useState('')
   const [selectedProject, setSelectedProject] = React.useState('')
@@ -107,27 +833,33 @@ export function usePropertiesFilters() {
   // Province/District codes for API cascade lookup
   const [selectedProvinceCode, setSelectedProvinceCode] = React.useState<
     number | null
-  >(null)
+  >(initialLocation.provinceCode)
   const [selectedDistrictCode, setSelectedDistrictCode] = React.useState<
     number | null
-  >(null)
+  >(initialLocation.districtCode)
 
-  const [appliedCity, setAppliedCity] = React.useState('')
-  const [appliedDistrict, setAppliedDistrict] = React.useState('')
+  const [appliedCity, setAppliedCity] = React.useState(initialLocation.city)
+  const [appliedDistrict, setAppliedDistrict] = React.useState(
+    initialLocation.district
+  )
   const [appliedWard, setAppliedWard] = React.useState('')
   const [appliedStreet, setAppliedStreet] = React.useState('')
   const [appliedProject, setAppliedProject] = React.useState('')
 
   // Price & Area Range States
-  const [minPrice, setMinPrice] = React.useState<number | ''>('')
-  const [maxPrice, setMaxPrice] = React.useState<number | ''>('')
+  const [minPrice, setMinPrice] = React.useState<number | ''>(
+    parsedInitialMinPrice
+  )
+  const [maxPrice, setMaxPrice] = React.useState<number | ''>(
+    parsedInitialMaxPrice
+  )
   const [minArea, setMinArea] = React.useState<number | ''>('')
   const [maxArea, setMaxArea] = React.useState<number | ''>('')
 
   // Advanced Drawer States
   const [isVerifiedOnly, setIsVerifiedOnly] = React.useState(false)
   const [bedroomsFilter, setBedroomsFilter] = React.useState<number | 'all'>(
-    'all'
+    parsedInitialBedrooms
   )
   const [bathroomsFilter, setBathroomsFilter] = React.useState<number | 'all'>(
     'all'
@@ -148,7 +880,36 @@ export function usePropertiesFilters() {
   // Applied Advanced Drawer States (Only updated when Apply button is clicked)
   const [appliedBedroomsFilter, setAppliedBedroomsFilter] = React.useState<
     number | 'all'
-  >('all')
+  >(parsedInitialBedrooms)
+
+  // Synchronize state when search params change during navigation without effect cascading renders
+  const [prevParamsKey, setPrevParamsKey] = React.useState(
+    `${cityParam || ''}_${districtParam || ''}_${minPriceParam || ''}_${maxPriceParam || ''}_${bedroomsParam || ''}_${searchParam || ''}`
+  )
+  const currentParamsKey = `${cityParam || ''}_${districtParam || ''}_${minPriceParam || ''}_${maxPriceParam || ''}_${bedroomsParam || ''}_${searchParam || ''}`
+
+  if (prevParamsKey !== currentParamsKey) {
+    setPrevParamsKey(currentParamsKey)
+    const resolved = resolveLocationFromParams(cityParam, districtParam)
+    setSelectedCity(resolved.city)
+    setAppliedCity(resolved.city)
+    setSelectedDistrict(resolved.district)
+    setAppliedDistrict(resolved.district)
+    setSelectedProvinceCode(resolved.provinceCode)
+    setSelectedDistrictCode(resolved.districtCode)
+
+    const normalizedMinPrice = parsePriceParam(minPriceParam)
+    setMinPrice(normalizedMinPrice)
+
+    const normalizedMaxPrice = parsePriceParam(maxPriceParam)
+    setMaxPrice(normalizedMaxPrice)
+
+    const normalizedBedrooms = parseBedroomsParam(bedroomsParam)
+    setBedroomsFilter(normalizedBedrooms)
+    setAppliedBedroomsFilter(normalizedBedrooms)
+
+    setSearchKeyword(searchParam || '')
+  }
   const [appliedBathroomsFilter, setAppliedBathroomsFilter] = React.useState<
     number | 'all'
   >('all')
@@ -215,6 +976,9 @@ export function usePropertiesFilters() {
     setSelectedWard(appliedWard)
     setSelectedStreet(appliedStreet)
     setSelectedProject(appliedProject)
+    const resolved = resolveLocationFromParams(appliedCity, appliedDistrict)
+    setSelectedProvinceCode(resolved.provinceCode)
+    setSelectedDistrictCode(resolved.districtCode)
   }
 
   const [debouncedKeyword, setDebouncedKeyword] = React.useState(searchKeyword)
@@ -239,7 +1003,8 @@ export function usePropertiesFilters() {
     queryParams.append('format', 'web')
     if (debouncedKeyword) queryParams.append('search', debouncedKeyword)
     if (appliedCity) queryParams.append('city', appliedCity)
-    if (appliedDistrict) queryParams.append('district', appliedDistrict)
+    if (appliedDistrict && !isAllDistrict(appliedDistrict))
+      queryParams.append('district', appliedDistrict)
     if (appliedWard) queryParams.append('ward', appliedWard)
     if (appliedStreet) queryParams.append('street', appliedStreet)
     if (appliedProject) queryParams.append('projectName', appliedProject)
@@ -337,7 +1102,8 @@ export function usePropertiesFilters() {
     const queryParams = new URLSearchParams()
     if (debouncedKeyword) queryParams.append('search', debouncedKeyword)
     if (appliedCity) queryParams.append('city', appliedCity)
-    if (appliedDistrict) queryParams.append('district', appliedDistrict)
+    if (appliedDistrict && !isAllDistrict(appliedDistrict))
+      queryParams.append('district', appliedDistrict)
     if (minPrice !== '') queryParams.append('minPrice', String(minPrice))
     if (maxPrice !== '') queryParams.append('maxPrice', String(maxPrice))
 
@@ -444,7 +1210,12 @@ export function usePropertiesFilters() {
         normalizeCity(proj.city) !== normalizeCity(appliedCity)
       )
         return false
-      if (appliedDistrict && proj.district !== appliedDistrict) return false
+      if (
+        appliedDistrict &&
+        !isAllDistrict(appliedDistrict) &&
+        !matchDistrict(proj.district, appliedDistrict)
+      )
+        return false
       if (appliedWard && proj.ward !== appliedWard) return false
       if (appliedStreet && proj.street !== appliedStreet) return false
 
@@ -454,8 +1225,8 @@ export function usePropertiesFilters() {
       if (appliedHasMediaOnly && !proj.hasMedia) return false
 
       if (appliedBedroomsFilter !== 'all') {
-        const hasMatchingUnit = proj.units?.some(
-          unit => unit.bedrooms === Number(appliedBedroomsFilter)
+        const hasMatchingUnit = proj.units?.some(unit =>
+          matchBedrooms(unit.bedrooms, appliedBedroomsFilter)
         )
         if (!hasMatchingUnit) return false
       }
@@ -485,19 +1256,33 @@ export function usePropertiesFilters() {
 
   // Filter API projects
   const filteredApiProjects = React.useMemo(() => {
+    const shouldFilterLocally = useMockFallback || apiProjects.length === 0
     return apiProjects.filter(proj => {
-      if (useMockFallback) {
+      if (shouldFilterLocally) {
         if (searchKeyword.trim()) {
           const kw = removeVietnameseTones(searchKeyword)
-          const matchName = removeVietnameseTones(proj.name).includes(kw)
+          const nameToMatch =
+            proj.name || (proj as unknown as { title?: string }).title || ''
+          const devToMatch =
+            proj.investor ||
+            (proj as unknown as { developer?: string }).developer ||
+            ''
+          const matchName = removeVietnameseTones(nameToMatch).includes(kw)
           const matchDesc = removeVietnameseTones(
             proj.description || ''
           ).includes(kw)
           const matchLoc = removeVietnameseTones(proj.location).includes(kw)
-          const matchInvestor = removeVietnameseTones(
-            proj.investor || ''
+          const matchInvestor = removeVietnameseTones(devToMatch).includes(kw)
+          const matchDistrict = removeVietnameseTones(
+            proj.district || ''
           ).includes(kw)
-          if (!matchName && !matchDesc && !matchLoc && !matchInvestor)
+          if (
+            !matchName &&
+            !matchDesc &&
+            !matchLoc &&
+            !matchInvestor &&
+            !matchDistrict
+          )
             return false
         }
 
@@ -508,7 +1293,8 @@ export function usePropertiesFilters() {
           return false
         if (
           appliedDistrict &&
-          proj.district.toLowerCase() !== appliedDistrict.toLowerCase()
+          !isAllDistrict(appliedDistrict) &&
+          !matchDistrict(proj.district, appliedDistrict)
         )
           return false
       }
@@ -517,7 +1303,7 @@ export function usePropertiesFilters() {
       const projectApartments = apartments.filter(
         apt => apt.projectName === proj.name
       )
-      if (useMockFallback && projectApartments.length > 0) {
+      if (shouldFilterLocally && projectApartments.length > 0) {
         const prices = projectApartments.map(apt => apt.priceNum)
         const projectMinPrice = Math.min(...prices)
         const projectMaxPrice = Math.max(...prices)
@@ -528,8 +1314,8 @@ export function usePropertiesFilters() {
 
       // Filter by bedrooms and bathrooms in apartments belonging to this project
       if (appliedBedroomsFilter !== 'all') {
-        const hasMatchingApt = projectApartments.some(
-          apt => apt.bedrooms === Number(appliedBedroomsFilter)
+        const hasMatchingApt = projectApartments.some(apt =>
+          matchBedrooms(apt.bedrooms, appliedBedroomsFilter)
         )
         if (!hasMatchingApt) return false
       }
@@ -565,18 +1351,15 @@ export function usePropertiesFilters() {
 
   // Filter apartments
   const filteredApartments = React.useMemo(() => {
+    const shouldFilterLocally = useMockFallback || apartments === mockApartments
     return apartments.filter(apt => {
-      if (useMockFallback) {
+      if (shouldFilterLocally) {
         if (selectedBuildingId && apt.buildingId !== selectedBuildingId) {
           return false
         }
 
         if (searchKeyword.trim()) {
-          const kw = removeVietnameseTones(searchKeyword)
-          const matchTitle = removeVietnameseTones(apt.title).includes(kw)
-          const matchDesc = removeVietnameseTones(apt.description).includes(kw)
-          const matchLoc = removeVietnameseTones(apt.location).includes(kw)
-          if (!matchTitle && !matchDesc && !matchLoc) return false
+          if (!matchApartmentKeyword(apt, searchKeyword)) return false
         }
 
         if (
@@ -584,7 +1367,12 @@ export function usePropertiesFilters() {
           normalizeCity(apt.city) !== normalizeCity(appliedCity)
         )
           return false
-        if (appliedDistrict && apt.district !== appliedDistrict) return false
+        if (
+          appliedDistrict &&
+          !isAllDistrict(appliedDistrict) &&
+          !matchDistrict(apt.district, appliedDistrict)
+        )
+          return false
         if (appliedWard && apt.ward !== appliedWard) return false
         if (appliedStreet && apt.street !== appliedStreet) return false
         if (appliedProject && apt.projectName !== appliedProject) return false
@@ -598,7 +1386,7 @@ export function usePropertiesFilters() {
 
       if (
         appliedBedroomsFilter !== 'all' &&
-        apt.bedrooms !== Number(appliedBedroomsFilter)
+        !matchBedrooms(apt.bedrooms, appliedBedroomsFilter)
       )
         return false
       if (
@@ -697,11 +1485,7 @@ export function usePropertiesFilters() {
       }
 
       if (searchKeyword.trim()) {
-        const kw = removeVietnameseTones(searchKeyword)
-        const matchTitle = removeVietnameseTones(apt.title).includes(kw)
-        const matchDesc = removeVietnameseTones(apt.description).includes(kw)
-        const matchLoc = removeVietnameseTones(apt.location).includes(kw)
-        if (!matchTitle && !matchDesc && !matchLoc) return false
+        if (!matchApartmentKeyword(apt, searchKeyword)) return false
       }
 
       if (
@@ -709,7 +1493,12 @@ export function usePropertiesFilters() {
         normalizeCity(apt.city) !== normalizeCity(selectedCity)
       )
         return false
-      if (selectedDistrict && apt.district !== selectedDistrict) return false
+      if (
+        selectedDistrict &&
+        !isAllDistrict(selectedDistrict) &&
+        !matchDistrict(apt.district, selectedDistrict)
+      )
+        return false
       if (selectedWard && apt.ward !== selectedWard) return false
       if (selectedStreet && apt.street !== selectedStreet) return false
       if (selectedProject && apt.projectName !== selectedProject) return false
@@ -720,7 +1509,10 @@ export function usePropertiesFilters() {
       if (minArea !== '' && apt.areaNum < Number(minArea)) return false
       if (maxArea !== '' && apt.areaNum > Number(maxArea)) return false
 
-      if (bedroomsFilter !== 'all' && apt.bedrooms !== Number(bedroomsFilter))
+      if (
+        bedroomsFilter !== 'all' &&
+        !matchBedrooms(apt.bedrooms, bedroomsFilter)
+      )
         return false
       if (
         bathroomsFilter !== 'all' &&
@@ -805,15 +1597,28 @@ export function usePropertiesFilters() {
     return apiProjects.filter(proj => {
       if (searchKeyword.trim()) {
         const kw = removeVietnameseTones(searchKeyword)
-        const matchName = removeVietnameseTones(proj.name).includes(kw)
+        const nameToMatch =
+          proj.name || (proj as unknown as { title?: string }).title || ''
+        const devToMatch =
+          proj.investor ||
+          (proj as unknown as { developer?: string }).developer ||
+          ''
+        const matchName = removeVietnameseTones(nameToMatch).includes(kw)
         const matchDesc = removeVietnameseTones(
           proj.description || ''
         ).includes(kw)
         const matchLoc = removeVietnameseTones(proj.location).includes(kw)
-        const matchInvestor = removeVietnameseTones(
-          proj.investor || ''
+        const matchInvestor = removeVietnameseTones(devToMatch).includes(kw)
+        const matchDistrict = removeVietnameseTones(
+          proj.district || ''
         ).includes(kw)
-        if (!matchName && !matchDesc && !matchLoc && !matchInvestor)
+        if (
+          !matchName &&
+          !matchDesc &&
+          !matchLoc &&
+          !matchInvestor &&
+          !matchDistrict
+        )
           return false
       }
 
@@ -824,7 +1629,8 @@ export function usePropertiesFilters() {
         return false
       if (
         selectedDistrict &&
-        proj.district.toLowerCase() !== selectedDistrict.toLowerCase()
+        !isAllDistrict(selectedDistrict) &&
+        !matchDistrict(proj.district, selectedDistrict)
       )
         return false
 
@@ -843,8 +1649,8 @@ export function usePropertiesFilters() {
 
       // Filter by bedrooms and bathrooms in apartments belonging to this project
       if (bedroomsFilter !== 'all') {
-        const hasMatchingApt = projectApartments.some(
-          apt => apt.bedrooms === Number(bedroomsFilter)
+        const hasMatchingApt = projectApartments.some(apt =>
+          matchBedrooms(apt.bedrooms, bedroomsFilter)
         )
         if (!hasMatchingApt) return false
       }
@@ -891,7 +1697,8 @@ export function usePropertiesFilters() {
   const locationLabel = React.useMemo(() => {
     const parts = []
     if (appliedCity) parts.push(appliedCity)
-    if (appliedDistrict) parts.push(appliedDistrict)
+    if (appliedDistrict && !isAllDistrict(appliedDistrict))
+      parts.push(appliedDistrict)
     if (appliedWard) parts.push(appliedWard)
     return parts.length > 0 ? parts.join(' • ') : 'Toàn quốc'
   }, [appliedCity, appliedDistrict, appliedWard])

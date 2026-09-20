@@ -441,7 +441,7 @@ export function StaffOperationsDashboard({
         </header>
 
         {/* View content wrap */}
-        <main className="flex-grow p-4 sm:p-6 lg:p-8">
+        <main className="flex-grow p-3 sm:p-4 lg:p-6">
           <div className="max-w-6xl mx-auto">{renderActiveView()}</div>
         </main>
       </div>
