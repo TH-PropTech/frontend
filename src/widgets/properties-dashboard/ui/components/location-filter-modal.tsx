@@ -159,7 +159,7 @@ export function LocationFilterModal({
             setSelectedProvinceCode(null)
             setSelectedDistrictCode(null)
           }}
-          className="text-xs font-semibold text-primary hover:underline cursor-pointer"
+          className="rounded text-xs font-semibold text-primary hover:underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           Đặt lại
         </button>
