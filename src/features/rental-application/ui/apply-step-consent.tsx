@@ -323,13 +323,13 @@ export function ApplyStepConsent({
       ) : null}
 
       {/* Navigation actions */}
-      <div className="flex items-center justify-between border-t border-border/80 pt-4">
+      <div className="flex flex-col-reverse gap-3 border-t border-border/80 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <Button
           type="button"
           variant="outline"
           disabled={submitting}
           onClick={onBack}
-          className="flex items-center gap-2 border-border text-xs"
+          className="flex w-full items-center justify-center gap-2 border-border text-xs sm:w-auto"
         >
           <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
           <span>Quay lại chọn gói thuê</span>
@@ -339,7 +339,7 @@ export function ApplyStepConsent({
           type="button"
           disabled={!canSubmit}
           onClick={onSubmit}
-          className="flex items-center gap-2 bg-control px-6 py-2 text-xs font-semibold text-on-control shadow-sm hover:opacity-90 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 bg-control px-6 py-2.5 text-xs font-semibold text-on-control shadow-sm hover:opacity-90 disabled:opacity-50 sm:w-auto"
         >
           {submitting ? (
             <>

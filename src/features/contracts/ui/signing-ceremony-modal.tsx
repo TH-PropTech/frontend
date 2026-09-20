@@ -95,7 +95,7 @@ export function SigningCeremonyModal({
                 id="signing-ceremony-title"
                 className="text-sm font-bold text-[var(--fg)] tracking-tight"
               >
-                Xác nhận ký điện tử e-Consent
+                Xác nhận ký số VNPT SmartCA
               </h3>
               <p className="text-[11px] text-[var(--muted)]">
                 Hợp đồng số:{' '}
@@ -281,7 +281,7 @@ export function SigningCeremonyModal({
                   Ký hợp đồng thành công!
                 </h4>
                 <p className="text-xs text-[var(--muted)] mt-1 max-w-sm">
-                  Chữ ký số e-Consent và bằng chứng đối soát sinh trắc học đã
+                  Chữ ký số VNPT SmartCA và bằng chứng đối soát sinh trắc học đã
                   được ghi nhận vào hồ sơ hợp đồng.
                 </p>
               </div>

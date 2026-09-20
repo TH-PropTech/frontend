@@ -16,6 +16,7 @@ import {
   Home,
   Info,
   Landmark,
+  RefreshCw,
   Scale,
   Shield,
   UserCheck,
@@ -34,6 +35,7 @@ export interface ApplyStepSubmittedProps {
   application: RentalApplicationItem
   apartmentId: string
   propertyTitle?: string
+  onRefreshStatus?: () => Promise<void>
 }
 
 function formatVnd(amount: number): string {
@@ -131,8 +133,25 @@ export function ApplyStepSubmitted({
   application,
   apartmentId,
   propertyTitle,
+  onRefreshStatus,
 }: ApplyStepSubmittedProps): React.ReactElement {
   const [copied, setCopied] = React.useState(false)
+  const [isChecking, setIsChecking] = React.useState(false)
+  const [lastCheckedAt, setLastCheckedAt] = React.useState<Date | null>(null)
+  const [refreshError, setRefreshError] = React.useState<string | null>(null)
+  const feedbackTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  )
+  const isMountedRef = React.useRef(true)
+
+  React.useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const snapshot = application.packageSnapshot
   const durationMonths = snapshot?.durationMonths ?? 12
@@ -184,6 +203,37 @@ export function ApplyStepSubmitted({
       setTimeout(() => setCopied(false), 2000)
     } catch (e) {
       console.error(e)
+    }
+  }
+
+  const handleRefreshStatus = async (): Promise<void> => {
+    if (isChecking) return
+
+    setIsChecking(true)
+    setRefreshError(null)
+
+    const minimumFeedback = new Promise<void>(resolve => {
+      feedbackTimeoutRef.current = setTimeout(resolve, 600)
+    })
+
+    try {
+      await Promise.all([minimumFeedback, onRefreshStatus?.()])
+      if (isMountedRef.current) {
+        setLastCheckedAt(new Date())
+      }
+    } catch (error: unknown) {
+      await minimumFeedback
+      if (isMountedRef.current) {
+        setRefreshError(
+          error instanceof Error
+            ? error.message
+            : 'Không thể kiểm tra phản hồi của chủ nhà.'
+        )
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsChecking(false)
+      }
     }
   }
 
@@ -248,6 +298,61 @@ export function ApplyStepSubmitted({
           </span>
         </div>
       </section>
+
+      {application.status === 'pending' ? (
+        <section
+          data-testid="application-status-refresh"
+          className="flex flex-col gap-3 rounded-2xl border border-primary/25 bg-primary-soft/10 p-5 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex items-start gap-3 text-xs">
+            <Clock
+              aria-hidden="true"
+              className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+            />
+            <div>
+              <p className="font-semibold text-fg">
+                Chủ nhà đang xem xét hồ sơ của bạn
+              </p>
+              <p className="mt-0.5 leading-relaxed text-muted">
+                Bạn có thể chủ động kiểm tra phản hồi mới nhất bất cứ lúc nào.
+              </p>
+              {lastCheckedAt ? (
+                <p
+                  data-testid="application-last-checked"
+                  className="mt-1 text-[11px] text-primary"
+                >
+                  Kiểm tra lần cuối lúc:{' '}
+                  {lastCheckedAt.toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              ) : null}
+              {refreshError ? (
+                <p role="alert" className="mt-1 text-[11px] text-danger">
+                  {refreshError}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <Button
+            type="button"
+            onClick={() => void handleRefreshStatus()}
+            disabled={isChecking}
+            className="inline-flex shrink-0 items-center justify-center gap-2 bg-control text-xs text-on-control shadow-sm hover:opacity-90"
+          >
+            <RefreshCw
+              aria-hidden="true"
+              className={`h-3.5 w-3.5 ${isChecking ? 'animate-spin' : ''}`}
+            />
+            <span>
+              {isChecking
+                ? 'Đang kiểm tra phản hồi…'
+                : 'Kiểm tra phản hồi của chủ nhà'}
+            </span>
+          </Button>
+        </section>
+      ) : null}
 
       {executionPolicy ? (
         <section
@@ -487,11 +592,15 @@ export function ApplyStepSubmitted({
         {isContractReady && handoff.href ? (
           <Button
             asChild
-            className="flex items-center justify-center gap-2 bg-control px-6 py-2 text-xs font-semibold text-on-control shadow-sm hover:opacity-90"
+            className="flex items-center justify-center gap-2 bg-primary px-6 py-2 text-xs font-semibold text-on-control shadow-md hover:bg-primary-hover"
           >
-            <Link href={handoff.href as Route}>
+            <Link
+              href={
+                `/rental-applications/${application._id}/contract-invite` as Route
+              }
+            >
               <FileSignature aria-hidden="true" className="h-3.5 w-3.5" />
-              <span>Xem hợp đồng số</span>
+              <span>Xem &amp; Ký hợp đồng</span>
               <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
             </Link>
           </Button>

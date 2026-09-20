@@ -5,6 +5,11 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import 'leaflet/dist/leaflet.css'
 
+export const PROPERTY_MAP_TILE_URL =
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+export const PROPERTY_MAP_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+
 interface PropertiesMapProps {
   activeTab: 'single' | 'project'
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,18 +68,15 @@ export function PropertiesMap({
       // HCMC center coordinates: [10.7769, 106.7009]
       const map = L.map(mapRef.current, {
         zoomControl: false,
-        attributionControl: false,
       }).setView([10.7769, 106.7009], 13)
 
       leafletMapRef.current = map
 
-      // Load free CartoDB Positron style (beautiful, light, clean!)
-      L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-        {
-          maxZoom: 20,
-        }
-      ).addTo(map)
+      // Use public OpenStreetMap tiles so the map works without a provider API key.
+      L.tileLayer(PROPERTY_MAP_TILE_URL, {
+        attribution: PROPERTY_MAP_ATTRIBUTION,
+        maxZoom: 19,
+      }).addTo(map)
 
       // Add custom zoom controls on bottom right
       L.control

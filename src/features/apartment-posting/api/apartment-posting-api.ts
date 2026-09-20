@@ -67,6 +67,6 @@ export async function renewApartment(
 
 export async function getMyListings(): Promise<LandlordApartmentItem[]> {
   return apiClient.get<LandlordApartmentItem[]>(
-    '/apartments/my-listings?format=web'
+    '/apartments/my-listings?format=landlord'
   )
 }

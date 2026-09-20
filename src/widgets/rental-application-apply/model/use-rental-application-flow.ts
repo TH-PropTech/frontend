@@ -3,6 +3,7 @@
 import * as React from 'react'
 import {
   createRentalApplication,
+  getMyRentalApplications,
   getRentalApplicationContext,
   isRentalPackageStaleError,
   isRentalTermsStaleError,
@@ -42,6 +43,7 @@ export interface FlowState {
   acknowledgedDisclosures: string[]
   termsAccepted: boolean
   submittedApplication: RentalApplicationItem | null
+  pendingApplicationExists: boolean
 }
 
 export type FlowAction =
@@ -64,10 +66,13 @@ export type FlowAction =
   | { type: 'SET_TERMS_ACCEPTED'; accepted: boolean }
   | { type: 'SUBMIT_START' }
   | { type: 'SUBMIT_SUCCESS'; application: RentalApplicationItem }
+  | { type: 'REFRESH_SUBMITTED_SUCCESS'; application: RentalApplicationItem }
   | { type: 'SUBMIT_ERROR'; error: string }
   | { type: 'HANDLE_PACKAGE_STALE'; error: string }
   | { type: 'HANDLE_EXECUTION_POLICY_STALE'; error: string }
   | { type: 'HANDLE_TERMS_STALE'; error: string }
+  | { type: 'HANDLE_PENDING_APPLICATION_EXISTS' }
+  | { type: 'DISMISS_PENDING_APPLICATION_MODAL' }
   | { type: 'CLEAR_ERROR' }
 
 export function flowReducer(state: FlowState, action: FlowAction): FlowState {
@@ -190,6 +195,13 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         error: null,
       }
 
+    case 'REFRESH_SUBMITTED_SUCCESS':
+      return {
+        ...state,
+        submittedApplication: action.application,
+        error: null,
+      }
+
     case 'SUBMIT_ERROR':
       return { ...state, submitting: false, error: action.error }
 
@@ -221,6 +233,20 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         executionPolicyAccepted: false,
         step: 2,
         error: action.error,
+      }
+
+    case 'HANDLE_PENDING_APPLICATION_EXISTS':
+      return {
+        ...state,
+        submitting: false,
+        pendingApplicationExists: true,
+        error: null,
+      }
+
+    case 'DISMISS_PENDING_APPLICATION_MODAL':
+      return {
+        ...state,
+        pendingApplicationExists: false,
       }
 
     case 'CLEAR_ERROR':
@@ -256,6 +282,7 @@ export function useRentalApplicationFlow(apartmentId: string) {
       acknowledgedDisclosures: [],
       termsAccepted: false,
       submittedApplication: null,
+      pendingApplicationExists: false,
     }),
     [apartmentId]
   )
@@ -322,16 +349,39 @@ export function useRentalApplicationFlow(apartmentId: string) {
     }
   }, [apartmentId, loadTermsForContext])
 
+  const refreshSubmittedApplication =
+    React.useCallback(async (): Promise<void> => {
+      const submittedApplication = state.submittedApplication
+      if (!submittedApplication) return
+
+      const applications = await getMyRentalApplications()
+      const refreshedApplication = applications.items.find(
+        application => application._id === submittedApplication._id
+      )
+
+      if (!refreshedApplication) {
+        throw new Error('Không tìm thấy hồ sơ thuê cần kiểm tra.')
+      }
+
+      dispatch({
+        type: 'REFRESH_SUBMITTED_SUCCESS',
+        application: refreshedApplication,
+      })
+    }, [state.submittedApplication])
+
   React.useEffect(() => {
     void loadContext()
   }, [loadContext])
 
   const goToStep2 = React.useCallback(() => {
-    const errors = validateStepInfo(state.details)
+    const errors = validateStepInfo(
+      state.details,
+      state.context?.flowProfile?.steps?.step1
+    )
     if (Object.keys(errors).length > 0) return false
     dispatch({ type: 'SET_STEP', step: 2 })
     return true
-  }, [state.details])
+  }, [state.details, state.context?.flowProfile?.steps?.step1])
 
   const goToStep3 = React.useCallback(() => {
     const selectedPackage = state.context?.packages.find(
@@ -430,6 +480,11 @@ export function useRentalApplicationFlow(apartmentId: string) {
         return
       }
 
+      if (isPendingApplicationExistsError(err)) {
+        dispatch({ type: 'HANDLE_PENDING_APPLICATION_EXISTS' })
+        return
+      }
+
       dispatch({
         type: 'SUBMIT_ERROR',
         error:
@@ -444,6 +499,7 @@ export function useRentalApplicationFlow(apartmentId: string) {
     state,
     actions: {
       loadContext,
+      refreshSubmittedApplication,
       updateDetails: (details: Partial<ApplyStepInfoValues>) =>
         dispatch({ type: 'UPDATE_DETAILS', details }),
       selectPackage: (packageId: string) =>
@@ -461,6 +517,24 @@ export function useRentalApplicationFlow(apartmentId: string) {
       backToStep,
       submitApplication,
       clearError: () => dispatch({ type: 'CLEAR_ERROR' }),
+      dismissPendingApplicationModal: () =>
+        dispatch({ type: 'DISMISS_PENDING_APPLICATION_MODAL' }),
     },
   }
+}
+
+export function isPendingApplicationExistsError(error: unknown): boolean {
+  if (!error) return false
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : ''
+  const normalized = message.toLowerCase()
+  return (
+    normalized.includes('a pending application already exists') ||
+    normalized.includes('pending application already exists') ||
+    normalized.includes('pending_application_exists')
+  )
 }

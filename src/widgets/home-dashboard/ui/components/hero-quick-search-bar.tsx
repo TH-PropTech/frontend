@@ -177,10 +177,10 @@ export function HeroQuickSearchBar(): React.ReactElement {
       className="w-full max-w-6xl pt-2"
     >
       {/* Floating Pill Search Console - Explicit z-30 to stay above suggestions and siblings */}
-      <div className="relative z-30 rounded-2xl lg:rounded-full bg-white/95 backdrop-blur-md p-2 shadow-[0_20px_50px_rgba(0,0,0,0.22)] border border-white/40 flex flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-0">
+      <div className="relative z-30 rounded-xl lg:rounded-2xl bg-white/95 backdrop-blur-md p-2 shadow-[0_20px_50px_rgba(0,0,0,0.22)] border border-white/40 flex flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-0">
         {/* Keyword Field */}
         <div className="relative flex-[1.3] min-w-0">
-          <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl lg:rounded-full text-left hover:bg-surface-muted/80 focus-within:bg-surface-muted/80 transition-colors">
+          <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-left hover:bg-surface-muted/80 focus-within:bg-surface-muted/80 transition-colors">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
               <Search className="h-4 w-4" />
             </div>
@@ -225,7 +225,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             onClick={() =>
               setOpenDropdown(prev => (prev === 'district' ? null : 'district'))
             }
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl lg:rounded-full text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
               <MapPin className="h-4 w-4" />
@@ -251,7 +251,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 if (el) el.scrollTop = 0
               }}
               data-testid="district-dropdown-menu"
-              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
+              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto no-scrollbar z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
             >
               {QUICK_SEARCH_DISTRICTS.map(d => (
                 <button
@@ -288,7 +288,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             onClick={() =>
               setOpenDropdown(prev => (prev === 'price' ? null : 'price'))
             }
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl lg:rounded-full text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
               <BadgeDollarSign className="h-4 w-4" />
@@ -314,7 +314,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 if (el) el.scrollTop = 0
               }}
               data-testid="price-dropdown-menu"
-              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
+              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto no-scrollbar z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
             >
               {QUICK_SEARCH_PRICES.map(p => (
                 <button
@@ -351,7 +351,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             onClick={() =>
               setOpenDropdown(prev => (prev === 'bedroom' ? null : 'bedroom'))
             }
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl lg:rounded-full text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
               <BedDouble className="h-4 w-4" />
@@ -377,7 +377,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 if (el) el.scrollTop = 0
               }}
               data-testid="bedroom-dropdown-menu"
-              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
+              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto no-scrollbar z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
             >
               {QUICK_SEARCH_BEDROOMS.map(b => (
                 <button
@@ -407,7 +407,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             type="button"
             data-testid="quick-search-submit-button"
             onClick={() => executeSearch()}
-            className="w-full lg:w-auto h-11 px-5 lg:px-6 rounded-xl lg:rounded-full bg-primary hover:bg-primary-hover text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full lg:w-auto h-11 px-5 lg:px-6 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Search className="h-4 w-4" />
             <span>Tìm kiếm</span>

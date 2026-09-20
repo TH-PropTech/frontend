@@ -16,7 +16,9 @@ import {
   X,
   ImageIcon,
   ScanLine,
+  Pencil,
 } from 'lucide-react'
+import { ApartmentEditDialog } from './apartment-edit-dialog'
 import { ImageGallery } from './image-gallery'
 import { StatusBadge } from './status-badge'
 import { STATUS_CONFIG, formatPrice } from './types'
@@ -46,8 +48,30 @@ export function DetailDrawer({
   const [isActing, setIsActing] = React.useState(false)
   const [showRejectInput, setShowRejectInput] = React.useState(false)
   const [rejectReason, setRejectReason] = React.useState('')
+  const [showEdit, setShowEdit] = React.useState(false)
+  const [vrUrl, setVrUrl] = React.useState(apartment.vrUrl ?? '')
+  const [isSavingVr, setIsSavingVr] = React.useState(false)
 
   const cfg = STATUS_CONFIG[apartment.status]
+  const trimmedVrUrl = vrUrl.trim()
+  const isVrUnchanged = trimmedVrUrl === (apartment.vrUrl ?? '')
+
+  // Link VR Tour do nhân viên gắn sau khi chụp; chủ nhà không nhập.
+  const handleSaveVr = async (): Promise<void> => {
+    setIsSavingVr(true)
+    try {
+      const updated = await apiClient.patch<StaffApartment>(
+        `/apartments/${apartment.id}/media`,
+        { vrUrl: trimmedVrUrl }
+      )
+      onMediaChange(updated)
+      toast.success('Đã lưu link VR Tour')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Lưu link VR thất bại')
+    } finally {
+      setIsSavingVr(false)
+    }
+  }
 
   const handleUpload = async (files: FileList): Promise<void> => {
     setIsUploading(true)
@@ -280,6 +304,33 @@ export function DetailDrawer({
               )}
             </div>
 
+            {/* VR Tour */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="staff-vr-url"
+                className="text-[10px] font-bold text-[color:var(--muted)] uppercase tracking-wider"
+              >
+                Link VR Tour
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="staff-vr-url"
+                  value={vrUrl}
+                  onChange={e => setVrUrl(e.target.value)}
+                  placeholder="https://my.matterport.com/show/?m=..."
+                  className="min-w-0 flex-1 rounded-lg border border-[color:var(--border)] bg-[color:var(--bg)] p-2.5 text-xs focus:border-[color:var(--primary)] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveVr}
+                  disabled={isVrUnchanged || isSavingVr}
+                  className="shrink-0 rounded-lg bg-[color:var(--primary)] px-3 text-xs font-semibold text-[color:var(--on-control)] hover:opacity-90 disabled:opacity-50"
+                >
+                  Lưu link VR
+                </button>
+              </div>
+            </div>
+
             {/* Reject input */}
             {showRejectInput && (
               <div className="space-y-2">
@@ -299,6 +350,14 @@ export function DetailDrawer({
 
           {/* Actions Footer */}
           <div className="p-4 border-t border-[color:var(--border)] bg-[color:var(--surface-muted)]/20 shrink-0 space-y-2">
+            <button
+              type="button"
+              onClick={() => setShowEdit(true)}
+              className="w-full py-2.5 text-xs font-semibold rounded-xl border border-[color:var(--border)] text-[color:var(--fg)] hover:bg-[color:var(--surface-muted)] transition-colors flex items-center justify-center gap-1.5"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Chỉnh sửa thông tin
+            </button>
             {apartment.status === 'pending' && !showRejectInput && (
               <div className="flex gap-2">
                 <button
@@ -376,6 +435,17 @@ export function DetailDrawer({
           </div>
         </div>
       </div>
+
+      {showEdit && (
+        <ApartmentEditDialog
+          apartment={apartment}
+          onClose={() => setShowEdit(false)}
+          onSaved={updated => {
+            onMediaChange(updated)
+            setShowEdit(false)
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -203,4 +203,20 @@ describe('PropertyDetail backend resource identity', () => {
     expect(reviewsTab).toHaveAttribute('aria-selected', 'true')
     expect(livingTab).toHaveAttribute('aria-selected', 'false')
   })
+
+  it('renders an explicit error instead of substituting mock data for a missing API property', async () => {
+    mocks.useParams.mockReturnValue({ id: 'PROP-CAR-102' })
+    mocks.get.mockRejectedValue(new Error('Property not found'))
+    const errorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined)
+
+    render(<PropertyDetail />)
+
+    expect(
+      await screen.findByText('Không thể tải thông tin căn hộ này từ máy chủ.')
+    ).toBeInTheDocument()
+    expect(screen.queryByTestId('booking-id')).not.toBeInTheDocument()
+    errorSpy.mockRestore()
+  })
 })

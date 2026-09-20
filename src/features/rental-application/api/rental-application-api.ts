@@ -1,4 +1,5 @@
 import { apiClient, ApiClientError } from '@/shared/api'
+import type { FlowProfileSteps } from '@/features/rental-flow-config'
 
 export type RentalApplicationStatus = 'pending' | 'accepted' | 'rejected'
 export type RentalExecutionStrategy = 'DEPOSIT_FIRST' | 'SIGN_FIRST'
@@ -62,7 +63,7 @@ export interface RentalApplicationContext {
     version: number
     hash: string
     precedence: string
-    steps: unknown
+    steps: FlowProfileSteps
   } | null
 }
 
@@ -144,6 +145,11 @@ export async function getMyRentalApplications(): Promise<RentalApplicationList> 
   return apiClient.get<RentalApplicationList>(
     '/rental-applications/mine?page=1&limit=20'
   )
+}
+export async function getMyRentalApplicationById(
+  id: string
+): Promise<RentalApplicationItem> {
+  return apiClient.get<RentalApplicationItem>(`/rental-applications/${id}`)
 }
 export async function getReceivedRentalApplications(): Promise<RentalApplicationList> {
   return apiClient.get<RentalApplicationList>(

@@ -158,4 +158,76 @@ describe('ApplyStepInfo Component', () => {
       notes: 'Muốn dọn vào cuối tuần; Cần chỗ đỗ xe ô tô',
     })
   })
+
+  describe('Dynamic step1Config integration', () => {
+    const customConfig = {
+      moveInDateLabel: 'Thời điểm nhận chìa khóa',
+      minMoveInLeadDays: 5,
+      maxMoveInLeadDays: 60,
+      minOccupants: 2,
+      maxOccupants: 5,
+      allowNotes: false,
+      notesMaxLength: 300,
+    }
+
+    it('renders custom moveInDateLabel and lead days bounds from step1Config', () => {
+      render(
+        <ApplyStepInfo
+          values={validValues}
+          apartmentArea={80}
+          step1Config={customConfig}
+          onChange={vi.fn()}
+          onNext={vi.fn()}
+        />
+      )
+
+      expect(screen.getByText('Thời điểm nhận chìa khóa')).toBeInTheDocument()
+      expect(screen.getByText('+5 đến +60 ngày')).toBeInTheDocument()
+      // Since allowNotes is false, notes textarea should not be rendered
+      expect(screen.queryByLabelText(/Ghi chú & Thỏa thuận riêng/i)).toBeNull()
+    })
+
+    it('enforces min/max occupants and min/max lead days in validateStepInfo according to step1Config', () => {
+      // 1 occupant is below minOccupants (2)
+      const errOccupants = validateStepInfo(
+        { ...validValues, occupants: 1 },
+        customConfig
+      )
+      expect(errOccupants.occupants).toBe('Số người ở phải từ 2 đến 5.')
+
+      // 6 occupants is above maxOccupants (5)
+      const errMaxOccupants = validateStepInfo(
+        { ...validValues, occupants: 6 },
+        customConfig
+      )
+      expect(errMaxOccupants.occupants).toBe('Số người ở phải từ 2 đến 5.')
+
+      // Move-in date only 2 days ahead (min is 5)
+      const now = new Date()
+      const earlyDate = new Date(now)
+      earlyDate.setDate(now.getDate() + 2)
+      const earlyStr = earlyDate.toISOString().split('T')[0]!
+
+      const errEarly = validateStepInfo(
+        { ...validValues, occupants: 2, moveInDate: earlyStr },
+        customConfig
+      )
+      expect(errEarly.moveInDate).toBe(
+        'Ngày vào ở phải sau hôm nay ít nhất 5 ngày.'
+      )
+
+      // Move-in date 70 days ahead (max is 60)
+      const lateDate = new Date(now)
+      lateDate.setDate(now.getDate() + 70)
+      const lateStr = lateDate.toISOString().split('T')[0]!
+
+      const errLate = validateStepInfo(
+        { ...validValues, occupants: 2, moveInDate: lateStr },
+        customConfig
+      )
+      expect(errLate.moveInDate).toBe(
+        'Ngày vào ở không được vượt quá 60 ngày tính từ hôm nay.'
+      )
+    })
+  })
 })

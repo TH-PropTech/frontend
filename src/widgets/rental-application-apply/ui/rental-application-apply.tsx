@@ -9,15 +9,21 @@ import {
   Building2,
   Calendar,
   CheckCircle2,
-  Coins,
-  FileSignature,
+  Clock,
   RotateCcw,
-  Scale,
   ShieldAlert,
   ShieldCheck,
   Users,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
 import {
   ApplyStepInfo,
   ApplyStepPackage,
@@ -36,32 +42,22 @@ export interface RentalApplicationApplyProps {
 const STEP_DEFINITIONS: Array<{
   step: FlowStep
   label: string
-  sublabel: string
-  icon: React.ComponentType<{ className?: string }>
 }> = [
   {
     step: 1,
-    label: '1. Thông tin người thuê',
-    sublabel: 'Quy chuẩn nhân khẩu',
-    icon: Users,
+    label: 'Thông tin người thuê',
   },
   {
     step: 2,
-    label: '2. Gói thuê & Đặt cọc',
-    sublabel: 'Thời hạn & giá niêm yết',
-    icon: Coins,
+    label: 'Gói thuê & Đặt cọc',
   },
   {
     step: 3,
-    label: '3. Điều khoản & Cam kết',
-    sublabel: 'Pháp lý & an toàn PCCC',
-    icon: Scale,
+    label: 'Điều khoản & Cam kết',
   },
   {
     step: 4,
-    label: '4. Xác nhận hồ sơ',
-    sublabel: 'Lộ trình ký hợp đồng',
-    icon: FileSignature,
+    label: 'Xác nhận hồ sơ',
   },
 ]
 
@@ -203,7 +199,7 @@ export function RentalApplicationApply({
   return (
     <main
       data-testid="rental-application-apply-page"
-      className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
+      className="mx-auto max-w-7xl px-3.5 py-4 sm:px-6 sm:py-8 lg:px-8"
     >
       {/* Top Header & Breadcrumb */}
       <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -245,10 +241,10 @@ export function RentalApplicationApply({
       {/* Horizontal Multi-Step Progress Header */}
       <nav
         aria-label="Tiến trình 4 bước hoàn thành hồ sơ"
-        className="mb-8 rounded-3xl border border-border bg-surface p-3.5 shadow-sm"
+        className="mb-8 rounded-2xl border border-border bg-surface p-4 sm:px-6 sm:py-4 shadow-sm"
       >
-        <ol className="flex gap-2 overflow-x-auto pb-1 no-scrollbar sm:grid sm:grid-cols-4 sm:pb-0">
-          {STEP_DEFINITIONS.map(({ step, label, sublabel, icon: Icon }) => {
+        <ol className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+          {STEP_DEFINITIONS.map(({ step, label }) => {
             const isCurrent = state.step === step
             const isCompleted = state.step > step
 
@@ -256,20 +252,14 @@ export function RentalApplicationApply({
               <li
                 key={step}
                 aria-current={isCurrent ? 'step' : undefined}
-                className={`relative flex min-w-[200px] flex-1 shrink-0 items-center gap-3 rounded-2xl p-3 text-xs transition-all sm:min-w-0 ${
-                  isCurrent
-                    ? 'bg-primary-soft/30 font-bold text-primary ring-1 ring-primary/40 shadow-sm'
-                    : isCompleted
-                      ? 'bg-success-soft/30 font-semibold text-success'
-                      : 'text-subtle hover:bg-surface-muted/40'
-                }`}
+                className="flex items-center gap-3"
               >
                 <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition ${
-                    isCurrent
-                      ? 'bg-primary text-on-control shadow-sm'
-                      : isCompleted
-                        ? 'bg-success text-on-control shadow-sm'
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all ${
+                    isCompleted
+                      ? 'bg-success text-on-control shadow-sm'
+                      : isCurrent
+                        ? 'bg-primary text-on-control ring-4 ring-primary/20 shadow-sm'
                         : 'border border-border bg-surface text-subtle'
                   }`}
                 >
@@ -280,15 +270,18 @@ export function RentalApplicationApply({
                   )}
                 </div>
 
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <Icon
-                      aria-hidden="true"
-                      className="h-3.5 w-3.5 shrink-0 text-muted"
-                    />
-                    <p className="truncate text-xs font-semibold">{label}</p>
-                  </div>
-                  <p className="truncate text-[11px] text-muted">{sublabel}</p>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`truncate text-xs transition-colors ${
+                      isCurrent
+                        ? 'font-semibold text-fg'
+                        : isCompleted
+                          ? 'font-medium text-fg'
+                          : 'text-subtle'
+                    }`}
+                  >
+                    {label}
+                  </p>
                 </div>
               </li>
             )
@@ -321,11 +314,12 @@ export function RentalApplicationApply({
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         {/* Left Column: Active Step Workspace (8 cols) */}
         <div className="lg:col-span-8">
-          <div className="rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+          <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm sm:rounded-3xl sm:p-8">
             {state.step === 1 ? (
               <ApplyStepInfo
                 values={state.details}
                 apartmentArea={apartmentArea}
+                step1Config={state.context?.flowProfile?.steps?.step1}
                 onChange={actions.updateDetails}
                 onNext={actions.goToStep2}
               />
@@ -369,6 +363,7 @@ export function RentalApplicationApply({
                 application={state.submittedApplication}
                 apartmentId={apartmentId}
                 propertyTitle={listingTitle}
+                onRefreshStatus={actions.refreshSubmittedApplication}
               />
             ) : null}
           </div>
@@ -528,6 +523,54 @@ export function RentalApplicationApply({
           </div>
         </aside>
       </div>
+
+      {/* Pending Application Exists Modal */}
+      <Dialog
+        open={state.pendingApplicationExists}
+        onOpenChange={open => {
+          if (!open) {
+            actions.dismissPendingApplicationModal()
+          }
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-md border-border bg-surface"
+          data-testid="pending-application-modal"
+        >
+          <DialogHeader className="flex flex-col items-center text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-warning-soft text-warning">
+              <Clock aria-hidden="true" className="h-6 w-6" />
+            </div>
+            <DialogTitle className="text-center font-display text-lg font-bold text-fg">
+              Hồ sơ đang chờ phản hồi
+            </DialogTitle>
+            <DialogDescription className="mt-2 text-center text-sm leading-relaxed text-muted">
+              Bạn đã gửi hồ sơ cho căn hộ này rồi, vui lòng chờ chủ nhà phản
+              hồi.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              asChild
+              variant="outline"
+              className="w-full border-border sm:w-auto"
+              onClick={() => actions.dismissPendingApplicationModal()}
+            >
+              <Link href={`/properties/${apartmentId}` as Route}>
+                Quay lại căn hộ
+              </Link>
+            </Button>
+            <Button
+              asChild
+              className="w-full bg-primary text-on-control hover:bg-primary-hover sm:w-auto"
+            >
+              <Link href={'/rental-applications' as Route}>
+                Xem hồ sơ đã gửi
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

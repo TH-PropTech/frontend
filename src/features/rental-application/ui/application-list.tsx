@@ -16,13 +16,17 @@ import {
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { getMyRentalApplications } from '../api/rental-application-api'
+import type { RentalApplicationItem } from '../api/rental-application-api'
 import { ApplicationStatusBadge } from './application-status-badge'
+import { ApplicationDetailDialog } from './application-detail-dialog'
 
 function formatVnd(amount: number): string {
   return new Intl.NumberFormat('vi-VN').format(amount)
 }
 
 export function ApplicationList(): React.ReactElement {
+  const [detailApp, setDetailApp] =
+    React.useState<RentalApplicationItem | null>(null)
   const applications = useQuery({
     queryKey: ['rental-applications', 'mine'],
     queryFn: getMyRentalApplications,
@@ -117,12 +121,17 @@ export function ApplicationList(): React.ReactElement {
           isAccepted &&
           (item.contractHandoff?.state === 'failed' ||
             item.provisioningStatus === 'failed')
+        const needsSigning = isAccepted && hasContract
 
         return (
           <article
             key={item._id}
             data-testid={`application-item-${item._id}`}
-            className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-surface p-5 shadow-sm sm:flex-row sm:items-center"
+            className={`flex flex-col justify-between gap-4 rounded-2xl border p-5 shadow-sm sm:flex-row sm:items-center ${
+              needsSigning
+                ? 'border-primary/40 bg-primary-soft/10 ring-1 ring-primary/20'
+                : 'border-border bg-surface'
+            }`}
           >
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
@@ -130,6 +139,12 @@ export function ApplicationList(): React.ReactElement {
                   #{item._id.slice(-8)}
                 </span>
                 <ApplicationStatusBadge status={item.status} />
+                {needsSigning && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-on-control">
+                    <FileSignature className="h-3 w-3" aria-hidden="true" />
+                    Cần ký ngay
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
@@ -178,15 +193,31 @@ export function ApplicationList(): React.ReactElement {
             </div>
 
             <div className="flex items-center gap-2">
-              {isAccepted && hasContract ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="flex items-center gap-1 border-border text-xs"
+                onClick={() => setDetailApp(item)}
+              >
+                <FileText aria-hidden="true" className="h-3.5 w-3.5" />
+                <span>Xem hồ sơ</span>
+              </Button>
+
+              {needsSigning ? (
                 <Button
                   asChild
                   size="sm"
-                  className="flex items-center gap-1.5 bg-control text-on-control shadow-sm hover:opacity-90"
+                  className="flex items-center gap-1.5 bg-primary text-on-control shadow-md hover:bg-primary-hover"
                 >
-                  <Link href={`/contracts/${item.contractId}` as Route}>
+                  <Link
+                    href={
+                      `/rental-applications/${item._id}/contract-invite` as Route
+                    }
+                  >
                     <FileSignature aria-hidden="true" className="h-4 w-4" />
-                    <span>Xem hợp đồng số</span>
+                    <span>Xem &amp; Ký hợp đồng</span>
+                    <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
                   </Link>
                 </Button>
               ) : (
@@ -197,7 +228,7 @@ export function ApplicationList(): React.ReactElement {
                   className="flex items-center gap-1 border-border text-xs"
                 >
                   <Link href={`/properties/${item.apartmentId}` as Route}>
-                    <span>Xem chi tiết căn hộ</span>
+                    <span>Căn hộ</span>
                   </Link>
                 </Button>
               )}
@@ -205,6 +236,12 @@ export function ApplicationList(): React.ReactElement {
           </article>
         )
       })}
+
+      <ApplicationDetailDialog
+        application={detailApp}
+        open={!!detailApp}
+        onOpenChange={open => !open && setDetailApp(null)}
+      />
     </div>
   )
 }

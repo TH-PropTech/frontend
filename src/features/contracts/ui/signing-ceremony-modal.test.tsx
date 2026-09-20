@@ -42,6 +42,7 @@ describe('SigningCeremonyModal', () => {
     )
 
     expect(screen.getByTestId('signing-ceremony-modal')).toBeInTheDocument()
+    expect(screen.getByText('Xác nhận ký số VNPT SmartCA')).toBeInTheDocument()
     expect(screen.getByText('HD-101')).toBeInTheDocument()
 
     const startBtn = screen.getByLabelText('Bắt đầu ký kết')

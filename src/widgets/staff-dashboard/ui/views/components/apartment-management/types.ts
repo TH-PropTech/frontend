@@ -10,12 +10,50 @@ export type ApartmentStatus =
 
 export type FilterStatus = 'all' | ApartmentStatus
 
+export interface StaffExecutionPolicyRef {
+  policyId: string
+  version: number
+  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+  contentHash: string
+}
+
+/** Gói thuê như backend trả về (kèm dữ liệu chỉ đọc như resolvedDepositAmount). */
+export interface StaffRentalPackage {
+  packageId: string
+  version: number
+  durationMonths: 3 | 6 | 12 | 24
+  monthlyRent: number
+  depositPolicy:
+    | { type: 'MONTHS_OF_RENT'; months: number }
+    | { type: 'FIXED_AMOUNT'; amount: number }
+  status: 'active' | 'inactive'
+  resolvedDepositAmount?: number
+  allowedExecutionPolicies?: StaffExecutionPolicyRef[]
+  defaultExecutionPolicy?: StaffExecutionPolicyRef
+}
+
 export interface StaffApartment {
   id: string
+  pricingMode?: 'packages' | 'legacy'
+  pricingRevision?: number
+  rentalPackages?: StaffRentalPackage[]
   title: string
   location: string
   city: string
   district: string
+  // Các trường chỉnh sửa (GET /apartments/manage trả đủ; tuỳ chọn để không ép mọi nơi dùng phải có)
+  category?: string
+  description?: string
+  ward?: string
+  street?: string
+  address?: string
+  direction?: string
+  balconyDirection?: string
+  furniture?: string
+  moveInTime?: string
+  electricity?: string
+  water?: string
+  internet?: string
   priceMonthly: number
   area: number
   bedrooms: number

@@ -136,13 +136,18 @@ export function ViewingNoteEditor({
       )}
 
       <form className="mt-5 space-y-4" onSubmit={submit}>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3">
           {RATING_FIELDS.map(([name, label]) => (
-            <label key={name} className="text-xs font-medium text-muted">
-              {label}
+            <label
+              key={name}
+              className="flex flex-col gap-1 text-xs font-medium text-muted"
+            >
+              <span className="truncate" title={label}>
+                {label}
+              </span>
               <select
                 aria-label={label}
-                className="mt-1 h-10 w-full min-w-0 rounded-lg border border-border bg-bg px-3 text-sm text-fg"
+                className="h-9 w-full min-w-0 rounded-lg border border-border bg-bg px-2 text-sm text-fg"
                 value={draft[name] ?? ''}
                 onChange={event =>
                   setDraft(current => ({

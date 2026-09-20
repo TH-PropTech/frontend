@@ -12,8 +12,9 @@ import {
   ShieldAlert,
   Users,
 } from 'lucide-react'
-import { format, parseISO } from 'date-fns'
+import { addDays, format, parseISO } from 'date-fns'
 import { vi } from 'date-fns/locale'
+import type { FlowStep1Config } from '@/features/rental-flow-config'
 import { Button } from '@/shared/ui/button'
 import { Calendar } from '@/shared/ui/calendar'
 import { Input } from '@/shared/ui/input'
@@ -39,7 +40,8 @@ export interface ApplyStepInfoValues {
 
 export interface ApplyStepInfoProps {
   values: ApplyStepInfoValues
-  apartmentArea?: number
+  apartmentArea?: number | undefined
+  step1Config?: FlowStep1Config | undefined
   onChange: (values: Partial<ApplyStepInfoValues>) => void
   onNext: () => void
 }
@@ -53,21 +55,61 @@ export function getTodayDateString(): string {
 }
 
 export function validateStepInfo(
-  values: ApplyStepInfoValues
+  values: ApplyStepInfoValues,
+  config?: Partial<FlowStep1Config>
 ): Record<string, string> {
   const errors: Record<string, string> = {}
+  const minOccupants = config?.minOccupants ?? 1
+  const maxOccupants = config?.maxOccupants ?? 20
 
   if (
     !Number.isInteger(values.occupants) ||
-    values.occupants < 1 ||
-    values.occupants > 20
+    values.occupants < minOccupants ||
+    values.occupants > maxOccupants
   ) {
-    errors.occupants = 'Số người ở phải từ 1 đến 20.'
+    errors.occupants =
+      config?.minOccupants !== undefined || config?.maxOccupants !== undefined
+        ? `Số người ở phải từ ${minOccupants} đến ${maxOccupants}.`
+        : 'Số người ở phải từ 1 đến 20.'
   }
 
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
   const todayStr = getTodayDateString()
+
   if (!values.moveInDate || values.moveInDate < todayStr) {
     errors.moveInDate = 'Ngày vào ở không được trước hôm nay.'
+  } else if (
+    config?.minMoveInLeadDays !== undefined &&
+    config.minMoveInLeadDays > 0
+  ) {
+    const minDate = addDays(today, config.minMoveInLeadDays)
+    minDate.setHours(0, 0, 0, 0)
+    try {
+      const selected = parseISO(values.moveInDate)
+      if (selected < minDate) {
+        errors.moveInDate = `Ngày vào ở phải sau hôm nay ít nhất ${config.minMoveInLeadDays} ngày.`
+      }
+    } catch {
+      errors.moveInDate = 'Ngày vào ở không hợp lệ.'
+    }
+  }
+
+  if (
+    !errors.moveInDate &&
+    config?.maxMoveInLeadDays !== undefined &&
+    values.moveInDate
+  ) {
+    const maxDate = addDays(today, config.maxMoveInLeadDays)
+    maxDate.setHours(23, 59, 59, 999)
+    try {
+      const selected = parseISO(values.moveInDate)
+      if (selected > maxDate) {
+        errors.moveInDate = `Ngày vào ở không được vượt quá ${config.maxMoveInLeadDays} ngày tính từ hôm nay.`
+      }
+    } catch {
+      errors.moveInDate = 'Ngày vào ở không hợp lệ.'
+    }
   }
 
   const trimmedOccupation = (values.occupation || '').trim()
@@ -75,8 +117,15 @@ export function validateStepInfo(
     errors.occupation = 'Vui lòng nhập nghề nghiệp (1 đến 200 ký tự).'
   }
 
-  if (values.notes && values.notes.trim().length > 1000) {
-    errors.notes = 'Ghi chú không được vượt quá 1000 ký tự.'
+  const allowNotes = config?.allowNotes ?? true
+  const notesMaxLength = config?.notesMaxLength ?? 1000
+
+  if (
+    allowNotes &&
+    values.notes &&
+    values.notes.trim().length > notesMaxLength
+  ) {
+    errors.notes = `Ghi chú không được vượt quá ${notesMaxLength} ký tự.`
   }
 
   return errors
@@ -103,11 +152,21 @@ const QUICK_NOTE_SUGGESTIONS = [
 export function ApplyStepInfo({
   values,
   apartmentArea = 68,
+  step1Config,
   onChange,
   onNext,
 }: ApplyStepInfoProps): React.ReactElement {
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [calendarOpen, setCalendarOpen] = React.useState(false)
+
+  const moveInDateLabel =
+    step1Config?.moveInDateLabel?.trim() || 'Ngày dự kiến vào ở'
+  const minOccupants = step1Config?.minOccupants ?? 1
+  const maxOccupants = step1Config?.maxOccupants ?? 10
+  const minMoveInLeadDays = step1Config?.minMoveInLeadDays ?? 0
+  const maxMoveInLeadDays = step1Config?.maxMoveInLeadDays ?? 90
+  const allowNotes = step1Config?.allowNotes ?? true
+  const notesMaxLength = step1Config?.notesMaxLength ?? 1000
 
   // Recommended occupancy density based on Housing Law (min 8m2/person)
   const recommendedMaxOccupants = Math.max(
@@ -137,8 +196,11 @@ export function ApplyStepInfo({
   }, [selectedDateObject, values.moveInDate])
 
   const handleQuickDate = (offsetDays: number): void => {
-    const target = new Date()
-    target.setDate(target.getDate() + offsetDays)
+    const safeOffset = Math.max(
+      minMoveInLeadDays,
+      Math.min(maxMoveInLeadDays, offsetDays)
+    )
+    const target = addDays(new Date(), safeOffset)
     const formatted = format(target, 'yyyy-MM-dd')
     onChange({ moveInDate: formatted })
     if (errors.moveInDate) {
@@ -149,7 +211,7 @@ export function ApplyStepInfo({
 
   const handleSubmit = (event: React.FormEvent): void => {
     event.preventDefault()
-    const validationErrors = validateStepInfo(values)
+    const validationErrors = validateStepInfo(values, step1Config)
     setErrors(validationErrors)
 
     if (Object.keys(validationErrors).length > 0) {
@@ -186,7 +248,7 @@ export function ApplyStepInfo({
       </header>
 
       {/* Section 1: Cư trú & Thời gian */}
-      <section className="space-y-4 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+      <section className="space-y-4 rounded-xl border border-border bg-surface p-3.5 shadow-sm sm:rounded-2xl sm:p-5">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
           1. Quy chuẩn thành viên & Ngày nhận nhà
         </h3>
@@ -228,7 +290,10 @@ export function ApplyStepInfo({
                 <SelectValue placeholder="Chọn số lượng người ở" />
               </SelectTrigger>
               <SelectContent className="max-h-60 rounded-xl border-border bg-surface text-fg shadow-lg">
-                {Array.from({ length: 12 }, (_, i) => i + 1).map(num => (
+                {Array.from(
+                  { length: Math.max(1, maxOccupants - minOccupants + 1) },
+                  (_, i) => minOccupants + i
+                ).map(num => (
                   <SelectItem key={num} value={String(num)}>
                     {num} người {num === 1 ? '(Ở một mình)' : ''}
                     {num === recommendedMaxOccupants
@@ -265,10 +330,12 @@ export function ApplyStepInfo({
                   aria-hidden="true"
                   className="h-3.5 w-3.5 text-primary"
                 />
-                <span>Ngày dự kiến vào ở</span>
+                <span>{moveInDateLabel}</span>
                 <span className="text-danger">*</span>
               </Label>
-              <span className="text-[11px] text-muted">08:00 – 18:00</span>
+              <span className="text-[11px] text-muted">
+                +{minMoveInLeadDays} đến +{maxMoveInLeadDays} ngày
+              </span>
             </div>
 
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -311,6 +378,16 @@ export function ApplyStepInfo({
                   disabled={date => {
                     const today = new Date()
                     today.setHours(0, 0, 0, 0)
+                    if (
+                      step1Config?.minMoveInLeadDays !== undefined ||
+                      step1Config?.maxMoveInLeadDays !== undefined
+                    ) {
+                      const minDate = addDays(today, minMoveInLeadDays)
+                      minDate.setHours(0, 0, 0, 0)
+                      const maxDate = addDays(today, maxMoveInLeadDays)
+                      maxDate.setHours(23, 59, 59, 999)
+                      return date < minDate || date > maxDate
+                    }
                     return date < today
                   }}
                 />
@@ -353,7 +430,7 @@ export function ApplyStepInfo({
       </section>
 
       {/* Section 2: Công việc & Thú cưng */}
-      <section className="space-y-4 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+      <section className="space-y-4 rounded-xl border border-border bg-surface p-3.5 shadow-sm sm:rounded-2xl sm:p-5">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
           2. Nghề nghiệp & Kế hoạch sinh hoạt
         </h3>
@@ -396,7 +473,7 @@ export function ApplyStepInfo({
           ) : null}
 
           {/* Quick profession chips */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
+          <div className="flex overflow-x-auto no-scrollbar gap-1.5 pt-1 pb-1 sm:flex-wrap">
             {COMMON_OCCUPATIONS.map(occ => (
               <button
                 key={occ}
@@ -407,7 +484,7 @@ export function ApplyStepInfo({
                     setErrors(prev => ({ ...prev, occupation: '' }))
                   }
                 }}
-                className={`rounded-lg border px-2.5 py-1 text-[11px] transition ${
+                className={`shrink-0 rounded-lg border px-2.5 py-1 text-[11px] transition ${
                   values.occupation === occ
                     ? 'border-primary bg-primary-soft/40 font-semibold text-primary'
                     : 'border-border bg-surface-muted/60 text-muted hover:border-border-strong hover:text-fg'
@@ -444,80 +521,82 @@ export function ApplyStepInfo({
         </div>
 
         {/* Notes */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label
-              htmlFor="notes-input"
-              className="flex items-center gap-1.5 text-xs font-semibold text-fg"
-            >
-              <FileEdit
-                aria-hidden="true"
-                className="h-3.5 w-3.5 text-primary"
-              />
-              <span>Ghi chú & Thỏa thuận riêng (Tùy chọn)</span>
-            </Label>
-            <span className="text-[10px] text-subtle">
-              {(values.notes || '').length}/1000 ký tự
-            </span>
-          </div>
-
-          <Textarea
-            id="notes-input"
-            ref={notesInputRef}
-            rows={2}
-            maxLength={1000}
-            placeholder="Nêu mong muốn về bàn giao, thiết bị hoặc yêu cầu riêng..."
-            value={values.notes || ''}
-            onChange={e => {
-              onChange({ notes: e.target.value })
-              if (errors.notes) {
-                setErrors(prev => ({ ...prev, notes: '' }))
-              }
-            }}
-            className="rounded-xl text-xs bg-surface"
-          />
-          {errors.notes ? (
-            <p role="alert" className="text-[11px] text-danger">
-              {errors.notes}
-            </p>
-          ) : null}
-
-          {/* Quick note chips */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {QUICK_NOTE_SUGGESTIONS.map(sugg => (
-              <button
-                key={sugg}
-                type="button"
-                onClick={() => {
-                  const current = values.notes
-                    ? `${values.notes}; ${sugg}`
-                    : sugg
-                  onChange({ notes: current })
-                }}
-                className="rounded-lg border border-border bg-surface-muted/50 px-2 py-0.5 text-[10px] text-muted hover:border-primary/50 hover:text-fg transition"
+        {allowNotes ? (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label
+                htmlFor="notes-input"
+                className="flex items-center gap-1.5 text-xs font-semibold text-fg"
               >
-                + {sugg}
-              </button>
-            ))}
+                <FileEdit
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 text-primary"
+                />
+                <span>Ghi chú & Thỏa thuận riêng (Tùy chọn)</span>
+              </Label>
+              <span className="text-[10px] text-subtle">
+                {(values.notes || '').length}/{notesMaxLength} ký tự
+              </span>
+            </div>
+
+            <Textarea
+              id="notes-input"
+              ref={notesInputRef}
+              rows={2}
+              maxLength={notesMaxLength}
+              placeholder="Nêu mong muốn về bàn giao, thiết bị hoặc yêu cầu riêng..."
+              value={values.notes || ''}
+              onChange={e => {
+                onChange({ notes: e.target.value })
+                if (errors.notes) {
+                  setErrors(prev => ({ ...prev, notes: '' }))
+                }
+              }}
+              className="rounded-xl text-xs bg-surface"
+            />
+            {errors.notes ? (
+              <p role="alert" className="text-[11px] text-danger">
+                {errors.notes}
+              </p>
+            ) : null}
+
+            {/* Quick note chips */}
+            <div className="flex overflow-x-auto no-scrollbar gap-1.5 pt-1 pb-1 sm:flex-wrap">
+              {QUICK_NOTE_SUGGESTIONS.map(sugg => (
+                <button
+                  key={sugg}
+                  type="button"
+                  onClick={() => {
+                    const current = values.notes
+                      ? `${values.notes}; ${sugg}`
+                      : sugg
+                    onChange({ notes: current })
+                  }}
+                  className="shrink-0 rounded-lg border border-border bg-surface-muted/50 px-2 py-0.5 text-[10px] text-muted hover:border-primary/50 hover:text-fg transition"
+                >
+                  + {sugg}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
       </section>
 
       {/* Navigation action */}
-      <div className="flex items-center justify-between border-t border-border/80 pt-4">
+      <div className="flex flex-col-reverse gap-3 border-t border-border/80 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="inline-flex items-center gap-1.5 text-xs text-muted">
           <CheckCircle2
             aria-hidden="true"
-            className="h-3.5 w-3.5 text-success"
+            className="h-3.5 w-3.5 shrink-0 text-success"
           />
-          <span>
+          <span className="text-[11px] sm:text-xs">
             Thông tin được bảo mật và chỉ gửi tới chủ nhà được xác thực.
           </span>
         </div>
 
         <Button
           type="submit"
-          className="flex items-center gap-2 bg-control px-6 py-2 text-xs font-semibold text-on-control shadow-sm hover:opacity-90"
+          className="flex w-full items-center justify-center gap-2 bg-control px-6 py-2.5 text-xs font-semibold text-on-control shadow-sm hover:opacity-90 sm:w-auto"
         >
           <span>Tiếp tục chọn gói thuê</span>
           <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
