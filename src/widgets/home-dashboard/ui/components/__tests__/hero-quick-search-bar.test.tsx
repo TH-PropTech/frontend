@@ -11,6 +11,36 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 
+// Stand-in for the shared cascade modal (Radix Select is impractical in jsdom).
+vi.mock(
+  '@/widgets/properties-dashboard/ui/components/location-filter-modal',
+  () => ({
+    LocationFilterModal: (props: {
+      onClose: () => void
+      setSelectedCity: (v: string) => void
+      setSelectedDistrict: (v: string) => void
+      setSelectedWard: (v: string) => void
+    }) => (
+      <div data-testid="location-filter-modal-stub">
+        <button
+          type="button"
+          data-testid="stub-pick-location"
+          onClick={() => {
+            props.setSelectedCity('Thành phố Hồ Chí Minh')
+            props.setSelectedDistrict('Quận Bình Thạnh')
+            props.setSelectedWard('Phường 22')
+          }}
+        >
+          pick
+        </button>
+        <button type="button" onClick={props.onClose}>
+          Xác nhận
+        </button>
+      </div>
+    ),
+  })
+)
+
 describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -37,13 +67,16 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
     })
     expect(keywordInput).toHaveValue('Vinhomes Central Park')
 
-    // 2. Select District "Bình Thạnh"
-    fireEvent.click(screen.getByTestId('quick-search-district-trigger'))
-    const districtOption = screen.getByTestId('district-option-Bình Thạnh')
-    fireEvent.click(districtOption)
+    // 2. Select location through the shared cascade modal
     expect(
       screen.getByTestId('quick-search-district-trigger')
-    ).toHaveTextContent('Bình Thạnh')
+    ).toHaveTextContent('Toàn quốc')
+    fireEvent.click(screen.getByTestId('quick-search-district-trigger'))
+    fireEvent.click(screen.getByTestId('stub-pick-location'))
+    fireEvent.click(screen.getByText('Xác nhận'))
+    expect(
+      screen.getByTestId('quick-search-district-trigger')
+    ).toHaveTextContent('Thành phố Hồ Chí Minh • Quận Bình Thạnh • Phường 22')
 
     // 3. Select Price "10 – 15 triệu"
     fireEvent.click(screen.getByTestId('quick-search-price-trigger'))
@@ -68,7 +101,10 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
     const pushedUrl = String(pushMock.mock.calls[0]?.[0] ?? '')
     expect(pushedUrl).toContain('/properties?')
     expect(pushedUrl).toContain('search=Vinhomes+Central+Park')
-    expect(pushedUrl).toContain('district=B%C3%ACnh+Th%E1%BA%A1nh')
+    const pushedParams = new URL(pushedUrl, 'http://x').searchParams
+    expect(pushedParams.get('city')).toBe('Thành phố Hồ Chí Minh')
+    expect(pushedParams.get('district')).toBe('Quận Bình Thạnh')
+    expect(pushedParams.get('ward')).toBe('Phường 22')
     expect(pushedUrl).toContain('minPrice=10')
     expect(pushedUrl).toContain('maxPrice=15')
     expect(pushedUrl).toContain('bedrooms=2')
@@ -98,7 +134,12 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
     const q1Tag = screen.getByTestId('suggestion-chip-Quận 1')
     fireEvent.click(q1Tag)
 
-    expect(pushMock).toHaveBeenCalledWith('/properties?district=Qu%E1%BA%ADn+1')
+    const chipParams = new URL(
+      String(pushMock.mock.calls[0]?.[0] ?? ''),
+      'http://x'
+    ).searchParams
+    expect(chipParams.get('city')).toBe('Thành phố Hồ Chí Minh')
+    expect(chipParams.get('district')).toBe('Quận 1')
 
     const under10Tag = screen.getByTestId('suggestion-chip-Dưới 10 triệu')
     fireEvent.click(under10Tag)
@@ -118,7 +159,6 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
     render(<HeroQuickSearchBar />)
 
     const cases = [
-      ['quick-search-district-trigger', 'district-dropdown-menu'],
       ['quick-search-price-trigger', 'price-dropdown-menu'],
       ['quick-search-bedrooms-trigger', 'bedroom-dropdown-menu'],
     ] as const
@@ -136,22 +176,22 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
       </div>
     )
 
-    const districtTrigger = screen.getByTestId('quick-search-district-trigger')
+    const priceTrigger = screen.getByTestId('quick-search-price-trigger')
 
     // Open dropdown
-    fireEvent.click(districtTrigger)
-    expect(districtTrigger).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByTestId('district-option-Thủ Đức')).toBeInTheDocument()
+    fireEvent.click(priceTrigger)
+    expect(priceTrigger).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByTestId('price-option-10-15')).toBeInTheDocument()
 
     // Toggle close
-    fireEvent.click(districtTrigger)
-    expect(districtTrigger).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(priceTrigger)
+    expect(priceTrigger).toHaveAttribute('aria-expanded', 'false')
 
     // Open again and click outside to close
-    fireEvent.click(districtTrigger)
-    expect(districtTrigger).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(priceTrigger)
+    expect(priceTrigger).toHaveAttribute('aria-expanded', 'true')
     fireEvent.mouseDown(screen.getByTestId('outside-element'))
-    expect(districtTrigger).toHaveAttribute('aria-expanded', 'false')
+    expect(priceTrigger).toHaveAttribute('aria-expanded', 'false')
 
     // Price branch: "Dưới 10 triệu"
     fireEvent.click(screen.getByTestId('quick-search-price-trigger'))

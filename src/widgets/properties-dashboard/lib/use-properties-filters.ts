@@ -790,6 +790,7 @@ export function usePropertiesFilters() {
   const buildingParam = searchParams?.get('building')
   const cityParam = searchParams?.get('city')
   const districtParam = searchParams?.get('district')
+  const wardParam = searchParams?.get('ward') || ''
   const minPriceParam = searchParams?.get('minPrice')
   const maxPriceParam = searchParams?.get('maxPrice')
   const bedroomsParam = searchParams?.get('bedrooms')
@@ -827,7 +828,7 @@ export function usePropertiesFilters() {
   const [selectedDistrict, setSelectedDistrict] = React.useState(
     initialLocation.district
   )
-  const [selectedWard, setSelectedWard] = React.useState('')
+  const [selectedWard, setSelectedWard] = React.useState(wardParam)
   const [selectedStreet, setSelectedStreet] = React.useState('')
   const [selectedProject, setSelectedProject] = React.useState('')
 
@@ -843,7 +844,7 @@ export function usePropertiesFilters() {
   const [appliedDistrict, setAppliedDistrict] = React.useState(
     initialLocation.district
   )
-  const [appliedWard, setAppliedWard] = React.useState('')
+  const [appliedWard, setAppliedWard] = React.useState(wardParam)
   const [appliedStreet, setAppliedStreet] = React.useState('')
   const [appliedProject, setAppliedProject] = React.useState('')
 
@@ -885,9 +886,9 @@ export function usePropertiesFilters() {
 
   // Synchronize state when search params change during navigation without effect cascading renders
   const [prevParamsKey, setPrevParamsKey] = React.useState(
-    `${cityParam || ''}_${districtParam || ''}_${minPriceParam || ''}_${maxPriceParam || ''}_${bedroomsParam || ''}_${searchParam || ''}`
+    `${cityParam || ''}_${districtParam || ''}_${wardParam}_${minPriceParam || ''}_${maxPriceParam || ''}_${bedroomsParam || ''}_${searchParam || ''}`
   )
-  const currentParamsKey = `${cityParam || ''}_${districtParam || ''}_${minPriceParam || ''}_${maxPriceParam || ''}_${bedroomsParam || ''}_${searchParam || ''}`
+  const currentParamsKey = `${cityParam || ''}_${districtParam || ''}_${wardParam}_${minPriceParam || ''}_${maxPriceParam || ''}_${bedroomsParam || ''}_${searchParam || ''}`
 
   if (prevParamsKey !== currentParamsKey) {
     setPrevParamsKey(currentParamsKey)
@@ -898,6 +899,8 @@ export function usePropertiesFilters() {
     setAppliedDistrict(resolved.district)
     setSelectedProvinceCode(resolved.provinceCode)
     setSelectedDistrictCode(resolved.districtCode)
+    setSelectedWard(wardParam)
+    setAppliedWard(wardParam)
 
     const normalizedMinPrice = parsePriceParam(minPriceParam)
     setMinPrice(normalizedMinPrice)

@@ -11,11 +11,18 @@ import {
   ChevronDown,
   Sparkles,
 } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { LocationFilterModal } from '@/widgets/properties-dashboard/ui/components/location-filter-modal'
 
-export interface QuickSearchDistrictOption {
-  label: string
-  value: string
+const HCM_CITY = 'Thành phố Hồ Chí Minh'
+
+interface SearchLocation {
+  city: string
+  district: string
+  ward: string
 }
+
+const NO_LOCATION: SearchLocation = { city: '', district: '', ward: '' }
 
 export interface QuickSearchPriceOption {
   label: string
@@ -28,18 +35,6 @@ export interface QuickSearchBedroomOption {
   label: string
   value: string
 }
-
-export const QUICK_SEARCH_DISTRICTS: QuickSearchDistrictOption[] = [
-  { label: 'Tất cả khu vực', value: '' },
-  { label: 'Bình Thạnh', value: 'Bình Thạnh' },
-  { label: 'Quận 2', value: 'Quận 2' },
-  { label: 'Quận 7', value: 'Quận 7' },
-  { label: 'Quận 1', value: 'Quận 1' },
-  { label: 'Thủ Đức', value: 'Thủ Đức' },
-  { label: 'Cầu Giấy', value: 'Cầu Giấy' },
-  { label: 'Nam Từ Liêm', value: 'Nam Từ Liêm' },
-  { label: 'Phú Nhuận', value: 'Phú Nhuận' },
-]
 
 export const QUICK_SEARCH_PRICES: QuickSearchPriceOption[] = [
   { label: 'Tất cả mức giá', value: 'all', minPrice: '', maxPrice: '' },
@@ -96,12 +91,21 @@ export function HeroQuickSearchBar(): React.ReactElement {
   const router = useRouter()
 
   const [searchKeyword, setSearchKeyword] = React.useState<string>('')
+  const [selectedCity, setSelectedCity] = React.useState<string>('')
   const [selectedDistrict, setSelectedDistrict] = React.useState<string>('')
+  const [selectedWard, setSelectedWard] = React.useState<string>('')
+  const [selectedProvinceCode, setSelectedProvinceCode] = React.useState<
+    number | null
+  >(null)
+  const [selectedDistrictCode, setSelectedDistrictCode] = React.useState<
+    number | null
+  >(null)
+  const [isLocationOpen, setIsLocationOpen] = React.useState(false)
   const [selectedPrice, setSelectedPrice] = React.useState<string>('all')
   const [selectedBedroom, setSelectedBedroom] = React.useState<string>('all')
 
   const [openDropdown, setOpenDropdown] = React.useState<
-    'district' | 'price' | 'bedroom' | null
+    'price' | 'bedroom' | null
   >(null)
 
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -124,15 +128,18 @@ export function HeroQuickSearchBar(): React.ReactElement {
   }, [openDropdown])
 
   const executeSearch = (
-    overrideDistrict?: string,
+    overrideLocation?: SearchLocation,
     overridePrice?: string,
     overrideBedroom?: string,
     overrideKeyword?: string
   ): void => {
     const keywordToUse =
       overrideKeyword !== undefined ? overrideKeyword : searchKeyword
-    const districtToUse =
-      overrideDistrict !== undefined ? overrideDistrict : selectedDistrict
+    const locationToUse: SearchLocation = overrideLocation ?? {
+      city: selectedCity,
+      district: selectedDistrict,
+      ward: selectedWard,
+    }
     const priceToUse =
       overridePrice !== undefined ? overridePrice : selectedPrice
     const bedroomToUse =
@@ -144,9 +151,9 @@ export function HeroQuickSearchBar(): React.ReactElement {
       params.set('search', keywordToUse.trim())
     }
 
-    if (districtToUse) {
-      params.set('district', districtToUse)
-    }
+    if (locationToUse.city) params.set('city', locationToUse.city)
+    if (locationToUse.district) params.set('district', locationToUse.district)
+    if (locationToUse.ward) params.set('ward', locationToUse.ward)
 
     const priceObj = QUICK_SEARCH_PRICES.find(p => p.value === priceToUse)
     if (priceObj) {
@@ -162,6 +169,11 @@ export function HeroQuickSearchBar(): React.ReactElement {
     const targetUrl = queryString ? `/properties?${queryString}` : '/properties'
     router.push(targetUrl as Route)
   }
+
+  const locationLabel =
+    [selectedCity, selectedDistrict, selectedWard]
+      .filter(Boolean)
+      .join(' • ') || 'Toàn quốc'
 
   const selectedPriceLabel =
     QUICK_SEARCH_PRICES.find(p => p.value === selectedPrice)?.label || 'Tất cả'
@@ -215,64 +227,54 @@ export function HeroQuickSearchBar(): React.ReactElement {
         {/* Divider on Desktop */}
         <div className="hidden lg:block w-px h-8 bg-border/60 shrink-0" />
 
-        {/* District Field */}
+        {/* Location Field (shared cascade with /properties) */}
         <div className="relative flex-1 min-w-0">
-          <button
-            type="button"
-            data-testid="quick-search-district-trigger"
-            aria-label="Chọn khu vực tìm kiếm"
-            aria-expanded={openDropdown === 'district'}
-            onClick={() =>
-              setOpenDropdown(prev => (prev === 'district' ? null : 'district'))
-            }
-            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl lg:rounded-full text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
-              <MapPin className="h-4 w-4" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-muted">
-                Khu vực
-              </span>
-              <span className="block truncate text-xs sm:text-sm font-semibold text-fg">
-                {selectedDistrict || 'Tất cả'}
-              </span>
-            </div>
-            <ChevronDown
-              className={`h-4 w-4 text-muted shrink-0 transition-transform duration-200 ${
-                openDropdown === 'district' ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
-
-          {openDropdown === 'district' && (
-            <div
-              ref={el => {
-                if (el) el.scrollTop = 0
-              }}
-              data-testid="district-dropdown-menu"
-              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto custom-scrollbar z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
-            >
-              {QUICK_SEARCH_DISTRICTS.map(d => (
-                <button
-                  key={d.value}
-                  type="button"
-                  data-testid={`district-option-${d.value || 'all'}`}
-                  onClick={() => {
-                    setSelectedDistrict(d.value)
-                    setOpenDropdown(null)
-                  }}
-                  className={`w-full text-left px-3.5 py-2 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
-                    selectedDistrict === d.value
-                      ? 'bg-primary text-white'
-                      : 'text-fg hover:bg-surface-muted'
+          <Popover open={isLocationOpen} onOpenChange={setIsLocationOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                data-testid="quick-search-district-trigger"
+                aria-label="Chọn khu vực tìm kiếm"
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl lg:rounded-full text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-muted">
+                    Khu vực
+                  </span>
+                  <span className="block truncate text-xs sm:text-sm font-semibold text-fg">
+                    {locationLabel}
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 text-muted shrink-0 transition-transform duration-200 ${
+                    isLocationOpen ? 'rotate-180' : ''
                   }`}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-          )}
+                />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-80 md:w-96 rounded-2xl border border-border bg-white p-4 shadow-xl outline-none"
+              align="start"
+              onOpenAutoFocus={e => e.preventDefault()}
+            >
+              <LocationFilterModal
+                onClose={() => setIsLocationOpen(false)}
+                selectedCity={selectedCity}
+                setSelectedCity={setSelectedCity}
+                selectedDistrict={selectedDistrict}
+                setSelectedDistrict={setSelectedDistrict}
+                selectedWard={selectedWard}
+                setSelectedWard={setSelectedWard}
+                selectedProvinceCode={selectedProvinceCode}
+                setSelectedProvinceCode={setSelectedProvinceCode}
+                selectedDistrictCode={selectedDistrictCode}
+                setSelectedDistrictCode={setSelectedDistrictCode}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Divider on Desktop */}
@@ -428,14 +430,21 @@ export function HeroQuickSearchBar(): React.ReactElement {
             data-testid={`suggestion-chip-${sug.label}`}
             onClick={() => {
               if (sug.district) {
+                setSelectedCity(HCM_CITY)
                 setSelectedDistrict(sug.district)
-                executeSearch(sug.district, 'all', 'all', '')
+                setSelectedWard('')
+                executeSearch(
+                  { city: HCM_CITY, district: sug.district, ward: '' },
+                  'all',
+                  'all',
+                  ''
+                )
               } else if (sug.priceBracket) {
                 setSelectedPrice(sug.priceBracket)
-                executeSearch('', sug.priceBracket, 'all', '')
+                executeSearch(NO_LOCATION, sug.priceBracket, 'all', '')
               } else if (sug.bedrooms) {
                 setSelectedBedroom(sug.bedrooms)
-                executeSearch('', 'all', sug.bedrooms, '')
+                executeSearch(NO_LOCATION, 'all', sug.bedrooms, '')
               }
             }}
             className="rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/25 px-3 py-1 text-[11px] font-medium text-white transition-all hover:scale-105 active:scale-95 cursor-pointer"

@@ -69,6 +69,22 @@ describe('usePropertiesFilters - Query Parameters & Normalization Suite (5 Dimen
     })
   })
 
+  describe('Location params shared with home quick search', () => {
+    it('initializes city, district and ward from URL params', () => {
+      mockSearchParams.set('city', 'Thành phố Hồ Chí Minh')
+      mockSearchParams.set('district', 'Quận Bình Thạnh')
+      mockSearchParams.set('ward', 'Phường 22')
+
+      const { result } = renderHook(() => usePropertiesFilters())
+
+      expect(result.current.selectedCity).toBe('Thành phố Hồ Chí Minh')
+      expect(result.current.selectedWard).toBe('Phường 22')
+      expect(result.current.locationLabel).toBe(
+        'Thành phố Hồ Chí Minh • Quận Bình Thạnh • Phường 22'
+      )
+    })
+  })
+
   // Dimension 2: Boundary & Edge Cases
   describe('Dimension 2: Boundary & Edge Cases', () => {
     it('normalizes legacy raw VND prices (e.g. 10,000,000) into millions (10) automatically', () => {
