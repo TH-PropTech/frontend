@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import * as React from 'react'
 import { ProfileWidget } from './profile-widget'
 import * as useProfileModule from '../model/use-profile'
@@ -128,5 +128,23 @@ describe('ProfileWidget', () => {
     expect(screen.getByText('Tin đăng của tôi')).toBeDefined()
     expect(screen.getByText('Hồ sơ đặt thuê')).toBeDefined()
     expect(screen.getByTestId('tab-landlord-applications')).toBeDefined()
+  })
+
+  it('renders tenant rental applications tab label when role is tenant', () => {
+    const setActiveTabMock = vi.fn()
+    vi.mocked(useProfileModule.useProfile).mockReturnValue({
+      ...baseProfile,
+      role: 'tenant',
+      activeTab: 'progress',
+      setActiveTab: setActiveTabMock,
+    } as unknown as ReturnType<typeof useProfileModule.useProfile>)
+
+    render(<ProfileWidget />)
+
+    const tenantTab = screen.getByRole('tab', { name: /đơn thuê đã gửi/i })
+    expect(tenantTab).toBeDefined()
+    fireEvent.pointerDown(tenantTab, { button: 0, ctrlKey: false })
+    fireEvent.keyDown(tenantTab, { key: 'Enter', code: 'Enter' })
+    expect(setActiveTabMock).toHaveBeenCalledWith('rental-applications')
   })
 })

@@ -44,31 +44,8 @@ const EMPTY_KYC = {
 
 export function useProfile(): UseProfileReturn {
   const router = useRouter()
-  const [role, setRole] = React.useState<'tenant' | 'landlord'>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('user')
-        if (stored) {
-          const u = JSON.parse(stored) as { roles?: string[] }
-          if (u.roles?.includes('landlord')) {
-            return 'landlord'
-          }
-        }
-      } catch (e) {
-        console.error(e)
-      }
-
-      const params = new URLSearchParams(window.location.search)
-      if (
-        params.get('tab') === 'listings' ||
-        params.get('tab') === 'rental-applications'
-      ) {
-        return 'landlord'
-      }
-    }
-    return 'tenant'
-  })
-  const [activeTab, setActiveTab] = React.useState<
+  const [role, setRole] = React.useState<'tenant' | 'landlord'>('tenant')
+  const [activeTab, setActiveTabState] = React.useState<
     | 'progress'
     | 'bills'
     | 'blockchain'
@@ -80,30 +57,47 @@ export function useProfile(): UseProfileReturn {
     | 'safety-reports'
     | 'support-tickets'
     | 'rental-applications'
-  >(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      const tab = params.get('tab')
-      if (tab === 'listings') {
-        return 'listings'
-      } else if (tab === 'rental-applications') {
-        return 'rental-applications'
-      } else if (
-        tab === 'progress' ||
-        tab === 'bills' ||
-        tab === 'blockchain' ||
-        tab === 'maintenance' ||
-        tab === 'security' ||
-        tab === 'saved-searches' ||
-        tab === 'living-cost' ||
-        tab === 'safety-reports' ||
-        tab === 'support-tickets'
-      ) {
-        return tab
-      }
-    }
-    return 'progress'
-  })
+  >('progress')
+
+  const setActiveTab = React.useCallback(
+    (
+      action: React.SetStateAction<
+        | 'progress'
+        | 'bills'
+        | 'blockchain'
+        | 'maintenance'
+        | 'security'
+        | 'listings'
+        | 'saved-searches'
+        | 'living-cost'
+        | 'safety-reports'
+        | 'support-tickets'
+        | 'rental-applications'
+      >
+    ) => {
+      setActiveTabState(prev => {
+        const next = typeof action === 'function' ? action(prev) : action
+        try {
+          if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search)
+            if (params.get('tab') !== next) {
+              params.set('tab', next)
+              if (!params.has('role') && role) {
+                params.set('role', role)
+              }
+              const search = params.toString()
+              const query = search ? `?${search}` : ''
+              router.replace(`/profile${query}` as Route, { scroll: false })
+            }
+          }
+        } catch (e) {
+          console.error(e)
+        }
+        return next
+      })
+    },
+    [router, role]
+  )
   const [activePropertyId, setActivePropertyId] = React.useState('prop-1')
   const properties = React.useMemo(() => DEMO_PROPERTIES, [])
 
@@ -133,31 +127,74 @@ export function useProfile(): UseProfileReturn {
   // KYC
   const [kycStatus, setKycStatus] = React.useState<
     'not-started' | 'pending' | 'verified' | 'rejected'
-  >(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('user')
-        if (stored) {
-          const u = JSON.parse(stored) as { kycStatus?: string }
-          if (
-            u.kycStatus === 'pending' ||
-            u.kycStatus === 'verified' ||
-            u.kycStatus === 'rejected'
-          ) {
-            return u.kycStatus
-          }
-        }
-      } catch {
-        // Ignore JSON parse error
-      }
-    }
-    return 'not-started'
-  })
+  >('not-started')
   const isKycVerified = kycStatus === 'verified'
   const [showKycModal, setShowKycModal] = React.useState(false)
   const [isOcrLoading, setIsOcrLoading] = React.useState(false)
   const [kycForm, setKycForm] = React.useState(EMPTY_KYC)
   const [cccdUploaded, setCccdUploaded] = React.useState(false)
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem('user')
+        if (stored) {
+          const u = JSON.parse(stored) as {
+            roles?: string[]
+            kycStatus?: 'not-started' | 'pending' | 'verified' | 'rejected'
+          }
+          if (u.roles?.includes('landlord')) {
+            setRole('landlord')
+          }
+          if (
+            u.kycStatus === 'pending' ||
+            u.kycStatus === 'verified' ||
+            u.kycStatus === 'rejected'
+          ) {
+            setKycStatus(u.kycStatus)
+          }
+        }
+      } catch (e) {
+        console.error(e)
+      }
+
+      const params = new URLSearchParams(window.location.search)
+      const tabParam = params.get('tab')
+      const roleParam = params.get('role')
+
+      if (roleParam === 'landlord' || roleParam === 'tenant') {
+        setRole(roleParam)
+      } else if (tabParam === 'listings') {
+        setRole('landlord')
+      }
+
+      if (tabParam) {
+        setActiveTabState(tabParam as typeof activeTab)
+      }
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const tab = params.get('tab')
+        if (tab) {
+          setActiveTabState(tab as typeof activeTab)
+        }
+        const r = params.get('role')
+        if (r === 'landlord' || r === 'tenant') {
+          setRole(r)
+        }
+      } catch {
+        // ignore
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   const refreshKycStatus = React.useCallback(async (): Promise<void> => {
     const record = await getMyKyc()
@@ -462,7 +499,22 @@ export function useProfile(): UseProfileReturn {
     setCccdUploaded(false)
     setKycForm(EMPTY_KYC)
     setActivePropertyId('prop-1')
-    setActiveTab('progress')
+    const targetTab =
+      newRole === 'tenant' && activeTab === 'listings' ? 'progress' : activeTab
+    setActiveTab(targetTab)
+
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search)
+        params.set('role', newRole)
+        params.set('tab', targetTab)
+        const query = params.toString() ? `?${params.toString()}` : ''
+        router.replace(`/profile${query}` as Route, { scroll: false })
+      }
+    } catch {
+      // ignore
+    }
+
     toast.info(
       `Đã chuyển sang vai trò: ${newRole === 'tenant' ? 'Khách thuê' : 'Chủ nhà'}`
     )

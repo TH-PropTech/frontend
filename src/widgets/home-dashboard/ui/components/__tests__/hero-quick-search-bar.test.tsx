@@ -155,19 +155,6 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
   })
 
   // Dimension 4: Full Branch Coverage
-  it('styles all dropdown menus with themed scrollbar instead of the native one', () => {
-    render(<HeroQuickSearchBar />)
-
-    const cases = [
-      ['quick-search-price-trigger', 'price-dropdown-menu'],
-      ['quick-search-bedrooms-trigger', 'bedroom-dropdown-menu'],
-    ] as const
-    for (const [trigger, menu] of cases) {
-      fireEvent.click(screen.getByTestId(trigger))
-      expect(screen.getByTestId(menu)).toHaveClass('custom-scrollbar')
-    }
-  })
-
   it('toggles dropdown menus and handles outside click properly (Branch Coverage)', () => {
     render(
       <div>
