@@ -47,10 +47,10 @@ export function ApartmentCard({
   const favorite = isFavorite(apt.id)
 
   return (
-    <article className="flex flex-col justify-between rounded-2xl border border-border bg-white p-5 shadow-sm hover:translate-y-[-4px] hover:border-border-strong hover:shadow-md transition-all duration-300">
+    <article className="flex flex-col justify-between rounded-xl border border-border bg-white p-4 shadow-sm hover:translate-y-[-3px] hover:border-border-strong hover:shadow-md transition-all duration-300">
       <div>
         {/* Visual Card Top */}
-        <div className="relative mb-4 flex h-36 flex-col justify-between rounded-xl border border-border bg-surface-muted p-4 overflow-hidden">
+        <div className="relative mb-3 flex h-32 flex-col justify-between rounded-lg border border-border bg-surface-muted p-3 overflow-hidden">
           {apt.image ? (
             <img
               src={apt.image}
@@ -142,7 +142,7 @@ export function ApartmentCard({
         </p>
 
         {/* Specs & Location section */}
-        <div className="mt-4 pt-4 border-t border-border/60 space-y-3">
+        <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
           {/* Location */}
           <div className="flex items-center gap-1.5 text-xs font-medium text-muted">
             <svg
@@ -205,11 +205,11 @@ export function ApartmentCard({
         </div>
       </div>
 
-      <div className="mt-5 flex">
+      <div className="mt-3.5 flex">
         <Link href={`/properties/${apt.id}` as Route} className="w-full">
           <Button
             variant="primary"
-            className="w-full rounded-xl py-2.5 text-xs font-bold transition-all"
+            className="w-full rounded-lg py-2 text-xs font-semibold transition-all"
           >
             Xem chi tiết
           </Button>

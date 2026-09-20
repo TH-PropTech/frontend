@@ -170,7 +170,7 @@ export function HomeDashboard(): React.ReactElement {
       <main className="w-full">
         <HeroSection />
         {user && user.kycStatus !== 'verified' && (
-          <div className="w-full bg-[#faf7f2] py-8 border-b border-[#e3d8d0]/60 relative z-20">
+          <div className="w-full bg-[#faf7f2] py-8 border-b border-[#e3d8d0]/60 relative z-10">
             <div className="max-w-6xl mx-auto px-6 md:px-10">
               <div className="bg-[#fffdf9] border border-[#e3d8d0] rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
                 <div className="flex items-start gap-4">

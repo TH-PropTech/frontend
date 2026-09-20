@@ -4,10 +4,10 @@ import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import type { Route } from 'next'
 import {
+  Search,
   MapPin,
   BadgeDollarSign,
   BedDouble,
-  Search,
   ChevronDown,
   Sparkles,
 } from 'lucide-react'
@@ -31,11 +31,13 @@ export interface QuickSearchBedroomOption {
 
 export const QUICK_SEARCH_DISTRICTS: QuickSearchDistrictOption[] = [
   { label: 'Tất cả khu vực', value: '' },
-  { label: 'Quận 1', value: 'Quận 1' },
+  { label: 'Bình Thạnh', value: 'Bình Thạnh' },
   { label: 'Quận 2', value: 'Quận 2' },
   { label: 'Quận 7', value: 'Quận 7' },
-  { label: 'Bình Thạnh', value: 'Bình Thạnh' },
+  { label: 'Quận 1', value: 'Quận 1' },
   { label: 'Thủ Đức', value: 'Thủ Đức' },
+  { label: 'Cầu Giấy', value: 'Cầu Giấy' },
+  { label: 'Nam Từ Liêm', value: 'Nam Từ Liêm' },
   { label: 'Phú Nhuận', value: 'Phú Nhuận' },
 ]
 
@@ -45,24 +47,24 @@ export const QUICK_SEARCH_PRICES: QuickSearchPriceOption[] = [
     label: 'Dưới 10 triệu',
     value: 'under-10',
     minPrice: '',
-    maxPrice: '10000000',
+    maxPrice: '10',
   },
   {
     label: '10 – 15 triệu',
     value: '10-15',
-    minPrice: '10000000',
-    maxPrice: '15000000',
+    minPrice: '10',
+    maxPrice: '15',
   },
   {
     label: '15 – 25 triệu',
     value: '15-25',
-    minPrice: '15000000',
-    maxPrice: '25000000',
+    minPrice: '15',
+    maxPrice: '25',
   },
   {
     label: 'Trên 25 triệu',
     value: 'above-25',
-    minPrice: '25000000',
+    minPrice: '25',
     maxPrice: '',
   },
 ]
@@ -71,7 +73,8 @@ export const QUICK_SEARCH_BEDROOMS: QuickSearchBedroomOption[] = [
   { label: 'Tất cả loại phòng', value: 'all' },
   { label: '1 phòng ngủ', value: '1' },
   { label: '2 phòng ngủ', value: '2' },
-  { label: '3+ phòng ngủ', value: '3' },
+  { label: '3 phòng ngủ', value: '3' },
+  { label: '4+ phòng ngủ', value: '4' },
 ]
 
 interface PopularSuggestion {
@@ -83,15 +86,16 @@ interface PopularSuggestion {
 
 export const POPULAR_SUGGESTIONS: PopularSuggestion[] = [
   { label: 'Quận 1', district: 'Quận 1' },
+  { label: 'Bình Thạnh', district: 'Bình Thạnh' },
   { label: 'Dưới 10 triệu', priceBracket: 'under-10' },
   { label: '2 phòng ngủ', bedrooms: '2' },
-  { label: 'Bình Thạnh', district: 'Bình Thạnh' },
   { label: '10 – 15 triệu', priceBracket: '10-15' },
 ]
 
 export function HeroQuickSearchBar(): React.ReactElement {
   const router = useRouter()
 
+  const [searchKeyword, setSearchKeyword] = React.useState<string>('')
   const [selectedDistrict, setSelectedDistrict] = React.useState<string>('')
   const [selectedPrice, setSelectedPrice] = React.useState<string>('all')
   const [selectedBedroom, setSelectedBedroom] = React.useState<string>('all')
@@ -122,8 +126,11 @@ export function HeroQuickSearchBar(): React.ReactElement {
   const executeSearch = (
     overrideDistrict?: string,
     overridePrice?: string,
-    overrideBedroom?: string
+    overrideBedroom?: string,
+    overrideKeyword?: string
   ): void => {
+    const keywordToUse =
+      overrideKeyword !== undefined ? overrideKeyword : searchKeyword
     const districtToUse =
       overrideDistrict !== undefined ? overrideDistrict : selectedDistrict
     const priceToUse =
@@ -132,6 +139,10 @@ export function HeroQuickSearchBar(): React.ReactElement {
       overrideBedroom !== undefined ? overrideBedroom : selectedBedroom
 
     const params = new URLSearchParams()
+
+    if (keywordToUse && keywordToUse.trim()) {
+      params.set('search', keywordToUse.trim())
+    }
 
     if (districtToUse) {
       params.set('district', districtToUse)
@@ -152,28 +163,60 @@ export function HeroQuickSearchBar(): React.ReactElement {
     router.push(targetUrl as Route)
   }
 
-  const selectedDistrictLabel =
-    QUICK_SEARCH_DISTRICTS.find(d => d.value === selectedDistrict)?.label ||
-    'Tất cả khu vực'
-
   const selectedPriceLabel =
-    QUICK_SEARCH_PRICES.find(p => p.value === selectedPrice)?.label ||
-    'Tất cả mức giá'
+    QUICK_SEARCH_PRICES.find(p => p.value === selectedPrice)?.label || 'Tất cả'
 
   const selectedBedroomLabel =
     QUICK_SEARCH_BEDROOMS.find(b => b.value === selectedBedroom)?.label ||
-    'Tất cả loại phòng'
+    'Tất cả'
 
   return (
     <div
       ref={containerRef}
       data-testid="hero-quick-search-bar"
-      className="w-full max-w-4xl pt-2"
+      className="w-full max-w-6xl pt-2"
     >
-      {/* Floating Pill Search Console */}
-      <div className="relative rounded-2xl md:rounded-full bg-white/95 backdrop-blur-md p-2 shadow-[0_20px_50px_rgba(0,0,0,0.22)] border border-white/40 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0">
+      {/* Floating Pill Search Console - Explicit z-30 to stay above suggestions and siblings */}
+      <div className="relative z-30 rounded-2xl lg:rounded-full bg-white/95 backdrop-blur-md p-2 shadow-[0_20px_50px_rgba(0,0,0,0.22)] border border-white/40 flex flex-col lg:flex-row items-stretch lg:items-center gap-2 lg:gap-0">
+        {/* Keyword Field */}
+        <div className="relative flex-[1.3] min-w-0">
+          <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl lg:rounded-full text-left hover:bg-surface-muted/80 focus-within:bg-surface-muted/80 transition-colors">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <Search className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <label
+                htmlFor="hero-quick-search-keyword"
+                className="block text-[10px] font-bold uppercase tracking-wider text-muted cursor-pointer"
+              >
+                Từ khóa
+              </label>
+              <input
+                id="hero-quick-search-keyword"
+                type="text"
+                data-testid="quick-search-keyword-input"
+                aria-label="Nhập từ khóa tìm kiếm căn hộ hoặc dự án"
+                placeholder="Tên căn hộ, dự án, vị trí..."
+                value={searchKeyword}
+                onChange={e => setSearchKeyword(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    executeSearch()
+                  }
+                }}
+                className="w-full bg-transparent font-semibold text-xs sm:text-sm text-fg placeholder:text-subtle focus:outline-none truncate"
+                autoComplete="off"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Divider on Desktop */}
+        <div className="hidden lg:block w-px h-8 bg-border/60 shrink-0" />
+
         {/* District Field */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <button
             type="button"
             data-testid="quick-search-district-trigger"
@@ -182,7 +225,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             onClick={() =>
               setOpenDropdown(prev => (prev === 'district' ? null : 'district'))
             }
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl md:rounded-full text-left hover:bg-stone-100/70 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl lg:rounded-full text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
               <MapPin className="h-4 w-4" />
@@ -192,7 +235,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 Khu vực
               </span>
               <span className="block truncate text-xs sm:text-sm font-semibold text-fg">
-                {selectedDistrictLabel}
+                {selectedDistrict || 'Tất cả'}
               </span>
             </div>
             <ChevronDown
@@ -204,8 +247,11 @@ export function HeroQuickSearchBar(): React.ReactElement {
 
           {openDropdown === 'district' && (
             <div
+              ref={el => {
+                if (el) el.scrollTop = 0
+              }}
               data-testid="district-dropdown-menu"
-              className="absolute left-0 top-full mt-2 w-full min-w-[200px] z-50 rounded-2xl border border-border bg-white p-1.5 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150"
+              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
             >
               {QUICK_SEARCH_DISTRICTS.map(d => (
                 <button
@@ -219,7 +265,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                   className={`w-full text-left px-3.5 py-2 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
                     selectedDistrict === d.value
                       ? 'bg-primary text-white'
-                      : 'text-fg hover:bg-stone-100'
+                      : 'text-fg hover:bg-surface-muted'
                   }`}
                 >
                   {d.label}
@@ -230,10 +276,10 @@ export function HeroQuickSearchBar(): React.ReactElement {
         </div>
 
         {/* Divider on Desktop */}
-        <div className="hidden md:block w-px h-8 bg-stone-200 shrink-0" />
+        <div className="hidden lg:block w-px h-8 bg-border/60 shrink-0" />
 
         {/* Price Field */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <button
             type="button"
             data-testid="quick-search-price-trigger"
@@ -242,7 +288,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             onClick={() =>
               setOpenDropdown(prev => (prev === 'price' ? null : 'price'))
             }
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl md:rounded-full text-left hover:bg-stone-100/70 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl lg:rounded-full text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
               <BadgeDollarSign className="h-4 w-4" />
@@ -252,7 +298,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 Khoảng giá
               </span>
               <span className="block truncate text-xs sm:text-sm font-semibold text-fg">
-                {selectedPriceLabel}
+                {selectedPrice === 'all' ? 'Tất cả' : selectedPriceLabel}
               </span>
             </div>
             <ChevronDown
@@ -264,8 +310,11 @@ export function HeroQuickSearchBar(): React.ReactElement {
 
           {openDropdown === 'price' && (
             <div
+              ref={el => {
+                if (el) el.scrollTop = 0
+              }}
               data-testid="price-dropdown-menu"
-              className="absolute left-0 top-full mt-2 w-full min-w-[200px] z-50 rounded-2xl border border-border bg-white p-1.5 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150"
+              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
             >
               {QUICK_SEARCH_PRICES.map(p => (
                 <button
@@ -279,7 +328,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                   className={`w-full text-left px-3.5 py-2 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
                     selectedPrice === p.value
                       ? 'bg-primary text-white'
-                      : 'text-fg hover:bg-stone-100'
+                      : 'text-fg hover:bg-surface-muted'
                   }`}
                 >
                   {p.label}
@@ -290,10 +339,10 @@ export function HeroQuickSearchBar(): React.ReactElement {
         </div>
 
         {/* Divider on Desktop */}
-        <div className="hidden md:block w-px h-8 bg-stone-200 shrink-0" />
+        <div className="hidden lg:block w-px h-8 bg-border/60 shrink-0" />
 
         {/* Bedroom Field */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <button
             type="button"
             data-testid="quick-search-bedrooms-trigger"
@@ -302,7 +351,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             onClick={() =>
               setOpenDropdown(prev => (prev === 'bedroom' ? null : 'bedroom'))
             }
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl md:rounded-full text-left hover:bg-stone-100/70 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-xl lg:rounded-full text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
               <BedDouble className="h-4 w-4" />
@@ -312,7 +361,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 Loại phòng
               </span>
               <span className="block truncate text-xs sm:text-sm font-semibold text-fg">
-                {selectedBedroomLabel}
+                {selectedBedroom === 'all' ? 'Tất cả' : selectedBedroomLabel}
               </span>
             </div>
             <ChevronDown
@@ -324,8 +373,11 @@ export function HeroQuickSearchBar(): React.ReactElement {
 
           {openDropdown === 'bedroom' && (
             <div
+              ref={el => {
+                if (el) el.scrollTop = 0
+              }}
               data-testid="bedroom-dropdown-menu"
-              className="absolute left-0 top-full mt-2 w-full min-w-[200px] z-50 rounded-2xl border border-border bg-white p-1.5 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150"
+              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
             >
               {QUICK_SEARCH_BEDROOMS.map(b => (
                 <button
@@ -339,7 +391,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                   className={`w-full text-left px-3.5 py-2 text-xs font-semibold rounded-xl transition-colors cursor-pointer ${
                     selectedBedroom === b.value
                       ? 'bg-primary text-white'
-                      : 'text-fg hover:bg-stone-100'
+                      : 'text-fg hover:bg-surface-muted'
                   }`}
                 >
                   {b.label}
@@ -355,7 +407,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             type="button"
             data-testid="quick-search-submit-button"
             onClick={() => executeSearch()}
-            className="w-full md:w-auto h-11 px-6 rounded-xl md:rounded-full bg-primary hover:bg-primary-hover text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full lg:w-auto h-11 px-5 lg:px-6 rounded-xl lg:rounded-full bg-primary hover:bg-primary-hover text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Search className="h-4 w-4" />
             <span>Tìm kiếm</span>
@@ -363,10 +415,10 @@ export function HeroQuickSearchBar(): React.ReactElement {
         </div>
       </div>
 
-      {/* Popular Search Suggestions */}
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-white/90">
-        <span className="inline-flex items-center gap-1 font-body text-[11px] font-medium text-white/80">
-          <Sparkles className="h-3 w-3 text-amber-300" />
+      {/* Popular Search Suggestions - Lower z-index so dropdowns always float on top */}
+      <div className="relative z-10 mt-3 flex flex-wrap items-center gap-2 text-white/90">
+        <span className="inline-flex items-center gap-1.5 font-body text-[11px] font-medium text-white/80">
+          <Sparkles className="h-3.5 w-3.5 text-primary-soft" />
           Gợi ý nhanh:
         </span>
         {POPULAR_SUGGESTIONS.map(sug => (
@@ -375,12 +427,18 @@ export function HeroQuickSearchBar(): React.ReactElement {
             type="button"
             data-testid={`suggestion-chip-${sug.label}`}
             onClick={() => {
-              if (sug.district) setSelectedDistrict(sug.district)
-              if (sug.priceBracket) setSelectedPrice(sug.priceBracket)
-              if (sug.bedrooms) setSelectedBedroom(sug.bedrooms)
-              executeSearch(sug.district, sug.priceBracket, sug.bedrooms)
+              if (sug.district) {
+                setSelectedDistrict(sug.district)
+                executeSearch(sug.district, 'all', 'all', '')
+              } else if (sug.priceBracket) {
+                setSelectedPrice(sug.priceBracket)
+                executeSearch('', sug.priceBracket, 'all', '')
+              } else if (sug.bedrooms) {
+                setSelectedBedroom(sug.bedrooms)
+                executeSearch('', 'all', sug.bedrooms, '')
+              }
             }}
-            className="rounded-full bg-black/25 hover:bg-black/40 backdrop-blur-sm border border-white/20 px-2.5 py-1 text-[11px] font-medium text-white transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            className="rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/25 px-3 py-1 text-[11px] font-medium text-white transition-all hover:scale-105 active:scale-95 cursor-pointer"
           >
             {sug.label}
           </button>

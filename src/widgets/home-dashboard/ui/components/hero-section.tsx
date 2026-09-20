@@ -6,9 +6,9 @@ import { HeroQuickSearchBar } from './hero-quick-search-bar'
 
 export function HeroSection(): React.ReactElement {
   return (
-    <section className="relative flex min-h-[90vh] items-center justify-center overflow-hidden pb-24 pt-32 rounded-b-[40px] shadow-[0_24px_50px_-10px_rgba(43,33,30,0.16)] border-b border-white/5">
-      {/* Parallax / Animated Background Frame */}
-      <div className="absolute inset-0 z-0">
+    <section className="relative z-30 flex min-h-[90vh] items-center justify-center pb-28 pt-32 shadow-[0_24px_50px_-10px_rgba(43,33,30,0.16)] border-b border-white/5">
+      {/* Parallax / Animated Background Frame with isolated rounded clip */}
+      <div className="absolute inset-0 z-0 overflow-hidden rounded-b-[40px]">
         <Image
           src="/c10c12b6-901f-4f31-ba98-50fd2e28df00.png"
           alt="TH-PropTech Hero Background"
@@ -22,23 +22,28 @@ export function HeroSection(): React.ReactElement {
       </div>
 
       {/* Hero Content Inner */}
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 md:px-10">
-        <div className="max-w-3xl space-y-6 text-white animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <span className="font-mono text-xs font-bold uppercase tracking-widest text-white/85">
-            Trustworthy PropTech SaaS
-          </span>
-          <h1 className="font-display text-4xl font-bold leading-[1.02] tracking-tight sm:text-5xl md:text-[62px] text-white">
-            Tìm căn hộ phù hợp,
-            <br />
-            minh bạch từng bước.
-          </h1>
-          <p className="max-w-xl font-body text-base md:text-lg text-white/85 leading-relaxed">
-            TH-PropTech giúp khách thuê lọc căn hộ, đặt lịch xem, theo dõi đặt
-            cọc, hợp đồng và thanh toán trong một luồng vận hành rõ trạng thái.
-          </p>
+      <div className="relative z-30 mx-auto w-full max-w-6xl px-6 md:px-10">
+        <div className="space-y-6 text-white animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div className="max-w-3xl space-y-6">
+            <span className="font-mono text-xs font-bold uppercase tracking-widest text-white/85">
+              Trustworthy PropTech SaaS
+            </span>
+            <h1 className="font-display text-4xl font-bold leading-[1.02] tracking-tight sm:text-5xl md:text-[62px] text-white">
+              Tìm căn hộ phù hợp,
+              <br />
+              minh bạch từng bước.
+            </h1>
+            <p className="max-w-xl font-body text-base md:text-lg text-white/85 leading-relaxed">
+              TH-PropTech giúp khách thuê lọc căn hộ, đặt lịch xem, theo dõi đặt
+              cọc, hợp đồng và thanh toán trong một luồng vận hành rõ trạng
+              thái.
+            </p>
+          </div>
 
-          {/* Quick Search Console with Location, Price, Bedroom & Popular Suggestions */}
-          <HeroQuickSearchBar />
+          {/* Quick Search Console with Keyword, Location, Price, Bedroom & Popular Suggestions */}
+          <div className="pt-2 max-w-5xl">
+            <HeroQuickSearchBar />
+          </div>
         </div>
       </div>
     </section>
