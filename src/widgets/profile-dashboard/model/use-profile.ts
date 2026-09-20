@@ -45,7 +45,7 @@ const EMPTY_KYC = {
 export function useProfile(): UseProfileReturn {
   const router = useRouter()
   const [role, setRole] = React.useState<'tenant' | 'landlord'>('tenant')
-  const [activeTab, setActiveTab] = React.useState<
+  const [activeTab, setActiveTabState] = React.useState<
     | 'progress'
     | 'bills'
     | 'blockchain'
@@ -58,6 +58,46 @@ export function useProfile(): UseProfileReturn {
     | 'support-tickets'
     | 'rental-applications'
   >('progress')
+
+  const setActiveTab = React.useCallback(
+    (
+      action: React.SetStateAction<
+        | 'progress'
+        | 'bills'
+        | 'blockchain'
+        | 'maintenance'
+        | 'security'
+        | 'listings'
+        | 'saved-searches'
+        | 'living-cost'
+        | 'safety-reports'
+        | 'support-tickets'
+        | 'rental-applications'
+      >
+    ) => {
+      setActiveTabState(prev => {
+        const next = typeof action === 'function' ? action(prev) : action
+        try {
+          if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search)
+            if (params.get('tab') !== next) {
+              params.set('tab', next)
+              if (!params.has('role') && role) {
+                params.set('role', role)
+              }
+              const search = params.toString()
+              const query = search ? `?${search}` : ''
+              router.replace(`/profile${query}` as Route, { scroll: false })
+            }
+          }
+        } catch (e) {
+          console.error(e)
+        }
+        return next
+      })
+    },
+    [router, role]
+  )
   const [activePropertyId, setActivePropertyId] = React.useState('prop-1')
   const properties = React.useMemo(() => DEMO_PROPERTIES, [])
 
@@ -120,25 +160,40 @@ export function useProfile(): UseProfileReturn {
 
       const params = new URLSearchParams(window.location.search)
       const tabParam = params.get('tab')
-      if (tabParam === 'listings' || tabParam === 'rental-applications') {
+      const roleParam = params.get('role')
+
+      if (roleParam === 'landlord' || roleParam === 'tenant') {
+        setRole(roleParam)
+      } else if (tabParam === 'listings') {
         setRole('landlord')
-        setActiveTab(tabParam)
-      } else if (
-        tabParam === 'progress' ||
-        tabParam === 'bills' ||
-        tabParam === 'blockchain' ||
-        tabParam === 'maintenance' ||
-        tabParam === 'security' ||
-        tabParam === 'saved-searches' ||
-        tabParam === 'living-cost' ||
-        tabParam === 'safety-reports' ||
-        tabParam === 'support-tickets'
-      ) {
-        setActiveTab(tabParam)
+      }
+
+      if (tabParam) {
+        setActiveTabState(tabParam as typeof activeTab)
       }
     }, 0)
 
     return () => clearTimeout(timer)
+  }, [])
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const tab = params.get('tab')
+        if (tab) {
+          setActiveTabState(tab as typeof activeTab)
+        }
+        const r = params.get('role')
+        if (r === 'landlord' || r === 'tenant') {
+          setRole(r)
+        }
+      } catch {
+        // ignore
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
   const refreshKycStatus = React.useCallback(async (): Promise<void> => {
@@ -444,7 +499,22 @@ export function useProfile(): UseProfileReturn {
     setCccdUploaded(false)
     setKycForm(EMPTY_KYC)
     setActivePropertyId('prop-1')
-    setActiveTab('progress')
+    const targetTab =
+      newRole === 'tenant' && activeTab === 'listings' ? 'progress' : activeTab
+    setActiveTab(targetTab)
+
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search)
+        params.set('role', newRole)
+        params.set('tab', targetTab)
+        const query = params.toString() ? `?${params.toString()}` : ''
+        router.replace(`/profile${query}` as Route, { scroll: false })
+      }
+    } catch {
+      // ignore
+    }
+
     toast.info(
       `Đã chuyển sang vai trò: ${newRole === 'tenant' ? 'Khách thuê' : 'Chủ nhà'}`
     )

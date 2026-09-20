@@ -81,11 +81,11 @@ const QUICK_APPROVAL_TEMPLATES = [
 ] as const
 
 const STEP_TABS = [
-  { id: 'all', label: 'Tất cả các bước', badge: 'Toàn bộ' },
-  { id: 'step1', label: 'Bước 1: Người thuê & Cư trú', badge: '1' },
-  { id: 'step2', label: 'Bước 2: Gói thuê & Tài chính', badge: '2' },
-  { id: 'step3', label: 'Bước 3: Điều khoản & Cam kết', badge: '3' },
-  { id: 'step4', label: 'Bước 4: Quyết định thẩm định', badge: '4' },
+  { id: 'all', label: 'Toàn bộ hồ sơ', badge: '★' },
+  { id: 'step1', label: 'B1: Người thuê & Cư trú', badge: '1' },
+  { id: 'step2', label: 'B2: Gói thuê & Tài chính', badge: '2' },
+  { id: 'step3', label: 'B3: Điều khoản & PCCC', badge: '3' },
+  { id: 'step4', label: 'B4: Quyết định thẩm định', badge: '4' },
 ] as const
 
 function formatVnd(amount: number): string {
@@ -174,7 +174,7 @@ function ApplicationReviewForm({
     >
       {/* Stepper Tabs Bar */}
       <div className="border-b border-border bg-surface-muted/40 px-6 py-2.5 shrink-0">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {STEP_TABS.map(tab => {
             const isActive = activeStepTab === tab.id
             return (
@@ -182,14 +182,14 @@ function ApplicationReviewForm({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveStepTab(tab.id as typeof activeStepTab)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center sm:justify-start gap-2 border ${
                   isActive
-                    ? 'bg-surface text-primary shadow-sm border border-border'
-                    : 'text-muted hover:text-fg hover:bg-surface/50'
+                    ? 'bg-surface text-primary shadow-sm border-primary/40'
+                    : 'bg-surface/60 text-muted hover:text-fg hover:bg-surface border-border/60'
                 }`}
               >
                 <span
-                  className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${
+                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
                     isActive
                       ? 'bg-primary text-white'
                       : 'bg-surface-muted text-muted'
@@ -197,7 +197,7 @@ function ApplicationReviewForm({
                 >
                   {tab.badge}
                 </span>
-                <span>{tab.label}</span>
+                <span className="truncate">{tab.label}</span>
               </button>
             )
           })}
@@ -783,7 +783,7 @@ export function ApplicationReviewDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-5xl bg-surface p-0 sm:rounded-2xl border border-border overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-[96vw] max-w-6xl 2xl:max-w-7xl max-h-[92vh] h-[92vh] bg-surface p-0 sm:rounded-2xl border border-border overflow-hidden flex flex-col shadow-2xl"
         data-testid="application-review-dialog"
       >
         <DialogHeader className="border-b border-border p-6 bg-surface-muted/30 shrink-0">

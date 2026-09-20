@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
 import { ProfileWidget } from '@/widgets/profile-dashboard'
@@ -22,7 +23,13 @@ export default function ProfilePage() {
 
         <main className="w-full pt-36 pb-20">
           <div className="mx-auto max-w-6xl px-6 md:px-10">
-            <ProfileWidget />
+            <React.Suspense
+              fallback={
+                <div className="h-96 animate-pulse rounded-3xl bg-surface-muted" />
+              }
+            >
+              <ProfileWidget />
+            </React.Suspense>
           </div>
         </main>
       </div>
