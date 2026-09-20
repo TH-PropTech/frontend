@@ -38,7 +38,7 @@ export function RentCalculator({
   }
 
   return (
-    <div className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-5">
+    <div className="bg-white border border-border rounded-3xl p-4 md:p-5 shadow-sm space-y-4">
       <h3 className="font-marketing text-xl font-bold text-fg flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-primary" />
@@ -76,7 +76,7 @@ export function RentCalculator({
         an toàn ngân sách đối với căn hộ này.
       </p>
 
-      <div className="border border-border rounded-2xl p-6 bg-surface-muted/20 space-y-5">
+      <div className="border border-border rounded-2xl p-4 bg-surface-muted/20 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <span className="text-sm font-bold text-fg">
             Thu nhập hàng tháng:
@@ -96,7 +96,7 @@ export function RentCalculator({
           className="w-full h-3 bg-white border border-border rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
         />
 
-        <div className="space-y-2.5 pt-2">
+        <div className="space-y-2 pt-1">
           <div className="flex justify-between items-center text-xs font-extrabold text-muted-foreground">
             <span>Tỷ lệ tiền thuê / thu nhập:</span>
             <span className="text-fg text-sm font-bold font-mono">
@@ -130,7 +130,7 @@ export function RentCalculator({
         </div>
 
         <div
-          className={`p-5 border rounded-xl font-body text-sm font-bold text-center ${safetyColor}`}
+          className={`p-3 border rounded-xl font-body text-sm font-bold text-center ${safetyColor}`}
         >
           {safetyText}
         </div>

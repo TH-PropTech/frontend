@@ -15,9 +15,10 @@ export function PropertyDecisionActions({
   monthlyRent,
 }: PropertyDecisionActionsProps): React.ReactElement {
   return (
-    <section
+    <div
+      role="group"
       aria-label="Công cụ đánh giá căn hộ"
-      className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-6 pt-6 md:px-10"
+      className="flex flex-wrap items-center gap-2"
     >
       <CostCalculatorModal apartmentId={propertyId} initialRent={monthlyRent} />
       <ReportFormDialog
@@ -25,6 +26,6 @@ export function PropertyDecisionActions({
         targetId={propertyId}
         targetTitle={title}
       />
-    </section>
+    </div>
   )
 }

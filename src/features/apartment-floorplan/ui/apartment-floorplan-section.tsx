@@ -23,7 +23,7 @@ export function ApartmentFloorplanSection({
 
   if (!config) {
     return (
-      <section className="mx-auto max-w-6xl px-6 py-6 md:px-10">
+      <section className="mx-auto max-w-6xl px-6 pb-2 pt-3 md:px-10">
         <div className="rounded-3xl border border-border bg-surface p-6 text-sm text-muted">
           Chưa đủ thông tin để tạo sơ đồ 3D minh hoạ cho căn hộ này.
         </div>
@@ -33,15 +33,15 @@ export function ApartmentFloorplanSection({
 
   if (isOpen) {
     return (
-      <section className="mx-auto max-w-6xl px-6 py-6 md:px-10">
+      <section className="mx-auto max-w-6xl px-6 pb-2 pt-3 md:px-10">
         <ApartmentFloorplanFrame config={config} onClose={handleClose} />
       </section>
     )
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-6 md:px-10">
-      <div className="flex flex-col items-start justify-between gap-5 rounded-3xl border border-border bg-surface p-6 md:flex-row md:items-center">
+    <section className="mx-auto max-w-6xl px-6 pb-2 pt-3 md:px-10">
+      <div className="flex flex-col items-start justify-between gap-5 rounded-3xl border border-border bg-surface p-4 md:flex-row md:items-center">
         <div className="flex gap-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
             <Box className="h-5 w-5" aria-hidden="true" />

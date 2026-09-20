@@ -5,7 +5,7 @@ import * as React from 'react'
 export function PropertyReviews(): React.ReactElement {
   return (
     <section className="mx-auto max-w-6xl px-6 py-6 md:px-10">
-      <div className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+      <div className="bg-white border border-border rounded-3xl p-4 md:p-5 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
           <h3 className="font-marketing text-lg font-bold text-fg flex items-center gap-2 text-left">
             <span className="h-2.5 w-2.5 rounded-full bg-primary" />

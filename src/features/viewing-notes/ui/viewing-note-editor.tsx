@@ -83,7 +83,7 @@ export function ViewingNoteEditor({
 
   return (
     <section
-      className="rounded-3xl border border-border bg-surface p-6 shadow-sm"
+      className="rounded-3xl border border-border bg-surface p-4 md:p-5 shadow-sm"
       aria-labelledby="viewing-note-title"
     >
       <div className="flex items-start justify-between gap-4">
@@ -142,7 +142,7 @@ export function ViewingNoteEditor({
               {label}
               <select
                 aria-label={label}
-                className="mt-1 h-9 w-full rounded-lg border border-border bg-bg px-2 text-sm text-fg"
+                className="mt-1 h-10 w-full min-w-0 rounded-lg border border-border bg-bg px-3 text-sm text-fg"
                 value={draft[name] ?? ''}
                 onChange={event =>
                   setDraft(current => ({
