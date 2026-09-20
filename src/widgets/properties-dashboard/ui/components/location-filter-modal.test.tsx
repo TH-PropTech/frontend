@@ -66,6 +66,14 @@ describe('LocationFilterModal Component (5 Dimensions)', () => {
     expect(screen.getByText('Quận 1')).toBeInTheDocument()
   })
 
+  it('gives the reset button a themed focus ring instead of the default outline', () => {
+    render(<LocationFilterModal {...defaultProps} />)
+
+    const reset = screen.getByRole('button', { name: 'Đặt lại' })
+    expect(reset).toHaveClass('focus-visible:ring-2')
+    expect(reset).toHaveClass('focus:outline-none')
+  })
+
   // Dimension 2: Auto-resolve Boundary Case
   it('auto-resolves province and codes when only selectedDistrict is provided', async () => {
     const setSelectedCity = vi.fn()
