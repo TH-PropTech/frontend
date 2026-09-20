@@ -67,3 +67,42 @@ describe('ApiClient.put', () => {
     )
   })
 })
+
+describe('ApiClient.post', () => {
+  it('supports request headers required by idempotent operations', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ success: true, data: { ok: true } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const client = new ApiClient({ baseUrl: 'http://localhost:3001/api/v1' })
+
+    await client.post(
+      '/ownership-transfers/transfer-1/apply',
+      {
+        previewHash: 'sha256:hash',
+      },
+      {
+        headers: { 'Idempotency-Key': 'request-1' },
+      }
+    )
+
+    const headers = fetchMock.mock.calls[0]?.[1]?.headers as Headers
+    expect(headers.get('Idempotency-Key')).toBe('request-1')
+  })
+})
+
+describe('ApiClient network failures', () => {
+  it('normalizes transport failures into an ApiClientError with status zero', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')))
+    const client = new ApiClient({ baseUrl: 'http://localhost:3001/api/v1' })
+
+    await expect(client.get('/apartments')).rejects.toMatchObject({
+      name: 'ApiClientError',
+      status: 0,
+      message: 'Không thể kết nối tới máy chủ API',
+    })
+  })
+})

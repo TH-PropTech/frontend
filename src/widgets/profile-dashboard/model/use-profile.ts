@@ -46,6 +46,18 @@ export function useProfile(): UseProfileReturn {
   const router = useRouter()
   const [role, setRole] = React.useState<'tenant' | 'landlord'>(() => {
     if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('user')
+        if (stored) {
+          const u = JSON.parse(stored) as { roles?: string[] }
+          if (u.roles?.includes('landlord')) {
+            return 'landlord'
+          }
+        }
+      } catch (e) {
+        console.error(e)
+      }
+
       const params = new URLSearchParams(window.location.search)
       if (
         params.get('tab') === 'listings' ||

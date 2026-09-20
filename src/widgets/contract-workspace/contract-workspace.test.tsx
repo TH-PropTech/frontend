@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { ContractWorkspace } from './contract-workspace'
 import * as contractsApi from '@/features/contracts/api/contracts-api'
@@ -183,6 +189,32 @@ describe('ContractWorkspace', () => {
         screen.getByTestId('contract-execution-policy')
       ).toBeInTheDocument()
       expect(screen.getByText('Mô phỏng PoC')).toBeInTheDocument()
+      expect(
+        within(screen.getByTestId('contract-status-timeline'))
+          .getAllByTestId(/^step-/)
+          .map(step => step.getAttribute('data-testid'))
+      ).toEqual(['step-draft', 'step-sign', 'step-deposit', 'step-ledger'])
+    })
+  })
+
+  it('labels successor access while preserving the original legal landlord', async () => {
+    vi.mocked(contractsApi.getContractView).mockResolvedValueOnce({
+      ...mockView,
+      access: {
+        canReadWorkspace: true,
+        canSign: false,
+        isOriginalParticipant: false,
+        isSuccessorOwner: true,
+      },
+    })
+
+    render(<ContractWorkspace contractId="c-100" currentUserId="successor-1" />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('successor-access-banner')).toBeInTheDocument()
+      expect(
+        screen.getByText(/Chủ nhà pháp lý gốc vẫn là Lê Thị Chủ/)
+      ).toBeInTheDocument()
     })
   })
 

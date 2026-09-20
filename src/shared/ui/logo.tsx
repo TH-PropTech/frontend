@@ -30,7 +30,7 @@ export function Logo({
         alt="TH PropTech Logo"
         width={img}
         height={img}
-        style={{ width: img, height: 'auto' }}
+        style={{ width: 'auto', height: 'auto' }}
         className={variant === 'white' ? 'brightness-0 invert' : ''}
         priority
       />

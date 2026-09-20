@@ -36,10 +36,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               'focus:border-primary focus:ring-2 focus:ring-primary-soft',
               'hover:border-border-strong',
               'disabled:cursor-not-allowed disabled:opacity-50',
+              className,
               icon && 'pl-10',
               error &&
-                'border-danger focus:border-danger focus:ring-danger-soft',
-              className
+                'border-danger focus:border-danger focus:ring-danger-soft'
             )}
             aria-invalid={error ? 'true' : undefined}
             aria-describedby={error ? `${inputId}-error` : undefined}

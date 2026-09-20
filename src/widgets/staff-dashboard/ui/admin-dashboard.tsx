@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import type { Route } from 'next'
+import { ArrowRightLeft } from 'lucide-react'
 import { OverviewView } from './views/overview-view'
 import { ContractMonitorView } from './views/contract-monitor-view'
 import { AiConsultationView } from './views/ai-consultation-view'
@@ -11,6 +12,7 @@ import { RentalFlowControlView } from './views/rental-flow-control-view'
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { OwnershipTransferPanel } from '@/features/property-ownership-transfer'
 
 type TabType =
   | 'overview'
@@ -19,6 +21,7 @@ type TabType =
   | 'permissions'
   | 'policies'
   | 'rental-flow'
+  | 'ownership-transfer'
 
 const ADMIN_TABS: readonly TabType[] = [
   'overview',
@@ -27,9 +30,10 @@ const ADMIN_TABS: readonly TabType[] = [
   'permissions',
   'policies',
   'rental-flow',
+  'ownership-transfer',
 ]
 
-function resolveAdminTab(pathname: string): TabType {
+export function resolveAdminTab(pathname: string): TabType {
   const section = pathname.split('/')[2]
   return ADMIN_TABS.includes(section as TabType)
     ? (section as TabType)
@@ -178,10 +182,15 @@ export function AdminDashboard({
         </svg>
       ),
     },
+    {
+      type: 'ownership-transfer',
+      label: 'Chuyển quyền chủ nhà',
+      icon: <ArrowRightLeft className="h-[18px] w-[18px]" aria-hidden="true" />,
+    },
   ]
 
   const handleSidebarItemClick = (type: TabType): void => {
-    router.push(`/staff/${type}` as Route)
+    router.push(`/admin/${type}` as Route)
     setIsSidebarOpen(false)
   }
 
@@ -218,6 +227,8 @@ export function AdminDashboard({
         return <PoliciesView />
       case 'rental-flow':
         return <RentalFlowControlView />
+      case 'ownership-transfer':
+        return <OwnershipTransferPanel />
       default:
         return <OverviewView />
     }

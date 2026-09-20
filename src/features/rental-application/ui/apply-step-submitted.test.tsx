@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApplyStepSubmitted } from './apply-step-submitted'
 import type { RentalApplicationItem } from '../api/rental-application-api'
@@ -28,7 +28,10 @@ const mockApplication: RentalApplicationItem = {
 }
 
 describe('ApplyStepSubmitted Component', () => {
-  afterEach(() => cleanup())
+  afterEach(() => {
+    cleanup()
+    vi.useRealTimers()
+  })
 
   it('renders application confirmation, reference code, pending status, and snapshot metrics', () => {
     render(
@@ -153,5 +156,35 @@ describe('ApplyStepSubmitted Component', () => {
 
     const contractLink = screen.getByRole('link', { name: /Xem hợp đồng số/i })
     expect(contractLink).toHaveAttribute('href', '/contracts/contract-ready-1')
+  })
+
+  it('checks landlord response on demand with loading and last-checked feedback', async () => {
+    vi.useFakeTimers()
+    const onRefreshStatus = vi.fn().mockResolvedValue(undefined)
+
+    render(
+      <ApplyStepSubmitted
+        application={mockApplication}
+        apartmentId="apartment-demo-1"
+        onRefreshStatus={onRefreshStatus}
+      />
+    )
+
+    const refreshButton = screen.getByRole('button', {
+      name: /Kiểm tra phản hồi của chủ nhà/i,
+    })
+    fireEvent.click(refreshButton)
+
+    expect(onRefreshStatus).toHaveBeenCalledTimes(1)
+    expect(refreshButton).toBeDisabled()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(600)
+    })
+
+    expect(refreshButton).not.toBeDisabled()
+    expect(screen.getByTestId('application-last-checked')).toHaveTextContent(
+      /Kiểm tra lần cuối lúc:/i
+    )
   })
 })

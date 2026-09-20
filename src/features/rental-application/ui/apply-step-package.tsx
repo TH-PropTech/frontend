@@ -355,12 +355,12 @@ export function ApplyStepPackage({
       </section>
 
       {/* Navigation actions */}
-      <div className="flex items-center justify-between border-t border-border/80 pt-4">
+      <div className="flex flex-col-reverse gap-3 border-t border-border/80 pt-4 sm:flex-row sm:items-center sm:justify-between">
         <Button
           type="button"
           variant="outline"
           onClick={onBack}
-          className="flex items-center gap-2 border-border text-xs"
+          className="flex w-full items-center justify-center gap-2 border-border text-xs sm:w-auto"
         >
           <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" />
           <span>Quay lại thông tin người thuê</span>
@@ -373,7 +373,7 @@ export function ApplyStepPackage({
             (executionPolicies.length > 1 && !selectedExecutionPolicy)
           }
           onClick={onNext}
-          className="flex items-center gap-2 bg-control px-6 py-2 text-xs font-semibold text-on-control shadow-sm hover:opacity-90 disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 bg-control px-6 py-2.5 text-xs font-semibold text-on-control shadow-sm hover:opacity-90 disabled:opacity-50 sm:w-auto"
         >
           <span>Xem điều khoản & cam kết</span>
           <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />

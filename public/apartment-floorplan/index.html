@@ -183,6 +183,58 @@
           display: grid;
         }
       }
+      #room-markers {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+        overflow: hidden;
+      }
+      .room-marker {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: auto;
+        display: none;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 11px;
+        border-radius: 16px;
+        background: color-mix(in srgb, var(--surface) 92%, transparent);
+        border: 1px solid var(--border);
+        color: var(--fg);
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        box-shadow: 0 4px 14px rgb(52 43 37 / 12%);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+        white-space: nowrap;
+        user-select: none;
+        touch-action: manipulation;
+      }
+      .room-marker:hover,
+      .room-marker:focus-visible {
+        border-color: var(--primary);
+        background: var(--surface);
+        color: var(--primary);
+        transform: translate(-50%, -50%) scale(1.06) !important;
+        outline: none;
+      }
+      .room-marker.active {
+        border-color: var(--primary);
+        background: var(--primary-soft);
+        color: var(--primary);
+      }
+      .room-marker::before {
+        content: '';
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--primary);
+      }
       #loading,
       #error {
         position: absolute;
@@ -224,6 +276,7 @@
         id="canvas"
         aria-label="Mô hình 3D minh hoạ bố cục căn hộ"
       ></canvas>
+      <div id="room-markers" aria-label="Các điểm ghim phòng"></div>
       <div id="loading" role="status">Đang chuẩn bị sơ đồ 3D...</div>
       <div id="error" role="alert">
         Không thể tải sơ đồ 3D trên thiết bị này.
@@ -240,6 +293,9 @@
         <div id="room-list"></div>
       </aside>
       <div id="controls" class="panel" aria-label="Điều khiển sơ đồ">
+        <button id="overview-button" class="control-button" type="button" hidden>
+          Quay lại tổng quan
+        </button>
         <button id="reset-button" class="control-button" type="button">
           Đặt lại góc nhìn
         </button>
@@ -312,6 +368,7 @@
     <script src="./floorplan-geometry.js"></script>
     <script src="./apartment-generator.js"></script>
     <script src="./walk-navigation.js"></script>
+    <script src="./preview-controller.js"></script>
     <script src="./ui-controller.js"></script>
     <script src="./walk-controller.js"></script>
     <script src="./app.js"></script>

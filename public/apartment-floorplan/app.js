@@ -2,6 +2,11 @@
   'use strict'
 
   var MESSAGE_VERSION = 1
+  var MODE_EXTERIOR_PREVIEW = 'EXTERIOR_PREVIEW'
+  var MODE_INTERIOR_ORBIT = 'INTERIOR_ORBIT'
+  var MODE_INTERIOR_WALK = 'INTERIOR_WALK'
+
+  var currentMode = MODE_EXTERIOR_PREVIEW
   var scene
   var camera
   var renderer
@@ -9,6 +14,7 @@
   var apartmentGroup
   var ui
   var walk
+  var preview
   var currentConfig = null
   var animationFrame
   var running = false
@@ -19,6 +25,8 @@
   var canvas
   var resizeObserver
   var pointerStart = null
+  var selectedRoomId = null
+
   var CONFIG_LIMITS = { bedrooms: 8, bathrooms: 8, areaM2: 1000 }
   var DRAG_THRESHOLD_PX = 5
   var CAMERA_FIT = 0.85
@@ -71,8 +79,18 @@
     var dt =
       hasTime && lastFrameTime !== null ? (time - lastFrameTime) / 1000 : 0
     lastFrameTime = hasTime ? time : null
-    if (walk && walk.isActive()) walk.update(dt)
-    else controls.update()
+
+    if (walk && walk.isActive()) {
+      walk.update(dt)
+    } else if (currentMode === MODE_EXTERIOR_PREVIEW && preview) {
+      preview.update(dt)
+      controls.update()
+      if (ui && canvas) {
+        ui.updateMarkers(camera, canvas.clientWidth, canvas.clientHeight)
+      }
+    } else {
+      controls.update()
+    }
     renderer.render(scene, camera)
   }
 
@@ -106,24 +124,25 @@
   function disposeRenderer() {
     stopRendering()
     if (walk) walk.dispose()
+    if (preview) preview.dispose()
     if (controls) controls.dispose()
     disposeGroup(apartmentGroup, true)
     if (renderer) renderer.dispose()
-    if (canvas)
+    if (canvas) {
       canvas.removeEventListener('pointerdown', handleCanvasPointerDown)
-    if (canvas) canvas.removeEventListener('pointerup', handleCanvasPointer)
-    if (canvas)
+      canvas.removeEventListener('pointerup', handleCanvasPointer)
       canvas.removeEventListener('webglcontextlost', handleContextLost)
+    }
     if (resizeObserver) resizeObserver.disconnect()
-    document
-      .getElementById('reset-button')
-      .removeEventListener('click', resetView)
-    document
-      .getElementById('walk-button')
-      .removeEventListener('click', toggleWalk)
-    document
-      .getElementById('view-button')
-      .removeEventListener('click', toggleView)
+    var resetBtn = document.getElementById('reset-button')
+    if (resetBtn) resetBtn.removeEventListener('click', handleResetClick)
+    var walkBtn = document.getElementById('walk-button')
+    if (walkBtn) walkBtn.removeEventListener('click', toggleWalk)
+    var viewBtn = document.getElementById('view-button')
+    if (viewBtn) viewBtn.removeEventListener('click', toggleView)
+    var overviewBtn = document.getElementById('overview-button')
+    if (overviewBtn) overviewBtn.removeEventListener('click', enterPreview)
+    window.removeEventListener('keydown', handleKeyDown)
     window.removeEventListener('resize', resize)
     window.removeEventListener('message', handleMessage)
   }
@@ -141,11 +160,80 @@
     })
   }
 
+  function resetExteriorCamera() {
+    if (!camera || !controls || !apartmentGroup) return
+    var template = apartmentGroup.userData.template
+    var size = apartmentGroup.userData.size || DEFAULT_LAYOUT_SIZE
+    var bounds = preview ? preview.getBounds() : null
+    var cx = bounds ? bounds.centerX : 0
+    var cz = bounds ? bounds.centerZ : 0
+    var distance = Math.max(size * 1.15, 12)
+
+    camera.position.set(
+      cx + distance * 0.72,
+      distance * 0.9,
+      cz + distance * 0.95
+    )
+    controls.enabled = true
+    controls.maxDistance = Math.max(MIN_MAX_DISTANCE, size * 2.8)
+    controls.target.set(cx, 0.3, cz)
+    controls.update()
+  }
+
+  function enterPreview() {
+    leaveWalk()
+    currentMode = MODE_EXTERIOR_PREVIEW
+    selectedRoomId = null
+
+    if (apartmentGroup) {
+      buildGroup(geometry().WALL_HEIGHT)
+      if (preview) preview.enter(apartmentGroup.userData.template)
+    }
+    resetExteriorCamera()
+
+    if (ui) {
+      ui.setMarkersVisible(true)
+      ui.setOverviewButtonVisible(false)
+      ui.highlight(null)
+    }
+  }
+
+  function enterInterior(roomId) {
+    if (!apartmentGroup) return
+    var rooms = apartmentGroup.userData.rooms || []
+    var room = rooms.find(function (r) {
+      return r.id === roomId
+    })
+    if (!room) return
+
+    leaveWalk()
+    currentMode = MODE_INTERIOR_ORBIT
+    selectedRoomId = roomId
+
+    if (preview) preview.exit()
+    if (ui) {
+      ui.setMarkersVisible(false)
+      ui.setOverviewButtonVisible(true)
+      ui.highlight(roomId)
+    }
+
+    // Focus camera on the selected room
+    var targetX = room.x
+    var targetZ = room.z
+    var roomSize = Math.max(room.width || 3, room.depth || 3)
+    var dist = Math.max(roomSize * 1.5, 4.8)
+
+    camera.position.set(targetX + dist * 0.6, dist * 0.75, targetZ + dist * 0.8)
+    controls.enabled = true
+    controls.target.set(targetX, 0.4, targetZ)
+    controls.update()
+  }
+
   function resetScene(config) {
     currentConfig = config
     leaveWalk()
     buildGroup(geometry().WALL_HEIGHT)
-    resetCamera()
+    enterPreview()
   }
 
   function setFov(fov) {
@@ -171,17 +259,42 @@
     controls.enabled = true
     setFov(ORBIT_FOV)
     syncWalkUi()
+    if (currentMode === MODE_INTERIOR_WALK) {
+      currentMode = MODE_INTERIOR_ORBIT
+    }
     return true
   }
 
-  function resetView() {
-    if (leaveWalk()) buildGroup(geometry().WALL_HEIGHT)
-    resetCamera()
+  function resetInteriorCamera() {
+    if (!camera || !controls || !apartmentGroup) return
+    var size = apartmentGroup.userData.size || DEFAULT_LAYOUT_SIZE
+    var distance = size * CAMERA_FIT
+    camera.position.set(distance, distance, distance * 1.1)
+    controls.maxDistance = Math.max(MIN_MAX_DISTANCE, size * 2.5)
+    controls.target.set(0, 0, 0)
+    controls.update()
+  }
+
+  function handleResetClick() {
+    if (currentMode === MODE_EXTERIOR_PREVIEW) {
+      resetExteriorCamera()
+      if (preview) preview.reset()
+    } else {
+      if (leaveWalk()) buildGroup(geometry().WALL_HEIGHT)
+      if (selectedRoomId) enterInterior(selectedRoomId)
+      else resetInteriorCamera()
+    }
   }
 
   function enterWalk() {
     if (!currentConfig || walk.isActive()) return
     try {
+      currentMode = MODE_INTERIOR_WALK
+      if (preview) preview.exit()
+      if (ui) {
+        ui.setMarkersVisible(false)
+        ui.setOverviewButtonVisible(false)
+      }
       buildGroup(geometry().WALK_WALL_HEIGHT)
       controls.enabled = false
       setFov(WALK_FOV)
@@ -192,15 +305,25 @@
       controls.enabled = true
       setFov(ORBIT_FOV)
       buildGroup(geometry().WALL_HEIGHT)
-      resetCamera()
+      enterInterior(
+        selectedRoomId ||
+          (apartmentGroup.userData.rooms[0] &&
+            apartmentGroup.userData.rooms[0].id)
+      )
       syncWalkUi()
       send('FLOORPLAN_ERROR', { code: 'WALK_UNAVAILABLE' })
     }
   }
 
   function toggleWalk() {
-    if (walk.isActive()) resetView()
-    else enterWalk()
+    if (walk.isActive()) {
+      leaveWalk()
+      buildGroup(geometry().WALL_HEIGHT)
+      if (selectedRoomId) enterInterior(selectedRoomId)
+      else resetInteriorCamera()
+    } else {
+      enterWalk()
+    }
   }
 
   function toggleView() {
@@ -216,8 +339,11 @@
   }
 
   function handleRoomClick(roomId) {
-    if (walk && walk.isActive()) walk.teleport(roomId)
-    else if (ui) ui.highlight(roomId)
+    if (walk && walk.isActive()) {
+      walk.teleport(roomId)
+    } else {
+      enterInterior(roomId)
+    }
   }
 
   function handleCanvasPointerDown(event) {
@@ -245,23 +371,26 @@
         intersection.object.userData && intersection.object.userData.roomId
       )
     })
-    if (hit) ui.highlight(hit.object.userData.roomId)
+    if (hit) {
+      handleRoomClick(hit.object.userData.roomId)
+    }
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === 'Escape') {
+      if (walk && walk.isActive()) {
+        leaveWalk()
+        buildGroup(geometry().WALL_HEIGHT)
+        enterInterior(selectedRoomId)
+      } else if (currentMode === MODE_INTERIOR_ORBIT) {
+        enterPreview()
+      }
+    }
   }
 
   function handleContextLost(event) {
     event.preventDefault()
     fail('WEBGL_CONTEXT_LOST')
-  }
-
-  function resetCamera() {
-    if (!camera || !controls) return
-    var size =
-      (apartmentGroup && apartmentGroup.userData.size) || DEFAULT_LAYOUT_SIZE
-    var distance = size * CAMERA_FIT
-    camera.position.set(distance, distance, distance * 1.1)
-    controls.maxDistance = Math.max(MIN_MAX_DISTANCE, size * 2.5)
-    controls.target.set(0, 0, 0)
-    controls.update()
   }
 
   function setupScene() {
@@ -283,6 +412,12 @@
     controls.minDistance = 3
     controls.maxDistance = 18
     window.FloorplanMaterials.addLighting(scene)
+
+    preview = window.FloorplanPreview.create({
+      scene: scene,
+      camera: camera,
+    })
+
     walk = window.FloorplanWalk.create({
       camera: camera,
       scene: scene,
@@ -293,8 +428,14 @@
       onRoomChange: function (roomId) {
         if (ui) ui.highlight(roomId)
       },
-      onExit: resetView,
+      onExit: function () {
+        leaveWalk()
+        buildGroup(geometry().WALL_HEIGHT)
+        if (selectedRoomId) enterInterior(selectedRoomId)
+        else resetInteriorCamera()
+      },
     })
+
     resize()
     if ('ResizeObserver' in window) {
       resizeObserver = new ResizeObserver(resize)
@@ -303,12 +444,20 @@
       window.addEventListener('resize', resize)
     }
     window.addEventListener('beforeunload', disposeRenderer)
+    window.addEventListener('keydown', handleKeyDown)
     canvas.addEventListener('pointerdown', handleCanvasPointerDown)
     canvas.addEventListener('pointerup', handleCanvasPointer)
     canvas.addEventListener('webglcontextlost', handleContextLost)
-    document.getElementById('reset-button').addEventListener('click', resetView)
-    document.getElementById('walk-button').addEventListener('click', toggleWalk)
-    document.getElementById('view-button').addEventListener('click', toggleView)
+
+    var resetBtn = document.getElementById('reset-button')
+    if (resetBtn) resetBtn.addEventListener('click', handleResetClick)
+    var walkBtn = document.getElementById('walk-button')
+    if (walkBtn) walkBtn.addEventListener('click', toggleWalk)
+    var viewBtn = document.getElementById('view-button')
+    if (viewBtn) viewBtn.addEventListener('click', toggleView)
+    var overviewBtn = document.getElementById('overview-button')
+    if (overviewBtn) overviewBtn.addEventListener('click', enterPreview)
+
     syncWalkUi()
     document.getElementById('loading').style.display = 'none'
   }
@@ -353,9 +502,17 @@
     if (data.type === 'FLOORPLAN_PAUSE') {
       stopRendering()
       if (walk) walk.pause()
+      if (preview) preview.pause()
     }
     if (data.type === 'FLOORPLAN_RESUME') startRendering()
-    if (data.type === 'FLOORPLAN_RESET') resetView()
+    if (data.type === 'FLOORPLAN_RESET') {
+      if (currentMode === MODE_EXTERIOR_PREVIEW) {
+        resetExteriorCamera()
+        if (preview) preview.reset()
+      } else {
+        handleResetClick()
+      }
+    }
   }
 
   function fail(error) {

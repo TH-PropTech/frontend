@@ -71,6 +71,7 @@ export function PropertiesDashboard(): React.ReactElement {
     filteredProjects,
     filteredApiProjects,
     filteredApartments,
+    apartmentsError,
     locationLabel,
     priceLabel,
     areaLabel,
@@ -360,6 +361,16 @@ export function PropertiesDashboard(): React.ReactElement {
           </div>
 
           <LandlordActionBar />
+
+          {activeTab === 'single' && apartmentsError ? (
+            <div
+              role="alert"
+              className="mb-6 rounded-2xl border border-danger/30 bg-danger/10 p-4 text-sm text-danger"
+            >
+              Không thể tải danh sách căn hộ từ máy chủ. Vui lòng kiểm tra kết
+              nối và thử lại.
+            </div>
+          ) : null}
 
           {viewMode === 'map' ? (
             <PropertiesMap

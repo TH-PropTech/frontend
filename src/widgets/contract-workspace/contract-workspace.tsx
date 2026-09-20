@@ -10,6 +10,7 @@ import {
   History,
   Info,
   Landmark,
+  ShieldCheck,
   Sparkles,
   X,
 } from 'lucide-react'
@@ -101,9 +102,10 @@ export function ContractWorkspace({
     )
   }
 
-  const { contract, document, parties, deposit, actions, ledger } = data
+  const { contract, document, parties, deposit, actions, ledger, access } = data
   const { signingEligibility } = actions
   const isSimulation = ledger?.networkMode === 'simulation'
+  const isSuccessorOwner = access?.isSuccessorOwner === true
 
   const getReasonMessage = (reason: string | null) => {
     if (!reason) return `Hợp đồng đang ở trạng thái ${contract.status}.`
@@ -116,7 +118,7 @@ export function ContractWorkspace({
       case 'CONTENT_NOT_LOCKED':
         return 'Nội dung hợp đồng đang trong giai đoạn soạn thảo, chưa chốt khóa phiên bản.'
       case 'ALREADY_SIGNED':
-        return 'Bạn đã hoàn tất ký xác nhận e-Consent cho hợp đồng này. Đang chờ bên còn lại ký kết.'
+        return 'Bạn đã hoàn tất ký xác nhận VNPT SmartCA cho hợp đồng này. Đang chờ bên còn lại ký kết.'
       case 'NOT_PARTICIPANT':
         return 'Bạn không phải là bên tham gia (Chủ nhà hoặc Khách thuê) của hợp đồng này.'
       default:
@@ -164,6 +166,23 @@ export function ContractWorkspace({
           <strong className="text-[var(--fg)]">{`v${document.revision}`}</strong>
         </div>
       </div>
+
+      {isSuccessorOwner ? (
+        <div
+          data-testid="successor-access-banner"
+          className="flex items-start gap-3 rounded-xl border border-[var(--info)] bg-[var(--surface-muted)] p-4 text-xs text-[var(--fg)]"
+        >
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--info)]" />
+          <div>
+            <p className="font-semibold">Quyền truy cập chủ nhà kế nhiệm</p>
+            <p className="mt-1 leading-relaxed text-[var(--muted)]">
+              Bạn được phép xem workspace theo transfer đã hoàn tất. Chủ nhà
+              pháp lý gốc vẫn là {parties.landlord.name}; quyền kế nhiệm không
+              thay thế chữ ký, snapshot pháp lý hoặc bằng chứng blockchain.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {/* Notice Message Banner if present */}
       {noticeMessage && (
@@ -213,7 +232,7 @@ export function ContractWorkspace({
             </h3>
             <p className="text-xs leading-relaxed mt-0.5 text-[var(--fg)]">
               {signingEligibility.eligible
-                ? 'Toàn bộ điều kiện tiên quyết đã hoàn tất. Bạn có thể xác thực sinh trắc học và Smart OTP để ký số e-Consent.'
+                ? 'Toàn bộ điều kiện tiên quyết đã hoàn tất. Bạn có thể xác thực sinh trắc học và Smart OTP để ký số VNPT SmartCA.'
                 : signingEligibility.message ||
                   getReasonMessage(signingEligibility.reasonCode)}
             </p>
@@ -228,7 +247,7 @@ export function ContractWorkspace({
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 shadow transition-all shrink-0 hover:scale-[1.02]"
           >
             <Sparkles className="w-4 h-4" />
-            <span>Ký số e-Consent ngay</span>
+            <span>Ký số VNPT SmartCA ngay</span>
           </button>
         )}
       </div>
@@ -411,6 +430,9 @@ export function ContractWorkspace({
             >
               <ContractStatusTimeline
                 status={contract.status}
+                {...(contract.executionPolicy?.strategy
+                  ? { strategy: contract.executionPolicy.strategy }
+                  : {})}
                 depositStatus={deposit?.status}
                 signedByTenant={parties.tenant.hasSigned}
                 signedByLandlord={parties.landlord.hasSigned}

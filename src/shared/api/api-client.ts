@@ -10,6 +10,8 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
 }
 
+type PostOptions = Omit<RequestOptions, 'body' | 'method'>
+
 export class ApiClientError extends Error {
   constructor(
     message: string,
@@ -34,8 +36,12 @@ export class ApiClient {
     return this.request<TData>(path, { ...options, method: 'GET' })
   }
 
-  async post<TData>(path: string, body: unknown): Promise<TData> {
-    return this.request<TData>(path, { method: 'POST', body })
+  async post<TData>(
+    path: string,
+    body: unknown,
+    options: PostOptions = {}
+  ): Promise<TData> {
+    return this.request<TData>(path, { ...options, method: 'POST', body })
   }
 
   async patch<TData>(path: string, body: unknown): Promise<TData> {
@@ -57,7 +63,10 @@ export class ApiClient {
     const headers = new Headers()
     const token = this.getAccessToken?.()
     if (token) headers.set('Authorization', `Bearer ${token}`)
-    const response = await fetch(createApiUrl(this.baseUrl, path), { headers })
+    const response = await fetchWithNetworkError(
+      createApiUrl(this.baseUrl, path),
+      { headers }
+    )
     if (!response.ok) {
       throw new ApiClientError(
         'Không thể tải nội dung được bảo vệ',
@@ -104,7 +113,7 @@ export class ApiClient {
     }
 
     const url = createApiUrl(this.baseUrl, path)
-    let response = await fetch(url, init)
+    let response = await fetchWithNetworkError(url, init)
     let payload = (await response.json()) as ApiResponse<TData>
 
     // Auto-refresh token on 401 unauthorized
@@ -121,7 +130,7 @@ export class ApiClient {
               accessToken: string
               refreshToken: string
             } | null> => {
-              const refreshRes = await fetch(
+              const refreshRes = await fetchWithNetworkError(
                 createApiUrl(this.baseUrl, '/auth/refresh'),
                 {
                   method: 'POST',
@@ -156,7 +165,7 @@ export class ApiClient {
             const newHeaders = new Headers(init.headers)
             newHeaders.set('Authorization', `Bearer ${newTokens.accessToken}`)
             init.headers = newHeaders
-            response = await fetch(url, init)
+            response = await fetchWithNetworkError(url, init)
             payload = (await response.json()) as ApiResponse<TData>
           }
         } catch {
@@ -187,6 +196,17 @@ export function createApiUrl(baseUrl: string, path: string): string {
   const normalizedPath = path.startsWith('/') ? path.slice(1) : path
 
   return new URL(normalizedPath, normalizedBase).toString()
+}
+
+async function fetchWithNetworkError(
+  url: string,
+  init?: RequestInit
+): Promise<Response> {
+  try {
+    return await fetch(url, init)
+  } catch {
+    throw new ApiClientError('Không thể kết nối tới máy chủ API', 0, null)
+  }
 }
 
 export const apiClient = new ApiClient({

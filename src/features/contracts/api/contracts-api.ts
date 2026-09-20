@@ -173,6 +173,13 @@ export interface ContractActionsView {
   canLockContent?: boolean
 }
 
+export interface ContractAccessView {
+  canReadWorkspace: boolean
+  canSign: boolean
+  isOriginalParticipant: boolean
+  isSuccessorOwner: boolean
+}
+
 export interface ContractViewDto {
   contract: ContractOverviewSnapshot
   document: ContractDocumentView
@@ -182,6 +189,7 @@ export interface ContractViewDto {
   }
   deposit: ContractDepositView | null
   actions: ContractActionsView
+  access?: ContractAccessView
   ledger: ContractLedgerSummary
 }
 

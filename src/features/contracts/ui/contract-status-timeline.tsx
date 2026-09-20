@@ -12,6 +12,7 @@ import type { ContractStatus } from '../api/contracts-api'
 
 export interface ContractStatusTimelineProps {
   status: ContractStatus
+  strategy?: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
   depositStatus?: string | undefined
   signedByTenant?: boolean | undefined
   signedByLandlord?: boolean | undefined
@@ -28,11 +29,14 @@ interface TimelineStep {
 
 export function ContractStatusTimeline({
   status,
+  strategy = 'DEPOSIT_FIRST',
   depositStatus,
   signedByTenant = false,
   signedByLandlord = false,
   txHash,
 }: ContractStatusTimelineProps) {
+  const isSignFirst = strategy === 'SIGN_FIRST'
+
   // Determine state of each step
   const isDraft = status === 'draft'
   const isFullySignedPendingDeposit = status === 'fully-signed-pending-deposit'
@@ -42,7 +46,7 @@ export function ContractStatusTimeline({
     depositStatus === 'paid' ||
     depositStatus === 'transferred' ||
     status === 'deposit-paid' ||
-    status === 'awaiting-signature' ||
+    (!isSignFirst && status === 'awaiting-signature') ||
     status === 'active' ||
     status === 'completed'
   const isAwaitingSig = status === 'awaiting-signature'
@@ -51,66 +55,77 @@ export function ContractStatusTimeline({
   const isActive = status === 'active' || status === 'completed'
   const isTerminated = status === 'terminated' || status === 'cancelled'
 
-  const steps: TimelineStep[] = [
-    {
-      id: 'step-draft',
-      title: 'Khởi tạo dự thảo',
-      description: 'Soạn thảo và chốt nội dung pháp lý',
-      state: 'completed',
-      icon: FileText,
-    },
-    {
-      id: 'step-deposit',
-      title: 'Đặt cọc bảo đảm',
-      description: isDepositPaid
-        ? 'Đã thanh toán cọc an toàn'
-        : isDepositPending
-          ? 'Chờ thanh toán cọc'
-          : 'Chưa thanh toán cọc',
-      state: isDepositPaid
-        ? 'completed'
-        : isDepositPending
-          ? 'current'
-          : isDraft
-            ? 'upcoming'
-            : 'completed',
-      icon: CreditCard,
-    },
-    {
-      id: 'step-sign',
-      title: 'Ký số e-Consent',
-      description: isBothSigned
-        ? 'Cả hai bên đã hoàn tất ký số'
-        : signedByTenant
-          ? 'Bên thuê đã ký, chờ chủ nhà'
-          : signedByLandlord
-            ? 'Chủ nhà đã ký, chờ bên thuê'
-            : isAwaitingSig
-              ? 'Chờ cả hai bên ký số'
-              : 'Chờ đến lượt ký',
-      state: isBothSigned
-        ? 'completed'
-        : isAwaitingSig
-          ? 'current'
-          : isActive
-            ? 'completed'
-            : 'upcoming',
-      icon: PenTool,
-    },
-    {
-      id: 'step-ledger',
-      title: 'Ghi nhận sổ cái & Kích hoạt',
-      description: isTerminated
-        ? 'Hợp đồng đã chấm dứt'
+  const draftStep: TimelineStep = {
+    id: 'step-draft',
+    title: 'Khởi tạo dự thảo',
+    description: 'Soạn thảo và chốt nội dung pháp lý',
+    state: 'completed',
+    icon: FileText,
+  }
+
+  const depositStep: TimelineStep = {
+    id: 'step-deposit',
+    title: 'Đặt cọc bảo đảm',
+    description:
+      isSignFirst && isFullySignedPendingDeposit
+        ? 'Chờ thanh toán cọc để kích hoạt'
+        : isDepositPaid
+          ? 'Đã thanh toán cọc an toàn'
+          : isDepositPending
+            ? 'Chờ thanh toán cọc'
+            : 'Chưa thanh toán cọc',
+    state: isDepositPaid
+      ? 'completed'
+      : isDepositPending
+        ? 'current'
+        : isDraft
+          ? 'upcoming'
+          : 'completed',
+    icon: CreditCard,
+  }
+
+  const signStep: TimelineStep = {
+    id: 'step-sign',
+    title: 'Ký số VNPT SmartCA',
+    description: isBothSigned
+      ? 'Cả hai bên đã hoàn tất ký số'
+      : signedByTenant
+        ? 'Bên thuê đã ký, chờ chủ nhà'
+        : signedByLandlord
+          ? 'Chủ nhà đã ký, chờ bên thuê'
+          : isAwaitingSig
+            ? 'Chờ cả hai bên ký số'
+            : 'Chờ đến lượt ký',
+    state: isBothSigned
+      ? 'completed'
+      : isAwaitingSig
+        ? 'current'
+        : isActive
+          ? 'completed'
+          : 'upcoming',
+    icon: PenTool,
+  }
+
+  const ledgerStep: TimelineStep = {
+    id: 'step-ledger',
+    title: 'Ghi nhận sổ cái & Kích hoạt',
+    description: isTerminated
+      ? 'Hợp đồng đã chấm dứt'
+      : isSignFirst && isFullySignedPendingDeposit
+        ? 'Chờ cọc để neo Fabric'
         : isActive
           ? txHash
             ? 'Đã kích hoạt & neo hash sổ cái'
             : 'Đã kích hoạt (Đang chờ đồng bộ sổ cái)'
           : 'Kích hoạt sau khi hai bên ký',
-      state: isTerminated ? 'failed' : isActive ? 'completed' : 'upcoming',
-      icon: isTerminated ? AlertTriangle : CheckCircle2,
-    },
-  ]
+    state: isTerminated ? 'failed' : isActive ? 'completed' : 'upcoming',
+    icon: isTerminated ? AlertTriangle : CheckCircle2,
+  }
+
+  const steps: TimelineStep[] =
+    strategy === 'SIGN_FIRST'
+      ? [draftStep, signStep, depositStep, ledgerStep]
+      : [draftStep, depositStep, signStep, ledgerStep]
 
   return (
     <div
@@ -144,6 +159,7 @@ export function ContractStatusTimeline({
             <div
               key={step.id}
               data-testid={step.id}
+              data-state={step.state}
               className="relative z-10 flex md:flex-col items-center md:text-center gap-3 md:gap-2 w-full md:w-1/4"
             >
               {/* Step indicator circle */}

@@ -17,6 +17,20 @@ import type {
   FlowDisclosure,
 } from '../api/rental-flow-api'
 
+// Shared UI
+import { Input } from '@/shared/ui/input'
+import { Textarea } from '@/shared/ui/textarea'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Label } from '@/shared/ui/label'
+import { Button } from '@/shared/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+
 interface StepEditorsProps {
   steps: FlowProfileSteps
   readOnly?: boolean
@@ -63,105 +77,101 @@ export function StepEditors({
   return (
     <div className="space-y-6">
       {/* Step selection tabs */}
-      <div className="flex border-b border-border space-x-2">
-        <button
-          type="button"
-          onClick={() => setActiveStepTab('step1')}
-          className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold border-b-2 transition-colors ${
-            activeStepTab === 'step1'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted hover:text-fg'
-          }`}
-        >
-          <Calendar className="w-4 h-4" />
-          Bước 1: Ngày dọn & Người ở
-        </button>
+      <div className="flex w-full justify-between items-start overflow-x-auto pt-2 pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-2">
+        {[
+          { id: 'step1', title: 'Lưu trú', icon: Calendar },
+          { id: 'step2', title: 'Tài chính', icon: FileText },
+          { id: 'step3', title: 'Pháp lý', icon: ShieldCheck },
+          { id: 'step4', title: 'Tiến trình', icon: CheckCircle2 },
+        ].map((s, idx, arr) => {
+          const isActive = activeStepTab === s.id
+          const Icon = s.icon
+          return (
+            <React.Fragment key={s.id}>
+              <div className="flex flex-col items-center gap-2 relative z-10 shrink-0">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveStepTab(
+                      s.id as 'step1' | 'step2' | 'step3' | 'step4'
+                    )
+                  }
+                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-md scale-110'
+                      : 'border border-border bg-surface text-muted-foreground hover:bg-surface-muted hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                </button>
+                <span
+                  className={`text-[11px] font-bold whitespace-nowrap ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
+                >
+                  {s.title}
+                </span>
+              </div>
 
-        <button
-          type="button"
-          onClick={() => setActiveStepTab('step2')}
-          className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold border-b-2 transition-colors ${
-            activeStepTab === 'step2'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted hover:text-fg'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          Bước 2: Tài chính & Huy hiệu
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveStepTab('step3')}
-          className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold border-b-2 transition-colors ${
-            activeStepTab === 'step3'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted hover:text-fg'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4" />
-          Bước 3: Điều khoản pháp lý
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveStepTab('step4')}
-          className={`flex items-center gap-2 pb-3 px-3 text-xs font-semibold border-b-2 transition-colors ${
-            activeStepTab === 'step4'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted hover:text-fg'
-          }`}
-        >
-          <CheckCircle2 className="w-4 h-4" />
-          Bước 4: Tiến trình hoàn tất
-        </button>
+              {/* Connector with Arrow */}
+              {idx < arr.length - 1 && (
+                <div className="flex-1 flex items-center min-w-[30px] h-11 px-1 sm:px-3">
+                  <div className="h-[2px] w-full bg-border relative">
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 border-t-2 border-r-2 border-border transform rotate-45"></div>
+                  </div>
+                </div>
+              )}
+            </React.Fragment>
+          )
+        })}
       </div>
 
       {/* Tab 1: Step 1 Editor */}
       {activeStepTab === 'step1' && (
-        <div className="space-y-4 bg-surface p-5 rounded-xl border border-border">
+        <div className="space-y-6 bg-surface p-5 rounded-xl border border-border">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-fg flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-primary" />
-              Cấu hình Bước 1: Thông tin lưu trú & Người ở
-            </h3>
-            <span className="text-[11px] text-muted">
-              Kiểm soát khoảng ngày dọn vào và giới hạn người ở
-            </span>
+            <div>
+              <h3 className="text-sm font-bold text-fg flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-primary" />
+                Cấu hình Bước 1: Thông tin lưu trú & Người ở
+              </h3>
+              <p className="text-xs text-muted mt-1">
+                Kiểm soát khoảng ngày dọn vào và giới hạn người ở
+              </p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
-                Nhãn ngày dọn vào
-              </label>
-              <input
-                type="text"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="moveInDateLabel">Nhãn ngày dọn vào</Label>
+              <Input
+                id="moveInDateLabel"
                 disabled={readOnly}
                 value={steps.step1.moveInDateLabel}
                 onChange={e => updateStep1({ moveInDateLabel: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
               />
             </div>
 
-            <div className="flex items-center gap-3 pt-5">
-              <label className="flex items-center gap-2 text-xs font-semibold text-fg cursor-pointer">
-                <input
-                  type="checkbox"
+            <div className="flex items-center gap-3 pt-8">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="allowNotes"
                   disabled={readOnly}
                   checked={steps.step1.allowNotes}
-                  onChange={e => updateStep1({ allowNotes: e.target.checked })}
-                  className="rounded border-border text-primary focus:ring-primary"
+                  onCheckedChange={checked =>
+                    updateStep1({ allowNotes: !!checked })
+                  }
                 />
-                Cho phép ghi chú thêm
-              </label>
+                <Label htmlFor="allowNotes" className="cursor-pointer">
+                  Cho phép ghi chú thêm
+                </Label>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
+            <div className="space-y-2">
+              <Label htmlFor="minMoveInLeadDays">
                 Số ngày tối thiểu trước khi dọn vào (Lead Days Min)
-              </label>
-              <input
+              </Label>
+              <Input
+                id="minMoveInLeadDays"
                 type="number"
                 disabled={readOnly}
                 min={0}
@@ -170,15 +180,15 @@ export function StepEditors({
                 onChange={e =>
                   updateStep1({ minMoveInLeadDays: Number(e.target.value) })
                 }
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
+            <div className="space-y-2">
+              <Label htmlFor="maxMoveInLeadDays">
                 Số ngày tối đa trước khi dọn vào (Lead Days Max)
-              </label>
-              <input
+              </Label>
+              <Input
+                id="maxMoveInLeadDays"
                 type="number"
                 disabled={readOnly}
                 min={1}
@@ -187,15 +197,13 @@ export function StepEditors({
                 onChange={e =>
                   updateStep1({ maxMoveInLeadDays: Number(e.target.value) })
                 }
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
-                Số người ở tối thiểu
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="minOccupants">Số người ở tối thiểu</Label>
+              <Input
+                id="minOccupants"
                 type="number"
                 disabled={readOnly}
                 min={1}
@@ -204,15 +212,13 @@ export function StepEditors({
                 onChange={e =>
                   updateStep1({ minOccupants: Number(e.target.value) })
                 }
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
-                Số người ở tối đa
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="maxOccupants">Số người ở tối đa</Label>
+              <Input
+                id="maxOccupants"
                 type="number"
                 disabled={readOnly}
                 min={steps.step1.minOccupants}
@@ -221,15 +227,15 @@ export function StepEditors({
                 onChange={e =>
                   updateStep1({ maxOccupants: Number(e.target.value) })
                 }
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
+            <div className="space-y-2">
+              <Label htmlFor="notesMaxLength">
                 Độ dài tối đa ghi chú (ký tự)
-              </label>
-              <input
+              </Label>
+              <Input
+                id="notesMaxLength"
                 type="number"
                 disabled={readOnly}
                 min={100}
@@ -238,7 +244,6 @@ export function StepEditors({
                 onChange={e =>
                   updateStep1({ notesMaxLength: Number(e.target.value) })
                 }
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -247,7 +252,7 @@ export function StepEditors({
 
       {/* Tab 2: Step 2 Editor */}
       {activeStepTab === 'step2' && (
-        <div className="space-y-4 bg-surface p-5 rounded-xl border border-border">
+        <div className="space-y-6 bg-surface p-5 rounded-xl border border-border">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-fg flex items-center gap-2">
               <FileText className="w-4 h-4 text-primary" />
@@ -256,8 +261,8 @@ export function StepEditors({
           </div>
 
           {/* Strict Notice regarding Commercial Values */}
-          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2.5 text-xs text-amber-600 dark:text-amber-400">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-3 text-sm text-amber-600 dark:text-amber-400">
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
             <div>
               <span className="font-bold">
                 Bảo vệ tính toàn vẹn thương mại:
@@ -269,44 +274,44 @@ export function StepEditors({
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
-                Tiêu đề phần tài chính
-              </label>
-              <input
-                type="text"
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="headerTitle">Tiêu đề phần tài chính</Label>
+              <Input
+                id="headerTitle"
                 disabled={readOnly}
                 value={steps.step2.headerTitle}
                 onChange={e => updateStep2({ headerTitle: e.target.value })}
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
+            <div className="space-y-2">
+              <Label htmlFor="depositNoticeBody">
                 Nội dung hướng dẫn tiền cọc
-              </label>
-              <textarea
+              </Label>
+              <Textarea
+                id="depositNoticeBody"
                 disabled={readOnly}
                 rows={3}
                 value={steps.step2.depositNoticeBody}
                 onChange={e =>
                   updateStep2({ depositNoticeBody: e.target.value })
                 }
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
+                className="resize-none"
               />
             </div>
 
             {/* Badge rules */}
-            <div className="pt-2">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-fg">
+            <div className="pt-4 border-t border-border">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <Label className="text-sm">
                   Quy tắc gắn huy hiệu theo thời hạn gói
-                </label>
+                </Label>
                 {!readOnly && (
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       const newRule: BadgeRule = {
                         durationMonths: 6,
@@ -317,53 +322,56 @@ export function StepEditors({
                         badgeRules: [...steps.step2.badgeRules, newRule],
                       })
                     }}
-                    className="flex items-center gap-1 text-[11px] font-semibold text-primary hover:text-primary-hover"
+                    className="text-primary hover:text-primary-hover hover:bg-primary/5"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-4 h-4 mr-2" />
                     Thêm huy hiệu
-                  </button>
+                  </Button>
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {steps.step2.badgeRules.map((rule, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 p-2.5 bg-surface-muted rounded-lg border border-border"
+                    className="flex flex-col sm:flex-row sm:items-end gap-4 p-4 bg-surface-muted rounded-xl border border-border"
                   >
-                    <div className="w-32">
-                      <span className="text-[10px] text-muted block mb-0.5">
+                    <div className="w-full sm:w-40 space-y-2">
+                      <Label className="text-xs text-muted">
                         Thời hạn (tháng)
-                      </span>
-                      <select
+                      </Label>
+                      <Select
                         disabled={readOnly}
-                        value={rule.durationMonths}
-                        onChange={e => {
+                        value={String(rule.durationMonths)}
+                        onValueChange={val => {
                           const updated = [...steps.step2.badgeRules]
                           updated[idx] = {
                             ...rule,
-                            durationMonths: Number(e.target.value),
+                            durationMonths: Number(val),
                           }
                           updateStep2({ badgeRules: updated })
                         }}
-                        className="w-full px-2 py-1 text-xs rounded bg-surface border border-border text-fg"
                       >
-                        <option value={1} disabled>
-                          1 tháng (legacy)
-                        </option>
-                        <option value={3}>3 tháng</option>
-                        <option value={6}>6 tháng</option>
-                        <option value={12}>12 tháng</option>
-                        <option value={24}>24 tháng</option>
-                      </select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn thời hạn" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1" disabled>
+                            1 tháng (legacy)
+                          </SelectItem>
+                          <SelectItem value="3">3 tháng</SelectItem>
+                          <SelectItem value="6">6 tháng</SelectItem>
+                          <SelectItem value="12">12 tháng</SelectItem>
+                          <SelectItem value="24">24 tháng</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    <div className="flex-1">
-                      <span className="text-[10px] text-muted block mb-0.5">
+                    <div className="flex-1 space-y-2">
+                      <Label className="text-xs text-muted">
                         Nhãn hiển thị
-                      </span>
-                      <input
-                        type="text"
+                      </Label>
+                      <Input
                         disabled={readOnly}
                         value={rule.badgeText}
                         onChange={e => {
@@ -371,47 +379,56 @@ export function StepEditors({
                           updated[idx] = { ...rule, badgeText: e.target.value }
                           updateStep2({ badgeRules: updated })
                         }}
-                        className="w-full px-2 py-1 text-xs rounded bg-surface border border-border text-fg"
                       />
                     </div>
 
-                    <div className="w-28">
-                      <span className="text-[10px] text-muted block mb-0.5">
-                        Màu sắc
-                      </span>
-                      <select
+                    <div className="w-full sm:w-48 space-y-2">
+                      <Label className="text-xs text-muted">Màu sắc</Label>
+                      <Select
                         disabled={readOnly}
                         value={rule.colorVariant}
-                        onChange={e => {
+                        onValueChange={val => {
                           const updated = [...steps.step2.badgeRules]
                           updated[idx] = {
                             ...rule,
-                            colorVariant: e.target.value,
+                            colorVariant: val,
                           }
                           updateStep2({ badgeRules: updated })
                         }}
-                        className="w-full px-2 py-1 text-xs rounded bg-surface border border-border text-fg"
                       >
-                        <option value="emerald">Xanh lục (Emerald)</option>
-                        <option value="indigo">Xanh tím (Indigo)</option>
-                        <option value="amber">Vàng cam (Amber)</option>
-                        <option value="rose">Hồng đào (Rose)</option>
-                      </select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn màu sắc" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="emerald">
+                            Xanh lục (Emerald)
+                          </SelectItem>
+                          <SelectItem value="indigo">
+                            Xanh tím (Indigo)
+                          </SelectItem>
+                          <SelectItem value="amber">
+                            Vàng cam (Amber)
+                          </SelectItem>
+                          <SelectItem value="rose">Hồng đào (Rose)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {!readOnly && (
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => {
                           const updated = steps.step2.badgeRules.filter(
                             (_, i) => i !== idx
                           )
                           updateStep2({ badgeRules: updated })
                         }}
-                        className="p-1 text-muted hover:text-danger mt-3"
+                        className="text-muted hover:text-danger hover:bg-danger/10 shrink-0 self-end"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </Button>
                     )}
                   </div>
                 ))}
@@ -423,7 +440,7 @@ export function StepEditors({
 
       {/* Tab 3: Step 3 Editor */}
       {activeStepTab === 'step3' && (
-        <div className="space-y-4 bg-surface p-5 rounded-xl border border-border">
+        <div className="space-y-6 bg-surface p-5 rounded-xl border border-border">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-fg flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-primary" />
@@ -431,45 +448,47 @@ export function StepEditors({
             </h3>
           </div>
 
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="consentCheckboxLabel">
                 Nhãn checkbox đồng thuận chung
-              </label>
-              <input
-                type="text"
+              </Label>
+              <Input
+                id="consentCheckboxLabel"
                 disabled={readOnly}
                 value={steps.step3.consentCheckboxLabel}
                 onChange={e =>
                   updateStep3({ consentCheckboxLabel: e.target.value })
                 }
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
+            <div className="space-y-2">
+              <Label htmlFor="consentStatement">
                 Tuyên bố xác nhận của khách thuê
-              </label>
-              <textarea
+              </Label>
+              <Textarea
+                id="consentStatement"
                 disabled={readOnly}
                 rows={2}
                 value={steps.step3.consentStatement}
                 onChange={e =>
                   updateStep3({ consentStatement: e.target.value })
                 }
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
+                className="resize-none"
               />
             </div>
 
-            <div className="pt-2">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-fg">
+            <div className="pt-4 border-t border-border">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <Label className="text-sm">
                   Danh sách các điều khoản bắt buộc / tự chọn
-                </label>
+                </Label>
                 {!readOnly && (
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       const newDisc: FlowDisclosure = {
                         id: `custom-disc-${Date.now()}`,
@@ -482,72 +501,77 @@ export function StepEditors({
                         disclosures: [...steps.step3.disclosures, newDisc],
                       })
                     }}
-                    className="flex items-center gap-1 text-[11px] font-semibold text-primary hover:text-primary-hover"
+                    className="text-primary hover:text-primary-hover hover:bg-primary/5"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-4 h-4 mr-2" />
                     Thêm điều khoản
-                  </button>
+                  </Button>
                 )}
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {steps.step3.disclosures.map((disc, idx) => (
                   <div
                     key={disc.id}
-                    className="p-3 bg-surface-muted rounded-lg border border-border space-y-2 relative"
+                    className="p-4 bg-surface-muted rounded-xl border border-border space-y-4 relative"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
                         {disc.immutablePolicy && (
-                          <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                            <Lock className="w-3 h-3" />
+                          <span className="flex items-center gap-1.5 text-[11px] font-bold text-amber-600 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
+                            <Lock className="w-3.5 h-3.5" />
                             Pháp lý bắt buộc (Nghị định 96/2024)
                           </span>
                         )}
-                        <span className="text-xs font-bold text-fg">
+                        <span className="text-xs font-bold text-fg bg-surface px-2.5 py-1 rounded-md border border-border">
                           Mã: {disc.id}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <label className="flex items-center gap-1.5 text-xs text-fg cursor-pointer">
-                          <input
-                            type="checkbox"
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`req-${disc.id}`}
                             disabled={readOnly || disc.immutablePolicy}
                             checked={disc.required}
-                            onChange={e => {
+                            onCheckedChange={checked => {
                               const updated = [...steps.step3.disclosures]
                               updated[idx] = {
                                 ...disc,
-                                required: e.target.checked,
+                                required: !!checked,
                               }
                               updateStep3({ disclosures: updated })
                             }}
-                            className="rounded border-border text-primary focus:ring-primary"
                           />
-                          Bắt buộc xác nhận
-                        </label>
+                          <Label
+                            htmlFor={`req-${disc.id}`}
+                            className="cursor-pointer"
+                          >
+                            Bắt buộc xác nhận
+                          </Label>
+                        </div>
 
                         {!readOnly && !disc.immutablePolicy && (
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => {
                               const updated = steps.step3.disclosures.filter(
                                 (_, i) => i !== idx
                               )
                               updateStep3({ disclosures: updated })
                             }}
-                            className="text-muted hover:text-danger"
+                            className="text-muted hover:text-danger hover:bg-danger/10 h-8 w-8"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
 
-                    <div>
-                      <input
-                        type="text"
+                    <div className="space-y-3">
+                      <Input
                         disabled={readOnly || disc.immutablePolicy}
                         value={disc.title}
                         onChange={e => {
@@ -555,13 +579,11 @@ export function StepEditors({
                           updated[idx] = { ...disc, title: e.target.value }
                           updateStep3({ disclosures: updated })
                         }}
-                        className="w-full px-2.5 py-1.5 text-xs font-semibold rounded bg-surface border border-border text-fg"
+                        className="font-semibold"
                         placeholder="Tiêu đề điều khoản..."
                       />
-                    </div>
 
-                    <div>
-                      <textarea
+                      <Textarea
                         disabled={readOnly || disc.immutablePolicy}
                         rows={2}
                         value={disc.body}
@@ -570,8 +592,8 @@ export function StepEditors({
                           updated[idx] = { ...disc, body: e.target.value }
                           updateStep3({ disclosures: updated })
                         }}
-                        className="w-full px-2.5 py-1.5 text-xs rounded bg-surface border border-border text-fg"
                         placeholder="Nội dung điều khoản..."
+                        className="resize-none"
                       />
                     </div>
                   </div>
@@ -584,7 +606,7 @@ export function StepEditors({
 
       {/* Tab 4: Step 4 Editor */}
       {activeStepTab === 'step4' && (
-        <div className="space-y-4 bg-surface p-5 rounded-xl border border-border">
+        <div className="space-y-6 bg-surface p-5 rounded-xl border border-border">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-fg flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-primary" />
@@ -592,38 +614,32 @@ export function StepEditors({
             </h3>
           </div>
 
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-semibold text-fg mb-1">
-                Tiêu đề hoàn tất hồ sơ
-              </label>
-              <input
-                type="text"
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="heroSuccessTitle">Tiêu đề hoàn tất hồ sơ</Label>
+              <Input
+                id="heroSuccessTitle"
                 disabled={readOnly}
                 value={steps.step4.heroSuccessTitle}
                 onChange={e =>
                   updateStep4({ heroSuccessTitle: e.target.value })
                 }
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg focus:outline-none focus:border-primary"
               />
             </div>
 
             <div className="pt-2">
-              <label className="text-xs font-semibold text-fg block mb-2">
-                Các mốc lộ trình tiếp theo
-              </label>
-              <div className="space-y-2">
+              <Label className="block mb-4">Các mốc lộ trình tiếp theo</Label>
+              <div className="space-y-4">
                 {steps.step4.timelineSteps.map((tStep, idx) => (
                   <div
                     key={tStep.key}
-                    className="p-3 bg-surface-muted rounded-lg border border-border flex items-start gap-3"
+                    className="p-4 bg-surface-muted rounded-xl border border-border flex flex-col sm:flex-row sm:items-start gap-4"
                   >
-                    <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+                    <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
                       {idx + 1}
                     </span>
-                    <div className="flex-1 space-y-1.5">
-                      <input
-                        type="text"
+                    <div className="flex-1 space-y-3 w-full">
+                      <Input
                         disabled={readOnly}
                         value={tStep.title}
                         onChange={e => {
@@ -631,10 +647,10 @@ export function StepEditors({
                           updated[idx] = { ...tStep, title: e.target.value }
                           updateStep4({ timelineSteps: updated })
                         }}
-                        className="w-full px-2 py-1 text-xs font-semibold rounded bg-surface border border-border text-fg"
+                        className="font-semibold"
+                        placeholder="Tên mốc lộ trình"
                       />
-                      <input
-                        type="text"
+                      <Input
                         disabled={readOnly}
                         value={tStep.description}
                         onChange={e => {
@@ -645,7 +661,8 @@ export function StepEditors({
                           }
                           updateStep4({ timelineSteps: updated })
                         }}
-                        className="w-full px-2 py-1 text-xs rounded bg-surface border border-border text-muted"
+                        placeholder="Mô tả chi tiết"
+                        className="text-muted-foreground"
                       />
                     </div>
                   </div>
