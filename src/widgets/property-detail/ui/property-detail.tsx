@@ -96,6 +96,19 @@ function getServerUser(): null {
   return null
 }
 
+function SpecValue({
+  value,
+  className = '',
+}: {
+  value?: string | null
+  className?: string
+}): React.ReactElement {
+  if (!value) {
+    return <span className="text-subtle font-medium">Chưa cập nhật</span>
+  }
+  return <span className={`text-fg font-bold ${className}`}>{value}</span>
+}
+
 function OwnerQualitySection({
   apartmentId,
   enabled,
@@ -118,7 +131,7 @@ function OwnerQualitySection({
       </p>
     )
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <QualityScoreCard result={quality.data} />
       <ImprovementChecklist checklist={quality.data.checklist} />
     </div>
@@ -310,38 +323,35 @@ export function PropertyDetail(): React.ReactElement {
         <PropertyDetailHero property={property} />
 
         {/* Real Premium Gallery */}
-        <section className="mx-auto max-w-6xl px-6 pt-10 md:px-10">
+        <section className="mx-auto max-w-6xl px-6 pt-4 md:px-10">
           <PropertyGallery gallery={property.gallery || []} />
         </section>
 
-        <PropertyDecisionActions
-          propertyId={apartmentResourceId}
-          title={property.title}
-          monthlyRent={property.priceNum * 1_000_000}
-        />
-
-        {viewer?.roles?.includes('tenant') ? (
-          <section className="mx-auto flex max-w-6xl justify-end px-6 pt-4 md:px-10">
+        {/* Single toolbar: tools + freshness on the left, primary CTA on the right */}
+        <section className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-6 pt-3 md:px-10">
+          <PropertyDecisionActions
+            propertyId={apartmentResourceId}
+            title={property.title}
+            monthlyRent={property.priceNum * 1_000_000}
+          />
+          <FreshnessBadge listingId={apartmentResourceId} />
+          {viewer?.roles?.includes('tenant') ? (
             <Button
               asChild
-              className="flex items-center gap-2 rounded-2xl bg-primary text-white shadow-sm hover:bg-primary-hover"
+              className="ml-auto flex items-center gap-2 rounded-2xl bg-primary text-white shadow-sm hover:bg-primary-hover"
             >
               <Link href={`/properties/${apartmentResourceId}/apply` as Route}>
                 <FileText aria-hidden="true" className="h-4 w-4" />
                 <span>Đặt thuê căn hộ</span>
               </Link>
             </Button>
-          </section>
-        ) : null}
-
-        <section className="mx-auto max-w-6xl px-6 pt-6 md:px-10">
-          <FreshnessBadge listingId={apartmentResourceId} />
+          ) : null}
         </section>
 
         {/* 360 Tour Interactive CTA Banner */}
         {property.images360 && property.images360.length > 0 && (
-          <section className="mx-auto max-w-6xl px-6 pt-6 md:px-10">
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+          <section className="mx-auto max-w-6xl px-6 pt-3 md:px-10">
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-3xl p-4 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
               <div className="space-y-1.5 text-center md:text-left">
                 <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full text-[10px] font-bold text-[#c65a3a] uppercase tracking-wider animate-pulse">
                   Tính năng mới
@@ -368,11 +378,11 @@ export function PropertyDetail(): React.ReactElement {
         <ApartmentFloorplanSection property={property} />
 
         {/* Details and Bento Info Section */}
-        <section className="mx-auto max-w-6xl px-6 py-12 md:px-10 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
-          <div className="space-y-8">
+        <section className="mx-auto max-w-6xl px-6 pb-4 pt-3 md:px-10 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
+          <div className="space-y-4">
             {/* Description Card */}
-            <div className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm">
-              <h3 className="font-marketing text-lg font-bold text-fg mb-4 flex items-center gap-2">
+            <div className="bg-white border border-border rounded-3xl p-4 md:p-5 shadow-sm">
+              <h3 className="font-marketing text-lg font-bold text-fg mb-3 flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-primary" />
                 Mô tả chi tiết căn hộ
               </h3>
@@ -408,31 +418,29 @@ export function PropertyDetail(): React.ReactElement {
             </div>
 
             {/* Detailed Parameters Grid */}
-            <div className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm">
+            <div className="bg-white border border-border rounded-3xl p-4 md:p-5 shadow-sm">
               <h3 className="font-marketing text-lg font-bold text-fg mb-5 flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-primary" />
                 Thông số & Đặc điểm
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
-                <div className="flex justify-between py-2 border-b border-border/40">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-8 text-sm">
+                <div className="flex justify-between py-1.5 border-b border-border/40">
                   <span className="text-muted font-medium">Loại hình</span>
-                  <span className="text-fg font-bold">{property.category}</span>
+                  <SpecValue value={property.category} />
                 </div>
-                <div className="flex justify-between py-2 border-b border-border/40">
+                <div className="flex justify-between py-1.5 border-b border-border/40">
                   <span className="text-muted font-medium">
                     Diện tích tim tường
                   </span>
-                  <span className="text-fg font-mono font-bold">
-                    {property.area}
-                  </span>
+                  <SpecValue value={property.area} className="font-mono" />
                 </div>
-                <div className="flex justify-between py-2 border-b border-border/40">
+                <div className="flex justify-between py-1.5 border-b border-border/40">
                   <span className="text-muted font-medium">Số phòng ngủ</span>
                   <span className="text-fg font-bold">
                     {property.bedrooms} PN
                   </span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-border/40">
+                <div className="flex justify-between py-1.5 border-b border-border/40">
                   <span className="text-muted font-medium">
                     Số phòng vệ sinh
                   </span>
@@ -440,42 +448,37 @@ export function PropertyDetail(): React.ReactElement {
                     {property.bathrooms} WC
                   </span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-border/40">
+                <div className="flex justify-between py-1.5 border-b border-border/40">
                   <span className="text-muted font-medium">
                     Hướng cửa chính
                   </span>
-                  <span className="text-fg font-bold">
-                    {property.direction}
-                  </span>
+                  <SpecValue value={property.direction} />
                 </div>
-                <div className="flex justify-between py-2 border-b border-border/40">
+                <div className="flex justify-between py-1.5 border-b border-border/40">
                   <span className="text-muted font-medium">Hướng ban công</span>
-                  <span className="text-fg font-bold">
-                    {property.balconyDirection}
-                  </span>
+                  <SpecValue value={property.balconyDirection} />
                 </div>
-                <div className="flex justify-between py-2 border-b border-border/40">
+                <div className="flex justify-between py-1.5 border-b border-border/40">
                   <span className="text-muted font-medium">
                     Tình trạng nội thất
                   </span>
-                  <span className="text-fg font-bold">
-                    {property.furniture}
-                  </span>
+                  <SpecValue value={property.furniture} />
                 </div>
-                <div className="flex justify-between py-2 border-b border-border/40">
+                <div className="flex justify-between py-1.5 border-b border-border/40">
                   <span className="text-muted font-medium">
                     Thời gian nhận nhà
                   </span>
-                  <span className="text-fg font-bold text-primary">
-                    {property.moveInTime}
-                  </span>
+                  <SpecValue
+                    value={property.moveInTime}
+                    className="text-primary"
+                  />
                 </div>
               </div>
             </div>
 
             {/* Operating Fees Profile */}
-            <div className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm">
-              <h3 className="font-marketing text-lg font-bold text-fg mb-4 flex items-center gap-2">
+            <div className="bg-white border border-border rounded-3xl p-4 md:p-5 shadow-sm">
+              <h3 className="font-marketing text-lg font-bold text-fg mb-3 flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-primary" />
                 Biểu phí sinh hoạt dự kiến
               </h3>
@@ -506,12 +509,15 @@ export function PropertyDetail(): React.ReactElement {
                 </div>
               </div>
             </div>
+
+            {/* Personal Viewing Notes: wide left column so rating selects fit */}
+            <ViewingNoteEditor apartmentId={apartmentResourceId} />
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Amenities Checklist */}
-            <div className="bg-white border border-border rounded-3xl p-6 shadow-sm">
-              <h3 className="font-marketing text-base font-bold text-fg mb-4 flex items-center gap-2">
+            <div className="bg-white border border-border rounded-3xl p-4 shadow-sm">
+              <h3 className="font-marketing text-base font-bold text-fg mb-3 flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-accent animate-pulse-subtle" />
                 Tiện ích tích hợp
               </h3>
@@ -543,12 +549,9 @@ export function PropertyDetail(): React.ReactElement {
             {/* Visit Booking Widget */}
             <BookingWidget propertyId={apartmentResourceId} />
 
-            {/* Personal Viewing Notes (Ghi chú xem phòng cá nhân) */}
-            <ViewingNoteEditor apartmentId={apartmentResourceId} />
-
             {/* Landlord Info Card */}
             {property.landlord && (
-              <div className="bg-white border border-border rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="bg-white border border-border rounded-3xl p-4 shadow-sm space-y-4">
                 <h3 className="font-marketing text-base font-bold text-fg flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-primary" />
                   Thông tin chủ nhà
@@ -612,7 +615,7 @@ export function PropertyDetail(): React.ReactElement {
 
         {/* Tabbed Property Intelligence & Decision Center */}
         <section
-          className="mx-auto max-w-6xl px-6 py-10 md:px-10 space-y-6"
+          className="mx-auto max-w-6xl px-6 py-4 md:px-10 space-y-4"
           aria-label="Trung tâm thẩm định và phân tích căn hộ"
         >
           {/* Section Header */}
@@ -668,7 +671,7 @@ export function PropertyDetail(): React.ReactElement {
             role="tabpanel"
             id="tabpanel-finance"
             aria-labelledby="tab-finance"
-            className={activeTab === 'finance' ? 'space-y-8' : 'hidden'}
+            className={activeTab === 'finance' ? 'space-y-4' : 'hidden'}
           >
             <PriceBenchmarkCard
               criteria={{
@@ -696,7 +699,7 @@ export function PropertyDetail(): React.ReactElement {
             role="tabpanel"
             id="tabpanel-location"
             aria-labelledby="tab-location"
-            className={activeTab === 'location' ? 'space-y-8' : 'hidden'}
+            className={activeTab === 'location' ? 'space-y-4' : 'hidden'}
           >
             <CommuteEstimator property={property} />
             <AreaProfileSection apartmentId={apartmentResourceId} />
@@ -708,7 +711,7 @@ export function PropertyDetail(): React.ReactElement {
             role="tabpanel"
             id="tabpanel-living"
             aria-labelledby="tab-living"
-            className={activeTab === 'living' ? 'space-y-8' : 'hidden'}
+            className={activeTab === 'living' ? 'space-y-4' : 'hidden'}
           >
             <AmbientRadarPanel onExplain={setExplainData} />
             <EnergyEfficiencyPanel onExplain={setExplainData} />
@@ -722,7 +725,7 @@ export function PropertyDetail(): React.ReactElement {
             role="tabpanel"
             id="tabpanel-reviews"
             aria-labelledby="tab-reviews"
-            className={activeTab === 'reviews' ? 'space-y-8' : 'hidden'}
+            className={activeTab === 'reviews' ? 'space-y-4' : 'hidden'}
           >
             <PropertyComparison property={property} />
             <OwnerQualitySection

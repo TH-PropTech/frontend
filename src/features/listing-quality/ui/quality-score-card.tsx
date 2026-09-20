@@ -23,7 +23,7 @@ export function QualityScoreCard({
   result: QualityScoreResult
 }): React.ReactElement {
   return (
-    <section className="rounded-3xl border border-border bg-surface p-6">
+    <section className="rounded-3xl border border-border bg-surface p-4">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-muted">Chất lượng tin đăng</p>

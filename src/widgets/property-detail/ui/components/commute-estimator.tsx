@@ -325,7 +325,7 @@ export function CommuteEstimator({
   const [showExplain, setShowExplain] = React.useState(false)
 
   return (
-    <div className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-5">
+    <div className="bg-white border border-border rounded-3xl p-4 md:p-5 shadow-sm space-y-4">
       <div className="space-y-1">
         <h3 className="font-marketing text-xl font-bold text-fg flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">

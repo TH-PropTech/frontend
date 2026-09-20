@@ -17,9 +17,27 @@ export function PropertyDetailHero({
   const { isFavorite, toggleFavorite } = useFavorites()
   const [showAuthModal, setShowAuthModal] = React.useState(false)
   const favorite = isFavorite(property.id)
+  const [copied, setCopied] = React.useState(false)
+  const shortListingId = property.id.slice(-8)
+  const specs = [
+    { label: 'Diện tích', value: property.area },
+    { label: 'Thiết kế', value: property.rooms },
+    { label: 'Hướng nhà', value: property.direction },
+    { label: 'Nội thất', value: property.furniture },
+  ]
+
+  const copyListingId = async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(property.id)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch (error) {
+      console.warn('Failed to copy listing id:', error)
+    }
+  }
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-[#f5ece2] via-[#faf6f1] to-bg pb-20 pt-36 rounded-b-[40px] border-b border-border">
+    <section className="relative overflow-hidden bg-gradient-to-b from-[#f5ece2] via-[#faf6f1] to-bg pb-8 pt-36 rounded-b-[40px] border-b border-border">
       {/* Topography SVG Background (extremely lightweight, vector-rendered) */}
       <div
         className="absolute inset-0 opacity-[0.08] pointer-events-none select-none overflow-hidden"
@@ -86,7 +104,7 @@ export function PropertyDetailHero({
 
       <div className="mx-auto w-full max-w-6xl px-6 md:px-10 z-10 relative">
         {/* Back Button & Favorite Toggle Row */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <Link href={'/properties?tab=single' as Route}>
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-white text-xs font-bold text-fg hover:text-primary hover:border-primary/40 hover:shadow-sm active:scale-95 transition-all cursor-pointer">
               <svg
@@ -112,10 +130,10 @@ export function PropertyDetailHero({
                 setShowAuthModal(true)
               }
             }}
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-white shadow-sm hover:bg-surface-muted active:scale-95 transition-all text-xs font-bold text-fg cursor-pointer"
+            className="flex shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2 rounded-full border border-border bg-white shadow-sm hover:border-danger/40 hover:bg-danger/5 active:scale-95 transition-all text-xs font-bold text-fg cursor-pointer"
           >
             <svg
-              className={`h-4.5 w-4.5 transition-colors ${favorite ? 'fill-danger text-danger' : 'text-muted'}`}
+              className={`h-4 w-4 shrink-0 transition-colors ${favorite ? 'fill-danger text-danger' : 'text-primary'}`}
               fill={favorite ? 'currentColor' : 'none'}
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -131,7 +149,7 @@ export function PropertyDetailHero({
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="flex flex-wrap items-center gap-3 mb-3">
           <span
             className={`rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider border backdrop-blur-sm ${
               property.tag === 'empty'
@@ -161,12 +179,21 @@ export function PropertyDetailHero({
               Tin xác thực
             </span>
           )}
-          <span className="font-mono text-xs font-bold text-muted">
-            Mã tin:{' '}
-            <span className="text-fg font-extrabold font-mono">
-              {property.id}
+          <button
+            type="button"
+            onClick={copyListingId}
+            title={`Sao chép mã tin ${property.id}`}
+            aria-label={`Sao chép mã tin ${property.id}`}
+            className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-bold text-muted hover:text-primary transition-colors"
+          >
+            Mã tin:
+            <span className="font-mono font-extrabold text-fg">
+              #{shortListingId}
             </span>
-          </span>
+            <span className="text-[10px] font-semibold">
+              {copied ? 'Đã chép' : 'Sao chép'}
+            </span>
+          </button>
         </div>
 
         <h1 className="font-marketing text-3xl font-extrabold leading-tight text-fg md:text-5xl tracking-tight max-w-4xl">
@@ -174,49 +201,36 @@ export function PropertyDetailHero({
         </h1>
 
         {/* Price tag below title */}
-        <div className="mt-6 flex flex-wrap items-baseline gap-2">
+        <div className="mt-3 flex flex-wrap items-baseline gap-2">
           <span className="text-muted text-sm font-semibold">
             Giá thuê căn hộ:
           </span>
-          <span className="text-3xl font-black text-primary font-mono">
+          <span className="text-3xl font-black text-primary tabular-nums">
             {property.price}
           </span>
         </div>
 
         {/* Quick Specs Bento Widget */}
-        <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl border-t border-border/80 pt-6">
-          <div className="bg-white/60 border border-border/80 p-3.5 rounded-xl shadow-sm">
-            <span className="text-[10px] uppercase font-bold text-muted tracking-wider block">
-              Diện tích
-            </span>
-            <p className="font-mono text-sm font-bold text-fg mt-1">
-              {property.area}
-            </p>
-          </div>
-          <div className="bg-white/60 border border-border/80 p-3.5 rounded-xl shadow-sm">
-            <span className="text-[10px] uppercase font-bold text-muted tracking-wider block">
-              Thiết kế
-            </span>
-            <p className="font-body text-sm font-bold text-fg mt-1">
-              {property.rooms}
-            </p>
-          </div>
-          <div className="bg-white/60 border border-border/80 p-3.5 rounded-xl shadow-sm">
-            <span className="text-[10px] uppercase font-bold text-muted tracking-wider block">
-              Hướng nhà
-            </span>
-            <p className="font-body text-sm font-bold text-fg mt-1">
-              {property.direction}
-            </p>
-          </div>
-          <div className="bg-white/60 border border-border/80 p-3.5 rounded-xl shadow-sm">
-            <span className="text-[10px] uppercase font-bold text-muted tracking-wider block">
-              Nội thất
-            </span>
-            <p className="font-body text-sm font-bold text-fg mt-1">
-              {property.furniture}
-            </p>
-          </div>
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-border/80 pt-4">
+          {specs.map(spec => (
+            <div
+              key={spec.label}
+              className="bg-white/60 border border-border/80 p-3 rounded-xl shadow-sm"
+            >
+              <span className="text-[10px] uppercase font-bold text-muted tracking-wider block">
+                {spec.label}
+              </span>
+              <p
+                className={`font-body text-sm mt-1 ${
+                  spec.value
+                    ? 'font-bold text-fg tabular-nums'
+                    : 'font-medium text-subtle'
+                }`}
+              >
+                {spec.value || 'Chưa cập nhật'}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 

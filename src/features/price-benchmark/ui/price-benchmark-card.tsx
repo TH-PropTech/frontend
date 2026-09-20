@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { BarChart3, CircleAlert, RotateCcw } from 'lucide-react'
+import { BarChart3, RotateCcw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import {
   getPriceBenchmark,
@@ -64,9 +64,30 @@ export function PriceBenchmarkCard({
   }
 
   const data = benchmark.data
+  if (!data.range) {
+    return (
+      <section
+        className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-2.5 text-xs text-muted shadow-sm"
+        aria-labelledby="benchmark-title"
+      >
+        <BarChart3
+          className="h-4 w-4 shrink-0 text-primary"
+          aria-hidden="true"
+        />
+        <h3 id="benchmark-title" className="font-bold text-fg">
+          So sánh giá thuê:
+        </h3>
+        <span>
+          {CLASSIFICATION_LABELS[data.classification]} · {data.sampleCount} tin
+          phù hợp. Cần ít nhất 5 tin sau khi loại ngoại lệ để hiển thị khoảng
+          giá.
+        </span>
+      </section>
+    )
+  }
   return (
     <section
-      className="rounded-3xl border border-border bg-surface p-6 shadow-sm"
+      className="rounded-3xl border border-border bg-surface p-4 shadow-sm"
       aria-labelledby="benchmark-title"
     >
       <div className="flex items-center gap-2">
@@ -81,28 +102,17 @@ export function PriceBenchmarkCard({
       <p className="mt-1 text-xs text-muted">
         {data.sampleCount} tin phù hợp · {CONFIDENCE_LABELS[data.confidence]}
       </p>
-      {data.range ? (
-        <div className="mt-4 rounded-2xl bg-surface-muted p-4">
-          <p className="text-xs text-muted">
-            Khoảng P25–P75 sau khi loại ngoại lệ
-          </p>
-          <p className="mt-1 text-sm font-bold text-fg">
-            {currency.format(data.range.min)} –{' '}
-            {currency.format(data.range.max)}
-          </p>
-          <p className="mt-1 text-xs text-subtle">
-            Trung vị {data.median === null ? '—' : currency.format(data.median)}
-          </p>
-        </div>
-      ) : (
-        <p className="mt-4 flex items-start gap-2 rounded-2xl bg-surface-muted p-4 text-xs text-muted">
-          <CircleAlert
-            className="h-4 w-4 shrink-0 text-warning"
-            aria-hidden="true"
-          />
-          Cần ít nhất 5 tin sau khi loại ngoại lệ để hiển thị khoảng giá.
+      <div className="mt-4 rounded-2xl bg-surface-muted p-4">
+        <p className="text-xs text-muted">
+          Khoảng P25–P75 sau khi loại ngoại lệ
         </p>
-      )}
+        <p className="mt-1 text-sm font-bold text-fg">
+          {currency.format(data.range.min)} – {currency.format(data.range.max)}
+        </p>
+        <p className="mt-1 text-xs text-subtle">
+          Trung vị {data.median === null ? '—' : currency.format(data.median)}
+        </p>
+      </div>
     </section>
   )
 }

@@ -16,7 +16,7 @@ export function ImprovementChecklist({
       PRIORITY[left.priority] - PRIORITY[right.priority]
   )
   return (
-    <section className="rounded-3xl border border-border bg-surface p-6">
+    <section className="rounded-3xl border border-border bg-surface p-4">
       <h3 className="text-base font-bold text-fg">Việc cần cải thiện</h3>
       <ul className="mt-3 space-y-2">
         {sorted.map(item => (

@@ -18,7 +18,7 @@ export function PriceTrendPanel({
   onExplain,
 }: PriceTrendPanelProps): React.ReactElement {
   return (
-    <div className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="bg-white border border-border rounded-3xl p-4 md:p-5 shadow-sm grid grid-cols-1 lg:grid-cols-2 gap-5">
       {/* Price Trend Line Chart */}
       <div className="space-y-4">
         <h3 className="font-marketing text-xl font-bold text-fg flex items-center justify-between gap-2">
@@ -259,7 +259,7 @@ export function PriceTrendPanel({
       </div>
 
       {/* Blockchain Trust Ledger Score */}
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <h3 className="font-marketing text-xl font-bold text-fg flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-left">
             <span className="h-2.5 w-2.5 rounded-full bg-accent-2" />
@@ -312,7 +312,7 @@ export function PriceTrendPanel({
           xác thực mã hóa phi tập trung.
         </p>
 
-        <div className="bg-surface-muted/30 border border-border rounded-2xl p-6 gap-6 flex flex-col justify-between min-h-[250px]">
+        <div className="bg-surface-muted/30 border border-border rounded-2xl p-4 gap-4 flex flex-1 flex-col justify-between">
           <div className="flex items-center justify-between">
             <div className="space-y-1 text-left">
               <span className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider block">
