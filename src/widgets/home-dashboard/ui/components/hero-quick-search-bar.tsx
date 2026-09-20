@@ -251,7 +251,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 if (el) el.scrollTop = 0
               }}
               data-testid="district-dropdown-menu"
-              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
+              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto custom-scrollbar z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
             >
               {QUICK_SEARCH_DISTRICTS.map(d => (
                 <button
@@ -314,7 +314,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 if (el) el.scrollTop = 0
               }}
               data-testid="price-dropdown-menu"
-              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
+              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto custom-scrollbar z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
             >
               {QUICK_SEARCH_PRICES.map(p => (
                 <button
@@ -377,7 +377,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 if (el) el.scrollTop = 0
               }}
               data-testid="bedroom-dropdown-menu"
-              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
+              className="absolute left-0 top-full mt-2 w-full min-w-[220px] max-h-72 overflow-y-auto custom-scrollbar z-[100] rounded-2xl border border-border bg-white dark:bg-surface p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.25)] animate-in fade-in slide-in-from-top-2 duration-150"
             >
               {QUICK_SEARCH_BEDROOMS.map(b => (
                 <button

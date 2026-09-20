@@ -169,6 +169,7 @@ export function PropertiesSearchConsole({
             <PopoverContent
               className="w-80 md:w-96 rounded-2xl border border-border bg-white p-4 shadow-xl outline-none"
               align="start"
+              onOpenAutoFocus={e => e.preventDefault()}
             >
               <LocationFilterModal
                 onClose={() => setIsLocationModalOpen(false)}
