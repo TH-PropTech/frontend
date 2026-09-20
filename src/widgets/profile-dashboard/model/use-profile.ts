@@ -44,30 +44,7 @@ const EMPTY_KYC = {
 
 export function useProfile(): UseProfileReturn {
   const router = useRouter()
-  const [role, setRole] = React.useState<'tenant' | 'landlord'>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('user')
-        if (stored) {
-          const u = JSON.parse(stored) as { roles?: string[] }
-          if (u.roles?.includes('landlord')) {
-            return 'landlord'
-          }
-        }
-      } catch (e) {
-        console.error(e)
-      }
-
-      const params = new URLSearchParams(window.location.search)
-      if (
-        params.get('tab') === 'listings' ||
-        params.get('tab') === 'rental-applications'
-      ) {
-        return 'landlord'
-      }
-    }
-    return 'tenant'
-  })
+  const [role, setRole] = React.useState<'tenant' | 'landlord'>('tenant')
   const [activeTab, setActiveTab] = React.useState<
     | 'progress'
     | 'bills'
@@ -80,30 +57,7 @@ export function useProfile(): UseProfileReturn {
     | 'safety-reports'
     | 'support-tickets'
     | 'rental-applications'
-  >(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      const tab = params.get('tab')
-      if (tab === 'listings') {
-        return 'listings'
-      } else if (tab === 'rental-applications') {
-        return 'rental-applications'
-      } else if (
-        tab === 'progress' ||
-        tab === 'bills' ||
-        tab === 'blockchain' ||
-        tab === 'maintenance' ||
-        tab === 'security' ||
-        tab === 'saved-searches' ||
-        tab === 'living-cost' ||
-        tab === 'safety-reports' ||
-        tab === 'support-tickets'
-      ) {
-        return tab
-      }
-    }
-    return 'progress'
-  })
+  >('progress')
   const [activePropertyId, setActivePropertyId] = React.useState('prop-1')
   const properties = React.useMemo(() => DEMO_PROPERTIES, [])
 
@@ -133,31 +87,59 @@ export function useProfile(): UseProfileReturn {
   // KYC
   const [kycStatus, setKycStatus] = React.useState<
     'not-started' | 'pending' | 'verified' | 'rejected'
-  >(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('user')
-        if (stored) {
-          const u = JSON.parse(stored) as { kycStatus?: string }
-          if (
-            u.kycStatus === 'pending' ||
-            u.kycStatus === 'verified' ||
-            u.kycStatus === 'rejected'
-          ) {
-            return u.kycStatus
-          }
-        }
-      } catch {
-        // Ignore JSON parse error
-      }
-    }
-    return 'not-started'
-  })
+  >('not-started')
   const isKycVerified = kycStatus === 'verified'
   const [showKycModal, setShowKycModal] = React.useState(false)
   const [isOcrLoading, setIsOcrLoading] = React.useState(false)
   const [kycForm, setKycForm] = React.useState(EMPTY_KYC)
   const [cccdUploaded, setCccdUploaded] = React.useState(false)
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const stored = localStorage.getItem('user')
+        if (stored) {
+          const u = JSON.parse(stored) as {
+            roles?: string[]
+            kycStatus?: 'not-started' | 'pending' | 'verified' | 'rejected'
+          }
+          if (u.roles?.includes('landlord')) {
+            setRole('landlord')
+          }
+          if (
+            u.kycStatus === 'pending' ||
+            u.kycStatus === 'verified' ||
+            u.kycStatus === 'rejected'
+          ) {
+            setKycStatus(u.kycStatus)
+          }
+        }
+      } catch (e) {
+        console.error(e)
+      }
+
+      const params = new URLSearchParams(window.location.search)
+      const tabParam = params.get('tab')
+      if (tabParam === 'listings' || tabParam === 'rental-applications') {
+        setRole('landlord')
+        setActiveTab(tabParam)
+      } else if (
+        tabParam === 'progress' ||
+        tabParam === 'bills' ||
+        tabParam === 'blockchain' ||
+        tabParam === 'maintenance' ||
+        tabParam === 'security' ||
+        tabParam === 'saved-searches' ||
+        tabParam === 'living-cost' ||
+        tabParam === 'safety-reports' ||
+        tabParam === 'support-tickets'
+      ) {
+        setActiveTab(tabParam)
+      }
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [])
 
   const refreshKycStatus = React.useCallback(async (): Promise<void> => {
     const record = await getMyKyc()

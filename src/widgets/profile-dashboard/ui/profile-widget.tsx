@@ -113,10 +113,17 @@ export function ProfileWidget(): React.ReactElement {
             </TabsTrigger>
           )}
 
-          <TabsTrigger value="rental-applications" className={TRIGGER_CLASS}>
-            <Users className="h-4 w-4 mr-1.5 shrink-0" />
-            Hồ sơ đặt thuê
-          </TabsTrigger>
+          {role === 'landlord' ? (
+            <TabsTrigger value="rental-applications" className={TRIGGER_CLASS}>
+              <Users className="h-4 w-4 mr-1.5 shrink-0" />
+              Hồ sơ đặt thuê
+            </TabsTrigger>
+          ) : (
+            <TabsTrigger value="rental-applications" className={TRIGGER_CLASS}>
+              <Users className="h-4 w-4 mr-1.5 shrink-0" />
+              Đơn thuê đã gửi
+            </TabsTrigger>
+          )}
 
           <TabsTrigger value="saved-searches" className={TRIGGER_CLASS}>
             <Bookmark className="h-4 w-4 mr-1.5 shrink-0" />
