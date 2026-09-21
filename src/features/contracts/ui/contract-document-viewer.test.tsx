@@ -74,13 +74,39 @@ describe('ContractDocumentViewer', () => {
     expect(screen.getByTestId('contract-document-paper')).toHaveClass('md:p-10')
   })
 
-  it('renders articles with protected badges', () => {
+  it('renders articles with protected badges and correct section heading numbering', () => {
     render(<ContractDocumentViewer {...defaultProps} />)
     expect(
       screen.getByText('Điều 1. Đối tượng hợp đồng và mô tả căn hộ')
     ).toBeInTheDocument()
     expect(screen.getByText('Điều 2. Mục đích sử dụng')).toBeInTheDocument()
     expect(screen.getByText('Bảo vệ')).toBeInTheDocument()
+  })
+
+  it('does not double prefix when section title already starts with "Điều "', () => {
+    const docWithPrefixedTitle: ContractDocumentView = {
+      ...mockDocument,
+      sections: [
+        {
+          id: 'article-5',
+          number: 5,
+          title: 'Điều 5. Foo',
+          content: 'Nội dung điều 5',
+          protected: false,
+          hash: 'hash-5',
+        },
+      ],
+    }
+
+    render(
+      <ContractDocumentViewer
+        {...defaultProps}
+        document={docWithPrefixedTitle}
+      />
+    )
+
+    expect(screen.getByText('Điều 5. Foo')).toBeInTheDocument()
+    expect(screen.queryByText(/Điều 1\. Điều 5\. Foo/)).not.toBeInTheDocument()
   })
 
   it('renders annexes with required badges', () => {

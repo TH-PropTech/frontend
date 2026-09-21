@@ -1,5 +1,7 @@
 export * from './api/contracts-api'
 export * from './model/use-signing-ceremony'
+export * from './lib'
+export * from './ui/contract-flow-guide'
 export * from './ui/contract-participant-panel'
 export * from './ui/contract-editor-panel'
 export * from './ui/public-service-citation-panel'

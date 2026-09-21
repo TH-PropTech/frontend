@@ -148,4 +148,121 @@ describe('ApplicationReviewDialog', () => {
     expect(screen.getByText(/hồ sơ này đã được xử lý/i)).toBeDefined()
     expect(screen.queryByTestId('submit-decision-btn')).toBeNull()
   })
+
+  // ---------------------------------------------------------------------------
+  // Policy Override Section Tests
+  // ---------------------------------------------------------------------------
+  describe('policy override section', () => {
+    const policyDepositFirst = {
+      policyId: 'pol-deposit-first',
+      version: 1,
+      strategy: 'DEPOSIT_FIRST' as const,
+      contentHash: 'hash-df',
+    }
+
+    const policySignFirst = {
+      policyId: 'pol-sign-first',
+      version: 1,
+      strategy: 'SIGN_FIRST' as const,
+      contentHash: 'hash-sf',
+    }
+
+    it('does not render override section when allowedExecutionPolicies.length = 1', () => {
+      const appWithOnePolicy: RentalApplicationItem = {
+        ...mockApp,
+        packageSnapshot: {
+          ...mockApp.packageSnapshot!,
+          allowedExecutionPolicies: [policyDepositFirst],
+        },
+      }
+
+      render(
+        <ApplicationReviewDialog
+          application={appWithOnePolicy}
+          open={true}
+          onOpenChange={vi.fn()}
+        />
+      )
+
+      expect(
+        screen.queryByTestId('policy-override-section')
+      ).not.toBeInTheDocument()
+    })
+
+    it('renders override section when allowedExecutionPolicies.length = 2', () => {
+      const appWithTwoPolicies: RentalApplicationItem = {
+        ...mockApp,
+        packageSnapshot: {
+          ...mockApp.packageSnapshot!,
+          allowedExecutionPolicies: [policyDepositFirst, policySignFirst],
+        },
+      }
+
+      render(
+        <ApplicationReviewDialog
+          application={appWithTwoPolicies}
+          open={true}
+          onOpenChange={vi.fn()}
+        />
+      )
+
+      expect(screen.getByTestId('policy-override-section')).toBeInTheDocument()
+      expect(screen.getByTestId('policy-override-keep')).toBeInTheDocument()
+      expect(
+        screen.getByTestId('policy-override-SIGN_FIRST')
+      ).toBeInTheDocument()
+    })
+
+    it('shows confirmation banner when landlord selects override policy and appends note on submit', async () => {
+      const onRespondMock = vi.fn().mockResolvedValue({})
+      const appWithTwoPolicies: RentalApplicationItem = {
+        ...mockApp,
+        packageSnapshot: {
+          ...mockApp.packageSnapshot!,
+          allowedExecutionPolicies: [policyDepositFirst, policySignFirst],
+        },
+        executionPolicySnapshot: policyDepositFirst,
+      }
+
+      render(
+        <ApplicationReviewDialog
+          application={appWithTwoPolicies}
+          open={true}
+          onOpenChange={vi.fn()}
+          onRespond={onRespondMock}
+        />
+      )
+
+      // Initially no confirmation banner
+      expect(
+        screen.queryByTestId('policy-override-confirmation')
+      ).not.toBeInTheDocument()
+
+      // Select SIGN_FIRST override
+      const signFirstRadio = screen.getByTestId('policy-override-SIGN_FIRST')
+      fireEvent.click(signFirstRadio)
+
+      // Confirmation banner is now shown
+      expect(
+        screen.getByTestId('policy-override-confirmation')
+      ).toBeInTheDocument()
+      expect(screen.getByText(/Bạn đã đổi trình tự sang:/i)).toBeInTheDocument()
+
+      // Submit approve
+      const submitBtn = screen.getByTestId('submit-decision-btn')
+      fireEvent.click(submitBtn)
+
+      await waitFor(() => {
+        expect(onRespondMock).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'app-999',
+            status: 'accepted',
+            note: expect.stringContaining(
+              '[Chủ nhà đổi trình tự: Ký trước — đặt cọc sau]'
+            ),
+          })
+        )
+      })
+    })
+  })
 })

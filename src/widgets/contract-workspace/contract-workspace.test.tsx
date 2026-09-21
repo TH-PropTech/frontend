@@ -23,7 +23,6 @@ vi.mock('@/features/contracts/api/contracts-api', async () => {
     getPublicServiceChecklist: vi.fn(),
   }
 })
-
 describe('ContractWorkspace', () => {
   const mockView: contractsApi.ContractViewDto = {
     contract: {
@@ -288,6 +287,39 @@ describe('ContractWorkspace', () => {
         screen.getByTestId('fabric-ledger-evidence-card')
       ).toBeInTheDocument()
       expect(screen.getByText('Chờ đối ứng (1/2)')).toBeInTheDocument()
+    })
+  })
+
+  it('renders ContractFlowGuide and sets isActiveStep correctly when strategy=DEPOSIT_FIRST and status=deposit-pending', async () => {
+    vi.mocked(contractsApi.getContractView).mockResolvedValueOnce({
+      ...mockView,
+      contract: {
+        ...mockView.contract,
+        status: 'deposit-pending',
+        executionPolicy: {
+          ...mockView.contract.executionPolicy!,
+          strategy: 'DEPOSIT_FIRST',
+        },
+      },
+      deposit: {
+        ...mockView.deposit!,
+        status: 'pending',
+        paidAt: null,
+        txHash: null,
+      },
+    })
+
+    render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('contract-flow-guide')).toBeInTheDocument()
+      const depositWrapper = screen.getByTestId('deposit-payment-panel-wrapper')
+      expect(depositWrapper.className).toContain('ring-2')
+      const signingWrapper = screen.getByTestId(
+        'bilateral-signing-timeline-wrapper'
+      )
+      expect(signingWrapper.className).toContain('opacity-50')
+      expect(signingWrapper.className).toContain('pointer-events-none')
     })
   })
 })

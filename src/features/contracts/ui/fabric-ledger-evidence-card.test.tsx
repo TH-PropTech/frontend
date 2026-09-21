@@ -23,6 +23,8 @@ describe('FabricLedgerEvidenceCard', () => {
         blockNumber={10492}
         txHash="7f8b9a1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a"
         contractHash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        connectionState="connected"
+        status="confirmed-fabric"
         verifiedAt="2026-09-18T12:00:00.000Z"
         networkMode="fabric"
       />
@@ -30,6 +32,12 @@ describe('FabricLedgerEvidenceCard', () => {
 
     expect(screen.getByTestId('fabric-ledger-evidence-card')).toBeDefined()
     expect(screen.getByTestId('network-mode-fabric')).toBeDefined()
+    expect(screen.getByTestId('fabric-connection-state')).toHaveTextContent(
+      'Đã kết nối'
+    )
+    expect(screen.getByTestId('fabric-ledger-status')).toHaveTextContent(
+      'confirmed-fabric'
+    )
     expect(screen.getByTestId('fabric-block-number').textContent).toBe('#10492')
     expect(screen.getByTestId('fabric-tx-hash')).toBeDefined()
     expect(screen.getByTestId('fabric-contract-hash')).toBeDefined()

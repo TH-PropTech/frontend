@@ -17,6 +17,8 @@ export interface DepositPaymentPanelProps {
   isTenant: boolean
   contractId: string
   onPaymentSuccess?: () => void
+  /** Khi false: panel mờ và không nhận tương tác. Khi true: panel nổi bật. undefined = no change. */
+  isActiveStep?: boolean
 }
 
 export function DepositPaymentPanel({
@@ -24,6 +26,7 @@ export function DepositPaymentPanel({
   isTenant,
   contractId,
   onPaymentSuccess,
+  isActiveStep,
 }: DepositPaymentPanelProps) {
   const [loading, setLoading] = useState(false)
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null)
@@ -73,125 +76,136 @@ export function DepositPaymentPanel({
     }
   }
 
+  const wrapperClass =
+    isActiveStep === true
+      ? 'ring-2 ring-[var(--primary)] rounded-xl'
+      : isActiveStep === false
+        ? 'opacity-50 pointer-events-none'
+        : ''
+
   return (
-    <div
-      data-testid="deposit-payment-panel"
-      data-contract-id={contractId}
-      className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm flex flex-col gap-4"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <CreditCard className="w-4 h-4 text-[var(--primary)]" />
-          <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
-            Tiền đặt cọc bảo đảm
-          </h4>
-        </div>
-        <div>
-          {isPaid ? (
-            <span
-              data-testid="deposit-status-paid"
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--surface-muted)] text-[var(--success)] border border-[var(--border)]"
-            >
-              <CheckCircle2 className="w-3 h-3 text-[var(--success)]" />
-              Đã thanh toán
-            </span>
-          ) : (
-            <span
-              data-testid="deposit-status-pending"
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--surface-muted)] text-[var(--warning)] border border-[var(--border)]"
-            >
-              <Clock className="w-3 h-3 text-[var(--warning)]" />
-              Chờ thanh toán
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Amount Display Card */}
-      <div className="p-4 rounded-lg bg-[var(--surface-muted)] border border-[var(--border)] flex flex-col gap-1">
-        <span className="text-[11px] text-[var(--muted)]">Số tiền đặt cọc</span>
-        <span className="text-xl font-extrabold text-[var(--fg)] tracking-tight">
-          {formattedAmount}
-        </span>
-      </div>
-
-      {/* PoC Mock Bank Simulation Note */}
-      <div className="flex items-start gap-2 p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-xs text-[var(--fg)]">
-        <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
-        <p className="text-[11px] leading-relaxed">
-          {deposit.mockSimulationNotice ||
-            'Môi trường thử nghiệm PoC: Thanh toán cọc qua ngân hàng mô phỏng để bảo đảm an toàn giao dịch trước khi kích hoạt quy trình ký e-Consent.'}
-        </p>
-      </div>
-
-      {/* Paid Details */}
-      {isPaid && (
-        <div className="space-y-2 text-xs border-t border-[var(--border)] pt-3">
-          {deposit.paidAt && (
-            <div className="flex justify-between items-center text-[var(--fg)]">
-              <span className="text-[var(--muted)]">Thời gian ghi nhận:</span>
-              <span>{new Date(deposit.paidAt).toLocaleString('vi-VN')}</span>
-            </div>
-          )}
-          {deposit.txHash && (
-            <div className="flex justify-between items-center text-[var(--fg)]">
-              <span className="text-[var(--muted)]">Mã giao dịch:</span>
-              <span className="font-mono text-[11px] text-[var(--primary)] truncate max-w-[180px]">
-                {deposit.txHash}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Action / CTA for Pending */}
-      {!isPaid && (
-        <div className="space-y-3 pt-2">
-          {errorMsg && (
-            <div className="flex items-center gap-1.5 text-xs text-[var(--danger)]">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {isTenant ? (
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={handleInitPayment}
-                disabled={loading}
-                aria-label="Thanh toán cọc ngay"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm"
+    <div data-testid="deposit-payment-panel-wrapper" className={wrapperClass}>
+      <div
+        data-testid="deposit-payment-panel"
+        data-contract-id={contractId}
+        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm flex flex-col gap-4"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-[var(--primary)]" />
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
+              Tiền đặt cọc bảo đảm
+            </h4>
+          </div>
+          <div>
+            {isPaid ? (
+              <span
+                data-testid="deposit-status-paid"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--surface-muted)] text-[var(--success)] border border-[var(--border)]"
               >
-                <CreditCard className="w-4 h-4" />
-                <span>
-                  {loading
-                    ? 'Đang tạo giao dịch...'
-                    : 'Thanh toán cọc ngay (Mock Bank)'}
-                </span>
-              </button>
-
-              {paymentUrl && (
-                <a
-                  href={paymentUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--fg)] hover:bg-[var(--surface)] transition-colors"
-                >
-                  <span>Mở cổng thanh toán Mock Bank</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              )}
-            </div>
-          ) : (
-            <div className="p-3 rounded-lg bg-[var(--surface-muted)] text-center text-xs text-[var(--muted)]">
-              Đang chờ Bên thuê hoàn tất nộp tiền đặt cọc để mở khóa điều kiện
-              ký kết hợp đồng.
-            </div>
-          )}
+                <CheckCircle2 className="w-3 h-3 text-[var(--success)]" />
+                Đã thanh toán
+              </span>
+            ) : (
+              <span
+                data-testid="deposit-status-pending"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--surface-muted)] text-[var(--warning)] border border-[var(--border)]"
+              >
+                <Clock className="w-3 h-3 text-[var(--warning)]" />
+                Chờ thanh toán
+              </span>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* Amount Display Card */}
+        <div className="p-4 rounded-lg bg-[var(--surface-muted)] border border-[var(--border)] flex flex-col gap-1">
+          <span className="text-[11px] text-[var(--muted)]">
+            Số tiền đặt cọc
+          </span>
+          <span className="text-xl font-extrabold text-[var(--fg)] tracking-tight">
+            {formattedAmount}
+          </span>
+        </div>
+
+        {/* PoC Mock Bank Simulation Note */}
+        <div className="flex items-start gap-2 p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-xs text-[var(--fg)]">
+          <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
+          <p className="text-[11px] leading-relaxed">
+            {deposit.mockSimulationNotice ||
+              'Môi trường thử nghiệm PoC: Thanh toán cọc qua ngân hàng mô phỏng để bảo đảm an toàn giao dịch trước khi kích hoạt quy trình ký e-Consent.'}
+          </p>
+        </div>
+
+        {/* Paid Details */}
+        {isPaid && (
+          <div className="space-y-2 text-xs border-t border-[var(--border)] pt-3">
+            {deposit.paidAt && (
+              <div className="flex justify-between items-center text-[var(--fg)]">
+                <span className="text-[var(--muted)]">Thời gian ghi nhận:</span>
+                <span>{new Date(deposit.paidAt).toLocaleString('vi-VN')}</span>
+              </div>
+            )}
+            {deposit.txHash && (
+              <div className="flex justify-between items-center text-[var(--fg)]">
+                <span className="text-[var(--muted)]">Mã giao dịch:</span>
+                <span className="font-mono text-[11px] text-[var(--primary)] truncate max-w-[180px]">
+                  {deposit.txHash}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Action / CTA for Pending */}
+        {!isPaid && (
+          <div className="space-y-3 pt-2">
+            {errorMsg && (
+              <div className="flex items-center gap-1.5 text-xs text-[var(--danger)]">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            {isTenant ? (
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleInitPayment}
+                  disabled={loading}
+                  aria-label="Thanh toán cọc ngay"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>
+                    {loading
+                      ? 'Đang tạo giao dịch...'
+                      : 'Thanh toán cọc ngay (Mock Bank)'}
+                  </span>
+                </button>
+
+                {paymentUrl && (
+                  <a
+                    href={paymentUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--fg)] hover:bg-[var(--surface)] transition-colors"
+                  >
+                    <span>Mở cổng thanh toán Mock Bank</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
+            ) : (
+              <div className="p-3 rounded-lg bg-[var(--surface-muted)] text-center text-xs text-[var(--muted)]">
+                Đang chờ Bên thuê hoàn tất nộp tiền đặt cọc để mở khóa điều kiện
+                ký kết hợp đồng.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

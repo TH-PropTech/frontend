@@ -92,4 +92,51 @@ describe('DepositPaymentPanel', () => {
       screen.queryByLabelText('Thanh toán cọc ngay')
     ).not.toBeInTheDocument()
   })
+
+  // ---------------------------------------------------------------------------
+  // isActiveStep visual state tests
+  // ---------------------------------------------------------------------------
+  describe('isActiveStep prop', () => {
+    it('adds ring highlight class when isActiveStep=true', () => {
+      render(
+        <DepositPaymentPanel
+          deposit={mockPendingDeposit}
+          isTenant={true}
+          contractId="c1"
+          isActiveStep={true}
+        />
+      )
+      const wrapper = screen.getByTestId('deposit-payment-panel-wrapper')
+      expect(wrapper.className).toContain('ring-2')
+      expect(wrapper.className).toContain('ring-[var(--primary)]')
+    })
+
+    it('adds opacity-50 and pointer-events-none when isActiveStep=false', () => {
+      render(
+        <DepositPaymentPanel
+          deposit={mockPendingDeposit}
+          isTenant={true}
+          contractId="c1"
+          isActiveStep={false}
+        />
+      )
+      const wrapper = screen.getByTestId('deposit-payment-panel-wrapper')
+      expect(wrapper.className).toContain('opacity-50')
+      expect(wrapper.className).toContain('pointer-events-none')
+    })
+
+    it('adds no extra class when isActiveStep is undefined', () => {
+      render(
+        <DepositPaymentPanel
+          deposit={mockPendingDeposit}
+          isTenant={true}
+          contractId="c1"
+        />
+      )
+      const wrapper = screen.getByTestId('deposit-payment-panel-wrapper')
+      expect(wrapper.className).not.toContain('ring-2')
+      expect(wrapper.className).not.toContain('opacity-50')
+      expect(wrapper.className).not.toContain('pointer-events-none')
+    })
+  })
 })
