@@ -80,7 +80,7 @@ describe('StepEditors Component', () => {
     fireEvent.click(screen.getByText('Tài chính'))
 
     // Open the combobox
-    fireEvent.click(screen.getAllByRole('combobox')[0])
+    fireEvent.click(screen.getAllByRole('combobox')[0]!)
 
     expect(
       await screen.findByRole('option', { name: /24/ })
