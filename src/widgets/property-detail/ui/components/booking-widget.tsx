@@ -146,7 +146,11 @@ export function BookingWidget({
         xem trực tiếp trong vòng 15 phút.
       </p>
 
-      <form onSubmit={handleFormSubmit} className="space-y-3.5 text-left">
+      <form
+        onSubmit={handleFormSubmit}
+        className="space-y-3.5 text-left"
+        noValidate
+      >
         <div>
           <Label
             htmlFor="fullName"

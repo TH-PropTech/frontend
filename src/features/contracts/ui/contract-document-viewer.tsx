@@ -150,7 +150,10 @@ export function ContractDocumentViewer({
       </div>
 
       {/* A4 Document Paper Container */}
-      <div className="relative w-full max-w-4xl mx-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-md p-6 sm:p-10 md:p-14 overflow-hidden print:border-none print:shadow-none print:p-0">
+      <div
+        data-testid="contract-document-paper"
+        className="relative w-full max-w-4xl mx-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-md p-6 sm:p-8 md:p-10 overflow-hidden print:border-none print:shadow-none print:p-0"
+      >
         {/* Subtle Watermark Stamp */}
         <div
           data-testid="contract-watermark"

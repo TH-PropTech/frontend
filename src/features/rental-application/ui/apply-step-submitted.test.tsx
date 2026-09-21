@@ -154,8 +154,13 @@ describe('ApplyStepSubmitted Component', () => {
       />
     )
 
-    const contractLink = screen.getByRole('link', { name: /Xem hợp đồng số/i })
-    expect(contractLink).toHaveAttribute('href', '/contracts/contract-ready-1')
+    const contractLink = screen.getByRole('link', {
+      name: /Xem & Ký hợp đồng/i,
+    })
+    expect(contractLink).toHaveAttribute(
+      'href',
+      '/rental-applications/app-998877/contract-invite'
+    )
   })
 
   it('checks landlord response on demand with loading and last-checked feedback', async () => {

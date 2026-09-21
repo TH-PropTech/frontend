@@ -68,6 +68,12 @@ describe('ContractDocumentViewer', () => {
     expect(screen.getByTestId('contract-watermark')).toBeInTheDocument()
   })
 
+  it('keeps the A4 paper padding compact beside the workspace sidebar', () => {
+    render(<ContractDocumentViewer {...defaultProps} />)
+
+    expect(screen.getByTestId('contract-document-paper')).toHaveClass('md:p-10')
+  })
+
   it('renders articles with protected badges', () => {
     render(<ContractDocumentViewer {...defaultProps} />)
     expect(

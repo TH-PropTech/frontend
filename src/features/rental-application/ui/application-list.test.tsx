@@ -157,7 +157,7 @@ describe('ApplicationList Component', () => {
     const app1 = screen.getByTestId('application-item-app-pending-111')
     expect(app1).toBeInTheDocument()
     const detailLink = within(app1).getByRole('link', {
-      name: /Xem chi tiết căn hộ/i,
+      name: /Căn hộ/i,
     })
     expect(detailLink).toHaveAttribute('href', '/properties/apt-1')
 
@@ -165,15 +165,20 @@ describe('ApplicationList Component', () => {
     expect(
       screen.getByTestId('application-item-app-accepted-222')
     ).toBeInTheDocument()
-    const contractLink = screen.getByRole('link', { name: /Xem hợp đồng số/i })
-    expect(contractLink).toHaveAttribute('href', '/contracts/contract-xyz-999')
+    const contractLink = screen.getByRole('link', {
+      name: /Xem & Ký hợp đồng/i,
+    })
+    expect(contractLink).toHaveAttribute(
+      'href',
+      '/rental-applications/app-accepted-222/contract-invite'
+    )
 
     // App 3: accepted with provisioning failed
     expect(
       screen.getByTestId('application-item-app-provisioning-333')
     ).toBeInTheDocument()
     expect(
-      screen.getByText(/Hệ thống đang chuẩn bị hợp đồng số/i)
+      screen.getByText(/Chuẩn bị hợp đồng số thất bại/i)
     ).toBeInTheDocument()
   })
 })

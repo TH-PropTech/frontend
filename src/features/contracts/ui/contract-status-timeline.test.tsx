@@ -11,6 +11,23 @@ describe('ContractStatusTimeline', () => {
     expect(screen.getByText('Ghi nhận sổ cái & Kích hoạt')).toBeInTheDocument()
   })
 
+  it('marks draft creation as the current step for a draft contract', () => {
+    render(<ContractStatusTimeline status="draft" />)
+
+    expect(screen.getByTestId('step-draft')).toHaveAttribute(
+      'data-state',
+      'current'
+    )
+    expect(screen.getByTestId('step-deposit')).toHaveAttribute(
+      'data-state',
+      'upcoming'
+    )
+    expect(screen.getByTestId('step-sign')).toHaveAttribute(
+      'data-state',
+      'upcoming'
+    )
+  })
+
   it('marks deposit step current when deposit-pending', () => {
     render(
       <ContractStatusTimeline

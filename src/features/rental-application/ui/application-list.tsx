@@ -121,6 +121,12 @@ export function ApplicationList(): React.ReactElement {
           isAccepted &&
           (item.contractHandoff?.state === 'failed' ||
             item.provisioningStatus === 'failed')
+        const isProvisioning =
+          isAccepted &&
+          (item.contractHandoff?.state === 'provisioning' ||
+            (!item.contractId &&
+              item.provisioningStatus !== 'failed' &&
+              item.provisioningStatus !== 'not-started'))
         const needsSigning = isAccepted && hasContract
 
         return (
@@ -181,12 +187,22 @@ export function ApplicationList(): React.ReactElement {
                 </p>
               ) : null}
 
-              {isProvisioningFailed ? (
-                <div className="inline-flex items-center gap-1.5 rounded-lg bg-warning-soft px-2.5 py-1 text-[11px] font-medium text-warning">
-                  <Clock aria-hidden="true" className="h-3 w-3" />
+              {isProvisioning ? (
+                <div className="inline-flex items-center gap-1.5 rounded-lg bg-info-soft px-2.5 py-1 text-[11px] font-medium text-info">
+                  <Clock aria-hidden="true" className="h-3 w-3" animate-spin />
                   <span>
                     Hệ thống đang chuẩn bị hợp đồng số, vui lòng chờ trong giây
                     lát…
+                  </span>
+                </div>
+              ) : null}
+
+              {isProvisioningFailed ? (
+                <div className="inline-flex items-center gap-1.5 rounded-lg bg-warning-soft px-2.5 py-1 text-[11px] font-medium text-warning">
+                  <AlertCircle aria-hidden="true" className="h-3 w-3" />
+                  <span>
+                    Chuẩn bị hợp đồng số thất bại. Vui lòng liên hệ hỗ trợ hoặc
+                    thử lại sau.
                   </span>
                 </div>
               ) : null}

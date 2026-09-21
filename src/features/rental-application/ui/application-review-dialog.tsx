@@ -35,6 +35,7 @@ import {
   Landmark,
   Loader2,
   PawPrint,
+  RotateCcw,
   Scale,
   ShieldAlert,
   ShieldCheck,
@@ -137,29 +138,36 @@ function ApplicationReviewForm({
 
   const isPending = application.status === 'pending'
   const isAccepted = application.status === 'accepted'
+  const isProvisioningFailed =
+    isAccepted && application.provisioningStatus === 'failed'
+  const canSubmit = isPending || isProvisioningFailed
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!onRespond) return
 
-    if (decisionMode === 'approve') {
-      await onRespond({
-        id: application._id,
-        status: 'accepted',
-        reasonCode: 'APPROVED',
-        note: note.trim() || undefined,
-        expectedRevision: application.applicationRevision ?? 1,
-      })
-    } else {
-      await onRespond({
-        id: application._id,
-        status: 'rejected',
-        reasonCode,
-        note: note.trim() || undefined,
-        expectedRevision: application.applicationRevision ?? 1,
-      })
+    try {
+      if (decisionMode === 'approve') {
+        await onRespond({
+          id: application._id,
+          status: 'accepted',
+          reasonCode: 'APPROVED',
+          note: note.trim() || undefined,
+          expectedRevision: application.applicationRevision ?? 1,
+        })
+      } else {
+        await onRespond({
+          id: application._id,
+          status: 'rejected',
+          reasonCode,
+          note: note.trim() || undefined,
+          expectedRevision: application.applicationRevision ?? 1,
+        })
+      }
+      onOpenChange(false)
+    } catch {
+      // Error notifications are already handled by respondMutation onError
     }
-    onOpenChange(false)
   }
 
   const showStep1 = activeStepTab === 'all' || activeStepTab === 'step1'
@@ -537,7 +545,7 @@ function ApplicationReviewForm({
             </div>
 
             <div className="p-5 space-y-4">
-              {isPending ? (
+              {canSubmit ? (
                 <div className="space-y-4">
                   {/* Switcher Phê duyệt / Từ chối */}
                   <div className="flex rounded-xl bg-surface-muted p-1 border border-border max-w-md">
@@ -552,21 +560,25 @@ function ApplicationReviewForm({
                       data-testid="mode-approve-btn"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      <span>Chấp thuận</span>
+                      <span>
+                        {isProvisioningFailed ? 'Thử tạo lại' : 'Chấp thuận'}
+                      </span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setDecisionMode('reject')}
-                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                        decisionMode === 'reject'
-                          ? 'bg-danger text-on-control shadow-sm'
-                          : 'text-muted hover:text-fg'
-                      }`}
-                      data-testid="mode-reject-btn"
-                    >
-                      <XCircle className="h-3.5 w-3.5" />
-                      <span>Từ chối</span>
-                    </button>
+                    {!isProvisioningFailed && (
+                      <button
+                        type="button"
+                        onClick={() => setDecisionMode('reject')}
+                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          decisionMode === 'reject'
+                            ? 'bg-danger text-on-control shadow-sm'
+                            : 'text-muted hover:text-fg'
+                        }`}
+                        data-testid="mode-reject-btn"
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                        <span>Từ chối</span>
+                      </button>
+                    )}
                   </div>
 
                   {decisionMode === 'approve' ? (
@@ -735,7 +747,7 @@ function ApplicationReviewForm({
           >
             Đóng
           </Button>
-          {isPending && (
+          {canSubmit && (
             <Button
               type="submit"
               size="sm"
@@ -754,8 +766,17 @@ function ApplicationReviewForm({
                 </>
               ) : decisionMode === 'approve' ? (
                 <>
-                  <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                  <span>Xác nhận chấp thuận</span>
+                  {isProvisioningFailed ? (
+                    <>
+                      <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                      <span>Thử tạo lại hợp đồng</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                      <span>Xác nhận chấp thuận</span>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
