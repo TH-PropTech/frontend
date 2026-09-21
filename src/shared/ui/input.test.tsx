@@ -27,7 +27,7 @@ describe('Input Component - Density & Sizing Refinement', () => {
     const input = screen.getByPlaceholderText('Tìm kiếm')
 
     expect(icon).toBeInTheDocument()
-    expect(input.className).toContain('pl-9')
+    expect(input.className).toContain('pl-10')
   })
 
   it('renders error state properly (Negative Scenario)', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import {
   usePropertiesFilters,
   parsePriceParam,
@@ -12,7 +12,14 @@ import {
   resolveLocationFromParams,
   resolveProvinceFromCity,
 } from '../use-properties-filters'
+import { apiClient } from '@/shared/api/api-client'
 import { mockApartments } from '@/entities/properties'
+
+vi.mock('@/shared/config/env', () => ({
+  env: {
+    enableMocks: true,
+  },
+}))
 
 let mockSearchParams = new URLSearchParams()
 
@@ -22,7 +29,7 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/shared/api/api-client', () => ({
   apiClient: {
-    get: vi.fn().mockRejectedValue(new Error('Network fallback')),
+    get: vi.fn(),
   },
 }))
 
@@ -30,11 +37,12 @@ describe('usePropertiesFilters - Query Parameters & Normalization Suite (5 Dimen
   beforeEach(() => {
     mockSearchParams = new URLSearchParams()
     vi.clearAllMocks()
+    vi.mocked(apiClient.get).mockResolvedValue(mockApartments)
   })
 
   // Dimension 1: Happy Path
   describe('Dimension 1: Happy Path', () => {
-    it('initializes filters correctly from standard URL search params (district, price in millions, bedrooms, search)', () => {
+    it('initializes filters correctly from standard URL search params (district, price in millions, bedrooms, search)', async () => {
       mockSearchParams.set('search', 'Vinhomes')
       mockSearchParams.set('district', 'Bình Thạnh')
       mockSearchParams.set('minPrice', '10')
@@ -42,6 +50,9 @@ describe('usePropertiesFilters - Query Parameters & Normalization Suite (5 Dimen
       mockSearchParams.set('bedrooms', '2')
 
       const { result } = renderHook(() => usePropertiesFilters())
+      await waitFor(() => {
+        expect(result.current.filteredApartments.length).toBeGreaterThan(0)
+      })
 
       expect(result.current.searchKeyword).toBe('Vinhomes')
       expect(result.current.appliedCity).toBe('Thành phố Hồ Chí Minh')
@@ -221,6 +232,9 @@ describe('usePropertiesFilters - Query Parameters & Normalization Suite (5 Dimen
     })
 
     it('falls back to mock apartments when backend API request fails', async () => {
+      vi.mocked(apiClient.get).mockRejectedValueOnce(
+        new Error('Network fallback')
+      )
       const { result } = renderHook(() => usePropertiesFilters())
 
       // Wait for catch block to settle fallback

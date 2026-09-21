@@ -88,28 +88,30 @@ export function StepEditors({
           const Icon = s.icon
           return (
             <React.Fragment key={s.id}>
-              <div className="flex flex-col items-center gap-2 relative z-10 shrink-0">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setActiveStepTab(
-                      s.id as 'step1' | 'step2' | 'step3' | 'step4'
-                    )
-                  }
+              <button
+                type="button"
+                onClick={() =>
+                  setActiveStepTab(
+                    s.id as 'step1' | 'step2' | 'step3' | 'step4'
+                  )
+                }
+                className="flex flex-col items-center gap-2 relative z-10 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
+              >
+                <div
                   className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shrink-0 ${
                     isActive
                       ? 'bg-primary text-primary-foreground shadow-md scale-110'
-                      : 'border border-border bg-surface text-muted-foreground hover:bg-surface-muted hover:text-foreground'
+                      : 'border border-border bg-surface text-muted-foreground group-hover:bg-surface-muted group-hover:text-foreground'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                </button>
+                </div>
                 <span
-                  className={`text-[11px] font-bold whitespace-nowrap ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
+                  className={`text-[11px] font-bold whitespace-nowrap ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}
                 >
                   {s.title}
                 </span>
-              </div>
+              </button>
 
               {/* Connector with Arrow */}
               {idx < arr.length - 1 && (

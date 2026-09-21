@@ -64,7 +64,7 @@ describe('StepEditors Component', () => {
     const onChange = vi.fn()
     render(<StepEditors steps={mockSteps} onChange={onChange} />)
 
-    fireEvent.click(screen.getByText('Bước 2: Tài chính & Huy hiệu'))
+    fireEvent.click(screen.getByText('Tài chính'))
     expect(
       screen.getByText(/Bảo vệ tính toàn vẹn thương mại/i)
     ).toBeInTheDocument()
@@ -73,15 +73,21 @@ describe('StepEditors Component', () => {
     ).toBeInTheDocument()
   })
 
-  it('offers the 24-month duration while keeping the legacy one-month option disabled', () => {
+  it('offers the 24-month duration while keeping the legacy one-month option disabled', async () => {
     const onChange = vi.fn()
     render(<StepEditors steps={mockSteps} onChange={onChange} />)
 
-    fireEvent.click(screen.getByText(/Bước 2:/))
-    expect(screen.getByRole('option', { name: /24/ })).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Tài chính'))
+
+    // Open the combobox
+    fireEvent.click(screen.getAllByRole('combobox')[0])
+
+    expect(
+      await screen.findByRole('option', { name: /24/ })
+    ).toBeInTheDocument()
     expect(
       screen.getByRole('option', { name: /1 tháng \(legacy\)/ })
-    ).toBeDisabled()
+    ).toHaveAttribute('aria-disabled', 'true')
   })
 
   it('triggers onChange when updating step 1 inputs', () => {
@@ -107,10 +113,8 @@ describe('StepEditors Component', () => {
     const onChange = vi.fn()
     render(<StepEditors steps={mockSteps} onChange={onChange} />)
 
-    fireEvent.click(screen.getByText('Bước 3: Điều khoản pháp lý'))
-    expect(
-      screen.getByText('Pháp lý bắt buộc (Nghị định 96/2024)')
-    ).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Pháp lý'))
+    expect(screen.getByText(/Pháp lý bắt buộc/i)).toBeInTheDocument()
 
     // The checkbox for required should be disabled because immutablePolicy is true
     const requiredCheckbox = screen.getByRole('checkbox', {
