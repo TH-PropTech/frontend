@@ -205,32 +205,39 @@ export function ContractDocumentViewer({
               &rdquo;.
             </div>
           ) : (
-            filteredSections.map(section => (
-              <article
-                key={section.id}
-                id={`article-${section.number}`}
-                data-testid={`article-${section.number}`}
-                className="scroll-mt-6"
-              >
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <h2 className="text-sm font-bold text-[var(--fg)] tracking-tight">
-                    Điều {section.number}. {section.title}
-                  </h2>
-                  {section.protected && (
-                    <span
-                      title="Điều khoản chuẩn bảo vệ pháp lý"
-                      className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-[var(--surface-muted)] text-[var(--primary)] border border-[var(--border)]"
-                    >
-                      <ShieldCheck className="w-3 h-3 text-[var(--primary)]" />
-                      Bảo vệ
-                    </span>
-                  )}
-                </div>
-                <div className="text-xs leading-relaxed text-[var(--fg)] whitespace-pre-line text-justify pl-2 border-l-2 border-[var(--border)]">
-                  {section.content}
-                </div>
-              </article>
-            ))
+            filteredSections.map((section, idx) => {
+              const sectionNum = section.number ?? idx + 1
+              const headingTitle = section.title.startsWith('Điều ')
+                ? section.title
+                : `Điều ${sectionNum}. ${section.title}`
+
+              return (
+                <article
+                  key={section.id}
+                  id={`article-${section.number}`}
+                  data-testid={`article-${section.number}`}
+                  className="scroll-mt-6"
+                >
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <h2 className="text-sm font-bold text-[var(--fg)] tracking-tight">
+                      {headingTitle}
+                    </h2>
+                    {section.protected && (
+                      <span
+                        title="Điều khoản chuẩn bảo vệ pháp lý"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-[var(--surface-muted)] text-[var(--primary)] border border-[var(--border)]"
+                      >
+                        <ShieldCheck className="w-3 h-3 text-[var(--primary)]" />
+                        Bảo vệ
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs leading-relaxed text-[var(--fg)] whitespace-pre-line text-justify pl-2 border-l-2 border-[var(--border)]">
+                    {section.content}
+                  </div>
+                </article>
+              )
+            })
           )}
         </div>
 

@@ -14,11 +14,13 @@ import {
 export interface UseContractWorkspaceOptions {
   contractId: string
   currentUserId?: string | undefined
+  enablePolling?: boolean | undefined
 }
 
 export function useContractWorkspace({
   contractId,
   currentUserId,
+  enablePolling = true,
 }: UseContractWorkspaceOptions) {
   const [data, setData] = useState<ContractViewDto | null>(null)
   const [auditEvents, setAuditEvents] = useState<ContractAuditEventDto[]>([])
@@ -101,6 +103,8 @@ export function useContractWorkspace({
 
   // Polling for status transitions and ledger convergence
   useEffect(() => {
+    if (!enablePolling) return
+
     const status = data?.contract?.status
     const ledgerStatus = data?.ledger?.status
     const shouldPoll =
@@ -121,7 +125,7 @@ export function useContractWorkspace({
         clearInterval(pollIntervalRef.current)
       }
     }
-  }, [data?.contract?.status, data?.ledger?.status, loadData])
+  }, [data?.contract?.status, data?.ledger?.status, enablePolling, loadData])
 
   // Download PDF
   const handleDownloadPdf = async () => {

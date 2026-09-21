@@ -116,11 +116,14 @@ function ApplicationReviewForm({
   const [reasonCode, setReasonCode] = React.useState<string>(
     'PROPERTY_UNAVAILABLE'
   )
+  const [policyOverride, setPolicyOverride] =
+    React.useState<string>('keep-tenant')
 
   const snapshot = application.packageSnapshot
   const duration = snapshot?.durationMonths ?? 12
   const rent = snapshot?.monthlyRent ?? 0
   const deposit = snapshot?.resolvedDepositAmount ?? 0
+  const allowedExecutionPolicies = snapshot?.allowedExecutionPolicies ?? []
 
   const executionPolicy = application.executionPolicySnapshot
   const executionStrategy =
@@ -148,11 +151,27 @@ function ApplicationReviewForm({
 
     try {
       if (decisionMode === 'approve') {
+        let finalNote = note.trim()
+        if (policyOverride !== 'keep-tenant') {
+          const selectedPolicy = allowedExecutionPolicies.find(
+            p => p.policyId === policyOverride || p.strategy === policyOverride
+          )
+          const policyLabel =
+            selectedPolicy?.strategy === 'DEPOSIT_FIRST' ||
+            policyOverride === 'DEPOSIT_FIRST'
+              ? 'Đặt cọc trước — ký sau'
+              : 'Ký trước — đặt cọc sau'
+          const overrideSuffix = `[Chủ nhà đổi trình tự: ${policyLabel}]`
+          finalNote = finalNote
+            ? `${finalNote} ${overrideSuffix}`
+            : overrideSuffix
+        }
+
         await onRespond({
           id: application._id,
           status: 'accepted',
           reasonCode: 'APPROVED',
-          note: note.trim() || undefined,
+          note: finalNote || undefined,
           expectedRevision: application.applicationRevision ?? 1,
         })
       } else {
@@ -442,6 +461,115 @@ function ApplicationReviewForm({
                   </p>
                 </div>
               </div>
+
+              {/* Tùy chọn: điều chỉnh trình tự đặt cọc và ký */}
+              {allowedExecutionPolicies.length > 1 && (
+                <div
+                  data-testid="policy-override-section"
+                  className="rounded-xl border border-border bg-surface-muted/30 p-4 space-y-3 text-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-fg">
+                      Tùy chọn: điều chỉnh trình tự đặt cọc và ký
+                    </h4>
+                    <span className="text-[10px] text-muted">
+                      Chỉ hiển thị khi gói thuê cho phép nhiều chính sách
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {/* Giữ nguyên lựa chọn của khách thuê */}
+                    <label
+                      data-testid="policy-override-keep"
+                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                        policyOverride === 'keep-tenant'
+                          ? 'border-primary bg-primary-soft/20 text-fg'
+                          : 'border-border bg-surface text-muted hover:text-fg'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="policy-override"
+                        value="keep-tenant"
+                        checked={policyOverride === 'keep-tenant'}
+                        onChange={() => setPolicyOverride('keep-tenant')}
+                        className="accent-primary"
+                      />
+                      <div>
+                        <span className="font-semibold text-fg">
+                          Giữ nguyên lựa chọn của khách thuê
+                        </span>
+                        <p className="text-[11px] text-muted">
+                          {executionStrategy === 'DEPOSIT_FIRST'
+                            ? 'Đặt cọc trước — ký sau'
+                            : 'Ký trước — đặt cọc sau'}
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* Các chính sách còn lại */}
+                    {allowedExecutionPolicies
+                      .filter(p => p.strategy !== executionStrategy)
+                      .map(p => {
+                        const policyLabel =
+                          p.strategy === 'DEPOSIT_FIRST'
+                            ? 'Đặt cọc trước — ký sau'
+                            : 'Ký trước — đặt cọc sau'
+                        const isSelected =
+                          policyOverride === p.strategy ||
+                          policyOverride === p.policyId
+                        return (
+                          <label
+                            key={p.policyId}
+                            data-testid={`policy-override-${p.strategy}`}
+                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                              isSelected
+                                ? 'border-primary bg-primary-soft/20 text-fg'
+                                : 'border-border bg-surface text-muted hover:text-fg'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="policy-override"
+                              value={p.strategy}
+                              checked={isSelected}
+                              onChange={() => setPolicyOverride(p.strategy)}
+                              className="accent-primary"
+                            />
+                            <div>
+                              <span className="font-semibold text-fg">
+                                {policyLabel}
+                              </span>
+                              <p className="text-[11px] text-muted">
+                                {p.strategy === 'DEPOSIT_FIRST'
+                                  ? 'Bên thuê nộp cọc trước khi ký kết hợp đồng số.'
+                                  : 'Hai bên ký kết hợp đồng số trước khi nộp cọc.'}
+                              </p>
+                            </div>
+                          </label>
+                        )
+                      })}
+                  </div>
+
+                  {/* Confirmation banner */}
+                  {policyOverride !== 'keep-tenant' && (
+                    <div
+                      data-testid="policy-override-confirmation"
+                      className="p-3 rounded-lg border border-warning bg-warning-soft/20 text-xs text-fg flex items-center gap-2"
+                    >
+                      <Info className="h-4 w-4 text-warning shrink-0" />
+                      <span>
+                        Bạn đã đổi trình tự sang:{' '}
+                        <strong>
+                          {policyOverride === 'DEPOSIT_FIRST'
+                            ? 'Đặt cọc trước — ký sau'
+                            : 'Ký trước — đặt cọc sau'}
+                        </strong>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </section>
         )}

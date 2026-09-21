@@ -19,6 +19,7 @@ export interface FabricLedgerEvidenceCardProps {
   contractId: string
   contractCode?: string
   contractHash?: string | null
+  connectionState?: 'disabled' | 'connected' | 'unavailable' | undefined
   blockNumber?: number | null
   txHash?: string | null
   verifiedAt?: string | null
@@ -63,10 +64,12 @@ function truncateString(
 export function FabricLedgerEvidenceCard({
   contractId,
   contractHash,
+  connectionState = 'unavailable',
   blockNumber,
   txHash,
   verifiedAt,
   networkMode = 'fabric',
+  status = 'not-requested',
   onVerifyIntegrity,
   isVerifying = false,
   integrityResult,
@@ -130,6 +133,38 @@ export function FabricLedgerEvidenceCard({
             Hyperledger Fabric MSP
           </span>
         )}
+      </div>
+
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-xs">
+        <span className="font-semibold text-[var(--muted)]">
+          Trạng thái kết nối Fabric
+        </span>
+        <span
+          data-testid="fabric-connection-state"
+          className={
+            connectionState === 'connected'
+              ? 'font-bold text-[var(--success)]'
+              : 'font-bold text-[var(--warning)]'
+          }
+        >
+          {connectionState === 'connected'
+            ? 'Đã kết nối'
+            : connectionState === 'disabled'
+              ? 'Đã tắt'
+              : 'Không khả dụng'}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-xs">
+        <span className="font-semibold text-[var(--muted)]">
+          Trạng thái ghi sổ
+        </span>
+        <span
+          data-testid="fabric-ledger-status"
+          className="font-mono font-bold text-[var(--fg)]"
+        >
+          {status}
+        </span>
       </div>
 
       {/* Description */}

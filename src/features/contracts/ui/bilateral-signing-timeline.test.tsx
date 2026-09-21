@@ -150,4 +150,45 @@ describe('BilateralSigningTimeline', () => {
 
     expect(screen.getByTestId('bilateral-signing-timeline')).toBeDefined()
   })
+
+  // ---------------------------------------------------------------------------
+  // isActiveStep visual state tests
+  // ---------------------------------------------------------------------------
+  describe('isActiveStep prop', () => {
+    it('adds ring highlight class when isActiveStep=true', () => {
+      render(
+        <BilateralSigningTimeline
+          tenant={tenantBase}
+          landlord={landlordBase}
+          isActiveStep={true}
+        />
+      )
+      const wrapper = screen.getByTestId('bilateral-signing-timeline-wrapper')
+      expect(wrapper.className).toContain('ring-2')
+      expect(wrapper.className).toContain('ring-[var(--primary)]')
+    })
+
+    it('adds opacity-50 and pointer-events-none when isActiveStep=false', () => {
+      render(
+        <BilateralSigningTimeline
+          tenant={tenantBase}
+          landlord={landlordBase}
+          isActiveStep={false}
+        />
+      )
+      const wrapper = screen.getByTestId('bilateral-signing-timeline-wrapper')
+      expect(wrapper.className).toContain('opacity-50')
+      expect(wrapper.className).toContain('pointer-events-none')
+    })
+
+    it('adds no extra class when isActiveStep is undefined', () => {
+      render(
+        <BilateralSigningTimeline tenant={tenantBase} landlord={landlordBase} />
+      )
+      const wrapper = screen.getByTestId('bilateral-signing-timeline-wrapper')
+      expect(wrapper.className).not.toContain('ring-2')
+      expect(wrapper.className).not.toContain('opacity-50')
+      expect(wrapper.className).not.toContain('pointer-events-none')
+    })
+  })
 })

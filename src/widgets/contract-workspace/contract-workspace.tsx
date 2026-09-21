@@ -16,12 +16,14 @@ import {
 } from 'lucide-react'
 import {
   ContractDocumentViewer,
+  ContractFlowGuide,
   PartyInfoCards,
   ContractStatusTimeline,
   SigningCeremonyModal,
   PublicServiceCitationPanel,
   BilateralSigningTimeline,
   FabricLedgerEvidenceCard,
+  resolveContractActiveStep,
 } from '@/features/contracts'
 import { DepositPaymentPanel } from '@/features/payments'
 import { useContractWorkspace } from './use-contract-workspace'
@@ -106,6 +108,15 @@ export function ContractWorkspace({
   const { signingEligibility } = actions
   const isSimulation = ledger?.networkMode === 'simulation'
   const isSuccessorOwner = access?.isSuccessorOwner === true
+
+  // Compute active step once — used by ContractFlowGuide, DepositPaymentPanel, BilateralSigningTimeline
+  const activeStep = resolveContractActiveStep({
+    strategy: contract.executionPolicy?.strategy ?? 'DEPOSIT_FIRST',
+    status: contract.status,
+    depositStatus: deposit?.status,
+    signedByTenant: parties.tenant.hasSigned,
+    signedByLandlord: parties.landlord.hasSigned,
+  })
 
   const getReasonMessage = (reason: string | null) => {
     if (!reason) return `Hợp đồng đang ở trạng thái ${contract.status}.`
@@ -336,6 +347,16 @@ export function ContractWorkspace({
             activeMobileTab !== 'document' ? 'block' : 'hidden lg:block'
           }`}
         >
+          {/* Contract Flow Guide — chỉ rõ bước hiện tại theo strategy */}
+          <ContractFlowGuide
+            contractId={contractId}
+            strategy={contract.executionPolicy?.strategy ?? 'DEPOSIT_FIRST'}
+            status={contract.status}
+            depositStatus={deposit?.status}
+            signedByTenant={parties.tenant.hasSigned}
+            signedByLandlord={parties.landlord.hasSigned}
+          />
+
           {/* Party Info Cards */}
           {(activeMobileTab === 'parties' || true) && (
             <div
@@ -394,6 +415,7 @@ export function ContractWorkspace({
                 isTenant={isTenant}
                 contractId={contractId}
                 onPaymentSuccess={() => loadData(false)}
+                isActiveStep={activeStep === 'deposit'}
               />
             </div>
           )}
@@ -415,6 +437,7 @@ export function ContractWorkspace({
                 userRole={signerRole}
                 isEligibleToSign={signingEligibility.eligible}
                 onSignClick={() => setIsSigningModalOpen(true)}
+                isActiveStep={activeStep === 'signing'}
               />
             </div>
           )}
@@ -469,6 +492,7 @@ export function ContractWorkspace({
                 contractId={contractId}
                 contractCode={contract.code}
                 contractHash={document.lockedHash}
+                connectionState={ledger.connectionState}
                 blockNumber={ledger.blockNumber}
                 txHash={ledger.txHash}
                 verifiedAt={ledger.verifiedAt}
