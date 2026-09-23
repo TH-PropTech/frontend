@@ -56,6 +56,7 @@ export function KycApprovalsView(): React.ReactElement {
   )
   const [rejectReason, setRejectReason] = React.useState('')
   const [showRejectDialog, setShowRejectDialog] = React.useState(false)
+  const [search, setSearch] = React.useState('')
   const [filter, setFilter] = React.useState<
     'all' | 'pending' | 'approved' | 'rejected'
   >('pending')
@@ -88,7 +89,11 @@ export function KycApprovalsView(): React.ReactElement {
   const loadRecords = React.useCallback(async () => {
     setLoading(true)
     try {
-      const data = await apiClient.get<BackendKycListResult>('/kyc?limit=100')
+      const query = new URLSearchParams({ limit: '100' })
+      if (search.trim()) query.set('search', search.trim())
+      const data = await apiClient.get<BackendKycListResult>(
+        `/kyc?${query.toString()}`
+      )
       if (data && data.items) {
         setRecords(data.items.map(mapKycRecord))
       }
@@ -97,7 +102,7 @@ export function KycApprovalsView(): React.ReactElement {
     } finally {
       setLoading(false)
     }
-  }, [mapKycRecord])
+  }, [mapKycRecord, search])
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -170,6 +175,17 @@ export function KycApprovalsView(): React.ReactElement {
             động từ hệ thống OCR.
           </p>
         </div>
+        <label className="flex items-center gap-2 self-start rounded-lg border border-line bg-surface px-3 py-2 text-xs text-muted">
+          <span className="sr-only">Tìm kiếm hồ sơ KYC</span>
+          <input
+            id="kyc-search"
+            type="search"
+            value={search}
+            onChange={event => setSearch(event.target.value)}
+            placeholder="Tìm theo tên hoặc số CCCD"
+            className="min-w-52 bg-transparent text-fg outline-none placeholder:text-subtle"
+          />
+        </label>
         <div className="flex rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
           <button
             onClick={() => setFilter('all')}

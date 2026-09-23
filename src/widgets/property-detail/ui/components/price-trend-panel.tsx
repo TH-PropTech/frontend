@@ -67,6 +67,9 @@ export function PriceTrendPanel({
             </svg>
           </button>
         </h3>
+        <span className="inline-flex w-fit rounded-full border border-warning/20 bg-warning-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-warning">
+          Dữ liệu minh hoạ
+        </span>
         <p className="font-body text-sm text-muted-foreground font-medium leading-relaxed text-left">
           Dữ liệu giá thuê thực tế được đối chiếu từ các giao dịch thuê nhà đã
           ghi nhận trên chuỗi khối Blockchain.
@@ -307,6 +310,9 @@ export function PriceTrendPanel({
             </svg>
           </button>
         </h3>
+        <span className="inline-flex w-fit rounded-full border border-warning/20 bg-warning-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-warning">
+          Dữ liệu minh hoạ
+        </span>
         <p className="font-body text-sm text-muted-foreground font-medium leading-relaxed text-left">
           Hồ sơ pháp lý căn hộ và thông tin giao dịch đặt cọc giữ chỗ đã được
           xác thực mã hóa phi tập trung.

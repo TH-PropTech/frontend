@@ -1,9 +1,52 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { RentalPackagesConfigSection } from './rental-packages-config-section'
 import type { ApartmentFormValues } from '../model/types'
+import { getRentalExecutionPolicies } from '@/features/rental-execution-policies/api/rental-execution-policies-api'
+
+vi.mock(
+  '@/features/rental-execution-policies/api/rental-execution-policies-api',
+  () => ({
+    getRentalExecutionPolicies: vi.fn(),
+  })
+)
+
+const executionPolicies = [
+  {
+    policyId: 'deposit-first',
+    version: 1,
+    status: 'published' as const,
+    strategy: 'DEPOSIT_FIRST' as const,
+    name: 'Deposit first',
+    description: 'Deposit before signing',
+    disclosure: {
+      sequenceLabel: 'Deposit then sign',
+      depositLabel: 'Deposit required',
+      effectivenessLabel: 'Active after both gates',
+      cancellationLabel: 'Snapshot rule',
+    },
+    contentHash: 'deposit-hash',
+    draftRevision: 1,
+  },
+  {
+    policyId: 'sign-first',
+    version: 1,
+    status: 'published' as const,
+    strategy: 'SIGN_FIRST' as const,
+    name: 'Sign first',
+    description: 'Sign before deposit',
+    disclosure: {
+      sequenceLabel: 'Sign then deposit',
+      depositLabel: 'Deposit pending',
+      effectivenessLabel: 'Active after deposit',
+      cancellationLabel: 'Snapshot rule',
+    },
+    contentHash: 'sign-hash',
+    draftRevision: 1,
+  },
+]
 
 function TestHarness({
   initialValues,
@@ -39,6 +82,10 @@ function TestHarness({
 }
 
 describe('RentalPackagesConfigSection', () => {
+  beforeEach(() => {
+    vi.mocked(getRentalExecutionPolicies).mockResolvedValue(executionPolicies)
+  })
+
   it('renders all duration options and fallback info message when no package is active', () => {
     render(<TestHarness />)
 
@@ -142,5 +189,31 @@ describe('RentalPackagesConfigSection', () => {
 
     // Should disappear
     expect(screen.queryByTestId('price-input-3')).toBeNull()
+  })
+
+  it('assigns only published policy references and a default policy to a package', async () => {
+    render(
+      <TestHarness
+        initialValues={{
+          rentalPackages: [
+            {
+              packageId: 'pkg-12',
+              version: 1,
+              durationMonths: 12,
+              monthlyRent: 15000000,
+              depositPolicy: { type: 'MONTHS_OF_RENT', months: 1 },
+              status: 'active',
+            },
+          ],
+        }}
+      />
+    )
+
+    expect(
+      await screen.findByTestId('execution-policy-config-12')
+    ).toBeDefined()
+    fireEvent.click(screen.getByTestId('policy-toggle-12-DEPOSIT_FIRST'))
+    fireEvent.click(screen.getByTestId('policy-default-12-DEPOSIT_FIRST'))
+    expect(screen.getByTestId('policy-default-12-DEPOSIT_FIRST')).toBeDefined()
   })
 })

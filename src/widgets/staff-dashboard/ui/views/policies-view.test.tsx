@@ -119,7 +119,7 @@ describe('PoliciesView', () => {
     render(<PoliciesView />)
 
     expect(
-      await screen.findByText('Quản trị Điều khoản & Chính sách')
+      await screen.findByText('Quản trị Điều khoản, Chính sách & Dịch vụ công')
     ).toBeDefined()
     expect(screen.getByText('v1 — Active')).toBeDefined()
     expect(screen.getByText('Revision 2')).toBeDefined()
@@ -227,5 +227,18 @@ describe('PoliciesView', () => {
         '2.0'
       )
     })
+  })
+
+  it('switches to public-services governance tab and displays governance studio', async () => {
+    render(<PoliciesView />)
+
+    const governanceTabBtn = await screen.findByTestId(
+      'tab-public-services-governance'
+    )
+    fireEvent.click(governanceTabBtn)
+
+    expect(await screen.findByTestId('public-services-admin-tab')).toBeDefined()
+    expect(screen.getByText('Quy định Đang Áp dụng')).toBeDefined()
+    expect(screen.getByTestId('regulation-card-REG-RES-01')).toBeDefined()
   })
 })

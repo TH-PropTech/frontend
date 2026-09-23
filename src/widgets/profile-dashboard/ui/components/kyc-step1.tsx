@@ -21,6 +21,7 @@ interface KycStep1Props {
   ) => void
   handleExtractOcr: () => void
   isProcessing: boolean
+  maintenanceMode: boolean
 }
 
 export function KycStep1({
@@ -37,9 +38,20 @@ export function KycStep1({
   handleFileChange,
   handleExtractOcr,
   isProcessing,
+  maintenanceMode,
 }: KycStep1Props): React.ReactElement {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch flex-1 overflow-y-auto pr-1">
+      {maintenanceMode && (
+        <div
+          role="status"
+          className="md:col-span-2 rounded-xl border border-warning/40 bg-warning-soft/20 p-4 text-sm text-fg"
+        >
+          Dịch vụ eKYC đang tạm bảo trì. Các thao tác nhập CCCD và gửi OCR đã
+          được khóa để không phát sinh request giả.
+        </div>
+      )}
+
       {/* Front ID */}
       <div className="border border-slate-200 rounded-2xl p-5 bg-white shadow-sm flex flex-col justify-between space-y-4">
         <div>
@@ -79,6 +91,7 @@ export function KycStep1({
             {isWebcamActive1 ? (
               <Button
                 onClick={() => takePicture(1)}
+                disabled={maintenanceMode}
                 className="flex-1 text-[11px] h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold border-none"
               >
                 <Camera className="h-4 w-4 mr-1.5" /> Chụp ảnh
@@ -86,6 +99,7 @@ export function KycStep1({
             ) : (
               <Button
                 onClick={() => startWebcam(1)}
+                disabled={maintenanceMode}
                 variant="outline"
                 className="flex-1 text-[11px] h-9 border-slate-200 hover:bg-slate-50"
               >
@@ -94,6 +108,7 @@ export function KycStep1({
             )}
             <Button
               onClick={() => fileInputRef1.current?.click()}
+              disabled={maintenanceMode}
               variant="outline"
               className="flex-1 text-[11px] h-9 border-slate-200 hover:bg-slate-50"
             >
@@ -104,6 +119,7 @@ export function KycStep1({
               ref={fileInputRef1}
               className="hidden"
               accept="image/*"
+              disabled={maintenanceMode}
               onChange={e => handleFileChange(e, 1)}
             />
           </div>
@@ -147,6 +163,7 @@ export function KycStep1({
             {isWebcamActive2 ? (
               <Button
                 onClick={() => takePicture(2)}
+                disabled={maintenanceMode}
                 className="flex-1 text-[11px] h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold border-none"
               >
                 <Camera className="h-4 w-4 mr-1.5" /> Chụp ảnh
@@ -154,6 +171,7 @@ export function KycStep1({
             ) : (
               <Button
                 onClick={() => startWebcam(2)}
+                disabled={maintenanceMode}
                 variant="outline"
                 className="flex-1 text-[11px] h-9 border-slate-200 hover:bg-slate-50"
               >
@@ -162,6 +180,7 @@ export function KycStep1({
             )}
             <Button
               onClick={() => fileInputRef2.current?.click()}
+              disabled={maintenanceMode}
               variant="outline"
               className="flex-1 text-[11px] h-9 border-slate-200 hover:bg-slate-50"
             >
@@ -172,6 +191,7 @@ export function KycStep1({
               ref={fileInputRef2}
               className="hidden"
               accept="image/*"
+              disabled={maintenanceMode}
               onChange={e => handleFileChange(e, 2)}
             />
           </div>
@@ -200,7 +220,7 @@ export function KycStep1({
             </div>
             <Button
               onClick={handleExtractOcr}
-              disabled={!frontPreview}
+              disabled={maintenanceMode || !frontPreview || isProcessing}
               className="w-full md:w-auto h-11 px-8 text-sm font-bold text-white rounded-xl shadow-md border-none flex items-center justify-center gap-2 cursor-pointer transition-colors"
               style={{ backgroundColor: frontPreview ? '#9F3F2A' : '#e2e8f0' }}
             >

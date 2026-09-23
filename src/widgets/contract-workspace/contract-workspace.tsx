@@ -14,6 +14,8 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
+import { Button } from '@/shared/ui/button'
+import { Badge } from '@/shared/ui/badge'
 import {
   ContractDocumentViewer,
   ContractFlowGuide,
@@ -62,6 +64,7 @@ export function ContractWorkspace({
   } = useContractWorkspace({ contractId, currentUserId })
 
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('document')
+  const [isDocumentExpanded, setIsDocumentExpanded] = useState(false)
 
   if (isLoading) {
     return (
@@ -140,11 +143,11 @@ export function ContractWorkspace({
   return (
     <div
       data-testid="contract-workspace"
-      className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6"
+      className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6"
     >
       {/* Top Breadcrumb & Metadata Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3 sm:pb-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
             href={'/rental-applications' as Route}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--muted)] hover:text-[var(--primary)] transition-colors"
@@ -152,22 +155,31 @@ export function ContractWorkspace({
             <ArrowLeft className="w-4 h-4" />
             <span>Danh sách hồ sơ</span>
           </Link>
-          <span className="text-[var(--border)]">|</span>
-          <div className="flex items-center gap-2 text-xs">
+          <span className="text-[var(--border)] hidden sm:inline">|</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="font-bold font-mono text-[var(--fg)]">
               {contract.code}
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[var(--surface-muted)] text-[var(--primary)] border border-[var(--border)]">
+            <Badge
+              variant="outline"
+              className="text-[10px] font-bold uppercase text-[var(--primary)] bg-[var(--surface-muted)]"
+            >
               {contract.status}
-            </span>
+            </Badge>
             {isSimulation ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--surface-muted)] text-[var(--warning)] border border-[var(--border)]">
+              <Badge
+                variant="outline"
+                className="text-[10px] font-bold text-[var(--warning)] bg-[var(--surface-muted)]"
+              >
                 Mô phỏng PoC
-              </span>
+              </Badge>
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--surface-muted)] text-[var(--success)] border border-[var(--border)]">
+              <Badge
+                variant="outline"
+                className="text-[10px] font-bold text-[var(--success)] bg-[var(--surface-muted)]"
+              >
                 Hyperledger
-              </span>
+              </Badge>
             )}
           </div>
         </div>
@@ -203,7 +215,7 @@ export function ContractWorkspace({
         >
           <div className="flex items-start gap-2">
             <Info className="w-4 h-4 text-[var(--warning)] shrink-0 mt-0.5" />
-            <span>{noticeMessage}</span>
+            <span className="leading-relaxed">{noticeMessage}</span>
           </div>
           <button
             type="button"
@@ -219,7 +231,7 @@ export function ContractWorkspace({
       {/* Prominent Signing Action Hero Banner */}
       <div
         data-testid="signing-eligibility-banner"
-        className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
+        className={`p-3.5 sm:p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 transition-all ${
           signingEligibility.eligible
             ? 'bg-[var(--surface)] border-[var(--primary)] shadow-sm'
             : 'bg-[var(--surface-muted)] border-[var(--border)] text-[var(--muted)]'
@@ -251,27 +263,28 @@ export function ContractWorkspace({
         </div>
 
         {signingEligibility.eligible && (
-          <button
+          <Button
             type="button"
+            variant="primary"
             onClick={() => setIsSigningModalOpen(true)}
             aria-label="Tiến hành ký hợp đồng điện tử"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 shadow transition-all shrink-0 hover:scale-[1.02]"
+            className="h-10 px-4 sm:px-5 text-xs font-bold shrink-0 shadow hover:scale-[1.02] transition-transform"
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4 mr-1.5" />
             <span>Ký số VNPT SmartCA ngay</span>
-          </button>
+          </Button>
         )}
       </div>
 
-      {/* Mobile Tab Switching Bar (hidden on desktop) */}
-      <div className="flex lg:hidden items-center justify-between border-b border-[var(--border)] pb-2 overflow-x-auto gap-2 text-xs font-medium">
+      {/* Mobile Tab Switching Bar (hidden on desktop lg) */}
+      <div className="flex lg:hidden items-center border-b border-[var(--border)] pb-2 overflow-x-auto gap-1.5 text-xs font-medium no-scrollbar">
         <button
           type="button"
           onClick={() => setActiveMobileTab('document')}
-          className={`px-3 py-1.5 rounded-md whitespace-nowrap ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
             activeMobileTab === 'document'
-              ? 'bg-[var(--primary)] text-white'
-              : 'text-[var(--muted)] hover:text-[var(--fg)]'
+              ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
+              : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
           }`}
         >
           Văn bản hợp đồng
@@ -279,10 +292,10 @@ export function ContractWorkspace({
         <button
           type="button"
           onClick={() => setActiveMobileTab('parties')}
-          className={`px-3 py-1.5 rounded-md whitespace-nowrap ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
             activeMobileTab === 'parties'
-              ? 'bg-[var(--primary)] text-white'
-              : 'text-[var(--muted)] hover:text-[var(--fg)]'
+              ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
+              : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
           }`}
         >
           Bên tham gia
@@ -290,10 +303,10 @@ export function ContractWorkspace({
         <button
           type="button"
           onClick={() => setActiveMobileTab('actions')}
-          className={`px-3 py-1.5 rounded-md whitespace-nowrap ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
             activeMobileTab === 'actions'
-              ? 'bg-[var(--primary)] text-white'
-              : 'text-[var(--muted)] hover:text-[var(--fg)]'
+              ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
+              : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
           }`}
         >
           Đặt cọc & Tiến trình
@@ -301,10 +314,10 @@ export function ContractWorkspace({
         <button
           type="button"
           onClick={() => setActiveMobileTab('public-service')}
-          className={`px-3 py-1.5 rounded-md whitespace-nowrap ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
             activeMobileTab === 'public-service'
-              ? 'bg-[var(--primary)] text-white'
-              : 'text-[var(--muted)] hover:text-[var(--fg)]'
+              ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
+              : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
           }`}
         >
           Dịch vụ công & Pháp lý
@@ -312,21 +325,27 @@ export function ContractWorkspace({
         <button
           type="button"
           onClick={() => setActiveMobileTab('audit')}
-          className={`px-3 py-1.5 rounded-md whitespace-nowrap ${
+          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
             activeMobileTab === 'audit'
-              ? 'bg-[var(--primary)] text-white'
-              : 'text-[var(--muted)] hover:text-[var(--fg)]'
+              ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
+              : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
           }`}
         >
           Sổ cái & Audit
         </button>
       </div>
 
-      {/* 2-Column Responsive Workspace Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* Responsive Workspace Grid (Supports 2-Column Split or Full-Width Reading Mode) */}
+      <div
+        className={`grid grid-cols-1 ${
+          isDocumentExpanded ? 'lg:grid-cols-1' : 'lg:grid-cols-12'
+        } gap-6 items-start`}
+      >
         {/* Left Column: A4 Document Viewer */}
         <div
-          className={`lg:col-span-7 xl:col-span-8 flex flex-col gap-6 ${
+          className={`${
+            isDocumentExpanded ? 'lg:col-span-1' : 'lg:col-span-7 xl:col-span-8'
+          } flex flex-col gap-6 ${
             activeMobileTab === 'document' ? 'block' : 'hidden lg:block'
           }`}
         >
@@ -335,50 +354,64 @@ export function ContractWorkspace({
             contractCode={contract.code}
             status={contract.status}
             networkMode={ledger.networkMode}
+            parties={parties}
+            property={contract.property}
+            commercial={contract.commercial}
+            startDate={contract.startDate}
+            endDate={contract.endDate}
+            createdAt={document.lockedAt || contract.startDate}
             onDownloadPdf={handleDownloadPdf}
             onDownloadDocx={handleDownloadDocx}
             isDownloading={isDownloadingPdf || isDownloadingDocx}
+            isExpanded={isDocumentExpanded}
+            onToggleExpand={() => setIsDocumentExpanded(!isDocumentExpanded)}
           />
         </div>
 
         {/* Right Column: Interactive Panes & Ledgers */}
         <div
-          className={`lg:col-span-5 xl:col-span-4 flex flex-col gap-6 ${
+          className={`${
+            isDocumentExpanded ? 'lg:col-span-1' : 'lg:col-span-5 xl:col-span-4'
+          } flex flex-col gap-6 ${
             activeMobileTab !== 'document' ? 'block' : 'hidden lg:block'
           }`}
         >
-          {/* Contract Flow Guide — chỉ rõ bước hiện tại theo strategy */}
-          <ContractFlowGuide
-            contractId={contractId}
-            strategy={contract.executionPolicy?.strategy ?? 'DEPOSIT_FIRST'}
-            status={contract.status}
-            depositStatus={deposit?.status}
-            signedByTenant={parties.tenant.hasSigned}
-            signedByLandlord={parties.landlord.hasSigned}
-          />
+          {/* Contract Flow Guide — chỉ rõ bước hiện tại theo strategy (Actions tab on mobile) */}
+          <div
+            className={
+              activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
+            }
+          >
+            <ContractFlowGuide
+              contractId={contractId}
+              strategy={contract.executionPolicy?.strategy ?? 'DEPOSIT_FIRST'}
+              status={contract.status}
+              depositStatus={deposit?.status}
+              signedByTenant={parties.tenant.hasSigned}
+              signedByLandlord={parties.landlord.hasSigned}
+            />
+          </div>
 
-          {/* Party Info Cards */}
-          {(activeMobileTab === 'parties' || true) && (
-            <div
-              className={
-                activeMobileTab === 'parties' || activeMobileTab === 'document'
-                  ? 'block'
-                  : 'hidden lg:block'
-              }
-            >
-              <PartyInfoCards
-                tenant={parties.tenant}
-                landlord={parties.landlord}
-                currentUserId={currentUserId}
-              />
-            </div>
-          )}
+          {/* Party Info Cards (Parties tab on mobile) */}
+          <div
+            className={
+              activeMobileTab === 'parties' ? 'block' : 'hidden lg:block'
+            }
+          >
+            <PartyInfoCards
+              tenant={parties.tenant}
+              landlord={parties.landlord}
+              currentUserId={currentUserId}
+            />
+          </div>
 
-          {/* Deposit Payment Panel */}
+          {/* Deposit Payment Panel & Policy (Actions tab on mobile) */}
           {contract.executionPolicy ? (
             <section
               data-testid="contract-execution-policy"
-              className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-5 shadow-sm"
+              className={`rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-4 sm:p-5 shadow-sm ${
+                activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
+              }`}
             >
               <div className="flex items-start gap-3">
                 <Landmark
@@ -402,75 +435,60 @@ export function ContractWorkspace({
             </section>
           ) : null}
 
-          {(activeMobileTab === 'actions' || true) && (
-            <div
-              className={
-                activeMobileTab === 'actions' || activeMobileTab === 'document'
-                  ? 'block'
-                  : 'hidden lg:block'
-              }
-            >
-              <DepositPaymentPanel
-                deposit={deposit}
-                isTenant={isTenant}
-                contractId={contractId}
-                onPaymentSuccess={() => loadData(false)}
-                isActiveStep={activeStep === 'deposit'}
-              />
-            </div>
-          )}
-
-          {/* Bilateral Signing Stepper */}
-          {(activeMobileTab === 'actions' || true) && (
-            <div
-              className={
-                activeMobileTab === 'actions' || activeMobileTab === 'document'
-                  ? 'block'
-                  : 'hidden lg:block'
-              }
-            >
-              <BilateralSigningTimeline
-                tenant={parties.tenant}
-                landlord={parties.landlord}
-                contractStatus={contract.status}
-                currentUserId={currentUserId}
-                userRole={signerRole}
-                isEligibleToSign={signingEligibility.eligible}
-                onSignClick={() => setIsSigningModalOpen(true)}
-                isActiveStep={activeStep === 'signing'}
-              />
-            </div>
-          )}
-
-          {/* Contract Status Timeline */}
-          {(activeMobileTab === 'actions' || true) && (
-            <div
-              className={
-                activeMobileTab === 'actions' || activeMobileTab === 'document'
-                  ? 'block'
-                  : 'hidden lg:block'
-              }
-            >
-              <ContractStatusTimeline
-                status={contract.status}
-                {...(contract.executionPolicy?.strategy
-                  ? { strategy: contract.executionPolicy.strategy }
-                  : {})}
-                depositStatus={deposit?.status}
-                signedByTenant={parties.tenant.hasSigned}
-                signedByLandlord={parties.landlord.hasSigned}
-                txHash={ledger.txHash}
-              />
-            </div>
-          )}
-
-          {/* Public Service & Legal Citation Panel */}
           <div
             className={
-              activeMobileTab === 'public-service' ||
-              activeMobileTab === 'document'
-                ? 'block'
-                : 'hidden lg:block'
+              activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
+            }
+          >
+            <DepositPaymentPanel
+              deposit={deposit}
+              isTenant={isTenant}
+              contractId={contractId}
+              onPaymentSuccess={() => loadData(false)}
+              isActiveStep={activeStep === 'deposit'}
+            />
+          </div>
+
+          {/* Bilateral Signing Stepper (Actions tab on mobile) */}
+          <div
+            className={
+              activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
+            }
+          >
+            <BilateralSigningTimeline
+              tenant={parties.tenant}
+              landlord={parties.landlord}
+              contractStatus={contract.status}
+              currentUserId={currentUserId}
+              userRole={signerRole}
+              isEligibleToSign={signingEligibility.eligible}
+              onSignClick={() => setIsSigningModalOpen(true)}
+              isActiveStep={activeStep === 'signing'}
+            />
+          </div>
+
+          {/* Contract Status Timeline (Actions tab on mobile) */}
+          <div
+            className={
+              activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
+            }
+          >
+            <ContractStatusTimeline
+              status={contract.status}
+              {...(contract.executionPolicy?.strategy
+                ? { strategy: contract.executionPolicy.strategy }
+                : {})}
+              depositStatus={deposit?.status}
+              signedByTenant={parties.tenant.hasSigned}
+              signedByLandlord={parties.landlord.hasSigned}
+              txHash={ledger.txHash}
+            />
+          </div>
+
+          {/* Public Service & Legal Citation Panel (Public-service tab on mobile) */}
+          <div
+            className={
+              activeMobileTab === 'public-service' ? 'block' : 'hidden lg:block'
             }
           >
             <PublicServiceCitationPanel
@@ -479,40 +497,34 @@ export function ContractWorkspace({
             />
           </div>
 
-          {/* Fabric Ledger Evidence Card */}
-          {(activeMobileTab === 'audit' || true) && (
-            <div
-              className={
-                activeMobileTab === 'audit' || activeMobileTab === 'document'
-                  ? 'block'
-                  : 'hidden lg:block'
-              }
-            >
-              <FabricLedgerEvidenceCard
-                contractId={contractId}
-                contractCode={contract.code}
-                contractHash={document.lockedHash}
-                connectionState={ledger.connectionState}
-                blockNumber={ledger.blockNumber}
-                txHash={ledger.txHash}
-                verifiedAt={ledger.verifiedAt}
-                networkMode={ledger.networkMode}
-                status={ledger.status}
-                onVerifyIntegrity={handleVerifyIntegrity}
-                isVerifying={isVerifyingIntegrity}
-                integrityResult={integrityResult}
-              />
-            </div>
-          )}
+          {/* Fabric Ledger Evidence Card (Audit tab on mobile) */}
+          <div
+            className={
+              activeMobileTab === 'audit' ? 'block' : 'hidden lg:block'
+            }
+          >
+            <FabricLedgerEvidenceCard
+              contractId={contractId}
+              contractCode={contract.code}
+              contractHash={document.lockedHash}
+              connectionState={ledger.connectionState}
+              blockNumber={ledger.blockNumber}
+              txHash={ledger.txHash}
+              verifiedAt={ledger.verifiedAt}
+              networkMode={ledger.networkMode}
+              status={ledger.status}
+              onVerifyIntegrity={handleVerifyIntegrity}
+              isVerifying={isVerifyingIntegrity}
+              integrityResult={integrityResult}
+            />
+          </div>
 
-          {/* Audit Events Trail Drawer */}
+          {/* Audit Events Trail Drawer (Audit tab on mobile) */}
           {auditEvents && auditEvents.length > 0 && (
             <div
               data-testid="audit-events-panel"
-              className={`rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm flex flex-col gap-3 ${
-                activeMobileTab === 'audit' || activeMobileTab === 'document'
-                  ? 'block'
-                  : 'hidden lg:block'
+              className={`rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 shadow-sm flex flex-col gap-3 ${
+                activeMobileTab === 'audit' ? 'block' : 'hidden lg:block'
               }`}
             >
               <div className="flex items-center justify-between">

@@ -6,6 +6,10 @@ import type { Route } from 'next'
 import { Button } from '@/shared/ui/button'
 import { useFavorites } from '@/shared/lib/use-favorites'
 import { AuthRequiredModal } from '@/widgets/community-dashboard/ui/components/auth-required-modal'
+import {
+  getRentalAvailabilityPresentation,
+  type RentalAvailabilityStatus,
+} from '@/entities/properties'
 
 interface Apartment {
   id: string
@@ -25,6 +29,8 @@ interface Apartment {
   amenities: string[]
   image?: string
   gallery?: string[]
+  rentalAvailabilityStatus?: RentalAvailabilityStatus
+  rentalAvailabilityLabel?: string
 }
 
 interface ApartmentCardProps {
@@ -45,6 +51,13 @@ export function ApartmentCard({
   const { isFavorite, toggleFavorite } = useFavorites()
   const [showAuthModal, setShowAuthModal] = React.useState(false)
   const favorite = isFavorite(apt.id)
+  const availability = getRentalAvailabilityPresentation(apt)
+  const availabilityClasses: Record<RentalAvailabilityStatus, string> = {
+    available: 'bg-success-soft text-success',
+    reserved: 'bg-warning-soft text-warning',
+    'deposit-paid': 'bg-accent-soft text-primary',
+    rented: 'bg-info-soft text-info',
+  }
 
   return (
     <article className="flex flex-col justify-between rounded-xl border border-border bg-white p-4 shadow-sm hover:translate-y-[-3px] hover:border-border-strong hover:shadow-md transition-all duration-300">
@@ -86,15 +99,11 @@ export function ApartmentCard({
                 />
               )}
               <span
-                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                  apt.tag === 'empty'
-                    ? 'bg-success-soft text-success'
-                    : apt.tag === 'pending'
-                      ? 'bg-accent-soft text-primary'
-                      : 'bg-info-soft text-info'
-                }`}
+                role="status"
+                aria-label={`Tình trạng thuê: ${availability.label}`}
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${availabilityClasses[availability.status]}`}
               >
-                {apt.tagText}
+                {availability.label}
               </span>
             </div>
             <button

@@ -1,5 +1,11 @@
 export type RentalPackageDuration = 1 | 3 | 6 | 12 | 24
 
+export type RentalAvailabilityStatus =
+  | 'available'
+  | 'reserved'
+  | 'deposit-paid'
+  | 'rented'
+
 export interface RentalPackageItem {
   packageId: string
   version: number
@@ -62,11 +68,7 @@ export interface ApartmentItem {
   pricingMode?: 'packages' | 'legacy'
   pricingRevision?: number
   rentalPackages?: RentalPackageItem[]
-  rentalAvailabilityStatus?:
-    | 'available'
-    | 'reserved'
-    | 'deposit-paid'
-    | 'rented'
+  rentalAvailabilityStatus?: RentalAvailabilityStatus
   rentalAvailabilityLabel?: string
 }
 

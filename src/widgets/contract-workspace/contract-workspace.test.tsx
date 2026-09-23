@@ -158,8 +158,7 @@ describe('ContractWorkspace', () => {
     vi.mocked(contractsApi.getPublicServiceChecklist).mockResolvedValue({
       purpose: 'temporary-residence',
       externalProcedureCompleted: false,
-      officialSourceUrl:
-        'https://thutuc.dichvucong.gov.vn/p/home/dvc-chi-tiet-thu-tuc-hanh-chinh.html?ma_thu_tuc=1.004194',
+      officialSourceUrl: 'https://dichvucong.bocongan.gov.vn/',
       executionMethod: 'POC_ECONSENT',
       notarizationStatus: 'not-requested',
       disclaimer: 'Hệ thống chỉ xuất checklist và bằng chứng hiện có.',
@@ -267,11 +266,11 @@ describe('ContractWorkspace', () => {
       ).toBeInTheDocument()
       expect(screen.getByTestId('link-dvc-residence-1004194')).toHaveAttribute(
         'href',
-        expect.stringContaining('thutuc.dichvucong.gov.vn')
+        expect.stringContaining('dichvucong.bocongan.gov.vn')
       )
       expect(screen.getByTestId('link-dvc-tax-1007689')).toHaveAttribute(
         'href',
-        expect.stringContaining('vpcp.dichvucong.gov.vn')
+        expect.stringContaining('thuedientu.gdt.gov.vn')
       )
     })
   })

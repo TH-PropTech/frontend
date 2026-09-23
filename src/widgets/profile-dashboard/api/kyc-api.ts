@@ -1,4 +1,6 @@
 import { apiClient } from '@/shared/api/api-client'
+import { env } from '@/shared/config/env'
+import { assertKycAvailable } from '@/shared/config/kyc-maintenance'
 
 export interface KycOcrFrontResult {
   idNumber: string
@@ -62,12 +64,14 @@ export function getMyKyc(): Promise<MyKycRecord | null> {
 }
 
 export function extractKycFront(file: Blob): Promise<KycOcrFrontResult> {
+  assertKycAvailable(env.kycDemoMaintenanceMode)
   const formData = new FormData()
   formData.append('frontID', file, 'front.jpg')
   return apiClient.post('/kyc/ocr-front', formData)
 }
 
 export function extractKycBack(file: Blob): Promise<KycOcrBackResult> {
+  assertKycAvailable(env.kycDemoMaintenanceMode)
   const formData = new FormData()
   formData.append('backID', file, 'back.jpg')
   return apiClient.post('/kyc/ocr-back', formData)
@@ -86,6 +90,7 @@ export function verifyKycFace(
   selfie: Blob,
   frontCard: Blob
 ): Promise<KycBiometricResult> {
+  assertKycAvailable(env.kycDemoMaintenanceMode)
   const formData = new FormData()
   formData.append('portraitImages', selfie, 'selfie.jpg')
   formData.append('frontID', frontCard, 'front.jpg')
@@ -95,6 +100,7 @@ export function verifyKycFace(
 export function submitKyc(
   input: KycSubmission
 ): Promise<{ status: 'pending' }> {
+  assertKycAvailable(env.kycDemoMaintenanceMode)
   const formData = new FormData()
   const { frontCard, backCard, selfie, ...fields } = input
   Object.entries(fields).forEach(([key, value]) => formData.append(key, value))

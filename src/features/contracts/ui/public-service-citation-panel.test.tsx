@@ -57,21 +57,21 @@ describe('PublicServiceCitationPanel', () => {
       screen.getByTestId('public-service-citation-panel')
     ).toBeInTheDocument()
 
-    // Verify TTHC 1.004194 Direct Link
+    // Verify TTHC 1.004194 Button & Link
+    const btnResidence = screen.getByTestId('btn-view-procedure-1004194')
+    expect(btnResidence).toHaveTextContent('Xem chi tiết quy trình & hồ sơ')
     const linkResidence = screen.getByTestId('link-dvc-residence-1004194')
     expect(linkResidence).toHaveAttribute('href', DVC_LINKS.RESIDENCE_1004194)
     expect(linkResidence).toHaveAttribute('target', '_blank')
     expect(linkResidence).toHaveAttribute('rel', 'noopener noreferrer')
-    expect(linkResidence).toHaveTextContent(
-      'Mở Cổng DVC Quốc gia (TTHC 1.004194)'
-    )
 
-    // Verify TTHC 1.007689 Direct Link
+    // Verify TTHC 1.007689 Button & Link
+    const btnTax = screen.getByTestId('btn-view-procedure-1007689')
+    expect(btnTax).toHaveTextContent('Xem chi tiết kê khai thuế')
     const linkTax = screen.getByTestId('link-dvc-tax-1007689')
     expect(linkTax).toHaveAttribute('href', DVC_LINKS.RENTAL_TAX_1007689)
     expect(linkTax).toHaveAttribute('target', '_blank')
     expect(linkTax).toHaveAttribute('rel', 'noopener noreferrer')
-    expect(linkTax).toHaveTextContent('Mở Cổng DVC Thuế (TTHC 1.007689)')
 
     // Verify Statutory legal foundation links
     const linkHousing = screen.getByTestId('link-legal-housing-law')
@@ -148,5 +148,32 @@ describe('PublicServiceCitationPanel', () => {
     await waitFor(() => {
       expect(screen.getByTestId('dvc-checklist-items')).toBeInTheDocument()
     })
+  })
+
+  it('opens in-app procedure detail modal when clicking eye buttons', async () => {
+    render(
+      <PublicServiceCitationPanel
+        contractId="contract-123"
+        contractCode="HD-2026-999"
+      />
+    )
+
+    // Click on Residence Eye Button
+    const residenceEyeBtn = screen.getByTestId('btn-view-procedure-1004194')
+    fireEvent.click(residenceEyeBtn)
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText('TTHC 1.004194')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Đăng ký tạm trú / Thường trú tại chỗ ở hợp pháp do thuê'
+      )
+    ).toBeInTheDocument()
+
+    // Close modal
+    const closeBtn = screen.getByRole('button', { name: 'Đóng' })
+    fireEvent.click(closeBtn)
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

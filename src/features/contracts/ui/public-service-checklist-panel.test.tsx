@@ -19,8 +19,7 @@ describe('PublicServiceChecklistPanel', () => {
       externalProcedureCompleted: false,
       executionMethod: 'POC_ECONSENT',
       notarizationStatus: 'not-requested',
-      officialSourceUrl:
-        'https://thutuc.dichvucong.gov.vn/p/home/dvc-chi-tiet-thu-tuc-hanh-chinh.html?ma_thu_tuc=1.004194',
+      officialSourceUrl: 'https://dichvucong.bocongan.gov.vn/',
       disclaimer:
         'POC_ECONSENT không phải chữ ký số có chứng thư và không thay thế công chứng/chứng thực.',
       items: [
@@ -51,10 +50,7 @@ describe('PublicServiceChecklistPanel', () => {
     )
     expect(
       screen.getByRole('link', { name: /hướng dẫn chính thức/ })
-    ).toHaveAttribute(
-      'href',
-      'https://thutuc.dichvucong.gov.vn/p/home/dvc-chi-tiet-thu-tuc-hanh-chinh.html?ma_thu_tuc=1.004194'
-    )
+    ).toHaveAttribute('href', 'https://dichvucong.bocongan.gov.vn/')
   })
 
   it('renders a recoverable error state', async () => {

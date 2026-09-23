@@ -6,7 +6,11 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
-import { mockApartments, type ApartmentItem } from '@/entities/properties'
+import {
+  getRentalAvailabilityPresentation,
+  mockApartments,
+  type ApartmentItem,
+} from '@/entities/properties'
 import { env } from '@/shared/config/env'
 import { PropertyDetailHero } from './components/property-detail-hero'
 import { BookingWidget } from './components/booking-widget'
@@ -219,11 +223,7 @@ export function PropertyDetail(): React.ReactElement {
       setProperty(null)
       setPropertyError(null)
       if (!propertyId) {
-        const demoProperty = env.enableMocks ? mockApartments[0] : null
-        setProperty(demoProperty || null)
-        if (!demoProperty) {
-          setPropertyError(new Error('Missing property resource id'))
-        }
+        setPropertyError(new Error('Missing property resource id'))
         setLoading(false)
         return
       }
@@ -308,6 +308,7 @@ export function PropertyDetail(): React.ReactElement {
   }
 
   const apartmentResourceId = propertyId || property.id
+  const availability = getRentalAvailabilityPresentation(property)
   const price = property.priceNum ? property.priceNum * 1_000_000 : 18_000_000
   const bookingDeposit = price
   const escrowDeposit = price * 2
@@ -336,15 +337,30 @@ export function PropertyDetail(): React.ReactElement {
           />
           <FreshnessBadge listingId={apartmentResourceId} />
           {viewer?.roles?.includes('tenant') ? (
-            <Button
-              asChild
-              className="ml-auto flex items-center gap-2 rounded-2xl bg-primary text-white shadow-sm hover:bg-primary-hover"
-            >
-              <Link href={`/properties/${apartmentResourceId}/apply` as Route}>
+            availability.isApplicationAllowed ? (
+              <Button
+                asChild
+                className="ml-auto flex items-center gap-2 rounded-2xl bg-primary text-white shadow-sm hover:bg-primary-hover"
+              >
+                <Link
+                  href={`/properties/${apartmentResourceId}/apply` as Route}
+                >
+                  <FileText aria-hidden="true" className="h-4 w-4" />
+                  <span>Đặt thuê căn hộ</span>
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                disabled
+                aria-label={`Không thể đặt thuê: ${availability.label}`}
+                data-testid="rental-application-unavailable"
+                className="ml-auto flex items-center gap-2 rounded-2xl bg-surface-muted text-muted shadow-sm"
+              >
                 <FileText aria-hidden="true" className="h-4 w-4" />
-                <span>Đặt thuê căn hộ</span>
-              </Link>
-            </Button>
+                <span>Không thể đặt thuê · {availability.label}</span>
+              </Button>
+            )
           ) : null}
         </section>
 

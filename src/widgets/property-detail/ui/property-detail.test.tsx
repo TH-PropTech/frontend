@@ -169,6 +169,64 @@ describe('PropertyDetail backend resource identity', () => {
     )
   })
 
+  it('disables the tenant application action when the availability projection is not available', async () => {
+    window.localStorage.setItem(
+      'user',
+      JSON.stringify({ id: 'tenant-1', roles: ['tenant'] })
+    )
+    mocks.get.mockResolvedValue({
+      ...property,
+      rentalAvailabilityStatus: 'deposit-paid',
+      rentalAvailabilityLabel: 'Đã đặt cọc',
+    })
+
+    render(<PropertyDetail />)
+
+    const unavailableAction = await screen.findByRole('button', {
+      name: 'Không thể đặt thuê: Đã đặt cọc',
+    })
+    expect(unavailableAction).toBeDisabled()
+    expect(
+      screen.queryByRole('link', { name: /Đặt thuê căn hộ/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('uses the newest availability projection after the detail fetch refreshes', async () => {
+    window.localStorage.setItem(
+      'user',
+      JSON.stringify({ id: 'tenant-1', roles: ['tenant'] })
+    )
+    mocks.useParams.mockReturnValue({ id: 'apt-1' })
+    mocks.get.mockResolvedValueOnce({
+      ...property,
+      id: 'apt-1',
+      rentalAvailabilityStatus: 'reserved',
+      rentalAvailabilityLabel: 'Có người giữ chỗ',
+    })
+
+    const view = render(<PropertyDetail />)
+    expect(
+      await screen.findByRole('button', {
+        name: 'Không thể đặt thuê: Có người giữ chỗ',
+      })
+    ).toBeDisabled()
+
+    mocks.useParams.mockReturnValue({ id: 'apt-2' })
+    mocks.get.mockResolvedValueOnce({
+      ...property,
+      id: 'apt-2',
+      rentalAvailabilityStatus: 'available',
+      rentalAvailabilityLabel: 'Đang trống',
+    })
+    view.rerender(<PropertyDetail />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('link', { name: /Đặt thuê căn hộ/i })
+      ).toHaveAttribute('href', '/properties/apt-2/apply')
+    })
+  })
+
   it('renders 4 intelligence tabs and handles tab switching', async () => {
     render(<PropertyDetail />)
 

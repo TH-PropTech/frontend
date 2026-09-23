@@ -209,6 +209,11 @@ describe('ApplicationReviewDialog', () => {
       expect(screen.getByTestId('policy-override-section')).toBeInTheDocument()
       expect(screen.getByTestId('policy-override-keep')).toBeInTheDocument()
       expect(
+        screen.getByRole('radio', {
+          name: /Giữ nguyên lựa chọn của khách thuê/i,
+        })
+      ).toBeChecked()
+      expect(
         screen.getByTestId('policy-override-SIGN_FIRST')
       ).toBeInTheDocument()
     })
