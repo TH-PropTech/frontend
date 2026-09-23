@@ -19,6 +19,13 @@ export interface ContractSignature {
   biometricGrantId: string
   otpSessionId: string
   deviceId?: string | null
+  provider?: 'smartca' | 'platform-consent' | null
+  providerTransactionId?: string | null
+  certificateSerial?: string | null
+  signatureAlgorithm?: string | null
+  signatureValueRef?: string | null
+  providerStatus?: string | null
+  verifiedAt?: string | null
 }
 
 export interface ContractItem {
@@ -87,9 +94,19 @@ export interface ContractDocumentView {
   hashSchemaVersion: number
   legalProfile: unknown | null
   templateVersion: string | null
+  canonicalArtifact?: ContractCanonicalArtifactView | null
   sections: ContractDocumentSection[]
   annexes: ContractDocumentAnnex[]
   integrity: 'not-locked' | 'valid' | 'mismatch' | 'unavailable'
+}
+
+export interface ContractCanonicalArtifactView {
+  artifactId: string
+  revision: number
+  templateKey: string
+  templateVersion: number
+  artifactHash: string
+  contentType: 'application/pdf'
 }
 
 export interface ContractPartyView {
@@ -102,6 +119,13 @@ export interface ContractPartyView {
   hasSigned: boolean
   signedAt?: string | null
   signatureHash?: string | null
+  provider?: 'smartca' | 'platform-consent' | null
+  providerTransactionId?: string | null
+  certificateSerial?: string | null
+  signatureAlgorithm?: string | null
+  signatureValueRef?: string | null
+  providerStatus?: string | null
+  verifiedAt?: string | null
 }
 
 export interface ContractDepositView {
@@ -272,9 +296,19 @@ export interface SmartCaSigningSession {
   signerRole: 'tenant' | 'landlord'
   artifactHash: string
   providerTransactionId: string
-  status: 'pending' | 'signed' | 'rejected' | 'expired'
+  status:
+    | 'pending'
+    | 'pending-user-confirmation'
+    | 'signed'
+    | 'rejected'
+    | 'expired'
   confirmationUrl?: string | null
   certificateSerial?: string | null
+  signatureHash?: string | null
+  signatureAlgorithm?: string | null
+  signatureValueRef?: string | null
+  providerStatus?: string | null
+  verifiedAt?: string | null
   expiresAt: string
 }
 

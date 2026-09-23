@@ -4,7 +4,10 @@ import * as React from 'react'
 import { Bell, Calculator, Headphones, Plus, ShieldCheck } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { AlertList, SavedSearchesList } from '@/features/saved-searches'
-import { CostCalculatorModal } from '@/features/living-cost'
+import {
+  CostCalculatorModal,
+  LivingCostProfilesList,
+} from '@/features/living-cost'
 import { MyReportsList } from '@/features/safety-reports'
 import {
   CreateTicketDialog,
@@ -32,6 +35,7 @@ export function ProfileFeatureHub({
     null
   )
   const [ticketRevision, setTicketRevision] = React.useState(0)
+  const [profileRevision, setProfileRevision] = React.useState(0)
 
   if (feature === 'saved-searches') {
     return (
@@ -75,12 +79,17 @@ export function ProfileFeatureHub({
             </p>
           </div>
           <CostCalculatorModal
+            onSaved={() => setProfileRevision(value => value + 1)}
             trigger={
               <Button className="gap-2">
                 <Calculator className="h-4 w-4" /> Mở máy tính
               </Button>
             }
           />
+        </div>
+        <div className="mt-6 border-t border-border pt-5">
+          <h3 className="mb-3 text-sm font-bold text-fg">Há»“ sÆ¡ Ä‘Ã£ lÆ°u</h3>
+          <LivingCostProfilesList key={profileRevision} />
         </div>
       </section>
     )

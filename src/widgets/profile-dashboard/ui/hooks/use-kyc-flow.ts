@@ -2,6 +2,8 @@
 
 import * as React from 'react'
 import { toast } from 'sonner'
+import { env } from '@/shared/config/env'
+import { KYC_MAINTENANCE_MESSAGE } from '@/shared/config/kyc-maintenance'
 import { UseProfileReturn } from '../../model/use-profile'
 import { extractKycCards, submitKyc, verifyKycFace } from '../../api/kyc-api'
 
@@ -56,6 +58,7 @@ export function useKycFlow(profile: UseProfileReturn) {
 
   const [currentStep, setCurrentStep] = React.useState<1 | 2 | 3>(1)
   const [isProcessing, setIsProcessing] = React.useState(false)
+  const kycDemoMaintenanceMode = env.kycDemoMaintenanceMode
 
   // Step 1 Refs & Previews
   const fileInputRef1 = React.useRef<HTMLInputElement>(null)
@@ -125,6 +128,11 @@ export function useKycFlow(profile: UseProfileReturn) {
 
   // Webcam Handlers
   const startWebcam = async (card: 1 | 2) => {
+    if (kycDemoMaintenanceMode) {
+      toast.error(KYC_MAINTENANCE_MESSAGE)
+      return
+    }
+
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: 640, height: 480 },
@@ -205,6 +213,11 @@ export function useKycFlow(profile: UseProfileReturn) {
     e: React.ChangeEvent<HTMLInputElement>,
     type: 1 | 2 | 3
   ) => {
+    if (kycDemoMaintenanceMode) {
+      toast.error(KYC_MAINTENANCE_MESSAGE)
+      return
+    }
+
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
@@ -236,6 +249,11 @@ export function useKycFlow(profile: UseProfileReturn) {
 
   // API Call: Step 1 OCR
   const handleExtractOcr = async () => {
+    if (kycDemoMaintenanceMode) {
+      toast.error(KYC_MAINTENANCE_MESSAGE)
+      return
+    }
+
     if (!frontPreview || !backPreview) {
       toast.error('Vui lòng cung cấp đủ ảnh mặt trước và mặt sau CCCD!')
       return
@@ -282,6 +300,11 @@ export function useKycFlow(profile: UseProfileReturn) {
 
   // API Call: Step 2 Selfie & Face Match
   const handleVerifyFace = async () => {
+    if (kycDemoMaintenanceMode) {
+      toast.error(KYC_MAINTENANCE_MESSAGE)
+      return
+    }
+
     if (!selfiePreview) {
       toast.error('Vui lòng chụp ảnh selfie của bạn!')
       return
@@ -319,6 +342,11 @@ export function useKycFlow(profile: UseProfileReturn) {
 
   // API Call: Step 3 Submit
   const handleConfirmAndSubmitKyc = async () => {
+    if (kycDemoMaintenanceMode) {
+      toast.error(KYC_MAINTENANCE_MESSAGE)
+      return
+    }
+
     if (
       !verifyResults.verified ||
       !frontPreview ||
@@ -459,6 +487,7 @@ export function useKycFlow(profile: UseProfileReturn) {
     currentStep,
     setCurrentStep,
     isProcessing,
+    kycDemoMaintenanceMode,
     fileInputRef1,
     fileInputRef2,
     videoRef1,

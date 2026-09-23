@@ -15,6 +15,14 @@ describe('ContractDocumentViewer', () => {
     hashSchemaVersion: 1,
     legalProfile: null,
     templateVersion: '1.0',
+    canonicalArtifact: {
+      artifactId: 'artifact-2026-001',
+      revision: 4,
+      templateKey: 'lease-vn',
+      templateVersion: 7,
+      artifactHash: 'a'.repeat(64),
+      contentType: 'application/pdf',
+    },
     sections: [
       {
         id: 'article-1',
@@ -72,6 +80,25 @@ describe('ContractDocumentViewer', () => {
     render(<ContractDocumentViewer {...defaultProps} />)
 
     expect(screen.getByTestId('contract-document-paper')).toHaveClass('md:p-10')
+  })
+
+  it('renders the canonical PDF version, digest, and official citation links', () => {
+    render(<ContractDocumentViewer {...defaultProps} />)
+
+    const artifactPanel = screen.getByTestId('canonical-artifact-panel')
+    expect(artifactPanel).toHaveTextContent('artifact-2026-001')
+    expect(artifactPanel).toHaveTextContent('Revision 4')
+    expect(artifactPanel).toHaveTextContent('a'.repeat(64))
+
+    const decreeLink = screen.getByRole('link', {
+      name: /Nghị định số 96\/2024\/NĐ-CP/i,
+    })
+    expect(decreeLink).toHaveAttribute(
+      'href',
+      'https://xaydungchinhsach.chinhphu.vn/mau-hop-dong-thue-nha-o-119240827172441217.htm'
+    )
+    expect(decreeLink).toHaveAttribute('target', '_blank')
+    expect(decreeLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
   it('renders articles with protected badges and correct section heading numbering', () => {
@@ -179,5 +206,98 @@ describe('ContractDocumentViewer', () => {
     fireEvent.click(screen.getByLabelText('In hợp đồng'))
     expect(printSpy).toHaveBeenCalledTimes(1)
     printSpy.mockRestore()
+  })
+
+  it('renders legal citations box, party information with eKYC status, and SmartCA signature blocks', () => {
+    const propsWithParties: ContractDocumentViewerProps = {
+      ...defaultProps,
+      parties: {
+        landlord: {
+          id: 'landlord-1',
+          name: 'Nguyễn Văn Chủ Nhà',
+          role: 'landlord',
+          kycStatus: 'verified',
+          maskedCccd: '079******123',
+          address: 'Thành phố Hồ Chí Minh',
+          hasSigned: true,
+          signedAt: '2026-03-15T08:30:00Z',
+          provider: 'smartca',
+          providerTransactionId: 'sca-landlord-1',
+          certificateSerial: 'cert-landlord-1',
+          signatureAlgorithm: 'RSA-PSS-SHA256',
+        },
+        tenant: {
+          id: 'tenant-1',
+          name: 'Trần Thị Thuê Nhà',
+          role: 'tenant',
+          kycStatus: 'verified',
+          maskedCccd: '080******456',
+          address: 'Quận 1, TP.HCM',
+          hasSigned: false,
+          signedAt: null,
+        },
+      },
+    }
+
+    render(<ContractDocumentViewer {...propsWithParties} />)
+
+    // Legal citations
+    expect(
+      screen.getByText(/Nghị định số 96\/2024\/NĐ-CP/i)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Luật Kinh doanh bất động sản số 29\/2023\/QH15/i)
+    ).toBeInTheDocument()
+
+    // Parties
+    expect(screen.getAllByText('Nguyễn Văn Chủ Nhà')).toHaveLength(2)
+    expect(screen.getByText('079******123')).toBeInTheDocument()
+    expect(screen.getAllByText('Trần Thị Thuê Nhà')).toHaveLength(2)
+    expect(screen.getByText('080******456')).toBeInTheDocument()
+    expect(screen.getAllByText(/Đã xác thực eKYC/i)).toHaveLength(2)
+
+    // Signatures
+    expect(screen.getByText(/Đại diện bên cho thuê/i)).toBeInTheDocument()
+    expect(screen.getByText(/Đại diện bên thuê/i)).toBeInTheDocument()
+    expect(screen.getByText('Chờ bên thuê ký')).toBeInTheDocument()
+    expect(screen.getByTestId('landlord-signature-evidence')).toHaveTextContent(
+      'sca-landlord-1'
+    )
+    expect(screen.getByTestId('landlord-signature-evidence')).toHaveTextContent(
+      'cert-landlord-1'
+    )
+  })
+
+  it('switches between Paginated A4 and Continuous view modes', () => {
+    render(<ContractDocumentViewer {...defaultProps} />)
+
+    // Default view mode is pages, should have page 1 marker
+    expect(screen.getByText(/— Trang 1 \/ 4/i)).toBeInTheDocument()
+
+    // Switch to continuous mode
+    const continuousButton = screen.getByTitle('Chế độ cuộn liên tục')
+    fireEvent.click(continuousButton)
+
+    // In continuous mode, page footer markers are hidden
+    expect(screen.queryByText(/— Trang 1 \/ 4/i)).not.toBeInTheDocument()
+
+    // Switch back to paginated A4 mode
+    const pagesButton = screen.getByTitle('Chế độ phân trang A4')
+    fireEvent.click(pagesButton)
+    expect(screen.getByText(/— Trang 1 \/ 4/i)).toBeInTheDocument()
+  })
+
+  it('adjusts zoom level when Zoom In and Zoom Out buttons clicked', () => {
+    render(<ContractDocumentViewer {...defaultProps} />)
+
+    expect(screen.getByText('100%')).toBeInTheDocument()
+
+    const zoomInBtn = screen.getByTitle('Phóng to')
+    fireEvent.click(zoomInBtn)
+    expect(screen.getByText('110%')).toBeInTheDocument()
+
+    const zoomOutBtn = screen.getByTitle('Thu nhỏ')
+    fireEvent.click(zoomOutBtn)
+    expect(screen.getByText('100%')).toBeInTheDocument()
   })
 })

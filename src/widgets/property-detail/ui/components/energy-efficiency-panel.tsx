@@ -64,6 +64,9 @@ export function EnergyEfficiencyPanel({
           </svg>
         </button>
       </h3>
+      <span className="inline-flex w-fit rounded-full border border-warning/20 bg-warning-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-warning">
+        Dữ liệu minh hoạ
+      </span>
       <p className="font-body text-sm text-muted-foreground font-medium leading-relaxed text-left">
         Ước tính hiệu quả sử dụng năng lượng và chi phí phụ sinh hoạt trung bình
         mỗi tháng.

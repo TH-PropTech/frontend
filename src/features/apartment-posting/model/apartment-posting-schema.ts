@@ -1,6 +1,13 @@
 import { z } from 'zod'
 import { APARTMENT_CATEGORIES } from './apartment-categories'
 
+const rentalExecutionPolicyRefSchema = z.object({
+  policyId: z.string().min(1),
+  version: z.number().int().min(1),
+  strategy: z.enum(['DEPOSIT_FIRST', 'SIGN_FIRST']),
+  contentHash: z.string().min(1),
+})
+
 export const rentalPackagePostingSchema = z.object({
   packageId: z.string().min(1),
   version: z.number().int().min(1).default(1),
@@ -22,6 +29,11 @@ export const rentalPackagePostingSchema = z.object({
     }),
   ]),
   status: z.enum(['active', 'inactive']).default('active'),
+  allowedExecutionPolicies: z
+    .array(rentalExecutionPolicyRefSchema)
+    .max(2)
+    .optional(),
+  defaultExecutionPolicy: rentalExecutionPolicyRefSchema.optional(),
 })
 
 export type RentalPackagePostingSchemaType = z.infer<

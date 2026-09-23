@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactElement } from 'react'
+import Link from 'next/link'
 import {
   resolveContractActiveStep,
   getContractFlowSteps,
@@ -97,12 +98,12 @@ export function ContractStepFlow({
         <p className="text-sm font-semibold text-[var(--danger)]">
           {workspace.error ?? 'Không thể tải dữ liệu hợp đồng.'}
         </p>
-        <a
+        <Link
           href="/rental-applications"
           className="inline-flex min-h-10 items-center rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white"
         >
           Về danh sách hồ sơ
-        </a>
+        </Link>
       </main>
     )
   }

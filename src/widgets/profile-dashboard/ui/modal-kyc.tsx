@@ -23,6 +23,7 @@ export function ModalKyc({
     currentStep,
     setCurrentStep,
     isProcessing,
+    kycDemoMaintenanceMode,
     fileInputRef1,
     fileInputRef2,
     videoRef1,
@@ -206,6 +207,7 @@ export function ModalKyc({
                 handleFileChange={handleFileChange}
                 handleExtractOcr={handleExtractOcr}
                 isProcessing={isProcessing}
+                maintenanceMode={kycDemoMaintenanceMode}
               />
             )}
 

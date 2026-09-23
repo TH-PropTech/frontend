@@ -90,6 +90,11 @@ function ContractArtifactStep({
         contractCode={data.contract.code}
         status={data.contract.status}
         networkMode={data.ledger.networkMode}
+        parties={data.parties}
+        property={data.contract.property}
+        commercial={data.contract.commercial}
+        startDate={data.contract.startDate}
+        endDate={data.contract.endDate}
         {...downloadHandlers}
         isDownloading={isDownloadingPdf || isDownloadingDocx}
       />
@@ -119,7 +124,9 @@ function ContractArtifactStep({
             ) : (
               <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--success)]">
                 <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                Artifact đã khóa hoặc bạn không có quyền chỉnh sửa
+                {data.document.lockedHash
+                  ? 'Artifact hợp đồng đã được khóa bảo toàn và sẵn sàng ký kết'
+                  : 'Đang chờ Chủ nhà kiểm tra và khóa nội dung hợp đồng'}
               </p>
             )}
             {lockError ? (

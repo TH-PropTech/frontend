@@ -63,6 +63,9 @@ export function AmbientRadarPanel({
           </svg>
         </button>
       </h3>
+      <span className="inline-flex w-fit rounded-full border border-warning/20 bg-warning-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-warning">
+        Dữ liệu minh hoạ
+      </span>
       <p className="font-body text-sm text-muted-foreground font-medium leading-relaxed text-left">
         Các chỉ số được đo lường thực tế dựa trên vị trí địa lý của căn hộ trong
         tòa nhà chung cư.

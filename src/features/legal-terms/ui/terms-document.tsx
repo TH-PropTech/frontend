@@ -265,12 +265,12 @@ export function TermsDocument({
               </ul>
               <div className="pt-2">
                 <a
-                  href="https://thutuc.dichvucong.gov.vn/p/home/dvc-chi-tiet-thu-tuc-hanh-chinh.html?ma_thu_tuc=1.004194"
+                  href="https://dichvucong.bocongan.gov.vn/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 font-semibold text-primary underline underline-offset-4 hover:text-primary-hover"
                 >
-                  Truy cập hướng dẫn chính thức trên Cổng DVC Quốc gia
+                  Truy cập Cổng Dịch vụ công Trực tuyến
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>

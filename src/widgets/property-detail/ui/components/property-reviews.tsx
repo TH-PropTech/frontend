@@ -11,6 +11,9 @@ export function PropertyReviews(): React.ReactElement {
             <span className="h-2.5 w-2.5 rounded-full bg-primary" />
             Đánh giá từ khách thuê
           </h3>
+          <span className="inline-flex w-fit rounded-full border border-warning/20 bg-warning-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-warning">
+            Dữ liệu minh hoạ
+          </span>
           <div className="flex items-center gap-2 text-sm text-left">
             <span className="text-muted-foreground font-semibold">
               Tín nhiệm chủ nhà:

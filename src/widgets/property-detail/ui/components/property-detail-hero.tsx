@@ -3,7 +3,10 @@
 import * as React from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
-import type { ApartmentItem } from '@/entities/properties'
+import {
+  getRentalAvailabilityPresentation,
+  type ApartmentItem,
+} from '@/entities/properties'
 import { useFavorites } from '@/shared/lib/use-favorites'
 import { AuthRequiredModal } from '@/widgets/community-dashboard/ui/components/auth-required-modal'
 
@@ -17,6 +20,7 @@ export function PropertyDetailHero({
   const { isFavorite, toggleFavorite } = useFavorites()
   const [showAuthModal, setShowAuthModal] = React.useState(false)
   const favorite = isFavorite(property.id)
+  const availability = getRentalAvailabilityPresentation(property)
   const [copied, setCopied] = React.useState(false)
   const shortListingId = property.id.slice(-8)
   const specs = [
@@ -151,15 +155,19 @@ export function PropertyDetailHero({
 
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <span
+            role="status"
+            aria-label={`Tình trạng thuê: ${availability.label}`}
             className={`rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider border backdrop-blur-sm ${
-              property.tag === 'empty'
+              availability.status === 'available'
                 ? 'bg-success-soft/60 text-success border-success/25'
-                : property.tag === 'pending'
-                  ? 'bg-accent-soft/60 text-primary border-primary/25'
-                  : 'bg-info-soft/60 text-info border-info/25'
+                : availability.status === 'reserved'
+                  ? 'bg-warning-soft/60 text-warning border-warning/25'
+                  : availability.status === 'deposit-paid'
+                    ? 'bg-accent-soft/60 text-primary border-primary/25'
+                    : 'bg-info-soft/60 text-info border-info/25'
             }`}
           >
-            {property.tagText}
+            {availability.label}
           </span>
           {property.isVerified && (
             <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-widest text-success bg-success-soft/80 border border-success/20 px-3 py-1 rounded-full backdrop-blur-sm">

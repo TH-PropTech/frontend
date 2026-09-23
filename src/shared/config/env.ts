@@ -11,16 +11,20 @@ const envSchema = z.object({
     .enum(['local', 'development', 'staging', 'production', 'test'])
     .default('local'),
   NEXT_PUBLIC_ENABLE_MOCKS: booleanStringSchema,
+  NEXT_PUBLIC_KYC_DEMO_MAINTENANCE_MODE: booleanStringSchema,
 })
 
 const parsedEnv = envSchema.parse({
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
   NEXT_PUBLIC_ENABLE_MOCKS: process.env.NEXT_PUBLIC_ENABLE_MOCKS,
+  NEXT_PUBLIC_KYC_DEMO_MAINTENANCE_MODE:
+    process.env.NEXT_PUBLIC_KYC_DEMO_MAINTENANCE_MODE,
 })
 
 export const env = {
   apiUrl: parsedEnv.NEXT_PUBLIC_API_URL,
   appEnv: parsedEnv.NEXT_PUBLIC_APP_ENV,
   enableMocks: parsedEnv.NEXT_PUBLIC_ENABLE_MOCKS,
+  kycDemoMaintenanceMode: parsedEnv.NEXT_PUBLIC_KYC_DEMO_MAINTENANCE_MODE,
 } as const

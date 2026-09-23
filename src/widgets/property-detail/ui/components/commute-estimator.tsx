@@ -3,10 +3,10 @@
 import * as React from 'react'
 import { CommuteExplainModal } from './commute-explain-modal'
 
-const DEFAULT_APT_COORDS: [number, number] = [10.7947, 106.7218] // lat, lng of Vinhomes Central Park
+type Coordinates = [number, number]
 
-function getCoordsForDistrict(district?: string): [number, number] {
-  if (!district) return DEFAULT_APT_COORDS
+function getCoordsForDistrict(district?: string): Coordinates | null {
+  if (!district) return null
   const d = district.toLowerCase()
   if (d.includes('quận 7') || d.includes('quan 7') || d.includes('7')) {
     return [10.7554, 106.7025]
@@ -23,7 +23,7 @@ function getCoordsForDistrict(district?: string): [number, number] {
   if (d.includes('quận 1') || d.includes('quan 1')) {
     return [10.7769, 106.7009]
   }
-  return DEFAULT_APT_COORDS
+  return null
 }
 
 export interface CommuteEstimatorProps {
@@ -111,6 +111,7 @@ export function CommuteEstimator({
   )
   const [mapLoaded, setMapLoaded] = React.useState(false)
   const initialDist = React.useMemo(() => {
+    if (!aptCoords) return 0
     return Number(
       calculateDistance(
         aptCoords[0],
@@ -133,7 +134,7 @@ export function CommuteEstimator({
 
   // 1. Load Leaflet CSS and JS Dynamically on client-side
   React.useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || !aptCoords) return
 
     const linkId = 'leaflet-css'
     if (!document.getElementById(linkId)) {
@@ -160,11 +161,16 @@ export function CommuteEstimator({
         setMapLoaded(true)
       }
     }
-  }, [])
+  }, [aptCoords])
 
   // 2. Initialize and Manage Map Instance
   React.useEffect(() => {
-    if (!mapLoaded || !mapContainerRef.current || typeof window === 'undefined')
+    if (
+      !aptCoords ||
+      !mapLoaded ||
+      !mapContainerRef.current ||
+      typeof window === 'undefined'
+    )
       return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const L = (window as any).L
@@ -295,10 +301,8 @@ export function CommuteEstimator({
   }, [mapLoaded, aptCoords, property?.title])
 
   // Preset Selection Action
-  const handlePresetSelect = (
-    presetId: string,
-    coords: [number, number]
-  ): void => {
+  const handlePresetSelect = (presetId: string, coords: Coordinates): void => {
+    if (!aptCoords) return
     setSelectedPreset(presetId)
     const dist = calculateDistance(
       aptCoords[0],
@@ -323,6 +327,16 @@ export function CommuteEstimator({
   const times = React.useMemo(() => getTransitTimes(distanceKm), [distanceKm])
 
   const [showExplain, setShowExplain] = React.useState(false)
+
+  if (!aptCoords) {
+    return (
+      <div className="bg-white border border-border rounded-3xl p-4 md:p-5 shadow-sm">
+        <p className="text-sm font-semibold text-muted-foreground">
+          Chưa có tọa độ cho vị trí căn hộ này.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white border border-border rounded-3xl p-4 md:p-5 shadow-sm space-y-4">
