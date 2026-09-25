@@ -77,6 +77,7 @@ export interface ContractDocumentSection {
   content: string
   protected: boolean
   hash: string
+  citationIds?: string[]
 }
 
 export interface ContractDocumentAnnex {
@@ -92,8 +93,15 @@ export interface ContractDocumentView {
   lockedAt: string | null
   lockedHash: string | null
   hashSchemaVersion: number
-  legalProfile: unknown | null
+  legalProfile:
+    | 'PRIVATE_CIVIL_APARTMENT_LEASE'
+    | 'REAL_ESTATE_BUSINESS_STANDARD'
+    | null
   templateVersion: string | null
+  contentHash?: string | null
+  citationIds?: string[]
+  amendmentHistory?: ContractAmendmentSummary[]
+  governingAmendmentId?: string | null
   canonicalArtifact?: ContractCanonicalArtifactView | null
   sections: ContractDocumentSection[]
   annexes: ContractDocumentAnnex[]
@@ -106,7 +114,86 @@ export interface ContractCanonicalArtifactView {
   templateKey: string
   templateVersion: number
   artifactHash: string
+  canonicalContentHash?: string | null
+  rendererVersion?: string | null
+  sourceSchemaVersion?: number | null
+  byteLength?: number | null
+  amendmentId?: string | null
   contentType: 'application/pdf'
+}
+
+export interface ContractAmendmentSummary {
+  id: string
+  sequence: number
+  status: string
+  effectiveFrom: string
+  contentHash: string | null
+  artifactHash?: string | null
+  artifactId?: string | null
+  artifactIntegrity?: 'available' | 'missing'
+  ledgerStatus?: 'not-requested' | 'pending' | 'confirmed' | 'failed'
+  ledgerTxHash?: string | null
+  tenantSigned: boolean
+  landlordSigned: boolean
+}
+
+export interface ContractCommercialDraft {
+  monthlyRent: number
+  deposit: number
+  paymentDay: number
+  latePenaltyRate: number
+  terminationNoticeDays: number
+  durationMonths: number
+  utilities?: Record<string, 'tenant' | 'landlord' | 'shared'>
+  handoverNotes?: string | null
+  inventoryReference?: string | null
+  noticePeriodDays?: number | null
+  addendaIds?: string[]
+}
+
+export interface ContractCommercialEditorResponse {
+  contractId: string
+  revision: number
+  commercial: ContractCommercialDraft | null
+  protectedFields: string[]
+  locked: boolean
+}
+
+export interface ContractCommercialValidation {
+  valid: boolean
+  errors: string[]
+  changedFields: string[]
+}
+
+export interface ContractAmendment {
+  _id: string
+  contractId: string
+  sequence: number
+  status: string
+  revision: number
+  changes: Array<{ field: string; before: unknown; after: unknown }>
+  beforeSnapshot: ContractCommercialDraft
+  afterSnapshot: ContractCommercialDraft
+  effectiveFrom: string
+  predecessorId: string | null
+  contentHash: string | null
+  artifactHash?: string | null
+  artifactId?: string | null
+  artifactRef?: {
+    artifactId: string
+    revision: number
+    artifactHash: string
+    canonicalContentHash: string
+    rendererVersion: string
+    sourceSchemaVersion: number
+    byteLength: number
+    contentType: 'application/pdf'
+    lockedAt: string
+  } | null
+  ledgerStatus?: 'not-requested' | 'pending' | 'confirmed' | 'failed'
+  ledgerTxHash?: string | null
+  tenantSignature: ContractSignature | null
+  landlordSignature: ContractSignature | null
 }
 
 export interface ContractPartyView {
@@ -254,6 +341,10 @@ export interface ContractIntegrityResult {
   storedHash: string | null
   blockchainAddress: string | null
   onChain: unknown
+  semanticHash?: string | null
+  artifactHash?: string | null
+  signatureIntegrity?: 'valid' | 'invalid' | 'not-available'
+  amendmentChainIntegrity?: 'valid' | 'invalid' | 'not-available'
 }
 
 export type PublicServiceChecklistItem = {
@@ -447,4 +538,102 @@ export async function downloadContractArtifact(
   format: 'pdf' | 'docx' = 'pdf'
 ): Promise<Blob> {
   return apiClient.getBlob(`/contracts/${contractId}/pdf?format=${format}`)
+}
+
+export async function getAdminContractEditor(
+  contractId: string
+): Promise<ContractCommercialEditorResponse> {
+  return apiClient.get<ContractCommercialEditorResponse>(
+    `/contracts/${contractId}/admin-editor`
+  )
+}
+
+export async function validateAdminCommercialDraft(
+  contractId: string,
+  commercial: ContractCommercialDraft
+): Promise<ContractCommercialValidation> {
+  return apiClient.post<ContractCommercialValidation>(
+    `/contracts/${contractId}/commercial-draft/validate`,
+    { commercial }
+  )
+}
+
+export async function saveAdminCommercialDraft(
+  contractId: string,
+  commercial: ContractCommercialDraft,
+  expectedRevision: number
+): Promise<ContractCommercialEditorResponse> {
+  return apiClient.put<ContractCommercialEditorResponse>(
+    `/contracts/${contractId}/commercial-draft`,
+    { commercial, expectedRevision }
+  )
+}
+
+export async function getContractAmendments(
+  contractId: string
+): Promise<ContractAmendment[]> {
+  return apiClient.get<ContractAmendment[]>(
+    `/contracts/${contractId}/amendments`
+  )
+}
+
+export async function createContractAmendment(
+  contractId: string,
+  input: {
+    changes: Array<{ field: string; after: unknown }>
+    effectiveFrom: string
+    idempotencyKey?: string
+  }
+): Promise<ContractAmendment> {
+  return apiClient.post<ContractAmendment>(
+    `/contracts/${contractId}/amendments`,
+    input
+  )
+}
+
+export async function lockContractAmendment(
+  contractId: string,
+  amendmentId: string,
+  expectedRevision: number
+): Promise<ContractAmendment> {
+  return apiClient.post<ContractAmendment>(
+    `/contracts/${contractId}/amendments/${amendmentId}/lock`,
+    { expectedRevision }
+  )
+}
+
+export async function lockContractAmendmentArtifact(
+  contractId: string,
+  amendmentId: string,
+  expectedRevision: number,
+  file: File
+): Promise<ContractAmendment> {
+  const formData = new FormData()
+  formData.append('expectedRevision', String(expectedRevision))
+  formData.append('artifact', file)
+  return apiClient.post<ContractAmendment>(
+    `/contracts/${contractId}/amendments/${amendmentId}/artifact`,
+    formData
+  )
+}
+
+export async function signContractAmendment(
+  contractId: string,
+  amendmentId: string,
+  expectedRevision: number,
+  signatureHash: string
+): Promise<ContractAmendment> {
+  return apiClient.post<ContractAmendment>(
+    `/contracts/${contractId}/amendments/${amendmentId}/sign`,
+    { expectedRevision, signatureHash }
+  )
+}
+
+export async function downloadContractAmendmentArtifact(
+  contractId: string,
+  amendmentId: string
+): Promise<Blob> {
+  return apiClient.getBlob(
+    `/contracts/${contractId}/amendments/${amendmentId}/artifact`
+  )
 }

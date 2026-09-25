@@ -250,6 +250,18 @@ export function ContractDocumentViewer({
         <div className="text-xs sm:text-[13px] leading-relaxed text-[var(--fg)] whitespace-pre-line text-justify pl-1 sm:pl-2">
           {section.content}
         </div>
+        {section.citationIds?.length ? (
+          <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[var(--border)]/40 pt-2">
+            {section.citationIds.map(citationId => (
+              <span
+                key={citationId}
+                className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 font-mono text-[9px] text-[var(--muted)]"
+              >
+                {citationId}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </article>
     )
   }
@@ -548,6 +560,41 @@ export function ContractDocumentViewer({
                   <p className="mt-2 break-all font-mono text-[10px] text-[var(--fg)]">
                     SHA-256: {document.canonicalArtifact.artifactHash}
                   </p>
+                  {document.canonicalArtifact.canonicalContentHash ? (
+                    <p className="mt-1 break-all font-mono text-[10px] text-[var(--muted)]">
+                      Mã nội dung pháp lý:{' '}
+                      {document.canonicalArtifact.canonicalContentHash}
+                    </p>
+                  ) : null}
+                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[var(--muted)]">
+                    {document.canonicalArtifact.rendererVersion ? (
+                      <span>
+                        Renderer:{' '}
+                        <span className="font-mono text-[var(--fg)]">
+                          {document.canonicalArtifact.rendererVersion}
+                        </span>
+                      </span>
+                    ) : null}
+                    {document.canonicalArtifact.sourceSchemaVersion ? (
+                      <span>
+                        Schema:{' '}
+                        <span className="font-semibold text-[var(--fg)]">
+                          v{document.canonicalArtifact.sourceSchemaVersion}
+                        </span>
+                      </span>
+                    ) : null}
+                    {document.canonicalArtifact.byteLength ? (
+                      <span>
+                        Kích thước:{' '}
+                        <span className="font-semibold text-[var(--fg)]">
+                          {document.canonicalArtifact.byteLength.toLocaleString(
+                            'vi-VN'
+                          )}{' '}
+                          bytes
+                        </span>
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </section>
@@ -561,6 +608,85 @@ export function ContractDocumentViewer({
               SmartCA.
             </section>
           )}
+
+          <section
+            data-testid="legal-template-panel"
+            aria-label="Legal template metadata"
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/50 p-4 text-xs"
+          >
+            <div className="flex items-start gap-2">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
+              <div className="min-w-0 flex-1">
+                <h2 className="font-bold text-[var(--fg)]">
+                  Căn cứ pháp lý và trạng thái nội dung
+                </h2>
+                <div className="mt-2 grid gap-1 text-[var(--muted)] sm:grid-cols-2">
+                  <p>
+                    Hồ sơ pháp lý:{' '}
+                    <span className="font-semibold text-[var(--fg)]">
+                      {document.legalProfile ?? 'Chưa xác định'}
+                    </span>
+                  </p>
+                  <p>
+                    Template:{' '}
+                    <span className="font-mono text-[var(--fg)]">
+                      {document.templateVersion ?? 'Chưa gắn template'}
+                    </span>
+                  </p>
+                  <p>
+                    Schema hash:{' '}
+                    <span className="font-semibold text-[var(--fg)]">
+                      v{document.hashSchemaVersion}
+                    </span>
+                  </p>
+                  <p>
+                    Trạng thái:{' '}
+                    <span className="font-semibold text-[var(--fg)]">
+                      {document.mode === 'locked'
+                        ? 'Đã khóa nội dung'
+                        : 'Bản nháp'}
+                    </span>
+                  </p>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="text-[var(--muted)]">Đối soát:</span>
+                  <Badge
+                    variant={
+                      document.integrity === 'valid'
+                        ? 'default'
+                        : document.integrity === 'mismatch'
+                          ? 'destructive'
+                          : 'outline'
+                    }
+                  >
+                    {document.integrity === 'valid'
+                      ? 'Đã xác minh'
+                      : document.integrity === 'mismatch'
+                        ? 'Không khớp'
+                        : document.integrity === 'unavailable'
+                          ? 'Chưa khả dụng'
+                          : 'Chưa khóa'}
+                  </Badge>
+                </div>
+                {document.citationIds?.length ? (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {document.citationIds.map(citationId => (
+                      <span
+                        key={citationId}
+                        className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 font-mono text-[10px] text-[var(--fg)]"
+                      >
+                        {citationId}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-[var(--warning)]">
+                    Chưa có mã căn cứ pháp lý được gắn vào template.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
 
           {/* Legal Citations Box (Phụ lục II Nghị định 96/2024/NĐ-CP) */}
           <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)]/50 p-4 text-xs text-[var(--muted)] leading-relaxed space-y-1.5 italic">
