@@ -29,14 +29,16 @@ export interface PublicServiceCitationPanelProps {
 }
 
 export const DVC_LINKS = {
-  RESIDENCE_1004194: 'https://dichvucong.bocongan.gov.vn/',
-  RENTAL_TAX_1007689: 'https://thuedientu.gdt.gov.vn/',
+  RESIDENCE_1004194:
+    'https://dichvucong.gov.vn/thu-tuc-hanh-chinh/019d2bf7-770b-734d-b7fb-5e1995f194f4',
+  RENTAL_TAX_1007689:
+    'https://dichvucong.gov.vn/thu-tuc-hanh-chinh/019d2bfc-2d93-73ec-ba2f-8d6aef8f7950',
   HOUSING_LAW_2023:
-    'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=209214',
+    'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=209627',
   DECREE_96_2024:
-    'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=210747',
+    'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=210798',
   CIVIL_CODE_2015:
-    'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=183049',
+    'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=183188',
 } as const
 
 function itemLabel(id: PublicServiceChecklist['items'][number]['id']): string {
@@ -201,7 +203,7 @@ export function PublicServiceCitationPanel({
                 target="_blank"
                 rel="noopener noreferrer"
                 data-testid="link-dvc-residence-1004194"
-                title="Mở Cổng DVC Quốc gia (Link gốc)"
+                title="Mở trang thủ tục 1.004194 trên Cổng DVC Quốc gia"
                 className="inline-flex items-center justify-center p-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -243,7 +245,7 @@ export function PublicServiceCitationPanel({
                 target="_blank"
                 rel="noopener noreferrer"
                 data-testid="link-dvc-tax-1007689"
-                title="Mở Cổng DVC Thuế (Link gốc)"
+                title="Mở trang thủ tục 1.007689 trên Cổng DVC Quốc gia"
                 className="inline-flex items-center justify-center p-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
