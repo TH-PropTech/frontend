@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import fixture from '../test-fixtures/canonical-contract-view.fixture.json'
 import type { ContractViewDto } from './contracts-api'
-import canonicalWorkspaceFixture from '../../../../../integration/fixtures/canonical-workspace.fixture.json'
+import canonicalWorkspaceFixture from '../test-fixtures/canonical-workspace.fixture.json'
 
 describe('Canonical ContractViewDto Fixture Contract', () => {
   it('strictly validates against the canonical Backend ContractViewDto interface', () => {

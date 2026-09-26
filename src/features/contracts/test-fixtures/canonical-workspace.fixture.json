@@ -1,0 +1,73 @@
+{
+  "contractId": "507f1f77bcf86cd799439011",
+  "contractCode": "HD-CANONICAL-001",
+  "document": {
+    "mode": "locked",
+    "revision": 3,
+    "lockedAt": "2026-09-15T08:00:00.000Z",
+    "lockedHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "hashSchemaVersion": 2,
+    "legalProfile": "PRIVATE_CIVIL_APARTMENT_LEASE",
+    "templateVersion": "VN_INDIVIDUAL_RESIDENTIAL_LEASE@3",
+    "canonicalArtifact": {
+      "artifactId": "507f1f77bcf86cd799439013",
+      "revision": 3,
+      "templateKey": "VN_INDIVIDUAL_RESIDENTIAL_LEASE",
+      "templateVersion": 3,
+      "artifactHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "canonicalContentHash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "rendererVersion": "uploaded-canonical-pdf-v1",
+      "sourceSchemaVersion": 2,
+      "byteLength": 2048,
+      "contentType": "application/pdf"
+    },
+    "sections": [
+      {
+        "id": "article-1",
+        "number": 1,
+        "title": "Property and handover",
+        "content": "Server-owned canonical article",
+        "protected": true,
+        "hash": "article-hash-1"
+      }
+    ],
+    "annexes": [],
+    "integrity": "valid"
+  },
+  "amendment": {
+    "id": "amendment-1",
+    "status": "effective",
+    "contentHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "ledgerStatus": "pending",
+    "governing": true
+  },
+  "ledger": {
+    "fabric": {
+      "networkMode": "fabric",
+      "connectionState": "connected",
+      "status": "confirmed-fabric",
+      "txHash": "fabric-tx-1",
+      "blockNumber": 105,
+      "verifiedAt": "2026-09-15T09:15:00.000Z",
+      "onChainValid": true
+    },
+    "simulation": {
+      "networkMode": "simulation",
+      "connectionState": "disabled",
+      "status": "confirmed-simulation",
+      "txHash": "simulation-tx-1",
+      "blockNumber": null,
+      "verifiedAt": "2026-09-15T09:15:00.000Z",
+      "onChainValid": true
+    },
+    "unavailable": {
+      "networkMode": "fabric",
+      "connectionState": "unavailable",
+      "status": "failed-retryable",
+      "txHash": null,
+      "blockNumber": null,
+      "verifiedAt": null,
+      "onChainValid": null
+    }
+  }
+}
