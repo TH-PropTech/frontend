@@ -39,9 +39,10 @@ type MobileTab = 'document' | 'parties' | 'actions' | 'public-service' | 'audit'
 
 export function ContractWorkspace({
   contractId,
-  currentUserId,
+  currentUserId: currentUserIdProp,
 }: ContractWorkspaceProps) {
   const {
+    currentUserId,
     data,
     auditEvents,
     isLoading,
@@ -61,7 +62,7 @@ export function ContractWorkspace({
     handleDownloadPdf,
     handleDownloadDocx,
     handleVerifyIntegrity,
-  } = useContractWorkspace({ contractId, currentUserId })
+  } = useContractWorkspace({ contractId, currentUserId: currentUserIdProp })
 
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('document')
   const [isDocumentExpanded, setIsDocumentExpanded] = useState(false)

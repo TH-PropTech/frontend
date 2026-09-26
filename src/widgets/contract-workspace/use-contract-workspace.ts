@@ -1,6 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  useSyncExternalStore,
+} from 'react'
 import {
   getContractView,
   getContractAuditEvents,
@@ -17,11 +24,46 @@ export interface UseContractWorkspaceOptions {
   enablePolling?: boolean | undefined
 }
 
+function subscribeToStoredUser(onStoreChange: () => void): () => void {
+  window.addEventListener('storage', onStoreChange)
+  return () => window.removeEventListener('storage', onStoreChange)
+}
+
+function getStoredUser(): string | null {
+  return window.localStorage.getItem('user')
+}
+
+function getServerUser(): null {
+  return null
+}
+
+function parseStoredUserId(raw: string | null): string | undefined {
+  if (!raw) return undefined
+  try {
+    const user = JSON.parse(raw) as { _id?: string; id?: string } | null
+    return user?._id || user?.id || undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function useContractWorkspace({
   contractId,
-  currentUserId,
+  currentUserId: currentUserIdProp,
   enablePolling = true,
 }: UseContractWorkspaceOptions) {
+  // Route pages không truyền currentUserId → lấy user đăng nhập từ localStorage
+  const storedUser = useSyncExternalStore(
+    subscribeToStoredUser,
+    getStoredUser,
+    getServerUser
+  )
+  const storedUserId = useMemo(
+    () => parseStoredUserId(storedUser),
+    [storedUser]
+  )
+  const currentUserId = currentUserIdProp ?? storedUserId
+
   const [data, setData] = useState<ContractViewDto | null>(null)
   const [auditEvents, setAuditEvents] = useState<ContractAuditEventDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -237,6 +279,7 @@ export function useContractWorkspace({
   const signerRole: 'tenant' | 'landlord' = isLandlord ? 'landlord' : 'tenant'
 
   return {
+    currentUserId,
     data,
     auditEvents,
     isLoading,

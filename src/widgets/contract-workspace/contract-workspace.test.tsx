@@ -195,6 +195,28 @@ describe('ContractWorkspace', () => {
     })
   })
 
+  it('resolves the viewer from the stored login user when the route passes no currentUserId', async () => {
+    window.localStorage.setItem(
+      'user',
+      JSON.stringify({ _id: 'user-landlord' })
+    )
+    try {
+      render(<ContractWorkspace contractId="c-100" />)
+
+      const landlordCard = await screen.findByTestId('party-card-landlord')
+      expect(
+        within(landlordCard).getByTestId('current-user-badge')
+      ).toBeInTheDocument()
+      expect(
+        within(screen.getByTestId('party-card-tenant')).queryByTestId(
+          'current-user-badge'
+        )
+      ).not.toBeInTheDocument()
+    } finally {
+      window.localStorage.removeItem('user')
+    }
+  })
+
   it('labels successor access while preserving the original legal landlord', async () => {
     vi.mocked(contractsApi.getContractView).mockResolvedValueOnce({
       ...mockView,
