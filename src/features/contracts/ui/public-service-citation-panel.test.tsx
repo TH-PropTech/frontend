@@ -1,35 +1,41 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
 import {
-  PublicServiceCitationPanel,
-  DVC_LINKS,
-} from './public-service-citation-panel'
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+  within,
+} from '@testing-library/react'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { PublicServiceCitationPanel } from './public-service-citation-panel'
 import * as contractsApi from '../api/contracts-api'
+import * as legalSourcesApi from '../api/legal-sources-api'
+import {
+  HOUSING_LAW_SOURCE,
+  PANEL_SOURCES,
+  TAX_SOURCE,
+  makeLegalSource,
+} from '../test-fixtures/legal-sources.fixture'
 
 vi.mock('../api/contracts-api', () => ({
   getPublicServiceChecklist: vi.fn(),
+}))
+
+vi.mock('../api/legal-sources-api', () => ({
+  getContractPanelSources: vi.fn(),
 }))
 
 describe('PublicServiceCitationPanel', () => {
   const mockChecklist: contractsApi.PublicServiceChecklist = {
     purpose: 'temporary-residence',
     externalProcedureCompleted: false,
-    officialSourceUrl: DVC_LINKS.RESIDENCE_1004194,
+    officialSourceUrl: makeLegalSource().externalUrl,
     executionMethod: 'POC_ECONSENT',
     notarizationStatus: 'not-requested',
     disclaimer:
       'Hệ thống chỉ xuất checklist và bằng chứng hiện có; không tự nộp hoặc xác nhận thủ tục bên ngoài.',
     items: [
-      {
-        id: 'locked-contract-copy',
-        status: 'available',
-        required: true,
-      },
-      {
-        id: 'signing-evidence',
-        status: 'evidence-present',
-        required: true,
-      },
+      { id: 'locked-contract-copy', status: 'available', required: true },
+      { id: 'signing-evidence', status: 'evidence-present', required: true },
       {
         id: 'notarization-or-authentication',
         status: 'required-before-submission',
@@ -43,9 +49,12 @@ describe('PublicServiceCitationPanel', () => {
     vi.mocked(contractsApi.getPublicServiceChecklist).mockResolvedValue(
       mockChecklist
     )
+    vi.mocked(legalSourcesApi.getContractPanelSources).mockResolvedValue(
+      PANEL_SOURCES
+    )
   })
 
-  it('renders direct buttons and links to public service portals with target="_blank"', async () => {
+  it('renders every admin-managed source with link-source-<key> links', async () => {
     render(
       <PublicServiceCitationPanel
         contractId="contract-123"
@@ -53,104 +62,109 @@ describe('PublicServiceCitationPanel', () => {
       />
     )
 
+    for (const source of PANEL_SOURCES) {
+      const link = await screen.findByTestId(`link-source-${source.key}`)
+      expect(link).toHaveAttribute('href', source.externalUrl)
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    }
+    expect(legalSourcesApi.getContractPanelSources).toHaveBeenCalledTimes(1)
+  })
+
+  it('groups procedures and legal texts separately', async () => {
+    render(<PublicServiceCitationPanel contractId="contract-123" />)
+
+    const procedureHeading = await screen.findByText(
+      'Thủ tục Hành chính Trực tuyến'
+    )
+    const procedureGroup = procedureHeading.parentElement as HTMLElement
     expect(
-      screen.getByTestId('public-service-citation-panel')
+      within(procedureGroup).getByTestId(`link-source-${TAX_SOURCE.key}`)
     ).toBeInTheDocument()
+    expect(
+      within(procedureGroup).queryByTestId(
+        `link-source-${HOUSING_LAW_SOURCE.key}`
+      )
+    ).toBeNull()
 
-    // Verify TTHC 1.004194 Button & Link
-    const btnResidence = screen.getByTestId('btn-view-procedure-1004194')
-    expect(btnResidence).toHaveTextContent('Xem chi tiết quy trình & hồ sơ')
-    const linkResidence = screen.getByTestId('link-dvc-residence-1004194')
-    expect(linkResidence).toHaveAttribute('href', DVC_LINKS.RESIDENCE_1004194)
-    expect(linkResidence).toHaveAttribute('target', '_blank')
-    expect(linkResidence).toHaveAttribute('rel', 'noopener noreferrer')
+    const lawHeading = screen.getByText('Căn cứ Pháp luật Việt Nam')
+    const lawGroup = lawHeading.parentElement as HTMLElement
+    expect(
+      within(lawGroup).getByTestId(`link-source-${HOUSING_LAW_SOURCE.key}`)
+    ).toBeInTheDocument()
+  })
 
-    // Verify TTHC 1.007689 Button & Link
-    const btnTax = screen.getByTestId('btn-view-procedure-1007689')
-    expect(btnTax).toHaveTextContent('Xem chi tiết kê khai thuế')
-    const linkTax = screen.getByTestId('link-dvc-tax-1007689')
-    expect(linkTax).toHaveAttribute('href', DVC_LINKS.RENTAL_TAX_1007689)
-    expect(linkTax).toHaveAttribute('target', '_blank')
-    expect(linkTax).toHaveAttribute('rel', 'noopener noreferrer')
+  it('shows loading state while sources are pending', () => {
+    vi.mocked(legalSourcesApi.getContractPanelSources).mockReturnValue(
+      new Promise(() => undefined)
+    )
 
-    // Verify Statutory legal foundation links
-    const linkHousing = screen.getByTestId('link-legal-housing-law')
-    expect(linkHousing).toHaveAttribute('href', DVC_LINKS.HOUSING_LAW_2023)
-    expect(linkHousing).toHaveAttribute('target', '_blank')
+    render(<PublicServiceCitationPanel contractId="contract-123" />)
 
-    const linkDecree = screen.getByTestId('link-legal-decree-96')
-    expect(linkDecree).toHaveAttribute('href', DVC_LINKS.DECREE_96_2024)
+    expect(screen.getByTestId('legal-sources-loading')).toBeInTheDocument()
+  })
 
-    const linkCivil = screen.getByTestId('link-legal-civil-code')
-    expect(linkCivil).toHaveAttribute('href', DVC_LINKS.CIVIL_CODE_2015)
+  it('shows empty state when no source is configured', async () => {
+    vi.mocked(legalSourcesApi.getContractPanelSources).mockResolvedValue([])
+
+    render(<PublicServiceCitationPanel contractId="contract-123" />)
+
+    expect(await screen.findByTestId('legal-sources-empty')).toBeInTheDocument()
+  })
+
+  it('shows error with retry and keeps the checklist working', async () => {
+    vi.mocked(legalSourcesApi.getContractPanelSources)
+      .mockRejectedValueOnce(new Error('Lỗi tải nguồn pháp lý'))
+      .mockResolvedValueOnce(PANEL_SOURCES)
+
+    render(<PublicServiceCitationPanel contractId="contract-123" />)
+
+    const error = await screen.findByTestId('legal-sources-error')
+    expect(error).toHaveTextContent('Lỗi tải nguồn pháp lý')
+    expect(await screen.findByTestId('dvc-checklist-items')).toBeInTheDocument()
+
+    fireEvent.click(within(error).getByRole('button', { name: 'Thử lại' }))
+
+    expect(
+      await screen.findByTestId(`link-source-${TAX_SOURCE.key}`)
+    ).toBeInTheDocument()
   })
 
   it('loads and displays contract live checklist items and badges', async () => {
-    render(
-      <PublicServiceCitationPanel
-        contractId="contract-123"
-        contractCode="HD-2026-999"
-      />
-    )
+    render(<PublicServiceCitationPanel contractId="contract-123" />)
 
     await waitFor(() => {
       expect(screen.getByTestId('dvc-checklist-items')).toBeInTheDocument()
     })
-
     expect(screen.getByText('Bản hợp đồng đã khóa hash')).toBeInTheDocument()
     expect(screen.getByText('Có sẵn')).toBeInTheDocument()
-    expect(
-      screen.getByText('Bằng chứng ký số e-Consent / Sổ cái')
-    ).toBeInTheDocument()
     expect(screen.getByText('Đã có bằng chứng')).toBeInTheDocument()
-    expect(
-      screen.getByText('Công chứng hoặc chứng thực (nếu thỏa thuận)')
-    ).toBeInTheDocument()
     expect(screen.getByText('Cần hoàn tất trước khi nộp')).toBeInTheDocument()
-  })
-
-  it('renders disclaimer from API or fallback default', async () => {
-    render(
-      <PublicServiceCitationPanel
-        contractId="contract-123"
-        contractCode="HD-2026-999"
-      />
+    expect(screen.getByTestId('dvc-disclaimer')).toHaveTextContent(
+      mockChecklist.disclaimer
     )
-
-    await waitFor(() => {
-      expect(screen.getByTestId('dvc-disclaimer')).toHaveTextContent(
-        'Hệ thống chỉ xuất checklist và bằng chứng hiện có; không tự nộp hoặc xác nhận thủ tục bên ngoài.'
-      )
-    })
   })
 
-  it('handles error state and allows refreshing checklist', async () => {
+  it('refresh button reloads checklist and sources after an error', async () => {
     vi.mocked(contractsApi.getPublicServiceChecklist).mockRejectedValueOnce(
       new Error('Lỗi mạng khi tải dữ liệu DVC')
     )
 
     render(<PublicServiceCitationPanel contractId="contract-123" />)
 
-    await waitFor(() => {
-      expect(
-        screen.getByText('Lỗi mạng khi tải dữ liệu DVC')
-      ).toBeInTheDocument()
-    })
+    expect(
+      await screen.findByText('Lỗi mạng khi tải dữ liệu DVC')
+    ).toBeInTheDocument()
 
-    // Click refresh button
-    vi.mocked(contractsApi.getPublicServiceChecklist).mockResolvedValueOnce(
-      mockChecklist
+    fireEvent.click(
+      screen.getByLabelText('Tải lại nguồn DVC và đối soát hồ sơ')
     )
 
-    const refreshBtn = screen.getByLabelText('Tải lại đối soát hồ sơ DVC')
-    fireEvent.click(refreshBtn)
-
-    await waitFor(() => {
-      expect(screen.getByTestId('dvc-checklist-items')).toBeInTheDocument()
-    })
+    expect(await screen.findByTestId('dvc-checklist-items')).toBeInTheDocument()
+    expect(legalSourcesApi.getContractPanelSources).toHaveBeenCalledTimes(2)
   })
 
-  it('opens in-app procedure detail modal when clicking eye buttons', async () => {
+  it('opens the detail modal with the selected source', async () => {
     render(
       <PublicServiceCitationPanel
         contractId="contract-123"
@@ -158,22 +172,13 @@ describe('PublicServiceCitationPanel', () => {
       />
     )
 
-    // Click on Residence Eye Button
-    const residenceEyeBtn = screen.getByTestId('btn-view-procedure-1004194')
-    fireEvent.click(residenceEyeBtn)
+    fireEvent.click(await screen.findByTestId('btn-view-source-1.004194'))
 
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText('TTHC 1.004194')).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        'Đăng ký tạm trú / Thường trú tại chỗ ở hợp pháp do thuê'
-      )
-    ).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('TTHC 1.004194')).toBeInTheDocument()
+    expect(within(dialog).getByText('HD-2026-999')).toBeInTheDocument()
 
-    // Close modal
-    const closeBtn = screen.getByRole('button', { name: 'Đóng' })
-    fireEvent.click(closeBtn)
-
+    fireEvent.click(screen.getByRole('button', { name: 'Đóng' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

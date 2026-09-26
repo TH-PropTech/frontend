@@ -8,6 +8,8 @@ import {
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { ContractWorkspace } from './contract-workspace'
 import * as contractsApi from '@/features/contracts/api/contracts-api'
+import * as legalSourcesApi from '@/features/contracts/api/legal-sources-api'
+import { PANEL_SOURCES } from '@/features/contracts/test-fixtures/legal-sources.fixture'
 
 vi.mock('@/features/contracts/api/contracts-api', async () => {
   const actual = await vi.importActual<typeof contractsApi>(
@@ -23,6 +25,10 @@ vi.mock('@/features/contracts/api/contracts-api', async () => {
     getPublicServiceChecklist: vi.fn(),
   }
 })
+
+vi.mock('@/features/contracts/api/legal-sources-api', () => ({
+  getContractPanelSources: vi.fn(),
+}))
 describe('ContractWorkspace', () => {
   const mockView: contractsApi.ContractViewDto = {
     contract: {
@@ -155,6 +161,9 @@ describe('ContractWorkspace', () => {
         description: 'Đã khóa nội dung hợp đồng',
       },
     ])
+    vi.mocked(legalSourcesApi.getContractPanelSources).mockResolvedValue(
+      PANEL_SOURCES
+    )
     vi.mocked(contractsApi.getPublicServiceChecklist).mockResolvedValue({
       purpose: 'temporary-residence',
       externalProcedureCompleted: false,
@@ -286,13 +295,13 @@ describe('ContractWorkspace', () => {
       expect(
         screen.getByTestId('public-service-citation-panel')
       ).toBeInTheDocument()
-      expect(screen.getByTestId('link-dvc-residence-1004194')).toHaveAttribute(
+      expect(screen.getByTestId('link-source-1.004194')).toHaveAttribute(
         'href',
         expect.stringContaining(
           'thu-tuc-hanh-chinh/019d2bf7-770b-734d-b7fb-5e1995f194f4'
         )
       )
-      expect(screen.getByTestId('link-dvc-tax-1007689')).toHaveAttribute(
+      expect(screen.getByTestId('link-source-1.007689')).toHaveAttribute(
         'href',
         expect.stringContaining(
           'thu-tuc-hanh-chinh/019d2bfc-2d93-73ec-ba2f-8d6aef8f7950'

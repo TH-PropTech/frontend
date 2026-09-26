@@ -18,28 +18,20 @@ import {
   Building,
   Cpu,
 } from 'lucide-react'
-import {
-  OFFICIAL_PROCEDURES_DATA,
-  type PublicServiceProcedureKey,
-  type PublicServiceProcedureData,
-} from '../model/legal-governance-data'
-
-export type { PublicServiceProcedureKey, PublicServiceProcedureData }
-export const PROCEDURES_DATA = OFFICIAL_PROCEDURES_DATA
+import type { LegalSource } from '../model/legal-governance-data'
 
 export interface PublicServiceDetailModalProps {
-  procedureKey: PublicServiceProcedureKey | null
+  /** Nguồn pháp lý/DVC cần hiển thị; `null` để đóng modal */
+  source: LegalSource | null
   onClose: () => void
   contractCode?: string | undefined
 }
 
 export function PublicServiceDetailModal({
-  procedureKey,
+  source: data,
   onClose,
   contractCode,
 }: PublicServiceDetailModalProps): React.ReactElement | null {
-  if (!procedureKey) return null
-  const data = OFFICIAL_PROCEDURES_DATA[procedureKey]
   if (!data) return null
 
   return (
@@ -224,6 +216,18 @@ export function PublicServiceDetailModal({
                       {lg.article}
                     </span>
                   </div>
+                  {lg.url && (
+                    <a
+                      href={lg.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid={`link-legal-ground-${idx}`}
+                      title="Mở văn bản gốc"
+                      className="p-1 text-[var(--muted)] hover:text-[var(--primary)]"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -267,7 +271,11 @@ export function PublicServiceDetailModal({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90"
             >
-              <span>Mở Cổng DVC Quốc gia (Link gốc)</span>
+              <span>
+                {data.kind === 'procedure'
+                  ? 'Mở Cổng DVC Quốc gia (Link gốc)'
+                  : 'Mở văn bản gốc'}
+              </span>
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
           </div>

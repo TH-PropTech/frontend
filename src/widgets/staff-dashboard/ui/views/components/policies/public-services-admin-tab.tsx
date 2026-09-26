@@ -17,7 +17,7 @@ import {
   GripVertical,
   Plus,
   Receipt,
-  RotateCcw,
+  RefreshCw,
   Scale,
   Search,
   ShieldCheck,
@@ -26,18 +26,22 @@ import {
   X,
 } from 'lucide-react'
 import {
-  OFFICIAL_PROCEDURES_DATA,
-  getStoredRegulations,
-  resetRegulationsToBaseline,
-  saveStoredRegulations,
+  PublicServiceDetailModal,
+  createPlatformRegulation,
+  deletePlatformRegulation,
+  getAdminLegalSources,
+  getAdminPlatformRegulations,
+  getLegalAdminErrorMessage,
+  reorderPlatformRegulations,
+  updatePlatformRegulation,
+  type LegalSource,
   type PlatformRegulation,
+  type PlatformRegulationInput,
   type PropertyScope,
-  type PublicServiceProcedureKey,
   type RegulationCategory,
   type RegulationChecklistItem,
   type RegulationSeverity,
-} from '@/features/contracts/model/legal-governance-data'
-import { PublicServiceDetailModal } from '@/features/contracts/ui/public-service-detail-modal'
+} from '@/features/contracts'
 
 const CATEGORY_LABELS: Record<
   RegulationCategory,
@@ -83,10 +87,42 @@ const SCOPE_LABELS: Record<PropertyScope, string> = {
   room: 'Phòng trọ sinh viên',
 }
 
+function toInput(reg: PlatformRegulation): PlatformRegulationInput {
+  return {
+    code: reg.code,
+    title: reg.title,
+    summary: reg.summary,
+    category: reg.category,
+    severity: reg.severity,
+    scope: reg.scope,
+    linkedSourceKey: reg.linkedSourceKey,
+    checklistItems: reg.checklistItems,
+    isActive: reg.isActive,
+  }
+}
+
+/** Trả về bản sao danh sách với phần tử `fromId` chuyển tới vị trí của `toId` */
+function moveById(
+  list: PlatformRegulation[],
+  fromId: string,
+  toId: string
+): PlatformRegulation[] {
+  const from = list.findIndex(r => r.id === fromId)
+  const to = list.findIndex(r => r.id === toId)
+  if (from < 0 || to < 0 || from === to) return list
+  const updated = [...list]
+  const [moved] = updated.splice(from, 1)
+  if (moved) updated.splice(to, 0, moved)
+  return updated
+}
+
 export function PublicServicesAdminTab(): React.ReactElement {
-  const [regulations, setRegulations] = React.useState<PlatformRegulation[]>(
-    () => getStoredRegulations()
-  )
+  const [regulations, setRegulations] = React.useState<PlatformRegulation[]>([])
+  const [sources, setSources] = React.useState<LegalSource[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [loadError, setLoadError] = React.useState<string | null>(null)
+  const [loadAttempt, setLoadAttempt] = React.useState(0)
+  const [isSaving, setIsSaving] = React.useState(false)
   const [selectedCategory, setSelectedCategory] = React.useState<
     'all' | RegulationCategory
   >('all')
@@ -110,8 +146,9 @@ export function PublicServicesAdminTab(): React.ReactElement {
   const [editingRegulation, setEditingRegulation] =
     React.useState<PlatformRegulation | null>(null)
   const [isAddModalOpen, setIsAddModalOpen] = React.useState(false)
-  const [detailModalKey, setDetailModalKey] =
-    React.useState<PublicServiceProcedureKey | null>(null)
+  const [detailSource, setDetailSource] = React.useState<LegalSource | null>(
+    null
+  )
   const [isSimulatorOpen, setIsSimulatorOpen] = React.useState(false)
 
   // Form State for Add / Edit
@@ -125,13 +162,41 @@ export function PublicServicesAdminTab(): React.ReactElement {
   const [formScope, setFormScope] = React.useState<PropertyScope[]>([
     'apartment',
   ])
-  const [formLinkedLegalKey, setFormLinkedLegalKey] = React.useState<
-    PublicServiceProcedureKey | ''
-  >('1.004194')
+  const [formLinkedSourceKey, setFormLinkedSourceKey] = React.useState('')
   const [formChecklist, setFormChecklist] = React.useState<
     Array<{ id: string; label: string; hint?: string | undefined }>
   >([{ id: 'chk-1', label: '', hint: '' }])
   const [formError, setFormError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    let active = true
+    Promise.all([getAdminPlatformRegulations(), getAdminLegalSources()])
+      .then(([regs, srcs]) => {
+        if (!active) return
+        setRegulations(regs)
+        setSources(srcs)
+        setLoadError(null)
+      })
+      .catch((err: unknown) => {
+        if (active) setLoadError(getLegalAdminErrorMessage(err))
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [loadAttempt])
+
+  const handleRetryLoad = () => {
+    setIsLoading(true)
+    setLoadAttempt(n => n + 1)
+  }
+
+  const sourceByKey = React.useMemo(
+    () => new Map(sources.map(s => [s.key, s])),
+    [sources]
+  )
 
   const showNotification = (
     text: string,
@@ -143,12 +208,27 @@ export function PublicServicesAdminTab(): React.ReactElement {
     }, 4000)
   }
 
-  const updateAndSave = (newList: PlatformRegulation[]) => {
-    setRegulations(newList)
-    saveStoredRegulations(newList)
+  const replaceRegulation = (saved: PlatformRegulation) => {
+    setRegulations(list => list.map(r => (r.id === saved.id ? saved : r)))
   }
 
-  // Drag and Drop Handlers
+  /** Cập nhật thứ tự lạc quan; hoàn tác nếu API lỗi */
+  const persistOrder = async (
+    reordered: PlatformRegulation[],
+    message: string
+  ) => {
+    const previous = regulations
+    setRegulations(reordered)
+    try {
+      setRegulations(await reorderPlatformRegulations(reordered.map(r => r.id)))
+      showNotification(message)
+    } catch (err) {
+      setRegulations(previous)
+      showNotification(getLegalAdminErrorMessage(err), 'error')
+    }
+  }
+
+  // Drag and Drop Handlers (index theo danh sách đang lọc → quy đổi sang id)
   const handleDragStart = (
     e: React.DragEvent<HTMLDivElement>,
     index: number
@@ -174,23 +254,16 @@ export function PublicServicesAdminTab(): React.ReactElement {
     targetIndex: number
   ) => {
     e.preventDefault()
-    if (draggedIndex === null || draggedIndex === targetIndex) {
-      setDraggedIndex(null)
-      setDragOverIndex(null)
-      return
-    }
-
-    const updated = [...regulations]
-    const [movedItem] = updated.splice(draggedIndex, 1)
-    if (movedItem) {
-      updated.splice(targetIndex, 0, movedItem)
-      updateAndSave(updated)
-      showNotification(
-        `Đã chuyển quy định "${movedItem.code}" sang vị trí #${targetIndex + 1}`
-      )
-    }
+    const moved =
+      draggedIndex === null ? undefined : filteredRegulations[draggedIndex]
+    const target = filteredRegulations[targetIndex]
     setDraggedIndex(null)
     setDragOverIndex(null)
+    if (!moved || !target || moved.id === target.id) return
+    void persistOrder(
+      moveById(regulations, moved.id, target.id),
+      `Đã chuyển quy định "${moved.code}" sang vị trí mới`
+    )
   }
 
   const handleDragEnd = () => {
@@ -199,85 +272,60 @@ export function PublicServicesAdminTab(): React.ReactElement {
   }
 
   // Move buttons for accessibility
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return
-    const updated = [...regulations]
-    const current = updated[index]
-    const prev = updated[index - 1]
-    if (current && prev) {
-      updated[index - 1] = current
-      updated[index] = prev
-      updateAndSave(updated)
+  const handleMove = (reg: PlatformRegulation, offset: -1 | 1) => {
+    const index = regulations.findIndex(r => r.id === reg.id)
+    const neighbour = regulations[index + offset]
+    if (!neighbour) return
+    void persistOrder(
+      moveById(regulations, reg.id, neighbour.id),
+      offset < 0
+        ? `Đã đẩy quy định "${reg.code}" lên thứ tự ưu tiên cao hơn`
+        : `Đã hạ quy định "${reg.code}" xuống thứ tự phía sau`
+    )
+  }
+
+  const handleToggleStatus = async (reg: PlatformRegulation) => {
+    const nextState = !reg.isActive
+    try {
+      replaceRegulation(
+        await updatePlatformRegulation(reg.id, { isActive: nextState })
+      )
       showNotification(
-        `Đã đẩy quy định "${current.code}" lên thứ tự ưu tiên cao hơn`
+        `${nextState ? 'Kích hoạt' : 'Tạm dừng'} áp dụng quy định [${reg.code}]`
       )
+    } catch (err) {
+      showNotification(getLegalAdminErrorMessage(err), 'error')
     }
   }
 
-  const handleMoveDown = (index: number) => {
-    if (index >= regulations.length - 1) return
-    const updated = [...regulations]
-    const current = updated[index]
-    const next = updated[index + 1]
-    if (current && next) {
-      updated[index + 1] = current
-      updated[index] = next
-      updateAndSave(updated)
-      showNotification(`Đã hạ quy định "${current.code}" xuống thứ tự phía sau`)
-    }
-  }
-
-  const handleToggleStatus = (id: string) => {
-    const updated = regulations.map(reg => {
-      if (reg.id === id) {
-        const nextState = !reg.isActive
-        showNotification(
-          `${nextState ? 'Kích hoạt' : 'Tạm dừng'} áp dụng quy định [${reg.code}]`
-        )
-        return { ...reg, isActive: nextState }
-      }
-      return reg
-    })
-    updateAndSave(updated)
-  }
-
-  const handleDelete = (id: string, code: string) => {
+  const handleDelete = async (reg: PlatformRegulation) => {
     if (
-      window.confirm(
-        `Bạn có chắc chắn muốn xóa quy định [${code}] khỏi danh mục nền tảng?`
+      !window.confirm(
+        `Bạn có chắc chắn muốn xóa quy định [${reg.code}] khỏi danh mục nền tảng?`
       )
     ) {
-      const updated = regulations.filter(reg => reg.id !== id)
-      updateAndSave(updated)
-      showNotification(`Đã xóa quy định [${code}] thành công`, 'info')
+      return
+    }
+    try {
+      await deletePlatformRegulation(reg.id)
+      setRegulations(list => list.filter(r => r.id !== reg.id))
+      showNotification(`Đã xóa quy định [${reg.code}] thành công`, 'info')
+    } catch (err) {
+      showNotification(getLegalAdminErrorMessage(err), 'error')
     }
   }
 
-  const handleDuplicate = (reg: PlatformRegulation) => {
-    const newCode = `${reg.code}-COPY`
-    const duplicated: PlatformRegulation = {
-      ...reg,
-      id: `reg-${Date.now()}`,
-      code: newCode,
-      title: `${reg.title} (Bản sao)`,
-      order: regulations.length + 1,
-      isDefault: false,
-      updatedAt: new Date().toISOString(),
-    }
-    const updated = [...regulations, duplicated]
-    updateAndSave(updated)
-    showNotification(`Đã nhân bản quy định mới [${newCode}]`)
-  }
-
-  const handleResetBaseline = () => {
-    if (
-      window.confirm(
-        'Khôi phục danh mục về 10 Quy định Chuẩn Baseline ban đầu? Các tùy chỉnh hiện tại sẽ được đặt lại theo chuẩn quốc gia.'
-      )
-    ) {
-      const baseline = resetRegulationsToBaseline()
-      setRegulations(baseline)
-      showNotification('Đã khôi phục thành công 10 quy định chuẩn Baseline!')
+  const handleDuplicate = async (reg: PlatformRegulation) => {
+    try {
+      const created = await createPlatformRegulation({
+        ...toInput(reg),
+        code: `${reg.code}-COPY`,
+        title: `${reg.title} (Bản sao)`,
+      })
+      setRegulations(list => [...list, created])
+      showNotification(`Đã nhân bản quy định mới [${created.code}]`)
+    } catch (err) {
+      showNotification(getLegalAdminErrorMessage(err), 'error')
     }
   }
 
@@ -290,7 +338,7 @@ export function PublicServicesAdminTab(): React.ReactElement {
     setFormCategory('residence')
     setFormSeverity('mandatory')
     setFormScope(['apartment'])
-    setFormLinkedLegalKey('1.004194')
+    setFormLinkedSourceKey('')
     setFormChecklist([{ id: `chk-${Date.now()}-1`, label: '', hint: '' }])
     setFormError(null)
     setIsAddModalOpen(true)
@@ -305,7 +353,7 @@ export function PublicServicesAdminTab(): React.ReactElement {
     setFormCategory(reg.category)
     setFormSeverity(reg.severity)
     setFormScope(reg.scope)
-    setFormLinkedLegalKey(reg.linkedLegalKey ?? '')
+    setFormLinkedSourceKey(reg.linkedSourceKey ?? '')
     setFormChecklist(
       reg.checklistItems.length > 0
         ? reg.checklistItems.map(c => ({ ...c }))
@@ -315,8 +363,8 @@ export function PublicServicesAdminTab(): React.ReactElement {
     setIsAddModalOpen(true)
   }
 
-  // Save Modal Form
-  const handleSaveForm = (e: React.FormEvent) => {
+  // Save Modal Form — lỗi API giữ modal mở với dữ liệu đã nhập
+  const handleSaveForm = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formCode.trim() || !formTitle.trim() || !formSummary.trim()) {
       setFormError(
@@ -325,61 +373,44 @@ export function PublicServicesAdminTab(): React.ReactElement {
       return
     }
 
-    const validChecklist: RegulationChecklistItem[] = formChecklist
+    const checklistItems: RegulationChecklistItem[] = formChecklist
       .filter(item => item.label.trim().length > 0)
       .map((item, idx) => ({
         id: item.id || `chk-${Date.now()}-${idx}`,
         label: item.label.trim(),
-        hint: item.hint?.trim() || undefined,
+        ...(item.hint?.trim() ? { hint: item.hint.trim() } : {}),
       }))
 
-    if (editingRegulation) {
-      // Edit existing
-      const updated = regulations.map(reg => {
-        if (reg.id === editingRegulation.id) {
-          return {
-            ...reg,
-            code: formCode.trim().toUpperCase(),
-            title: formTitle.trim(),
-            summary: formSummary.trim(),
-            category: formCategory,
-            severity: formSeverity,
-            scope:
-              formScope.length > 0 ? formScope : (['all'] as PropertyScope[]),
-            linkedLegalKey:
-              formLinkedLegalKey !== '' ? formLinkedLegalKey : undefined,
-            checklistItems: validChecklist,
-            updatedAt: new Date().toISOString(),
-          }
-        }
-        return reg
-      })
-      updateAndSave(updated)
-      showNotification(`Đã cập nhật quy định [${formCode}] thành công!`)
-    } else {
-      // Create new
-      const newReg: PlatformRegulation = {
-        id: `reg-${Date.now()}`,
-        code: formCode.trim().toUpperCase(),
-        title: formTitle.trim(),
-        summary: formSummary.trim(),
-        category: formCategory,
-        severity: formSeverity,
-        scope: formScope.length > 0 ? formScope : (['all'] as PropertyScope[]),
-        linkedLegalKey:
-          formLinkedLegalKey !== '' ? formLinkedLegalKey : undefined,
-        checklistItems: validChecklist,
-        order: regulations.length + 1,
-        isActive: true,
-        isDefault: false,
-        updatedAt: new Date().toISOString(),
-      }
-      const updated = [...regulations, newReg]
-      updateAndSave(updated)
-      showNotification(`Đã thêm mới quy định [${newReg.code}] vào hệ thống!`)
+    const input: PlatformRegulationInput = {
+      code: formCode.trim().toUpperCase(),
+      title: formTitle.trim(),
+      summary: formSummary.trim(),
+      category: formCategory,
+      severity: formSeverity,
+      scope: formScope.length > 0 ? formScope : ['all'],
+      linkedSourceKey: formLinkedSourceKey || null,
+      checklistItems,
     }
 
-    setIsAddModalOpen(false)
+    setIsSaving(true)
+    setFormError(null)
+    try {
+      if (editingRegulation) {
+        replaceRegulation(
+          await updatePlatformRegulation(editingRegulation.id, input)
+        )
+        showNotification(`Đã cập nhật quy định [${input.code}] thành công!`)
+      } else {
+        const created = await createPlatformRegulation(input)
+        setRegulations(list => [...list, created])
+        showNotification(`Đã thêm mới quy định [${created.code}] vào hệ thống!`)
+      }
+      setIsAddModalOpen(false)
+    } catch (err) {
+      setFormError(getLegalAdminErrorMessage(err))
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   // Filtered Regulations
@@ -398,10 +429,8 @@ export function PublicServicesAdminTab(): React.ReactElement {
       const matchTitle = reg.title.toLowerCase().includes(q)
       const matchSummary = reg.summary.toLowerCase().includes(q)
       const matchLegal =
-        reg.linkedLegalKey &&
-        OFFICIAL_PROCEDURES_DATA[reg.linkedLegalKey]?.title
-          .toLowerCase()
-          .includes(q)
+        reg.linkedSourceKey &&
+        sourceByKey.get(reg.linkedSourceKey)?.title.toLowerCase().includes(q)
       return matchCode || matchTitle || matchSummary || matchLegal
     }
     return true
@@ -417,8 +446,38 @@ export function PublicServicesAdminTab(): React.ReactElement {
     0
   )
   const connectedLegalCount = new Set(
-    regulations.map(r => r.linkedLegalKey).filter(Boolean)
+    regulations.map(r => r.linkedSourceKey).filter(Boolean)
   ).size
+
+  if (isLoading) {
+    return (
+      <div
+        data-testid="public-services-admin-loading"
+        className="p-8 text-center text-xs text-[var(--muted)] flex items-center justify-center gap-2"
+      >
+        <RefreshCw className="w-4 h-4 animate-spin text-[var(--primary)]" />
+        <span>Đang tải quy định nền tảng...</span>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div
+        data-testid="public-services-admin-error"
+        className="p-4 rounded-xl border border-[var(--danger)] bg-[var(--danger)]/10 text-xs text-[var(--danger)] flex items-center justify-between gap-3"
+      >
+        <span>{loadError}</span>
+        <button
+          type="button"
+          onClick={handleRetryLoad}
+          className="font-semibold underline underline-offset-2"
+        >
+          Thử lại
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -534,17 +593,6 @@ export function PublicServicesAdminTab(): React.ReactElement {
               <Eye className="w-4 h-4 text-[var(--primary)]" />
               <span>Giả lập Giao diện Người dùng</span>
             </button>
-
-            <button
-              type="button"
-              onClick={handleResetBaseline}
-              data-testid="btn-reset-baseline"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] text-xs font-semibold hover:text-[var(--danger)] hover:border-[var(--danger)] transition-colors"
-              title="Khôi phục 10 quy định chuẩn ban đầu"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Khôi phục Baseline</span>
-            </button>
           </div>
 
           {/* Quick Stats Helper */}
@@ -652,7 +700,7 @@ export function PublicServicesAdminTab(): React.ReactElement {
               Không tìm thấy quy định nào phù hợp với bộ lọc hiện tại.
             </p>
             <p className="text-[11px] text-[var(--muted)]">
-              Thử thay đổi từ khóa tìm kiếm hoặc bấm Khôi phục Baseline.
+              Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.
             </p>
           </div>
         ) : (
@@ -660,9 +708,10 @@ export function PublicServicesAdminTab(): React.ReactElement {
             const isDragging = draggedIndex === index
             const isOver = dragOverIndex === index
             const severityStyle = SEVERITY_LABELS[reg.severity]
-            const legalData = reg.linkedLegalKey
-              ? OFFICIAL_PROCEDURES_DATA[reg.linkedLegalKey]
-              : null
+            const legalData = reg.linkedSourceKey
+              ? sourceByKey.get(reg.linkedSourceKey)
+              : undefined
+            const fullIndex = regulations.findIndex(r => r.id === reg.id)
 
             return (
               <div
@@ -740,9 +789,7 @@ export function PublicServicesAdminTab(): React.ReactElement {
                         <div className="flex items-center gap-2 pt-1">
                           <button
                             type="button"
-                            onClick={() =>
-                              setDetailModalKey(reg.linkedLegalKey!)
-                            }
+                            onClick={() => setDetailSource(legalData)}
                             className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--primary)] hover:underline"
                           >
                             <Scale className="w-3.5 h-3.5" />
@@ -793,7 +840,7 @@ export function PublicServicesAdminTab(): React.ReactElement {
                       </span>
                       <button
                         type="button"
-                        onClick={() => handleToggleStatus(reg.id)}
+                        onClick={() => void handleToggleStatus(reg)}
                         data-testid={`toggle-status-${reg.code}`}
                         aria-label={`Bật tắt trạng thái quy định ${reg.code}`}
                         className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
@@ -815,8 +862,8 @@ export function PublicServicesAdminTab(): React.ReactElement {
                       {/* Priority Up/Down */}
                       <button
                         type="button"
-                        onClick={() => handleMoveUp(index)}
-                        disabled={index === 0}
+                        onClick={() => handleMove(reg, -1)}
+                        disabled={fullIndex === 0}
                         aria-label="Đẩy lên trên"
                         className="p-1 rounded text-[var(--muted)] hover:text-[var(--primary)] hover:bg-[var(--surface-muted)] disabled:opacity-30"
                       >
@@ -824,8 +871,8 @@ export function PublicServicesAdminTab(): React.ReactElement {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleMoveDown(index)}
-                        disabled={index === regulations.length - 1}
+                        onClick={() => handleMove(reg, 1)}
+                        disabled={fullIndex === regulations.length - 1}
                         aria-label="Hạ xuống dưới"
                         className="p-1 rounded text-[var(--muted)] hover:text-[var(--primary)] hover:bg-[var(--surface-muted)] disabled:opacity-30"
                       >
@@ -835,7 +882,7 @@ export function PublicServicesAdminTab(): React.ReactElement {
                       {/* Duplicate */}
                       <button
                         type="button"
-                        onClick={() => handleDuplicate(reg)}
+                        onClick={() => void handleDuplicate(reg)}
                         aria-label="Nhân bản quy định"
                         title="Tạo bản sao quy định"
                         className="p-1 rounded text-[var(--muted)] hover:text-[var(--primary)] hover:bg-[var(--surface-muted)]"
@@ -857,7 +904,7 @@ export function PublicServicesAdminTab(): React.ReactElement {
                       {/* Delete */}
                       <button
                         type="button"
-                        onClick={() => handleDelete(reg.id, reg.code)}
+                        onClick={() => void handleDelete(reg)}
                         data-testid={`btn-delete-${reg.code}`}
                         aria-label="Xóa quy định"
                         className="p-1 rounded text-[var(--muted)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10"
@@ -906,7 +953,7 @@ export function PublicServicesAdminTab(): React.ReactElement {
 
             {/* Modal Form Body */}
             <form
-              onSubmit={handleSaveForm}
+              onSubmit={e => void handleSaveForm(e)}
               className="flex-1 overflow-y-auto p-6 space-y-4 text-xs"
             >
               {formError && (
@@ -994,27 +1041,18 @@ export function PublicServicesAdminTab(): React.ReactElement {
                   Căn cứ Pháp luật / Thủ tục DVC Liên kết (Chuẩn Quốc Gia):
                 </label>
                 <select
-                  value={formLinkedLegalKey}
-                  onChange={e =>
-                    setFormLinkedLegalKey(
-                      e.target.value as PublicServiceProcedureKey | ''
-                    )
-                  }
+                  value={formLinkedSourceKey}
+                  onChange={e => setFormLinkedSourceKey(e.target.value)}
+                  data-testid="select-linked-source"
                   className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--fg)]"
                 >
                   <option value="">-- Không liên kết trực tiếp --</option>
-                  {(
-                    Object.keys(
-                      OFFICIAL_PROCEDURES_DATA
-                    ) as PublicServiceProcedureKey[]
-                  ).map(key => {
-                    const item = OFFICIAL_PROCEDURES_DATA[key]
-                    return (
-                      <option key={key} value={key}>
-                        {item.code} - {item.title}
-                      </option>
-                    )
-                  })}
+                  {sources.map(item => (
+                    <option key={item.key} value={item.key}>
+                      {item.code} - {item.title}
+                      {item.isActive ? '' : ' (đang tắt)'}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -1151,9 +1189,14 @@ export function PublicServicesAdminTab(): React.ReactElement {
                 <button
                   type="submit"
                   data-testid="btn-save-regulation"
-                  className="px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-xs font-bold hover:opacity-90"
+                  disabled={isSaving}
+                  className="px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-xs font-bold hover:opacity-90 disabled:opacity-50"
                 >
-                  {editingRegulation ? 'Lưu Thay Đổi' : 'Tạo Quy Định Mới'}
+                  {isSaving
+                    ? 'Đang lưu...'
+                    : editingRegulation
+                      ? 'Lưu Thay Đổi'
+                      : 'Tạo Quy Định Mới'}
                 </button>
               </div>
             </form>
@@ -1265,8 +1308,8 @@ export function PublicServicesAdminTab(): React.ReactElement {
 
       {/* ═══ DETAIL MODAL FOR STATUTORY LAWS / DVC PROCEDURES ═══ */}
       <PublicServiceDetailModal
-        procedureKey={detailModalKey}
-        onClose={() => setDetailModalKey(null)}
+        source={detailSource}
+        onClose={() => setDetailSource(null)}
       />
     </div>
   )
