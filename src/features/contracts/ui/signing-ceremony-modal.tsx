@@ -7,60 +7,12 @@ import {
   CheckCircle2,
   FileCheck,
   ArrowRight,
-  AlertCircle,
-  Clock3,
-  RefreshCw,
 } from 'lucide-react'
 import { useSigningCeremony } from '../model/use-signing-ceremony'
 import { FaceVerifyCamera } from './face-verify-camera'
 import { SmartOtpStep } from './smart-otp-step'
 import { SignatureAnimation } from './signature-animation'
-import {
-  createSmartCaSigningSession,
-  type SmartCaSigningSession,
-} from '../api/contracts-api'
-
-function smartCaStatusCopy(status: SmartCaSigningSession['status']): {
-  label: string
-  guidance: string
-  tone: 'info' | 'success' | 'warning' | 'danger'
-  retryable: boolean
-} {
-  switch (status) {
-    case 'signed':
-      return {
-        label: 'Đã ký và đã nhận bằng chứng chứng thư.',
-        guidance: 'Giữ nguyên digest này khi đối soát chữ ký còn lại.',
-        tone: 'success',
-        retryable: false,
-      }
-    case 'rejected':
-      return {
-        label: 'Bị từ chối bởi VNPT SmartCA.',
-        guidance:
-          'Bạn có thể mở lại một giao dịch ký mới; OTP/eKYC không thay thế chữ ký SmartCA.',
-        tone: 'danger',
-        retryable: true,
-      }
-    case 'expired':
-      return {
-        label: 'Phiên ký đã hết hạn.',
-        guidance:
-          'Mở lại phiên để nhận giao dịch SmartCA mới trên cùng artifact đang khóa.',
-        tone: 'warning',
-        retryable: true,
-      }
-    case 'pending-user-confirmation':
-    case 'pending':
-      return {
-        label: 'Đang chờ xác nhận trên VNPT SmartCA.',
-        guidance:
-          'Hoàn tất xác nhận trong ứng dụng/portal SmartCA rồi quay lại đối soát.',
-        tone: 'info',
-        retryable: false,
-      }
-  }
-}
+import { SmartCaSigningPanel } from './smartca-signing-panel'
 
 export interface SigningCeremonyModalProps {
   isOpen: boolean
@@ -82,10 +34,7 @@ export function SigningCeremonyModal({
   onSigningSuccess,
 }: SigningCeremonyModalProps) {
   const [consentChecked, setConsentChecked] = useState(false)
-  const [smartCaSession, setSmartCaSession] =
-    useState<SmartCaSigningSession | null>(null)
-  const [smartCaLoading, setSmartCaLoading] = useState(false)
-  const [smartCaError, setSmartCaError] = useState<string | null>(null)
+  const [smartCaPanelKey, setSmartCaPanelKey] = useState(0)
 
   const ceremony = useSigningCeremony({
     contractId,
@@ -96,42 +45,10 @@ export function SigningCeremonyModal({
 
   const handleClose = () => {
     ceremony.reset()
-    setSmartCaSession(null)
-    setSmartCaError(null)
+    setConsentChecked(false)
+    setSmartCaPanelKey(current => current + 1)
     onClose()
   }
-
-  const handleSmartCaStart = async (): Promise<void> => {
-    setSmartCaLoading(true)
-    setSmartCaError(null)
-    try {
-      const session = await createSmartCaSigningSession(contractId)
-      setSmartCaSession(session)
-      if (session.confirmationUrl)
-        window.open(session.confirmationUrl, '_blank', 'noopener,noreferrer')
-    } catch (error: unknown) {
-      setSmartCaError(
-        error instanceof Error
-          ? error.message
-          : 'Không thể khởi tạo phiên ký VNPT SmartCA.'
-      )
-    } finally {
-      setSmartCaLoading(false)
-    }
-  }
-
-  const smartCaStatus = smartCaSession
-    ? smartCaStatusCopy(smartCaSession.status)
-    : null
-
-  const smartCaStatusClass =
-    smartCaStatus?.tone === 'success'
-      ? 'text-[var(--success)] border-[var(--success)]/30 bg-[var(--surface-muted)]'
-      : smartCaStatus?.tone === 'danger'
-        ? 'text-[var(--danger)] border-[var(--danger)]/30 bg-[var(--surface-muted)]'
-        : smartCaStatus?.tone === 'warning'
-          ? 'text-[var(--warning)] border-[var(--warning)]/30 bg-[var(--surface-muted)]'
-          : 'text-[var(--primary)] border-[var(--primary)]/30 bg-[var(--surface-muted)]'
 
   return (
     <div
@@ -273,80 +190,11 @@ export function SigningCeremonyModal({
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              <div className="rounded-lg border border-[var(--primary)]/30 bg-[var(--primary-soft)] p-3 text-[11px] text-[var(--fg)]">
-                <p className="font-semibold">Ký số VNPT SmartCA</p>
-                <p className="mt-1 text-[var(--muted)]">
-                  SmartCA tạo giao dịch ký riêng cho từng bên trên đúng mã băm
-                  hợp đồng. OTP/eKYC bên dưới chỉ là xác thực hỗ trợ.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => void handleSmartCaStart()}
-                  disabled={!consentChecked || smartCaLoading}
-                  aria-label="Mở phiên ký VNPT SmartCA"
-                  className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--primary)] px-3 py-2 font-semibold text-[var(--primary)] disabled:opacity-50"
-                >
-                  {smartCaLoading
-                    ? 'Đang kết nối SmartCA…'
-                    : 'Mở phiên ký VNPT SmartCA'}
-                </button>
-                {smartCaSession && smartCaStatus ? (
-                  <div
-                    data-testid="smartca-session-status"
-                    role={smartCaStatus.retryable ? 'alert' : 'status'}
-                    className={`mt-2 rounded-lg border p-2 ${smartCaStatusClass}`}
-                  >
-                    <div className="flex items-start gap-1.5">
-                      {smartCaStatus.tone === 'success' ? (
-                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                      ) : smartCaStatus.retryable ? (
-                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                      ) : (
-                        <Clock3 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                      )}
-                      <div>
-                        <p className="font-semibold">{smartCaStatus.label}</p>
-                        <p className="mt-0.5 text-[var(--muted)]">
-                          {smartCaStatus.guidance}
-                        </p>
-                        <p className="mt-1 break-all font-mono text-[10px]">
-                          Giao dịch: {smartCaSession.providerTransactionId}
-                        </p>
-                      </div>
-                    </div>
-                    {smartCaStatus.retryable ? (
-                      <button
-                        type="button"
-                        onClick={() => void handleSmartCaStart()}
-                        disabled={smartCaLoading}
-                        aria-label="Mở lại phiên ký VNPT SmartCA"
-                        className="mt-2 inline-flex items-center gap-1.5 font-semibold underline underline-offset-2 disabled:opacity-50"
-                      >
-                        <RefreshCw className="h-3 w-3" />
-                        Mở lại phiên ký
-                      </button>
-                    ) : null}
-                  </div>
-                ) : null}
-                {smartCaError ? (
-                  <div className="mt-2 text-[var(--danger)]" role="alert">
-                    <p>
-                      Không thể kết nối VNPT SmartCA: {smartCaError}. Hãy thử
-                      lại; hệ thống không chuyển sang OTP để gắn nhãn SmartCA.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => void handleSmartCaStart()}
-                      disabled={smartCaLoading}
-                      aria-label="Mở lại phiên ký VNPT SmartCA"
-                      className="mt-2 inline-flex items-center gap-1.5 font-semibold underline underline-offset-2 disabled:opacity-50"
-                    >
-                      <RefreshCw className="h-3 w-3" />
-                      Thử lại kết nối
-                    </button>
-                  </div>
-                ) : null}
-              </div>
+              <SmartCaSigningPanel
+                key={smartCaPanelKey}
+                contractId={contractId}
+                disabled={!consentChecked}
+              />
             </div>
           )}
 
@@ -387,8 +235,9 @@ export function SigningCeremonyModal({
                   Ký hợp đồng thành công!
                 </h4>
                 <p className="text-xs text-[var(--muted)] mt-1 max-w-sm">
-                  Chữ ký số VNPT SmartCA và bằng chứng đối soát sinh trắc học đã
-                  được ghi nhận vào hồ sơ hợp đồng.
+                  Bằng chứng giao dịch VNPT SmartCA và dữ liệu đối soát sinh
+                  trắc học đã được ghi nhận. Thông báo này không khẳng định PDF
+                  đã có chữ ký hiển thị.
                 </p>
               </div>
 

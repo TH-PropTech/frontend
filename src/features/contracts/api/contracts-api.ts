@@ -381,7 +381,7 @@ export interface SigningGrant {
 }
 
 export interface SmartCaSigningSession {
-  id?: string
+  id: string
   contractId: string
   signerId: string
   signerRole: 'tenant' | 'landlord'
@@ -393,14 +393,34 @@ export interface SmartCaSigningSession {
     | 'signed'
     | 'rejected'
     | 'expired'
+    | 'cancelled'
   confirmationUrl?: string | null
   certificateSerial?: string | null
   signatureHash?: string | null
   signatureAlgorithm?: string | null
-  signatureValueRef?: string | null
   providerStatus?: string | null
+  signedAt?: string | null
   verifiedAt?: string | null
   expiresAt: string
+}
+
+export interface SmartCaCertificate {
+  serialNumber: string
+  subject?: string
+  issuer?: string
+  validFrom?: string
+  validTo?: string
+}
+
+export interface SmartCaCertificateList {
+  certificates: SmartCaCertificate[]
+}
+
+export interface CreateSmartCaSigningSessionInput {
+  idempotencyKey: string
+  certificateSerial?: string
+  smartCaPassword: string
+  smartCaOtp: string
 }
 
 // ── API Functions ──
@@ -438,11 +458,20 @@ export async function initiateContractOtp(
 }
 
 export async function createSmartCaSigningSession(
-  contractId: string
+  contractId: string,
+  input: CreateSmartCaSigningSessionInput
 ): Promise<SmartCaSigningSession> {
   return apiClient.post<SmartCaSigningSession>(
     `/contracts/${contractId}/smartca/signing-sessions`,
-    {}
+    input
+  )
+}
+
+export async function getSmartCaCertificates(
+  contractId: string
+): Promise<SmartCaCertificateList> {
+  return apiClient.get<SmartCaCertificateList>(
+    `/contracts/${contractId}/smartca/certificates`
   )
 }
 
