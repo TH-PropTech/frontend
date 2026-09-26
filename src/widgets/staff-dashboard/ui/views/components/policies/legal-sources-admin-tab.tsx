@@ -325,7 +325,7 @@ export function LegalSourcesAdminTab(): React.ReactElement {
 
               <div className="flex items-center gap-4 text-[11px] text-[var(--muted)]">
                 <span className="inline-flex items-center gap-1.5">
-                  Panel HĐ
+                  Hiện trên trang hợp đồng
                   <Toggle
                     checked={source.showInContractPanel}
                     label={`Hiển thị ${source.code} trên panel hợp đồng`}
