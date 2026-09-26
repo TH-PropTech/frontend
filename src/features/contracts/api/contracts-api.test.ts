@@ -114,4 +114,50 @@ describe('contracts API', () => {
     expect(signerResult.verified).toBe(true)
     expect(signerResult.biometricEvidenceId).toBe('bio-1')
   })
+
+  it('keeps commercial editing and amendment artifacts on explicit endpoints', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      revision: 1,
+      commercial: null,
+    })
+    vi.mocked(apiClient.post).mockResolvedValue({ status: 'draft' })
+    vi.mocked(apiClient.put).mockResolvedValue({ revision: 2 })
+    vi.mocked(apiClient.getBlob).mockResolvedValue(new Blob(['pdf']))
+
+    const api = await import('./contracts-api')
+    const commercial = {
+      monthlyRent: 15_000_000,
+      deposit: 30_000_000,
+      paymentDay: 5,
+      latePenaltyRate: 8,
+      terminationNoticeDays: 30,
+      durationMonths: 12,
+    }
+    await api.getAdminContractEditor('c1')
+    await api.validateAdminCommercialDraft('c1', commercial)
+    await api.saveAdminCommercialDraft('c1', commercial, 1)
+    await api.getContractAmendments('c1')
+    await api.createContractAmendment('c1', {
+      changes: [{ field: 'monthlyRent', after: 17_000_000 }],
+      effectiveFrom: '2030-01-01T00:00:00.000Z',
+    })
+    await api.lockContractAmendment('c1', 'a1', 0)
+    await api.lockContractAmendmentArtifact(
+      'c1',
+      'a1',
+      1,
+      new File(['pdf'], 'amendment.pdf', { type: 'application/pdf' })
+    )
+    await api.signContractAmendment('c1', 'a1', 2, 'a'.repeat(64))
+    await api.downloadContractAmendmentArtifact('c1', 'a1')
+
+    expect(apiClient.get).toHaveBeenCalledWith('/contracts/c1/admin-editor')
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/contracts/c1/amendments/a1/sign',
+      { expectedRevision: 2, signatureHash: 'a'.repeat(64) }
+    )
+    expect(apiClient.getBlob).toHaveBeenCalledWith(
+      '/contracts/c1/amendments/a1/artifact'
+    )
+  })
 })

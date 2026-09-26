@@ -25,6 +25,7 @@ import {
   PublicServiceCitationPanel,
   BilateralSigningTimeline,
   FabricLedgerEvidenceCard,
+  ContractAmendmentTimeline,
   resolveContractActiveStep,
 } from '@/features/contracts'
 import { DepositPaymentPanel } from '@/features/payments'
@@ -377,6 +378,14 @@ export function ContractWorkspace({
             activeMobileTab !== 'document' ? 'block' : 'hidden lg:block'
           }`}
         >
+          <ContractAmendmentTimeline
+            contractId={contractId}
+            canManage={Boolean(
+              data.actions.canEditContent && !data.access?.canSign
+            )}
+            canSign={Boolean(data.access?.canSign)}
+          />
+
           {/* Contract Flow Guide — chỉ rõ bước hiện tại theo strategy (Actions tab on mobile) */}
           <div
             className={

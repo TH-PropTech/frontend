@@ -2,13 +2,14 @@
 
 import * as React from 'react'
 import type { Route } from 'next'
-import { ArrowRightLeft } from 'lucide-react'
+import { ArrowRightLeft, Cpu } from 'lucide-react'
 import { OverviewView } from './views/overview-view'
 import { ContractMonitorView } from './views/contract-monitor-view'
 import { AiConsultationView } from './views/ai-consultation-view'
 import { PermissionMatrixView } from './views/permission-matrix-view'
 import { PoliciesView } from './views/policies-view'
 import { RentalFlowControlView } from './views/rental-flow-control-view'
+import { RecommendationEngineView } from './views/recommendation-engine-view'
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -22,6 +23,7 @@ type TabType =
   | 'policies'
   | 'rental-flow'
   | 'ownership-transfer'
+  | 'ai-engine'
 
 const ADMIN_TABS: readonly TabType[] = [
   'overview',
@@ -31,6 +33,7 @@ const ADMIN_TABS: readonly TabType[] = [
   'policies',
   'rental-flow',
   'ownership-transfer',
+  'ai-engine',
 ]
 
 export function resolveAdminTab(pathname: string): TabType {
@@ -187,6 +190,11 @@ export function AdminDashboard({
       label: 'Chuyển quyền chủ nhà',
       icon: <ArrowRightLeft className="h-[18px] w-[18px]" aria-hidden="true" />,
     },
+    {
+      type: 'ai-engine',
+      label: 'Cấu hình AI Engine',
+      icon: <Cpu className="h-[18px] w-[18px]" />,
+    },
   ]
 
   const handleSidebarItemClick = (type: TabType): void => {
@@ -229,6 +237,8 @@ export function AdminDashboard({
         return <RentalFlowControlView />
       case 'ownership-transfer':
         return <OwnershipTransferPanel />
+      case 'ai-engine':
+        return <RecommendationEngineView />
       default:
         return <OverviewView />
     }

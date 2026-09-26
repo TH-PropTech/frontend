@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import fixture from '../test-fixtures/canonical-contract-view.fixture.json'
 import type { ContractViewDto } from './contracts-api'
+import canonicalWorkspaceFixture from '../test-fixtures/canonical-workspace.fixture.json'
 
 describe('Canonical ContractViewDto Fixture Contract', () => {
   it('strictly validates against the canonical Backend ContractViewDto interface', () => {
@@ -43,5 +44,30 @@ describe('Canonical ContractViewDto Fixture Contract', () => {
     expect(view.ledger.status).toBe('confirmed-fabric')
     expect(view.ledger.txHash).toBe('0xfabric_tx_confirmed_abc123')
     expect(view.ledger.blockNumber).toBe(105)
+  })
+
+  it('keeps canonical document and ledger states aligned with the shared workspace fixture', () => {
+    const shared = canonicalWorkspaceFixture as unknown as {
+      document: ContractViewDto['document']
+      amendment: { status: string; governing: boolean }
+      ledger: {
+        fabric: ContractViewDto['ledger']
+        simulation: ContractViewDto['ledger']
+        unavailable: ContractViewDto['ledger']
+      }
+    }
+
+    expect(shared.document.canonicalArtifact?.templateVersion).toBe(3)
+    expect(shared.document.canonicalArtifact?.canonicalContentHash).toBe(
+      shared.document.lockedHash
+    )
+    expect(shared.document.mode).toBe('locked')
+    expect(shared.document.integrity).toBe('valid')
+    expect(shared.amendment).toEqual(
+      expect.objectContaining({ status: 'effective', governing: true })
+    )
+    expect(shared.ledger.fabric.status).toBe('confirmed-fabric')
+    expect(shared.ledger.simulation.status).toBe('confirmed-simulation')
+    expect(shared.ledger.unavailable.status).toBe('failed-retryable')
   })
 })

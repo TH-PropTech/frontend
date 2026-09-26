@@ -12,7 +12,14 @@ import { CommunityView } from './views/community-view'
 import { SafetyReportsView } from './views/safety-reports-view'
 import { SupportQueueView } from './views/support-queue-view'
 import { ApartmentManagementView } from './views/apartment-management-view'
-import { LifeBuoy, ShieldAlert, Building2, LayoutDashboard } from 'lucide-react'
+import { RecommendationEngineView } from './views/recommendation-engine-view'
+import {
+  LifeBuoy,
+  ShieldAlert,
+  Building2,
+  LayoutDashboard,
+  Cpu,
+} from 'lucide-react'
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -28,6 +35,7 @@ type TabType =
   | 'community'
   | 'safety-reports'
   | 'support-tickets'
+  | 'ai-engine'
 
 const STAFF_TABS: readonly TabType[] = [
   'overview',
@@ -40,6 +48,7 @@ const STAFF_TABS: readonly TabType[] = [
   'community',
   'safety-reports',
   'support-tickets',
+  'ai-engine',
 ]
 
 function resolveStaffTab(pathname: string): TabType {
@@ -200,6 +209,15 @@ export function StaffOperationsDashboard({
     },
   ]
 
+  // Only administrators can access and configure the AI Recommendation Engine
+  if (initialUser?.roles?.includes('admin')) {
+    sidebarItems.push({
+      type: 'ai-engine',
+      label: 'Cấu hình AI Engine',
+      icon: <Cpu className="h-[18px] w-[18px]" />,
+    })
+  }
+
   const handleSidebarItemClick = (type: TabType): void => {
     router.push(`/admin/${type}` as Route)
     setIsSidebarOpen(false)
@@ -246,6 +264,8 @@ export function StaffOperationsDashboard({
         return <SafetyReportsView />
       case 'support-tickets':
         return <SupportQueueView />
+      case 'ai-engine':
+        return <RecommendationEngineView />
       default:
         return <HomeView onNavigateTab={handleSidebarItemClick} />
     }
