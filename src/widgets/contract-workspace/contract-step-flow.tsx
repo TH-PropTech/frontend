@@ -150,7 +150,7 @@ export function ContractStepFlow({
     >
       <ContractStepContent
         contractId={contractId}
-        currentUserId={currentUserId}
+        currentUserId={workspace.currentUserId}
         step={step}
         data={data}
         auditEvents={workspace.auditEvents}
