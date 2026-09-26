@@ -102,7 +102,8 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     agency: 'Công an Xã / Phường / Thị trấn nơi có căn hộ cho thuê',
     duration: '03 ngày làm việc (kể từ khi nhận đủ hồ sơ hợp lệ)',
     fee: '10.000 - 20.000 VNĐ khi nộp trực tuyến qua Cổng DVC / Miễn phí đối với một số đối tượng ưu tiên',
-    externalUrl: 'https://dichvucong.bocongan.gov.vn/',
+    externalUrl:
+      'https://dichvucong.gov.vn/thu-tuc-hanh-chinh/019d2bf7-770b-734d-b7fb-5e1995f194f4',
     icon: 'residence',
     description:
       'Công dân khi đến sinh sống tại chỗ ở hợp pháp do thuê, mượn, ở nhờ có trách nhiệm đăng ký tạm trú với cơ quan đăng ký cư trú theo quy định của Luật Cư trú trong thời hạn 30 ngày.',
@@ -325,7 +326,8 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     agency: 'Chi cục Thuế khu vực / Thuế cơ sở nơi có căn hộ cho thuê',
     duration: 'Theo kỳ tính thuế (theo từng lần phát sinh hoặc theo quý/năm)',
     fee: 'Miễn phí thủ tục kê khai (Nộp thuế 10% nếu tổng doanh thu cho thuê > 100 triệu VNĐ/năm)',
-    externalUrl: 'https://thuedientu.gdt.gov.vn/',
+    externalUrl:
+      'https://dichvucong.gov.vn/thu-tuc-hanh-chinh/019d2bfc-2d93-73ec-ba2f-8d6aef8f7950',
     icon: 'tax',
     description:
       'Cá nhân có hoạt động cho thuê căn hộ chung cư, nhà ở có phát sinh tổng doanh thu trên 100 triệu đồng/năm thuộc diện kê khai và nộp thuế GTGT (5%) và thuế TNCN (5%) theo quy định.',
@@ -453,7 +455,7 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     duration: 'Có hiệu lực thi hành từ ngày 01/08/2024',
     fee: 'Văn bản Luật Quốc gia',
     externalUrl:
-      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=209214',
+      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=209627',
     icon: 'law',
     description:
       'Quy định điều kiện của nhà ở tham gia giao dịch (Điều 160), trình tự ký kết hợp đồng thuê nhà ở (Điều 163), quyền đơn phương chấm dứt hợp đồng khi vi phạm (Điều 164), và quy chế quản lý vận hành nhà chung cư.',
@@ -498,7 +500,7 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     duration: 'Có hiệu lực thi hành từ ngày 01/08/2024',
     fee: 'Văn bản Luật Quốc gia',
     externalUrl:
-      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=209215',
+      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=209624',
     icon: 'law',
     description:
       'Quy định về nguyên tắc công khai, minh bạch thông tin bất động sản đưa vào kinh doanh (Điều 6), hợp đồng kinh doanh BĐS (Điều 44-47), và trách nhiệm của sàn giao dịch BĐS công nghệ.',
@@ -542,7 +544,7 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     duration: 'Có hiệu lực thi hành từ ngày 01/08/2024',
     fee: 'Văn bản quy phạm pháp luật công khai',
     externalUrl:
-      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=210747',
+      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=210798',
     icon: 'decree',
     description:
       'Nghị định số 96/2024/NĐ-CP ban hành khung mẫu Hợp đồng thuê nhà ở thương mại tại Phụ lục II gồm đầy đủ 12 điều khoản pháp lý bắt buộc, áp dụng cho mọi giao dịch thuê nhà ở có tổ chức.',
@@ -587,7 +589,7 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     duration: 'Có hiệu lực từ ngày 01/01/2017',
     fee: 'Văn bản Luật Quốc gia',
     externalUrl:
-      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=183049',
+      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=183188',
     icon: 'law',
     description:
       'Quy định về nguyên tắc tự do, tự nguyện giao kết hợp đồng (Điều 3), hình thức giao kết điện tử (Điều 119), biện pháp bảo đảm đặt cọc (Điều 328), và hợp đồng thuê tài sản (Điều 472-482).',
@@ -626,7 +628,7 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     duration: 'Có hiệu lực thi hành từ ngày 01/07/2024',
     fee: 'Văn bản Luật Quốc gia',
     externalUrl:
-      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=208226',
+      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=208421',
     icon: 'digital',
     description:
       'Quy định về giá trị pháp lý của thông điệp dữ liệu có giá trị như văn bản gốc (Điều 9-10), giá trị chứng cứ của thông điệp dữ liệu (Điều 11), chữ ký điện tử an toàn / chữ ký số chuyên dùng (Điều 22-24).',
@@ -669,7 +671,7 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     duration: 'Có hiệu lực từ ngày 01/07/2021',
     fee: 'Văn bản Luật Quốc gia',
     externalUrl:
-      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=202008',
+      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=202609',
     icon: 'residence',
     description:
       'Bãi bỏ hoàn toàn sổ hộ khẩu / sổ tạm trú giấy, chuyển đổi sang quản lý cư trú bằng công nghệ số trên Cơ sở dữ liệu quốc gia về dân cư và VNeID.',
@@ -708,7 +710,7 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     duration: 'Có hiệu lực từ ngày 01/07/2021',
     fee: 'Văn bản Thông tư Bộ',
     externalUrl:
-      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=203613',
+      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=209185',
     icon: 'residence',
     description:
       'Quy định biểu mẫu Tờ khai thay đổi thông tin cư trú (CT01), Giấy xác nhận thông tin về cư trú (CT07), Thông báo kết quả giải quyết cư trú (CT08).',
@@ -747,7 +749,7 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     duration: 'Áp dụng thường xuyên',
     fee: 'Văn bản Pháp luật Thuế',
     externalUrl:
-      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=197316',
+      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=197312',
     icon: 'tax',
     description:
       'Quy định mức thuế suất: 5% thuế GTGT và 5% thuế TNCN (tổng 10%) tính trên doanh thu đối với cá nhân cho thuê BĐS có doanh thu vượt 100 triệu đồng/năm.',
@@ -785,7 +787,7 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
     duration: 'Áp dụng bắt buộc đối với mọi tòa nhà chung cư',
     fee: 'Quy chuẩn An toàn Bắt buộc',
     externalUrl:
-      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=202131',
+      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=201688',
     icon: 'fire',
     description:
       'Quy chuẩn an toàn bắt buộc: Trang bị bình chữa cháy bột/khí trong căn hộ, kiểm định hệ thống báo cháy tự động, không cản trở lối thoát nạn, tuân thủ an toàn sạc pin xe điện/xe máy điện.',
@@ -825,7 +827,7 @@ export const OFFICIAL_PROCEDURES_DATA: Record<
       'Có hiệu lực từ ngày 01/08/2024 (thay thế Thông tư 02/2016/TT-BXD)',
     fee: 'Quy chuẩn Vận hành Tòa nhà',
     externalUrl:
-      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=210815',
+      'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=210819',
     icon: 'building',
     description:
       'Quy định chi tiết về quyền và nghĩa vụ của chủ sở hữu và người sử dụng nhà chung cư; quy chế hoạt động của Ban Quản trị, Ban Quản lý; nội quy giữ gìn an ninh trật tự, vệ sinh và tiếng ồn sau 22h00.',

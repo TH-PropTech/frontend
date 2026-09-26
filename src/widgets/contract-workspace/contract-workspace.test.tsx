@@ -288,11 +288,15 @@ describe('ContractWorkspace', () => {
       ).toBeInTheDocument()
       expect(screen.getByTestId('link-dvc-residence-1004194')).toHaveAttribute(
         'href',
-        expect.stringContaining('dichvucong.bocongan.gov.vn')
+        expect.stringContaining(
+          'thu-tuc-hanh-chinh/019d2bf7-770b-734d-b7fb-5e1995f194f4'
+        )
       )
       expect(screen.getByTestId('link-dvc-tax-1007689')).toHaveAttribute(
         'href',
-        expect.stringContaining('thuedientu.gdt.gov.vn')
+        expect.stringContaining(
+          'thu-tuc-hanh-chinh/019d2bfc-2d93-73ec-ba2f-8d6aef8f7950'
+        )
       )
     })
   })
