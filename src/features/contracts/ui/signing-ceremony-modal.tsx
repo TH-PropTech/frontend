@@ -194,6 +194,7 @@ export function SigningCeremonyModal({
                 key={smartCaPanelKey}
                 contractId={contractId}
                 disabled={!consentChecked}
+                {...(onSigningSuccess ? { onSigned: onSigningSuccess } : {})}
               />
             </div>
           )}

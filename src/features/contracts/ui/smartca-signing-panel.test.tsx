@@ -2,16 +2,20 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SmartCaSigningPanel } from './smartca-signing-panel'
 
-const { createSmartCaSigningSession, getSmartCaCertificates } = vi.hoisted(
-  () => ({
-    createSmartCaSigningSession: vi.fn(),
-    getSmartCaCertificates: vi.fn(),
-  })
-)
+const {
+  createSmartCaSigningSession,
+  getSmartCaCertificates,
+  getSmartCaSigningSession,
+} = vi.hoisted(() => ({
+  createSmartCaSigningSession: vi.fn(),
+  getSmartCaCertificates: vi.fn(),
+  getSmartCaSigningSession: vi.fn(),
+}))
 
 vi.mock('../api/contracts-api', () => ({
   createSmartCaSigningSession,
   getSmartCaCertificates,
+  getSmartCaSigningSession,
 }))
 
 const certificate = {
@@ -147,5 +151,93 @@ describe('SmartCaSigningPanel', () => {
     expect(screen.getByRole('alert')).not.toHaveTextContent('password-redacted')
     expect(screen.getByLabelText('Mật khẩu VNPT SmartCA')).toHaveValue('')
     expect(screen.getByLabelText('OTP VNPT SmartCA')).toHaveValue('')
+  })
+
+  describe('refresh and retry', () => {
+    const session = (status: string, id = 'session-1') => ({
+      id,
+      contractId: 'contract-1',
+      signerId: 'tenant-1',
+      signerRole: 'tenant',
+      artifactHash: 'a'.repeat(64),
+      providerTransactionId: `provider-${id}`,
+      status,
+      expiresAt: '2030-01-01T00:00:00.000Z',
+    })
+
+    const submitOnce = async (): Promise<void> => {
+      fireEvent.change(screen.getByLabelText('Mật khẩu VNPT SmartCA'), {
+        target: { value: 'secret' },
+      })
+      fireEvent.change(screen.getByLabelText('OTP VNPT SmartCA'), {
+        target: { value: '123456' },
+      })
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Xác nhận ký VNPT SmartCA' })
+      )
+      await waitFor(() =>
+        expect(screen.getByTestId('smartca-session-status')).toBeInTheDocument()
+      )
+    }
+
+    it('calls onSigned when the session is signed', async () => {
+      createSmartCaSigningSession.mockResolvedValue(session('signed'))
+      const onSigned = vi.fn()
+      render(
+        <SmartCaSigningPanel
+          contractId="contract-1"
+          disabled={false}
+          onSigned={onSigned}
+        />
+      )
+      await loadCertificateForm()
+
+      await submitOnce()
+
+      expect(onSigned).toHaveBeenCalledTimes(1)
+    })
+
+    it('re-checks a pending session and reports signing to the workspace', async () => {
+      createSmartCaSigningSession.mockResolvedValue(session('pending'))
+      getSmartCaSigningSession.mockResolvedValue(session('signed'))
+      const onSigned = vi.fn()
+      render(
+        <SmartCaSigningPanel
+          contractId="contract-1"
+          disabled={false}
+          onSigned={onSigned}
+        />
+      )
+      await loadCertificateForm()
+      await submitOnce()
+      expect(onSigned).not.toHaveBeenCalled()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Kiểm tra lại' }))
+
+      await waitFor(() => expect(onSigned).toHaveBeenCalledTimes(1))
+      expect(getSmartCaSigningSession).toHaveBeenCalledWith(
+        'contract-1',
+        'session-1'
+      )
+    })
+
+    it('uses a new idempotency key after an expired session but keeps it while pending', async () => {
+      createSmartCaSigningSession
+        .mockResolvedValueOnce(session('pending', 'session-1'))
+        .mockResolvedValueOnce(session('expired', 'session-1'))
+        .mockResolvedValueOnce(session('pending', 'session-2'))
+      render(<SmartCaSigningPanel contractId="contract-1" disabled={false} />)
+      await loadCertificateForm()
+
+      await submitOnce()
+      await submitOnce()
+      await submitOnce()
+
+      const keys = createSmartCaSigningSession.mock.calls.map(
+        call => (call[1] as { idempotencyKey: string }).idempotencyKey
+      )
+      expect(keys[0]).toBe(keys[1])
+      expect(keys[2]).not.toBe(keys[1])
+    })
   })
 })

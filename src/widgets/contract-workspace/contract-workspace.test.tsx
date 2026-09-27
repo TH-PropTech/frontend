@@ -356,4 +356,171 @@ describe('ContractWorkspace', () => {
       expect(signingWrapper.className).toContain('pointer-events-none')
     })
   })
+
+  describe('with server flow', () => {
+    const draftFlowView = (
+      nextActions: contractsApi.ContractFlowAction[]
+    ): contractsApi.ContractViewDto => ({
+      ...mockView,
+      contract: {
+        ...mockView.contract,
+        status: 'draft',
+        executionPolicy: {
+          policyId: 'deposit-first',
+          version: 1,
+          strategy: 'DEPOSIT_FIRST',
+          depositConfirmed: false,
+          activationReady: false,
+          nextAction: 'Xác nhận tiền cọc trước khi ký SmartCA.',
+        },
+      },
+      deposit: {
+        agreementId: 'dpa-555',
+        agreementCode: 'DA-555',
+        status: 'draft',
+        amount: 30000000,
+        currency: 'VND',
+        consentGiven: false,
+        contentRevision: 1,
+        contentHash: 'deposit-hash',
+        paidAt: null,
+        txHash: null,
+      },
+      flow: {
+        version: 1,
+        strategy: 'DEPOSIT_FIRST',
+        stages: [
+          {
+            key: 'document',
+            status: 'active',
+            blockers: [],
+            completedAt: null,
+          },
+          {
+            key: 'deposit',
+            status: 'upcoming',
+            blockers: [],
+            completedAt: null,
+          },
+          {
+            key: 'signing',
+            status: 'upcoming',
+            blockers: [],
+            completedAt: null,
+          },
+          {
+            key: 'ledger',
+            status: 'upcoming',
+            blockers: [],
+            completedAt: null,
+          },
+        ],
+        activeStage: 'document',
+        nextActions,
+      },
+    })
+    const consentAction: contractsApi.ContractFlowAction = {
+      action: 'CONSENT_DEPOSIT',
+      actorRole: 'tenant',
+      enabled: true,
+      reasonCode: null,
+      stage: 'deposit',
+    }
+
+    it('tenant bấm được "Đồng ý thỏa thuận cọc" khi hợp đồng còn draft', async () => {
+      vi.mocked(contractsApi.getContractView).mockResolvedValue(
+        draftFlowView([consentAction])
+      )
+
+      render(
+        <ContractWorkspace contractId="c-100" currentUserId="user-tenant" />
+      )
+
+      const consentButton = await screen.findByLabelText(
+        'Đồng ý thỏa thuận cọc'
+      )
+      expect(consentButton).toBeEnabled()
+      expect(
+        screen.getByTestId('deposit-payment-panel-wrapper')
+      ).not.toHaveClass('pointer-events-none')
+      expect(screen.getByTestId('flow-step-document')).toHaveAttribute(
+        'data-state',
+        'active'
+      )
+    })
+
+    it('landlord thấy trạng thái chờ khách thuê và không có nút đồng ý', async () => {
+      vi.mocked(contractsApi.getContractView).mockResolvedValue(
+        draftFlowView([])
+      )
+
+      render(
+        <ContractWorkspace contractId="c-100" currentUserId="user-landlord" />
+      )
+
+      await screen.findByTestId('contract-workspace')
+      expect(
+        screen.queryByLabelText('Đồng ý thỏa thuận cọc')
+      ).not.toBeInTheDocument()
+      expect(screen.getByTestId('deposit-payment-panel-wrapper')).toHaveClass(
+        'pointer-events-none'
+      )
+    })
+
+    it('đặt thẻ tóm tắt và banner hành động kế tiếp ở đầu workspace', async () => {
+      vi.mocked(contractsApi.getContractView).mockResolvedValue(
+        draftFlowView([consentAction])
+      )
+
+      render(
+        <ContractWorkspace contractId="c-100" currentUserId="user-tenant" />
+      )
+
+      const summary = await screen.findByTestId('contract-summary-card')
+      const banner = screen.getByTestId('next-action-banner')
+      const guide = screen.getByTestId('contract-flow-guide')
+      expect(banner).toHaveTextContent('Đồng ý thỏa thuận cọc')
+      expect(
+        summary.compareDocumentPosition(banner) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy()
+      expect(
+        banner.compareDocumentPosition(guide) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy()
+    })
+
+    it('làm mới nền khi tab được focus lại mà không hiện spinner toàn trang', async () => {
+      render(
+        <ContractWorkspace contractId="c-100" currentUserId="user-tenant" />
+      )
+      await screen.findByTestId('contract-workspace')
+
+      fireEvent(window, new Event('focus'))
+
+      await waitFor(() =>
+        expect(contractsApi.getContractView).toHaveBeenCalledTimes(2)
+      )
+      expect(
+        screen.queryByTestId('contract-workspace-loading')
+      ).not.toBeInTheDocument()
+      expect(screen.getByTestId('contract-workspace')).toBeInTheDocument()
+    })
+
+    it('vẫn tải workspace khi audit-events lỗi ở lần tải đầu', async () => {
+      vi.mocked(contractsApi.getContractAuditEvents).mockRejectedValue(
+        new Error('AUDIT_UNAVAILABLE')
+      )
+
+      render(
+        <ContractWorkspace contractId="c-100" currentUserId="user-tenant" />
+      )
+
+      expect(
+        await screen.findByTestId('contract-workspace')
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByTestId('contract-workspace-error')
+      ).not.toBeInTheDocument()
+    })
+  })
 })

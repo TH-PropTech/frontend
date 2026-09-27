@@ -1,6 +1,11 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { ContractStatusTimeline } from './contract-status-timeline'
+import type {
+  ContractFlowStageKey,
+  ContractFlowStageStatus,
+  ContractFlowView,
+} from '../api/contracts-api'
 
 describe('ContractStatusTimeline', () => {
   it('renders all 4 workflow progression steps', () => {
@@ -133,5 +138,73 @@ describe('ContractStatusTimeline', () => {
     expect(
       screen.getByText('Chờ thanh toán cọc để kích hoạt')
     ).toBeInTheDocument()
+  })
+})
+
+describe('ContractStatusTimeline with serverFlow', () => {
+  const serverFlow = (
+    stages: Array<[ContractFlowStageKey, ContractFlowStageStatus]>
+  ): ContractFlowView => ({
+    version: 1,
+    strategy: 'DEPOSIT_FIRST',
+    stages: stages.map(([key, status]) => ({
+      key,
+      status,
+      blockers: [],
+      completedAt: null,
+    })),
+    activeStage: 'deposit',
+    nextActions: [],
+  })
+
+  it('lấy trạng thái từng bước từ server thay vì status hợp đồng', () => {
+    render(
+      <ContractStatusTimeline
+        status="draft"
+        serverFlow={serverFlow([
+          ['document', 'done'],
+          ['deposit', 'active'],
+          ['signing', 'upcoming'],
+          ['ledger', 'blocked'],
+        ])}
+      />
+    )
+
+    expect(screen.getByTestId('step-draft')).toHaveAttribute(
+      'data-state',
+      'completed'
+    )
+    expect(screen.getByTestId('step-deposit')).toHaveAttribute(
+      'data-state',
+      'current'
+    )
+    expect(screen.getByTestId('step-sign')).toHaveAttribute(
+      'data-state',
+      'upcoming'
+    )
+    expect(screen.getByTestId('step-ledger')).toHaveAttribute(
+      'data-state',
+      'failed'
+    )
+  })
+
+  it('thêm bước nhận nhà khi server trả stage move-in', () => {
+    render(
+      <ContractStatusTimeline
+        status="active"
+        serverFlow={serverFlow([
+          ['document', 'done'],
+          ['deposit', 'done'],
+          ['signing', 'done'],
+          ['ledger', 'done'],
+          ['move-in', 'active'],
+        ])}
+      />
+    )
+
+    expect(screen.getByTestId('step-move-in')).toHaveAttribute(
+      'data-state',
+      'current'
+    )
   })
 })

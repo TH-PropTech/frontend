@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import type { ContractViewDto } from '@/features/contracts'
+import type {
+  ContractFlowStageKey,
+  ContractFlowStageStatus,
+  ContractFlowView,
+} from '@/features/contracts'
 import { ContractStepFlow } from './contract-step-flow'
 
 const mockUseContractWorkspace = vi.hoisted(() => vi.fn())
@@ -228,5 +233,106 @@ describe('ContractStepFlow', () => {
     expect(screen.getByTestId('network-mode-fabric')).toBeInTheDocument()
     expect(screen.getByTestId('fabric-block-number')).toHaveTextContent('#42')
     expect(screen.getByTestId('verify-integrity-btn')).toBeInTheDocument()
+  })
+})
+
+describe('ContractStepFlow with server flow', () => {
+  const withFlow = (
+    stages: Array<[ContractFlowStageKey, ContractFlowStageStatus]>,
+    activeStage: ContractFlowView['activeStage'],
+    nextActions: ContractFlowView['nextActions'] = []
+  ): ContractViewDto => ({
+    ...contractView,
+    contract: { ...contractView.contract, status: 'draft' },
+    document: {
+      ...contractView.document,
+      mode: 'draft',
+      lockedAt: null,
+      lockedHash: null,
+    },
+    flow: {
+      version: 1,
+      strategy: 'DEPOSIT_FIRST',
+      stages: stages.map(([key, status]) => ({
+        key,
+        status,
+        blockers: [],
+        completedAt: null,
+      })),
+      activeStage,
+      nextActions,
+    },
+  })
+
+  it('DEPOSIT_FIRST cho phép "Tiếp tục" từ document sang deposit sau khi đồng ý cọc', () => {
+    configureHook({
+      data: withFlow(
+        [
+          ['document', 'done'],
+          ['deposit', 'active'],
+          ['signing', 'upcoming'],
+          ['ledger', 'upcoming'],
+        ],
+        'deposit'
+      ),
+    })
+
+    render(<ContractStepFlow contractId="contract-1" step="document" />)
+
+    expect(screen.getByRole('link', { name: /tiếp tục/i })).toHaveAttribute(
+      'href',
+      '/contracts/contract-1/steps/deposit'
+    )
+  })
+
+  it('mở bước deposit khi stage document còn active nhưng tenant có CONSENT_DEPOSIT', () => {
+    configureHook({
+      data: withFlow(
+        [
+          ['document', 'active'],
+          ['deposit', 'upcoming'],
+          ['signing', 'upcoming'],
+          ['ledger', 'upcoming'],
+        ],
+        'document',
+        [
+          {
+            action: 'CONSENT_DEPOSIT',
+            actorRole: 'tenant',
+            enabled: true,
+            reasonCode: null,
+            stage: 'deposit',
+          },
+        ]
+      ),
+    })
+
+    render(<ContractStepFlow contractId="contract-1" step="deposit" />)
+
+    expect(screen.queryByTestId('contract-step-guard')).not.toBeInTheDocument()
+    expect(screen.getByText('Bước 2/4')).toBeInTheDocument()
+  })
+
+  it('route move-in của hợp đồng không có quyết toán hiển thị không áp dụng và liên kết về bước active', () => {
+    configureHook({
+      data: withFlow(
+        [
+          ['document', 'done'],
+          ['deposit', 'active'],
+          ['signing', 'upcoming'],
+          ['ledger', 'upcoming'],
+        ],
+        'deposit'
+      ),
+    })
+
+    render(<ContractStepFlow contractId="contract-1" step="move-in" />)
+
+    expect(screen.getByTestId('contract-step-guard')).toHaveTextContent(
+      /không có bước nhận nhà/i
+    )
+    expect(
+      screen.getByRole('link', { name: /về bước đặt cọc/i })
+    ).toHaveAttribute('href', '/contracts/contract-1/steps/deposit')
   })
 })

@@ -293,6 +293,64 @@ export interface ContractAccessView {
   isSuccessorOwner: boolean
 }
 
+export type ContractFlowStageKey =
+  | 'document'
+  | 'deposit'
+  | 'signing'
+  | 'ledger'
+  | 'move-in'
+
+export type ContractFlowStageStatus =
+  | 'done'
+  | 'active'
+  | 'upcoming'
+  | 'blocked'
+  | 'skipped'
+
+export type ContractFlowActionKey =
+  | 'CONSENT_DEPOSIT'
+  | 'PAY_DEPOSIT'
+  | 'LOCK_CONTENT'
+  | 'LOCK_ARTIFACT'
+  | 'COMPLETE_KYC'
+  | 'SIGN_SMARTCA'
+  | 'SIGN_ECONSENT'
+  | 'PAY_SETTLEMENT'
+  | 'PAY_FEE'
+  | 'RECORD_HANDOVER'
+  | 'CONFIRM_HANDOVER'
+  | 'VERIFY_LEDGER'
+
+export interface ContractFlowBlocker {
+  code: string
+  partyRole: 'tenant' | 'landlord' | null
+}
+
+export interface ContractFlowStage {
+  key: ContractFlowStageKey
+  status: ContractFlowStageStatus
+  blockers: ContractFlowBlocker[]
+  completedAt: string | null
+}
+
+export interface ContractFlowAction {
+  action: ContractFlowActionKey
+  actorRole: 'tenant' | 'landlord' | 'staff'
+  enabled: boolean
+  reasonCode: string | null
+  /** Stage có panel thực hiện hành động này */
+  stage: ContractFlowStageKey
+}
+
+/** Trạng thái luồng do server tính; `nextActions` đã lọc theo user hiện tại. */
+export interface ContractFlowView {
+  version: number
+  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+  stages: ContractFlowStage[]
+  activeStage: ContractFlowStageKey | 'completed'
+  nextActions: ContractFlowAction[]
+}
+
 export interface ContractViewDto {
   contract: ContractOverviewSnapshot
   document: ContractDocumentView
@@ -304,6 +362,7 @@ export interface ContractViewDto {
   actions: ContractActionsView
   access?: ContractAccessView
   ledger: ContractLedgerSummary
+  flow?: ContractFlowView
 }
 
 export interface ContractAuditEventDto {

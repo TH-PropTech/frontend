@@ -1,4 +1,4 @@
-import type { ContractStatus } from '../api/contracts-api'
+import type { ContractFlowView, ContractStatus } from '../api/contracts-api'
 
 /** Bước hiện tại của người dùng trong luồng hợp đồng */
 export type ContractActiveStep =
@@ -6,6 +6,7 @@ export type ContractActiveStep =
   | 'deposit' // Đến lượt đặt cọc
   | 'signing' // Đến lượt ký số SmartCA
   | 'ledger' // Đã xong cả cọc + ký, đang ghi sổ cái
+  | 'move-in' // Quyết toán và bàn giao nhận nhà (chỉ khi server trả stage này)
   | 'completed' // Hợp đồng hoàn tất
 
 export interface ResolveActiveStepInput {
@@ -14,6 +15,8 @@ export interface ResolveActiveStepInput {
   depositStatus?: string | null | undefined
   signedByTenant?: boolean | undefined
   signedByLandlord?: boolean | undefined
+  /** Khối `flow` của Contract View; khi có thì là nguồn sự thật duy nhất. */
+  serverFlow?: ContractFlowView | null | undefined
 }
 
 /**
@@ -25,9 +28,12 @@ export interface ResolveActiveStepInput {
 export function resolveContractActiveStep(
   input: ResolveActiveStepInput
 ): ContractActiveStep {
-  const { strategy, status, signedByTenant, signedByLandlord } = input
+  const { strategy, status, signedByTenant, signedByLandlord, serverFlow } =
+    input
 
-  // Hoàn tất hoặc huỷ
+  if (serverFlow) return serverFlow.activeStage
+
+  // Fallback cho response cũ không có `flow`. Hoàn tất hoặc huỷ
   if (
     status === 'completed' ||
     status === 'terminated' ||

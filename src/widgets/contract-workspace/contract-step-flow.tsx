@@ -7,7 +7,9 @@ import {
   getContractFlowSteps,
   getContractStepState,
   getNextContractStep,
+  resolvePanelActivity,
   toContractStepHref,
+  type ContractFlowView,
   type ContractRouteStep,
 } from '@/features/contracts'
 import { useContractWorkspace } from './use-contract-workspace'
@@ -23,8 +25,12 @@ export interface ContractStepFlowProps {
 function getGuardMessage(
   step: ContractRouteStep,
   activeStep: ReturnType<typeof resolveContractActiveStep>,
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST',
+  hasStep: boolean
 ): string | null {
+  if (!hasStep && step === 'move-in') {
+    return 'Hợp đồng này không có bước nhận nhà vì không có quyết toán nhận nhà.'
+  }
   if (activeStep === 'completed') return null
   if (
     step === 'signing' &&
@@ -45,8 +51,17 @@ function getGuardMessage(
 
 function getNextDisabled(
   step: ContractRouteStep,
-  data: NonNullable<ReturnType<typeof useContractWorkspace>['data']>
+  data: NonNullable<ReturnType<typeof useContractWorkspace>['data']>,
+  nextStep: ContractRouteStep | null,
+  activeStep: ReturnType<typeof resolveContractActiveStep>
 ): boolean {
+  const flow: ContractFlowView | undefined = data.flow
+  if (flow) {
+    const stage = flow.stages.find(item => item.key === step)
+    const nextOpen =
+      nextStep !== null && resolvePanelActivity(nextStep, activeStep, flow)
+    return !(stage?.status === 'done' || nextOpen)
+  }
   if (step === 'document') return data.document.mode !== 'locked'
   if (step === 'deposit') {
     return (
@@ -116,15 +131,20 @@ export function ContractStepFlow({
     depositStatus: data.deposit?.status,
     signedByTenant: data.parties.tenant.hasSigned,
     signedByLandlord: data.parties.landlord.hasSigned,
+    serverFlow: data.flow,
   })
-  const steps = getContractFlowSteps(strategy)
+  const steps = getContractFlowSteps(strategy, data.flow)
+  const hasStep = steps.some(item => item.key === step)
   const stepState = getContractStepState(step, activeStep, steps)
-  const isGuarded = stepState === 'upcoming'
-  const nextStep = getNextContractStep(step, strategy)
+  const isGuarded =
+    !hasStep ||
+    (stepState === 'upcoming' &&
+      !resolvePanelActivity(step, activeStep, data.flow))
+  const nextStep = getNextContractStep(step, strategy, data.flow)
   const nextStepHref = nextStep
     ? toContractStepHref(contractId, nextStep)
     : null
-  const nextDisabled = getNextDisabled(step, data)
+  const nextDisabled = getNextDisabled(step, data, nextStep, activeStep)
   const activeStepHref =
     activeStep === 'completed'
       ? toContractStepHref(contractId, 'ledger')
@@ -141,7 +161,7 @@ export function ContractStepFlow({
       activeStepHref={activeStepHref}
       activeStepLabel={steps.find(item => item.key === activeStep)?.label}
       guardMessage={
-        isGuarded ? getGuardMessage(step, activeStep, strategy) : null
+        isGuarded ? getGuardMessage(step, activeStep, strategy, hasStep) : null
       }
       nextStep={nextStep}
       nextStepHref={nextStepHref}
@@ -164,6 +184,7 @@ export function ContractStepFlow({
         integrityResult={workspace.integrityResult}
         setIsSigningModalOpen={workspace.setIsSigningModalOpen}
         loadData={workspace.loadData}
+        refresh={workspace.refresh}
         handleDownloadPdf={workspace.handleDownloadPdf}
         handleDownloadDocx={workspace.handleDownloadDocx}
         handleVerifyIntegrity={workspace.handleVerifyIntegrity}

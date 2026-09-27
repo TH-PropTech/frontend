@@ -7,8 +7,14 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
+  Home,
 } from 'lucide-react'
-import type { ContractStatus } from '../api/contracts-api'
+import type {
+  ContractFlowStageKey,
+  ContractFlowStageStatus,
+  ContractFlowView,
+  ContractStatus,
+} from '../api/contracts-api'
 
 export interface ContractStatusTimelineProps {
   status: ContractStatus
@@ -17,6 +23,8 @@ export interface ContractStatusTimelineProps {
   signedByTenant?: boolean | undefined
   signedByLandlord?: boolean | undefined
   txHash?: string | null | undefined
+  /** Khối `flow` của server; khi có thì quyết định thứ tự và trạng thái bước. */
+  serverFlow?: ContractFlowView | null | undefined
 }
 
 interface TimelineStep {
@@ -27,6 +35,25 @@ interface TimelineStep {
   icon: typeof FileText
 }
 
+const SERVER_STEP_STATE: Record<
+  ContractFlowStageStatus,
+  TimelineStep['state']
+> = {
+  done: 'completed',
+  active: 'current',
+  blocked: 'failed',
+  upcoming: 'upcoming',
+  skipped: 'upcoming',
+}
+
+const MOVE_IN_STEP: TimelineStep = {
+  id: 'step-move-in',
+  title: 'Quyết toán & nhận nhà',
+  description: 'Thanh toán quyết toán và hai bên xác nhận bàn giao',
+  state: 'upcoming',
+  icon: Home,
+}
+
 export function ContractStatusTimeline({
   status,
   strategy = 'DEPOSIT_FIRST',
@@ -34,6 +61,7 @@ export function ContractStatusTimeline({
   signedByTenant = false,
   signedByLandlord = false,
   txHash,
+  serverFlow,
 }: ContractStatusTimelineProps) {
   const isSignFirst = strategy === 'SIGN_FIRST'
 
@@ -122,8 +150,19 @@ export function ContractStatusTimeline({
     icon: isTerminated ? AlertTriangle : CheckCircle2,
   }
 
-  const steps: TimelineStep[] =
-    strategy === 'SIGN_FIRST'
+  const stepByStage: Record<ContractFlowStageKey, TimelineStep> = {
+    document: draftStep,
+    deposit: depositStep,
+    signing: signStep,
+    ledger: ledgerStep,
+    'move-in': MOVE_IN_STEP,
+  }
+  const steps: TimelineStep[] = serverFlow
+    ? serverFlow.stages.map(stage => ({
+        ...stepByStage[stage.key],
+        state: SERVER_STEP_STATE[stage.status],
+      }))
+    : strategy === 'SIGN_FIRST'
       ? [draftStep, signStep, depositStep, ledgerStep]
       : [draftStep, depositStep, signStep, ledgerStep]
 

@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ContractFlowGuide } from './contract-flow-guide'
+import type {
+  ContractFlowStageKey,
+  ContractFlowStageStatus,
+  ContractFlowView,
+} from '../api/contracts-api'
 
 describe('ContractFlowGuide', () => {
   // ---------------------------------------------------------------------------
@@ -192,5 +197,98 @@ describe('ContractFlowGuide', () => {
     expect(
       screen.getByTestId('contract-flow-current-step-link')
     ).toHaveAttribute('href', '/contracts/contract-1/steps/deposit')
+  })
+})
+
+describe('ContractFlowGuide with serverFlow', () => {
+  const serverFlow = (
+    strategy: ContractFlowView['strategy'],
+    stages: Array<[ContractFlowStageKey, ContractFlowStageStatus]>
+  ): ContractFlowView => ({
+    version: 1,
+    strategy,
+    stages: stages.map(([key, status]) => ({
+      key,
+      status,
+      blockers: [],
+      completedAt: null,
+    })),
+    activeStage:
+      stages.find(
+        ([, status]) => status === 'active' || status === 'blocked'
+      )?.[0] ?? 'completed',
+    nextActions: [],
+  })
+
+  it('đánh dấu bước đặt cọc active dù status vẫn là draft', () => {
+    render(
+      <ContractFlowGuide
+        strategy="DEPOSIT_FIRST"
+        status="draft"
+        serverFlow={serverFlow('DEPOSIT_FIRST', [
+          ['document', 'done'],
+          ['deposit', 'active'],
+          ['signing', 'upcoming'],
+          ['ledger', 'upcoming'],
+        ])}
+      />
+    )
+
+    expect(screen.getByTestId('flow-step-document')).toHaveAttribute(
+      'data-state',
+      'done'
+    )
+    expect(screen.getByTestId('flow-step-deposit')).toHaveAttribute(
+      'data-state',
+      'active'
+    )
+    expect(screen.getByText('Bước hiện tại: Đặt cọc')).toBeInTheDocument()
+  })
+
+  it('render theo thứ tự stage của server cho SIGN_FIRST và thêm bước nhận nhà', () => {
+    render(
+      <ContractFlowGuide
+        strategy="SIGN_FIRST"
+        status="active"
+        serverFlow={serverFlow('SIGN_FIRST', [
+          ['document', 'done'],
+          ['signing', 'done'],
+          ['deposit', 'done'],
+          ['ledger', 'done'],
+          ['move-in', 'active'],
+        ])}
+      />
+    )
+
+    expect(
+      screen.getAllByRole('listitem').map(item => item.dataset.testid)
+    ).toEqual([
+      'flow-step-document',
+      'flow-step-signing',
+      'flow-step-deposit',
+      'flow-step-ledger',
+      'flow-step-move-in',
+    ])
+    expect(screen.getByText('Nhận nhà')).toBeInTheDocument()
+  })
+
+  it('hiển thị trạng thái blocked của server', () => {
+    render(
+      <ContractFlowGuide
+        strategy="DEPOSIT_FIRST"
+        status="active"
+        serverFlow={serverFlow('DEPOSIT_FIRST', [
+          ['document', 'done'],
+          ['deposit', 'done'],
+          ['signing', 'done'],
+          ['ledger', 'blocked'],
+        ])}
+      />
+    )
+
+    expect(screen.getByTestId('flow-step-ledger')).toHaveAttribute(
+      'data-state',
+      'blocked'
+    )
   })
 })

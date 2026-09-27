@@ -20,6 +20,8 @@ export interface DepositPaymentPanelProps {
   isTenant: boolean
   contractId: string
   onPaymentSuccess?: () => void
+  /** Tải lại workspace sau lỗi (ví dụ revision cọc đã đổi); không tự gửi lại. */
+  onRefresh?: () => void
   /** Khi false: panel mờ và không nhận tương tác. Khi true: panel nổi bật. undefined = no change. */
   isActiveStep?: boolean
 }
@@ -29,6 +31,7 @@ export function DepositPaymentPanel({
   isTenant,
   contractId,
   onPaymentSuccess,
+  onRefresh,
   isActiveStep,
 }: DepositPaymentPanelProps) {
   const [loading, setLoading] = useState(false)
@@ -113,6 +116,7 @@ export function DepositPaymentPanel({
       const msg =
         err instanceof Error ? err.message : 'Không thể xác nhận thỏa thuận cọc'
       setErrorMsg(msg)
+      onRefresh?.()
     } finally {
       setConsenting(false)
     }
