@@ -1,3 +1,4 @@
+import type { ContractFlowView } from '../api/contracts-api'
 import type { ContractActiveStep } from './resolve-contract-active-step'
 
 export type ContractRouteStep = Exclude<ContractActiveStep, 'completed'>
@@ -37,6 +38,19 @@ export const CONTRACT_FLOW_STEPS = [
   },
 ] as const satisfies readonly ContractFlowStepDefinition[]
 
+/** Chỉ xuất hiện khi server trả stage `move-in` (hợp đồng có quyết toán). */
+export const MOVE_IN_FLOW_STEP = {
+  key: 'move-in',
+  label: 'Nhận nhà',
+  shortLabel: 'Quyết toán & bàn giao',
+  pathSegment: 'move-in',
+} as const satisfies ContractFlowStepDefinition
+
+const ALL_FLOW_STEPS: readonly ContractFlowStepDefinition[] = [
+  ...CONTRACT_FLOW_STEPS,
+  MOVE_IN_FLOW_STEP,
+]
+
 const SIGN_FIRST_ORDER: readonly ContractRouteStep[] = [
   'document',
   'signing',
@@ -52,16 +66,21 @@ const DEPOSIT_FIRST_ORDER: readonly ContractRouteStep[] = [
 ]
 
 export function isContractRouteStep(value: string): value is ContractRouteStep {
-  return CONTRACT_FLOW_STEPS.some(step => step.key === value)
+  return ALL_FLOW_STEPS.some(step => step.key === value)
 }
 
+/** Thứ tự bước lấy từ `flow` của server khi có, ngược lại theo strategy. */
 export function getContractFlowSteps(
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST',
+  serverFlow?: ContractFlowView | null
 ): readonly ContractFlowStepDefinition[] {
-  const order =
-    strategy === 'SIGN_FIRST' ? SIGN_FIRST_ORDER : DEPOSIT_FIRST_ORDER
+  const order: readonly ContractRouteStep[] = serverFlow
+    ? serverFlow.stages.map(stage => stage.key)
+    : strategy === 'SIGN_FIRST'
+      ? SIGN_FIRST_ORDER
+      : DEPOSIT_FIRST_ORDER
   return order.map(stepKey => {
-    const definition = CONTRACT_FLOW_STEPS.find(step => step.key === stepKey)
+    const definition = ALL_FLOW_STEPS.find(step => step.key === stepKey)
     if (!definition) {
       throw new Error(`Unknown contract flow step: ${stepKey}`)
     }
@@ -86,18 +105,20 @@ export function getContractStepState(
 
 export function getPreviousContractStep(
   step: ContractRouteStep,
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST',
+  serverFlow?: ContractFlowView | null
 ): ContractRouteStep | null {
-  const steps = getContractFlowSteps(strategy)
+  const steps = getContractFlowSteps(strategy, serverFlow)
   const index = steps.findIndex(item => item.key === step)
   return index > 0 ? (steps[index - 1]?.key ?? null) : null
 }
 
 export function getNextContractStep(
   step: ContractRouteStep,
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST',
+  serverFlow?: ContractFlowView | null
 ): ContractRouteStep | null {
-  const steps = getContractFlowSteps(strategy)
+  const steps = getContractFlowSteps(strategy, serverFlow)
   const index = steps.findIndex(item => item.key === step)
   return index >= 0 && index < steps.length - 1
     ? (steps[index + 1]?.key ?? null)

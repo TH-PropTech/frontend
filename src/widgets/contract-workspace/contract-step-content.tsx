@@ -35,6 +35,8 @@ export interface ContractStepContentProps {
   } | null
   setIsSigningModalOpen: (open: boolean) => void
   loadData: (isBackground?: boolean) => Promise<void>
+  /** Làm mới nền, không thay trang bằng spinner. */
+  refresh: () => Promise<void>
   handleDownloadPdf: () => Promise<void>
   handleDownloadDocx: () => Promise<void>
   handleVerifyIntegrity: () => Promise<void>
@@ -71,7 +73,7 @@ function ContractArtifactStep({
     setLockError(null)
     try {
       await lockContractContent(contractId, data.document.revision)
-      await loadData(false)
+      await loadData(true)
     } catch (error: unknown) {
       setLockError(
         error instanceof Error
@@ -164,6 +166,7 @@ export function ContractStepContent({
   integrityResult,
   setIsSigningModalOpen,
   loadData,
+  refresh,
   handleDownloadPdf,
   handleDownloadDocx,
   handleVerifyIntegrity,
@@ -198,7 +201,8 @@ export function ContractStepContent({
           deposit={data.deposit}
           isTenant={isTenant}
           contractId={contractId}
-          onPaymentSuccess={() => loadData(false)}
+          onPaymentSuccess={() => void refresh()}
+          onRefresh={() => void refresh()}
           isActiveStep
         />
       </div>
@@ -236,10 +240,25 @@ export function ContractStepContent({
           signerRole={signerRole}
           onSigningSuccess={() => {
             setIsSigningModalOpen(false)
-            void loadData(false)
+            void refresh()
           }}
         />
       </div>
+    )
+  }
+
+  if (step === 'move-in') {
+    return (
+      <section
+        data-testid="contract-step-move-in"
+        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"
+      >
+        <h2 className="text-sm font-bold">Quyết toán và bàn giao nhận nhà</h2>
+        <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+          Khoản quyết toán nhận nhà, yêu cầu thanh toán và biên bản bàn giao sẽ
+          hiển thị tại đây khi hợp đồng có quyết toán.
+        </p>
+      </section>
     )
   }
 

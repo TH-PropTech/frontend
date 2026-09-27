@@ -146,6 +146,30 @@ describe('DepositPaymentPanel', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('asks the workspace to refresh after a failed consent without retrying', async () => {
+    vi.mocked(paymentsApi.consentDepositAgreement).mockRejectedValue(
+      new Error('DEPOSIT_CONSENT_REQUIRED')
+    )
+    const onRefresh = vi.fn()
+    const onPaymentSuccess = vi.fn()
+
+    render(
+      <DepositPaymentPanel
+        deposit={mockUnconsentedDeposit}
+        isTenant={true}
+        contractId="c1"
+        onRefresh={onRefresh}
+        onPaymentSuccess={onPaymentSuccess}
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText('Đồng ý thỏa thuận cọc'))
+
+    await waitFor(() => expect(onRefresh).toHaveBeenCalledTimes(1))
+    expect(onPaymentSuccess).not.toHaveBeenCalled()
+    expect(paymentsApi.consentDepositAgreement).toHaveBeenCalledTimes(1)
+  })
+
   it('shows waiting message for landlord when deposit is pending', () => {
     render(
       <DepositPaymentPanel

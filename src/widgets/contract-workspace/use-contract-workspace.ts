@@ -117,7 +117,8 @@ export function useContractWorkspace({
       try {
         const [viewRes, auditRes] = await Promise.all([
           getContractView(contractId),
-          getContractAuditEvents(contractId),
+          // Audit trail là thông tin phụ: lỗi không được chặn cả workspace.
+          getContractAuditEvents(contractId).catch(() => []),
         ])
         if (active) {
           setData(viewRes)
@@ -143,7 +144,27 @@ export function useContractWorkspace({
     }
   }, [contractId])
 
+  /** Làm mới nền: không bật spinner toàn trang, không remount panel. */
+  const refresh = useCallback(() => loadData(true), [loadData])
+
+  // Quay lại tab (ví dụ sau khi thanh toán ở cổng khác) thì tải lại view.
+  useEffect(() => {
+    const handleFocus = (): void => {
+      void refresh()
+    }
+    const handleVisibility = (): void => {
+      if (document.visibilityState === 'visible') void refresh()
+    }
+    window.addEventListener('focus', handleFocus)
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [refresh])
+
   // Polling for status transitions and ledger convergence
+  const flowActiveStage = data?.flow?.activeStage
   useEffect(() => {
     if (!enablePolling) return
 
@@ -152,6 +173,9 @@ export function useContractWorkspace({
     const shouldPoll =
       status === 'deposit-pending' ||
       status === 'awaiting-signature' ||
+      flowActiveStage === 'deposit' ||
+      flowActiveStage === 'ledger' ||
+      flowActiveStage === 'move-in' ||
       ledgerStatus === 'pending' ||
       ledgerStatus === 'processing' ||
       ledgerStatus === 'failed-retryable'
@@ -167,7 +191,13 @@ export function useContractWorkspace({
         clearInterval(pollIntervalRef.current)
       }
     }
-  }, [data?.contract?.status, data?.ledger?.status, enablePolling, loadData])
+  }, [
+    data?.contract?.status,
+    data?.ledger?.status,
+    flowActiveStage,
+    enablePolling,
+    loadData,
+  ])
 
   // Download PDF
   const handleDownloadPdf = async () => {
@@ -296,6 +326,7 @@ export function useContractWorkspace({
     setIsSigningModalOpen,
     setNoticeMessage,
     loadData,
+    refresh,
     handleDownloadPdf,
     handleDownloadDocx,
     handleVerifyIntegrity,

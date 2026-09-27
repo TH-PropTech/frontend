@@ -26,7 +26,10 @@ import {
   BilateralSigningTimeline,
   FabricLedgerEvidenceCard,
   ContractAmendmentTimeline,
+  ContractSummaryCard,
+  NextActionBanner,
   resolveContractActiveStep,
+  resolvePanelActivity,
 } from '@/features/contracts'
 import { DepositPaymentPanel } from '@/features/payments'
 import { useContractWorkspace } from './use-contract-workspace'
@@ -59,7 +62,7 @@ export function ContractWorkspace({
     signerRole,
     setIsSigningModalOpen,
     setNoticeMessage,
-    loadData,
+    refresh,
     handleDownloadPdf,
     handleDownloadDocx,
     handleVerifyIntegrity,
@@ -109,7 +112,16 @@ export function ContractWorkspace({
     )
   }
 
-  const { contract, document, parties, deposit, actions, ledger, access } = data
+  const {
+    contract,
+    document,
+    parties,
+    deposit,
+    actions,
+    ledger,
+    access,
+    flow,
+  } = data
   const { signingEligibility } = actions
   const isSimulation = ledger?.networkMode === 'simulation'
   const isSuccessorOwner = access?.isSuccessorOwner === true
@@ -121,6 +133,7 @@ export function ContractWorkspace({
     depositStatus: deposit?.status,
     signedByTenant: parties.tenant.hasSigned,
     signedByLandlord: parties.landlord.hasSigned,
+    serverFlow: flow,
   })
 
   const getReasonMessage = (reason: string | null) => {
@@ -191,6 +204,14 @@ export function ContractWorkspace({
           <strong className="text-[var(--fg)]">{`v${document.revision}`}</strong>
         </div>
       </div>
+
+      <ContractSummaryCard
+        contract={contract}
+        parties={parties}
+        ledger={ledger}
+        activeStage={activeStep}
+      />
+      <NextActionBanner contractId={contractId} flow={flow} />
 
       {isSuccessorOwner ? (
         <div
@@ -399,6 +420,7 @@ export function ContractWorkspace({
               depositStatus={deposit?.status}
               signedByTenant={parties.tenant.hasSigned}
               signedByLandlord={parties.landlord.hasSigned}
+              serverFlow={flow}
             />
           </div>
 
@@ -454,8 +476,9 @@ export function ContractWorkspace({
               deposit={deposit}
               isTenant={isTenant}
               contractId={contractId}
-              onPaymentSuccess={() => loadData(false)}
-              isActiveStep={activeStep === 'deposit'}
+              onPaymentSuccess={() => void refresh()}
+              onRefresh={() => void refresh()}
+              isActiveStep={resolvePanelActivity('deposit', activeStep, flow)}
             />
           </div>
 
@@ -473,7 +496,7 @@ export function ContractWorkspace({
               userRole={signerRole}
               isEligibleToSign={signingEligibility.eligible}
               onSignClick={() => setIsSigningModalOpen(true)}
-              isActiveStep={activeStep === 'signing'}
+              isActiveStep={resolvePanelActivity('signing', activeStep, flow)}
             />
           </div>
 
@@ -492,6 +515,7 @@ export function ContractWorkspace({
               signedByTenant={parties.tenant.hasSigned}
               signedByLandlord={parties.landlord.hasSigned}
               txHash={ledger.txHash}
+              serverFlow={flow}
             />
           </div>
 
@@ -586,7 +610,7 @@ export function ContractWorkspace({
         signerRole={signerRole}
         onSigningSuccess={() => {
           setIsSigningModalOpen(false)
-          loadData(false)
+          void refresh()
         }}
       />
     </div>

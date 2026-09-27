@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2, Clock3, RefreshCw } from 'lucide-react'
 import {
   createSmartCaSigningSession,
   getSmartCaCertificates,
+  getSmartCaSigningSession,
   type SmartCaCertificate,
   type SmartCaSigningSession,
 } from '../api/contracts-api'
@@ -12,7 +13,18 @@ import {
 interface SmartCaSigningPanelProps {
   contractId: string
   disabled: boolean
+  /** Gọi khi phiên ký chuyển sang `signed` để workspace làm mới. */
+  onSigned?: () => void
 }
+
+/** Sau các trạng thái này, lần thử kế tiếp phải là giao dịch mới. */
+const RETRYABLE_TERMINAL_STATUSES: ReadonlySet<
+  SmartCaSigningSession['status']
+> = new Set(['rejected', 'expired', 'cancelled'])
+const PENDING_STATUSES: ReadonlySet<SmartCaSigningSession['status']> = new Set([
+  'pending',
+  'pending-user-confirmation',
+])
 
 type Notice = {
   label: string
@@ -85,6 +97,7 @@ function noticeClass(tone: Notice['tone']): string {
 export function SmartCaSigningPanel({
   contractId,
   disabled,
+  onSigned,
 }: SmartCaSigningPanelProps) {
   const [certificates, setCertificates] = useState<SmartCaCertificate[] | null>(
     null
@@ -96,7 +109,33 @@ export function SmartCaSigningPanel({
   const [loadingCertificates, setLoadingCertificates] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [idempotencyKey] = useState(createIdempotencyKey)
+  const [idempotencyKey, setIdempotencyKey] = useState(createIdempotencyKey)
+  const [checking, setChecking] = useState(false)
+
+  const applySession = (next: SmartCaSigningSession): void => {
+    setSession(next)
+    if (next.status === 'signed') onSigned?.()
+    if (RETRYABLE_TERMINAL_STATUSES.has(next.status)) {
+      setIdempotencyKey(createIdempotencyKey())
+    }
+  }
+
+  const recheck = async (): Promise<void> => {
+    if (!session) return
+    setChecking(true)
+    setError(null)
+    try {
+      applySession(await getSmartCaSigningSession(contractId, session.id))
+    } catch (caught: unknown) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'Không thể kiểm tra trạng thái phiên ký VNPT SmartCA.'
+      )
+    } finally {
+      setChecking(false)
+    }
+  }
 
   const loadCertificates = async (): Promise<void> => {
     setLoadingCertificates(true)
@@ -137,7 +176,7 @@ export function SmartCaSigningPanel({
         smartCaPassword: password,
         smartCaOtp: otp,
       })
-      setSession(result)
+      applySession(result)
     } catch (caught: unknown) {
       setError(
         caught instanceof Error
@@ -259,6 +298,17 @@ export function SmartCaSigningPanel({
               <p className="mt-1 break-all font-mono text-[10px]">
                 Giao dịch: {session.providerTransactionId}
               </p>
+              {PENDING_STATUSES.has(session.status) ? (
+                <button
+                  type="button"
+                  onClick={() => void recheck()}
+                  disabled={checking}
+                  className="mt-2 inline-flex items-center gap-1.5 font-semibold underline underline-offset-2 disabled:opacity-50"
+                >
+                  <RefreshCw className="h-3 w-3" aria-hidden="true" />
+                  {checking ? 'Đang kiểm tra…' : 'Kiểm tra lại'}
+                </button>
+              ) : null}
             </div>
           </div>
         </div>

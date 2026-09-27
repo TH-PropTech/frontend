@@ -76,7 +76,7 @@ export function ContractStepShell({
           </p>
         </div>
         <span className="rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">
-          Bước {steps.findIndex(item => item.key === step) + 1}/4
+          Bước {steps.findIndex(item => item.key === step) + 1}/{steps.length}
         </span>
       </header>
 

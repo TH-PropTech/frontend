@@ -7,11 +7,16 @@ import {
   CheckCircle2,
   Coins,
   FileText,
+  Home,
   Loader2,
   PenLine,
   Zap,
 } from 'lucide-react'
-import type { ContractStatus } from '../api/contracts-api'
+import type {
+  ContractFlowStageStatus,
+  ContractFlowView,
+  ContractStatus,
+} from '../api/contracts-api'
 import {
   resolveContractActiveStep,
   type ContractActiveStep,
@@ -25,6 +30,8 @@ export interface ContractFlowGuideProps {
   signedByTenant?: boolean | undefined
   signedByLandlord?: boolean | undefined
   contractId?: string
+  /** Khối `flow` của server; khi có thì quyết định thứ tự và trạng thái bước. */
+  serverFlow?: ContractFlowView | null | undefined
 }
 
 interface StepDef {
@@ -88,7 +95,30 @@ const SIGN_FIRST_STEPS: StepDef[] = [
   },
 ]
 
-type StepState = 'done' | 'active' | 'upcoming'
+const MOVE_IN_STEP: StepDef = {
+  key: 'move-in',
+  label: 'Nhận nhà',
+  shortLabel: 'Nhận nhà',
+  icon: Home,
+}
+
+const STEP_BY_KEY: Record<Exclude<ContractActiveStep, 'completed'>, StepDef> = {
+  document: DEPOSIT_FIRST_STEPS[0] as StepDef,
+  deposit: DEPOSIT_FIRST_STEPS[1] as StepDef,
+  signing: DEPOSIT_FIRST_STEPS[2] as StepDef,
+  ledger: DEPOSIT_FIRST_STEPS[3] as StepDef,
+  'move-in': MOVE_IN_STEP,
+}
+
+type StepState = 'done' | 'active' | 'upcoming' | 'blocked'
+
+const SERVER_STATE: Record<ContractFlowStageStatus, StepState> = {
+  done: 'done',
+  active: 'active',
+  blocked: 'blocked',
+  upcoming: 'upcoming',
+  skipped: 'upcoming',
+}
 
 function getStepState(
   stepKey: ContractActiveStep,
@@ -118,6 +148,7 @@ export function ContractFlowGuide({
   signedByTenant,
   signedByLandlord,
   contractId,
+  serverFlow,
 }: ContractFlowGuideProps): React.ReactElement {
   const activeStep = resolveContractActiveStep({
     strategy,
@@ -125,10 +156,20 @@ export function ContractFlowGuide({
     depositStatus,
     signedByTenant,
     signedByLandlord,
+    serverFlow,
   })
 
-  const steps =
-    strategy === 'DEPOSIT_FIRST' ? DEPOSIT_FIRST_STEPS : SIGN_FIRST_STEPS
+  const steps = serverFlow
+    ? serverFlow.stages.map(stage => STEP_BY_KEY[stage.key])
+    : strategy === 'DEPOSIT_FIRST'
+      ? DEPOSIT_FIRST_STEPS
+      : SIGN_FIRST_STEPS
+  const stateOf = (stepKey: ContractActiveStep): StepState => {
+    const serverStage = serverFlow?.stages.find(stage => stage.key === stepKey)
+    return serverStage
+      ? SERVER_STATE[serverStage.status]
+      : getStepState(stepKey, activeStep, steps)
+  }
   const isCompleted = activeStep === 'completed'
 
   const activeStepDef = steps.find(s => s.key === activeStep)
@@ -164,7 +205,7 @@ export function ContractFlowGuide({
         aria-label="Tiến trình hợp đồng"
       >
         {steps.map((step, idx) => {
-          const state = getStepState(step.key, activeStep, steps)
+          const state = stateOf(step.key)
           const isLast = idx === steps.length - 1
           const Icon = step.icon
 
@@ -181,11 +222,13 @@ export function ContractFlowGuide({
                   className={`flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all ${
                     state === 'done'
                       ? 'border-[var(--success)] bg-[var(--success)] text-white'
-                      : state === 'active'
-                        ? 'border-[var(--primary)] bg-[var(--primary)] text-white ring-2 ring-[var(--primary)]/30'
-                        : 'border-[var(--border)] bg-[var(--surface-muted)] text-[var(--muted)]'
+                      : state === 'blocked'
+                        ? 'border-[var(--danger)] bg-[var(--surface)] text-[var(--danger)]'
+                        : state === 'active'
+                          ? 'border-[var(--primary)] bg-[var(--primary)] text-white ring-2 ring-[var(--primary)]/30'
+                          : 'border-[var(--border)] bg-[var(--surface-muted)] text-[var(--muted)]'
                   }`}
-                  aria-label={`${step.label}: ${state === 'done' ? 'Đã hoàn thành' : state === 'active' ? 'Đang thực hiện' : 'Chưa đến lượt'}`}
+                  aria-label={`${step.label}: ${state === 'done' ? 'Đã hoàn thành' : state === 'blocked' ? 'Đang bị chặn' : state === 'active' ? 'Đang thực hiện' : 'Chưa đến lượt'}`}
                 >
                   {state === 'done' ? (
                     <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -213,7 +256,7 @@ export function ContractFlowGuide({
                 <div
                   aria-hidden="true"
                   className={`mb-4 h-px flex-1 transition-colors ${
-                    idx < activeIdx || isCompleted
+                    state === 'done' || idx < activeIdx || isCompleted
                       ? 'bg-[var(--success)]'
                       : 'bg-[var(--border)]'
                   }`}

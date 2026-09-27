@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { ContractFlowView } from '../api/contracts-api'
 import {
   resolveContractActiveStep,
   type ResolveActiveStepInput,
@@ -194,5 +195,53 @@ describe('resolveContractActiveStep', () => {
         signedByLandlord: true,
       })
     ).toBe('ledger')
+  })
+})
+
+describe('resolveContractActiveStep with serverFlow', () => {
+  const serverFlow = (
+    activeStage: ContractFlowView['activeStage']
+  ): ContractFlowView => ({
+    version: 1,
+    strategy: 'DEPOSIT_FIRST',
+    stages: [],
+    activeStage,
+    nextActions: [],
+  })
+
+  it('ưu tiên activeStage của server khi status không bao giờ là deposit-pending', () => {
+    expect(
+      resolveContractActiveStep({
+        strategy: 'DEPOSIT_FIRST',
+        status: 'draft',
+        serverFlow: serverFlow('deposit'),
+      })
+    ).toBe('deposit')
+  })
+
+  it('trả move-in và completed từ server', () => {
+    const base: ResolveActiveStepInput = {
+      strategy: 'DEPOSIT_FIRST',
+      status: 'active',
+    }
+    expect(
+      resolveContractActiveStep({ ...base, serverFlow: serverFlow('move-in') })
+    ).toBe('move-in')
+    expect(
+      resolveContractActiveStep({
+        ...base,
+        serverFlow: serverFlow('completed'),
+      })
+    ).toBe('completed')
+  })
+
+  it('dùng logic cũ khi response không có flow', () => {
+    expect(
+      resolveContractActiveStep({
+        strategy: 'DEPOSIT_FIRST',
+        status: 'draft',
+        serverFlow: null,
+      })
+    ).toBe('document')
   })
 })
