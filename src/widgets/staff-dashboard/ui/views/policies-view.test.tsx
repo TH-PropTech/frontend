@@ -8,6 +8,11 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PoliciesView } from './policies-view'
 import * as legalTermsApi from '@/features/legal-terms/api/legal-terms-api'
+import * as legalSourcesApi from '@/features/contracts/api/legal-sources-api'
+import {
+  PANEL_SOURCES,
+  REGULATIONS,
+} from '@/features/contracts/test-fixtures/legal-sources.fixture'
 
 vi.mock('@/features/legal-terms/api/legal-terms-api', () => ({
   getAdminLegalTermsState: vi.fn(),
@@ -17,6 +22,17 @@ vi.mock('@/features/legal-terms/api/legal-terms-api', () => ({
   updatePolicy: vi.fn(),
   updatePolicyStatus: vi.fn(),
 }))
+
+vi.mock('@/features/contracts/api/legal-sources-api', async () => {
+  const actual = await vi.importActual<typeof legalSourcesApi>(
+    '@/features/contracts/api/legal-sources-api'
+  )
+  return {
+    ...actual,
+    getAdminLegalSources: vi.fn(),
+    getAdminPlatformRegulations: vi.fn(),
+  }
+})
 
 const mockTermsState: legalTermsApi.AdminLegalTermsStateResponse = {
   published: {
@@ -83,6 +99,12 @@ describe('PoliciesView', () => {
       mockTermsState
     )
     vi.mocked(legalTermsApi.getAdminPolicies).mockResolvedValue(mockPolicies)
+    vi.mocked(legalSourcesApi.getAdminLegalSources).mockResolvedValue(
+      PANEL_SOURCES
+    )
+    vi.mocked(legalSourcesApi.getAdminPlatformRegulations).mockResolvedValue(
+      REGULATIONS
+    )
     vi.mocked(legalTermsApi.saveLegalTermsDraft).mockResolvedValue({
       success: true,
       draftRevision: 3,
@@ -240,5 +262,16 @@ describe('PoliciesView', () => {
     expect(await screen.findByTestId('public-services-admin-tab')).toBeDefined()
     expect(screen.getByText('Quy định Đang Áp dụng')).toBeDefined()
     expect(screen.getByTestId('regulation-card-REG-RES-01')).toBeDefined()
+  })
+
+  it('switches to legal sources tab and lists admin-managed sources', async () => {
+    render(<PoliciesView />)
+
+    fireEvent.click(await screen.findByTestId('tab-legal-sources'))
+
+    expect(await screen.findByTestId('legal-sources-admin-tab')).toBeDefined()
+    for (const source of PANEL_SOURCES) {
+      expect(screen.getByTestId(`legal-source-row-${source.key}`)).toBeDefined()
+    }
   })
 })

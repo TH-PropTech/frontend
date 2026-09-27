@@ -13,33 +13,38 @@ import {
   CheckCircle2,
   Clock,
   Eye,
+  Flame,
+  Building,
+  Cpu,
 } from 'lucide-react'
 import {
   getPublicServiceChecklist,
   type PublicServiceChecklist,
 } from '../api/contracts-api'
-import {
-  PublicServiceDetailModal,
-  type PublicServiceProcedureKey,
-} from './public-service-detail-modal'
+import { getContractPanelSources } from '../api/legal-sources-api'
+import type {
+  LegalSource,
+  LegalSourceIcon,
+} from '../model/legal-governance-data'
+import { PublicServiceDetailModal } from './public-service-detail-modal'
 
 export interface PublicServiceCitationPanelProps {
   contractId: string
   contractCode?: string
 }
 
-export const DVC_LINKS = {
-  RESIDENCE_1004194:
-    'https://dichvucong.gov.vn/thu-tuc-hanh-chinh/019d2bf7-770b-734d-b7fb-5e1995f194f4',
-  RENTAL_TAX_1007689:
-    'https://dichvucong.gov.vn/thu-tuc-hanh-chinh/019d2bfc-2d93-73ec-ba2f-8d6aef8f7950',
-  HOUSING_LAW_2023:
-    'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=209627',
-  DECREE_96_2024:
-    'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=210798',
-  CIVIL_CODE_2015:
-    'https://vanban.chinhphu.vn/default.aspx?pageid=27160&docid=183188',
-} as const
+const SOURCE_ICONS: Record<
+  LegalSourceIcon,
+  React.ComponentType<{ className?: string }>
+> = {
+  residence: Building2,
+  tax: Receipt,
+  law: Scale,
+  decree: FileCheck,
+  fire: Flame,
+  building: Building,
+  digital: Cpu,
+}
 
 function itemLabel(id: PublicServiceChecklist['items'][number]['id']): string {
   switch (id) {
@@ -80,60 +85,162 @@ function statusBadge(
   }
 }
 
-export function PublicServiceCitationPanel({
-  contractId,
-  contractCode,
-}: PublicServiceCitationPanelProps): React.ReactElement {
-  const [checklist, setChecklist] =
-    React.useState<PublicServiceChecklist | null>(null)
-  const [loading, setLoading] = React.useState(true)
-  const [error, setError] = React.useState<string | null>(null)
-  const [selectedProcedure, setSelectedProcedure] =
-    React.useState<PublicServiceProcedureKey | null>(null)
+type LoadState<T> =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'ready'; data: T }
 
-  const handleRefresh = React.useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await getPublicServiceChecklist(
-        contractId,
-        'temporary-residence'
-      )
-      setChecklist(data)
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Không thể tải dữ liệu đối soát dịch vụ công.'
-      )
-    } finally {
-      setLoading(false)
-    }
-  }, [contractId])
+/** Tải dữ liệu với cờ huỷ khi unmount; `reload` để thử lại */
+function useLoad<T>(
+  load: () => Promise<T>,
+  fallbackError: string
+): [LoadState<T>, () => void] {
+  const [state, setState] = React.useState<LoadState<T>>({
+    status: 'loading',
+  })
+  const [attempt, setAttempt] = React.useState(0)
 
   React.useEffect(() => {
     let active = true
-    getPublicServiceChecklist(contractId, 'temporary-residence')
+    load()
       .then(data => {
-        if (active) {
-          setChecklist(data)
-          setLoading(false)
-        }
+        if (active) setState({ status: 'ready', data })
       })
       .catch((err: unknown) => {
         if (active) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : 'Không thể tải dữ liệu đối soát dịch vụ công.'
-          )
-          setLoading(false)
+          setState({
+            status: 'error',
+            message: err instanceof Error ? err.message : fallbackError,
+          })
         }
       })
     return () => {
       active = false
     }
-  }, [contractId])
+  }, [load, fallbackError, attempt])
+
+  const reload = React.useCallback(() => {
+    setState({ status: 'loading' })
+    setAttempt(n => n + 1)
+  }, [])
+  return [state, reload]
+}
+
+function ProcedureCard({
+  source,
+  onView,
+}: {
+  source: LegalSource
+  onView: () => void
+}): React.ReactElement {
+  const Icon = SOURCE_ICONS[source.icon]
+  return (
+    <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] flex flex-col gap-2.5">
+      <div className="flex items-start gap-2">
+        <Icon className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
+        <div>
+          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--surface)] text-[var(--primary)] border border-[var(--border)] mb-1">
+            {source.code}
+          </span>
+          <h5 className="text-xs font-bold text-[var(--fg)]">{source.title}</h5>
+          {source.subtitle && (
+            <p className="text-[11px] text-[var(--muted)] mt-0.5">
+              {source.subtitle}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onView}
+          data-testid={`btn-view-source-${source.key}`}
+          className="inline-flex items-center justify-center gap-1.5 flex-1 px-3 py-2 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--fg)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors"
+        >
+          <Eye className="w-3.5 h-3.5" />
+          <span>Xem chi tiết quy trình & hồ sơ</span>
+        </button>
+        <a
+          href={source.externalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid={`link-source-${source.key}`}
+          title={`Mở trang ${source.code} trên Cổng DVC Quốc gia`}
+          className="inline-flex items-center justify-center p-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    </div>
+  )
+}
+
+function LegalTextItem({
+  source,
+  onView,
+}: {
+  source: LegalSource
+  onView: () => void
+}): React.ReactElement {
+  return (
+    <li className="flex items-center justify-between gap-2">
+      <button
+        type="button"
+        onClick={onView}
+        data-testid={`btn-view-source-${source.key}`}
+        className="inline-flex items-center gap-1 text-[var(--fg)] hover:text-[var(--primary)] transition-colors text-left"
+      >
+        <FileCheck className="w-3.5 h-3.5 text-[var(--muted)] shrink-0" />
+        <span className="underline underline-offset-2">
+          {source.title} ({source.code})
+        </span>
+        <Eye className="w-3 h-3 text-[var(--primary)] ml-1" />
+      </button>
+      <a
+        href={source.externalUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-testid={`link-source-${source.key}`}
+        className="text-[var(--muted)] hover:text-[var(--primary)] p-1"
+        title="Mở văn bản gốc"
+      >
+        <ExternalLink className="w-3 h-3" />
+      </a>
+    </li>
+  )
+}
+
+export function PublicServiceCitationPanel({
+  contractId,
+  contractCode,
+}: PublicServiceCitationPanelProps): React.ReactElement {
+  const loadChecklist = React.useCallback(
+    () => getPublicServiceChecklist(contractId, 'temporary-residence'),
+    [contractId]
+  )
+  const [checklistState, reloadChecklist] = useLoad(
+    loadChecklist,
+    'Không thể tải dữ liệu đối soát dịch vụ công.'
+  )
+  const [sourcesState, reloadSources] = useLoad(
+    getContractPanelSources,
+    'Không thể tải nguồn Dịch vụ công & Pháp lý.'
+  )
+  const [selectedSource, setSelectedSource] =
+    React.useState<LegalSource | null>(null)
+
+  const checklist =
+    checklistState.status === 'ready' ? checklistState.data : null
+  const sources = sourcesState.status === 'ready' ? sourcesState.data : []
+  const procedures = sources.filter(s => s.kind === 'procedure')
+  const legalTexts = sources.filter(s => s.kind === 'legal_text')
+  const isLoading =
+    checklistState.status === 'loading' || sourcesState.status === 'loading'
+
+  const handleRefresh = (): void => {
+    reloadChecklist()
+    reloadSources()
+  }
 
   return (
     <>
@@ -151,187 +258,85 @@ export function PublicServiceCitationPanel({
           </div>
           <button
             type="button"
-            onClick={() => void handleRefresh()}
-            disabled={loading}
-            aria-label="Tải lại đối soát hồ sơ DVC"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            aria-label="Tải lại nguồn DVC và đối soát hồ sơ"
             className="text-[var(--muted)] hover:text-[var(--primary)] p-1 rounded transition-colors disabled:opacity-50"
           >
             <RefreshCw
-              className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`}
+              className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`}
             />
           </button>
         </div>
 
-        {/* Direct Action Links for Public Service Procedures */}
-        <div className="space-y-3">
-          <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wide">
-            Thủ tục Hành chính Trực tuyến
-          </span>
-
-          {/* TTHC 1.004194: Đăng ký tạm trú */}
-          <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] flex flex-col gap-2.5">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-start gap-2">
-                <Building2 className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
-                <div>
-                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--surface)] text-[var(--primary)] border border-[var(--border)] mb-1">
-                    Mã TTHC: 1.004194
-                  </span>
-                  <h5 className="text-xs font-bold text-[var(--fg)]">
-                    Đăng ký Thường trú / Tạm trú tại chỗ ở do thuê
-                  </h5>
-                  <p className="text-[11px] text-[var(--muted)] mt-0.5">
-                    Bộ Công an / Cổng DVC Quốc gia tiếp nhận trực tuyến với hồ
-                    sơ hợp đồng thuê nhà hợp pháp{' '}
-                    {contractCode ? `(${contractCode})` : ''}.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedProcedure('1.004194')}
-                data-testid="btn-view-procedure-1004194"
-                className="inline-flex items-center justify-center gap-1.5 flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 transition-opacity"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Xem chi tiết quy trình & hồ sơ</span>
-              </button>
-              <a
-                href={DVC_LINKS.RESIDENCE_1004194}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="link-dvc-residence-1004194"
-                title="Mở trang thủ tục 1.004194 trên Cổng DVC Quốc gia"
-                className="inline-flex items-center justify-center p-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
+        {/* Admin-managed sources */}
+        {sourcesState.status === 'loading' && (
+          <div
+            data-testid="legal-sources-loading"
+            className="text-center py-3 text-xs text-[var(--muted)] flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--primary)]" />
+            <span>Đang tải nguồn Dịch vụ công & Pháp lý...</span>
           </div>
+        )}
 
-          {/* TTHC 1.007689: Khai thuế cá nhân cho thuê BĐS */}
-          <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] flex flex-col gap-2.5">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-start gap-2">
-                <Receipt className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
-                <div>
-                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--surface)] text-[var(--primary)] border border-[var(--border)] mb-1">
-                    Mã TTHC: 1.007689
-                  </span>
-                  <h5 className="text-xs font-bold text-[var(--fg)]">
-                    Khai thuế đối với cá nhân cho thuê tài sản
-                  </h5>
-                  <p className="text-[11px] text-[var(--muted)] mt-0.5">
-                    Tổng cục Thuế tiếp nhận hồ sơ lần đầu gồm bản sao hợp đồng
-                    và bảng kê doanh thu theo biểu mẫu hiện hành.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedProcedure('1.007689')}
-                data-testid="btn-view-procedure-1007689"
-                className="inline-flex items-center justify-center gap-1.5 flex-1 px-3 py-2 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--fg)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Xem chi tiết kê khai thuế</span>
-              </button>
-              <a
-                href={DVC_LINKS.RENTAL_TAX_1007689}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="link-dvc-tax-1007689"
-                title="Mở trang thủ tục 1.007689 trên Cổng DVC Quốc gia"
-                className="inline-flex items-center justify-center p-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
+        {sourcesState.status === 'error' && (
+          <div
+            data-testid="legal-sources-error"
+            className="p-2.5 rounded-lg bg-[var(--surface-muted)] border border-[var(--danger)] text-xs text-[var(--danger)] flex items-center justify-between gap-2"
+          >
+            <span>{sourcesState.message}</span>
+            <button
+              type="button"
+              onClick={reloadSources}
+              className="font-semibold underline underline-offset-2"
+            >
+              Thử lại
+            </button>
           </div>
-        </div>
+        )}
 
-        {/* Statutory Legal Foundations */}
-        <div className="space-y-2 border-t border-[var(--border)] pt-3">
-          <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wide flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-[var(--primary)]" />
-            Căn cứ Pháp luật Việt Nam
-          </span>
-          <ul className="space-y-1.5 text-xs">
-            <li className="flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedProcedure('housing-law-2023')}
-                className="inline-flex items-center gap-1 text-[var(--fg)] hover:text-[var(--primary)] transition-colors text-left"
-              >
-                <FileCheck className="w-3.5 h-3.5 text-[var(--muted)] shrink-0" />
-                <span className="underline underline-offset-2">
-                  Luật Nhà ở 27/2023/QH15 (Điều 163, 164)
-                </span>
-                <Eye className="w-3 h-3 text-[var(--primary)] ml-1" />
-              </button>
-              <a
-                href={DVC_LINKS.HOUSING_LAW_2023}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="link-legal-housing-law"
-                className="text-[var(--muted)] hover:text-[var(--primary)] p-1"
-                title="Mở văn bản gốc"
-              >
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </li>
-            <li className="flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedProcedure('nd96-2024')}
-                className="inline-flex items-center gap-1 text-[var(--fg)] hover:text-[var(--primary)] transition-colors text-left"
-              >
-                <FileCheck className="w-3.5 h-3.5 text-[var(--muted)] shrink-0" />
-                <span className="underline underline-offset-2">
-                  Nghị định 96/2024/NĐ-CP (Mẫu Phụ lục II)
-                </span>
-                <Eye className="w-3 h-3 text-[var(--primary)] ml-1" />
-              </button>
-              <a
-                href={DVC_LINKS.DECREE_96_2024}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="link-legal-decree-96"
-                className="text-[var(--muted)] hover:text-[var(--primary)] p-1"
-                title="Mở văn bản gốc"
-              >
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </li>
-            <li className="flex items-center justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedProcedure('civil-code-2015')}
-                className="inline-flex items-center gap-1 text-[var(--fg)] hover:text-[var(--primary)] transition-colors text-left"
-              >
-                <FileCheck className="w-3.5 h-3.5 text-[var(--muted)] shrink-0" />
-                <span className="underline underline-offset-2">
-                  Bộ luật Dân sự 2015 (Điều 328, 472)
-                </span>
-                <Eye className="w-3 h-3 text-[var(--primary)] ml-1" />
-              </button>
-              <a
-                href={DVC_LINKS.CIVIL_CODE_2015}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="link-legal-civil-code"
-                className="text-[var(--muted)] hover:text-[var(--primary)] p-1"
-                title="Mở văn bản gốc"
-              >
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </li>
-          </ul>
-        </div>
+        {sourcesState.status === 'ready' && sources.length === 0 && (
+          <p
+            data-testid="legal-sources-empty"
+            className="text-xs text-[var(--muted)] text-center py-2"
+          >
+            Chưa có nguồn Dịch vụ công hoặc văn bản pháp lý nào được cấu hình.
+          </p>
+        )}
+
+        {procedures.length > 0 && (
+          <div className="space-y-3">
+            <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wide">
+              Thủ tục Hành chính Trực tuyến
+            </span>
+            {procedures.map(source => (
+              <ProcedureCard
+                key={source.key}
+                source={source}
+                onView={() => setSelectedSource(source)}
+              />
+            ))}
+          </div>
+        )}
+
+        {legalTexts.length > 0 && (
+          <div className="space-y-2 border-t border-[var(--border)] pt-3">
+            <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wide flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-[var(--primary)]" />
+              Căn cứ Pháp luật Việt Nam
+            </span>
+            <ul className="space-y-1.5 text-xs">
+              {legalTexts.map(source => (
+                <LegalTextItem
+                  key={source.key}
+                  source={source}
+                  onView={() => setSelectedSource(source)}
+                />
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Live Contract Checklist Status */}
         <div className="border-t border-[var(--border)] pt-3 space-y-2">
@@ -339,20 +344,20 @@ export function PublicServiceCitationPanel({
             Đối soát hồ sơ hợp đồng hiện tại
           </span>
 
-          {loading && (
+          {checklistState.status === 'loading' && (
             <div className="text-center py-3 text-xs text-[var(--muted)] flex items-center justify-center gap-2">
               <RefreshCw className="w-3.5 h-3.5 animate-spin text-[var(--primary)]" />
               <span>Đang kiểm tra dữ liệu đối soát...</span>
             </div>
           )}
 
-          {error && (
+          {checklistState.status === 'error' && (
             <div className="p-2.5 rounded-lg bg-[var(--surface-muted)] border border-[var(--danger)] text-xs text-[var(--danger)]">
-              {error}
+              {checklistState.message}
             </div>
           )}
 
-          {checklist && !loading && (
+          {checklist && (
             <ul className="space-y-2 text-xs" data-testid="dvc-checklist-items">
               {checklist.items.map(item => (
                 <li
@@ -382,10 +387,10 @@ export function PublicServiceCitationPanel({
         </div>
       </div>
 
-      {/* In-app procedure detail modal */}
+      {/* In-app source detail modal */}
       <PublicServiceDetailModal
-        procedureKey={selectedProcedure}
-        onClose={() => setSelectedProcedure(null)}
+        source={selectedSource}
+        onClose={() => setSelectedSource(null)}
         contractCode={contractCode}
       />
     </>
