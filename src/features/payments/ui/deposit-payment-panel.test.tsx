@@ -1,10 +1,11 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DepositPaymentPanel } from './deposit-payment-panel'
 import type { ContractDepositView } from '@/features/contracts/api/contracts-api'
 import * as paymentsApi from '../api/payments-api'
 
 vi.mock('../api/payments-api', () => ({
+  consentDepositAgreement: vi.fn(),
   initDepositPayment: vi.fn(),
 }))
 
@@ -13,6 +14,18 @@ describe('DepositPaymentPanel', () => {
     agreementId: 'dpa-123',
     status: 'pending',
     amount: 15000000,
+    consentGiven: true,
+    paidAt: null,
+    txHash: null,
+  }
+
+  const mockUnconsentedDeposit: ContractDepositView = {
+    agreementId: 'dpa-123',
+    status: 'draft',
+    amount: 15000000,
+    consentGiven: false,
+    contentRevision: 3,
+    contentHash: 'deposit-content-hash',
     paidAt: null,
     txHash: null,
   }
@@ -24,6 +37,10 @@ describe('DepositPaymentPanel', () => {
     paidAt: '2026-03-14T02:00:00Z',
     txHash: '0xmockdepositpay123',
   }
+
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('renders empty notice when deposit is null', () => {
     render(
@@ -76,6 +93,59 @@ describe('DepositPaymentPanel', () => {
     })
   })
 
+  it('lets the tenant consent before showing the Mock Bank payment action', async () => {
+    vi.mocked(paymentsApi.consentDepositAgreement).mockResolvedValue(undefined)
+    const onPaymentSuccess = vi.fn()
+
+    render(
+      <DepositPaymentPanel
+        deposit={mockUnconsentedDeposit}
+        isTenant={true}
+        contractId="c1"
+        onPaymentSuccess={onPaymentSuccess}
+      />
+    )
+
+    expect(screen.getByLabelText('Đồng ý thỏa thuận cọc')).toBeInTheDocument()
+    expect(
+      screen.queryByLabelText('Thanh toán cọc ngay')
+    ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText('Đồng ý thỏa thuận cọc'))
+
+    await waitFor(() => {
+      expect(paymentsApi.consentDepositAgreement).toHaveBeenCalledWith(
+        'dpa-123',
+        3,
+        'deposit-content-hash'
+      )
+    })
+    expect(onPaymentSuccess).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the consent failure and keeps payment unavailable', async () => {
+    vi.mocked(paymentsApi.consentDepositAgreement).mockRejectedValue(
+      new Error('DEPOSIT_CONSENT_REQUIRED')
+    )
+
+    render(
+      <DepositPaymentPanel
+        deposit={mockUnconsentedDeposit}
+        isTenant={true}
+        contractId="c1"
+      />
+    )
+
+    fireEvent.click(screen.getByLabelText('Đồng ý thỏa thuận cọc'))
+
+    expect(
+      await screen.findByText('DEPOSIT_CONSENT_REQUIRED')
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByLabelText('Thanh toán cọc ngay')
+    ).not.toBeInTheDocument()
+  })
+
   it('shows waiting message for landlord when deposit is pending', () => {
     render(
       <DepositPaymentPanel
@@ -90,6 +160,38 @@ describe('DepositPaymentPanel', () => {
     ).toBeInTheDocument()
     expect(
       screen.queryByLabelText('Thanh toán cọc ngay')
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not offer tenant consent to the landlord', () => {
+    render(
+      <DepositPaymentPanel
+        deposit={mockUnconsentedDeposit}
+        isTenant={false}
+        contractId="c1"
+      />
+    )
+
+    expect(
+      screen.queryByLabelText('Đồng ý thỏa thuận cọc')
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not offer consent without current agreement metadata', () => {
+    render(
+      <DepositPaymentPanel
+        deposit={{
+          ...mockUnconsentedDeposit,
+          contentRevision: null,
+          contentHash: null,
+        }}
+        isTenant={true}
+        contractId="c1"
+      />
+    )
+
+    expect(
+      screen.queryByLabelText('Đồng ý thỏa thuận cọc')
     ).not.toBeInTheDocument()
   })
 

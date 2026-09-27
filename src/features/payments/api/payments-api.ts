@@ -51,6 +51,20 @@ export async function initDepositPayment(
   })
 }
 
+export async function consentDepositAgreement(
+  depositAgreementId: string,
+  expectedRevision: number,
+  expectedContentHash: string
+): Promise<void> {
+  await apiClient.post<void>(
+    `/deposit-agreements/${depositAgreementId}/consent`,
+    {
+      expectedRevision,
+      expectedContentHash,
+    }
+  )
+}
+
 export async function initRentPayment(paymentId: string): Promise<PaymentInit> {
   return apiClient.post<PaymentInit>('/bank/rent/init', { paymentId })
 }
