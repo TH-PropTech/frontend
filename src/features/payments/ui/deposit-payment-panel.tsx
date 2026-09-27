@@ -10,7 +10,10 @@ import {
   Info,
 } from 'lucide-react'
 import type { ContractDepositView } from '@/features/contracts/api/contracts-api'
-import { initDepositPayment } from '../api/payments-api'
+import {
+  consentDepositAgreement,
+  initDepositPayment,
+} from '../api/payments-api'
 
 export interface DepositPaymentPanelProps {
   deposit: ContractDepositView | null
@@ -29,6 +32,7 @@ export function DepositPaymentPanel({
   isActiveStep,
 }: DepositPaymentPanelProps) {
   const [loading, setLoading] = useState(false)
+  const [consenting, setConsenting] = useState(false)
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -44,6 +48,13 @@ export function DepositPaymentPanel({
   }
 
   const isPaid = deposit.status === 'paid' || deposit.status === 'transferred'
+  const hasConsent = deposit.consentGiven !== false
+  const canConsent =
+    isTenant &&
+    !hasConsent &&
+    Boolean(deposit.agreementId) &&
+    Number.isInteger(deposit.contentRevision) &&
+    Boolean(deposit.contentHash)
   const formattedAmount = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
@@ -73,6 +84,37 @@ export function DepositPaymentPanel({
       setErrorMsg(msg)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleConsent = async () => {
+    const targetAgreementId = deposit.agreementId
+    const expectedRevision = deposit.contentRevision
+    const expectedContentHash = deposit.contentHash
+    if (
+      !targetAgreementId ||
+      typeof expectedRevision !== 'number' ||
+      !Number.isInteger(expectedRevision) ||
+      !expectedContentHash
+    ) {
+      setErrorMsg('Không thể xác nhận vì thiếu thông tin thỏa thuận cọc')
+      return
+    }
+    try {
+      setConsenting(true)
+      setErrorMsg(null)
+      await consentDepositAgreement(
+        targetAgreementId,
+        expectedRevision,
+        expectedContentHash
+      )
+      onPaymentSuccess?.()
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : 'Không thể xác nhận thỏa thuận cọc'
+      setErrorMsg(msg)
+    } finally {
+      setConsenting(false)
     }
   }
 
@@ -168,12 +210,12 @@ export function DepositPaymentPanel({
               </div>
             )}
 
-            {isTenant ? (
+            {isTenant && hasConsent ? (
               <div className="flex flex-col gap-2">
                 <button
                   type="button"
                   onClick={handleInitPayment}
-                  disabled={loading}
+                  disabled={loading || consenting}
                   aria-label="Thanh toán cọc ngay"
                   className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm"
                 >
@@ -196,6 +238,26 @@ export function DepositPaymentPanel({
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 )}
+              </div>
+            ) : isTenant && canConsent ? (
+              <button
+                type="button"
+                onClick={handleConsent}
+                disabled={consenting}
+                aria-label="Đồng ý thỏa thuận cọc"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>
+                  {consenting
+                    ? 'Đang xác nhận thỏa thuận...'
+                    : 'Đồng ý thỏa thuận cọc'}
+                </span>
+              </button>
+            ) : isTenant ? (
+              <div className="p-3 rounded-lg bg-[var(--surface-muted)] text-center text-xs text-[var(--muted)]">
+                Thỏa thuận cọc chưa có đủ thông tin để xác nhận. Vui lòng tải
+                lại hợp đồng.
               </div>
             ) : (
               <div className="p-3 rounded-lg bg-[var(--surface-muted)] text-center text-xs text-[var(--muted)]">

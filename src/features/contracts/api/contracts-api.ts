@@ -222,6 +222,8 @@ export interface ContractDepositView {
   currency?: string
   status: 'draft' | 'pending' | 'paid' | 'transferred'
   consentGiven?: boolean
+  contentRevision?: number | null
+  contentHash?: string | null
   paidAt: string | null
   txHash: string | null
   paymentProofUrl?: string | null
