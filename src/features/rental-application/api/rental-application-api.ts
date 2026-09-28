@@ -23,6 +23,21 @@ export interface RentalApplicationDisclosure {
   items: Array<{ id: string; title: string; body: string; required: boolean }>
 }
 
+export interface FeeQuoteLine {
+  feeKind: 'LANDLORD_COMMISSION' | 'TENANT_SERVICE'
+  payerRole: 'tenant' | 'landlord'
+  amountBeforeVat: number
+  vatAmount: number
+  amount: number
+}
+
+export interface FeeSnapshot {
+  scheduleId: string
+  version: number
+  contentHash: string
+  quote: FeeQuoteLine[]
+}
+
 export interface RentalApplicationContext {
   enabled: boolean
   eligible: boolean
@@ -45,6 +60,19 @@ export interface RentalApplicationContext {
       | { type: 'MONTHS_OF_RENT'; months: number }
       | { type: 'FIXED_AMOUNT'; amount: number }
     resolvedDepositAmount: number
+    settlementPolicy?: {
+      holdingDeposit?: {
+        type: 'FIXED_AMOUNT' | 'PERCENT_OF_SECURITY'
+        amount?: number
+        percent?: number
+      }
+      allowedPaymentCycles: Array<1 | 3 | 6>
+      defaultPaymentCycle: 1 | 3 | 6
+      firstPaymentDueOffsetDays: number
+    }
+    resolvedHoldingDepositAmount?: number
+    resolvedSecurityTopUpAmount?: number
+    feeSnapshot?: FeeSnapshot | null
     status: 'active' | 'inactive'
     currency: 'VND'
     allowedExecutionPolicies?: RentalExecutionPolicyRef[]
@@ -83,6 +111,19 @@ export interface CreateRentalApplicationInput {
   flowProfileVersion?: number | undefined
   flowProfileHash?: string | undefined
   selectedExecutionPolicy?: RentalExecutionPolicyRef | undefined
+  occupantsDetail?: Array<{
+    fullName: string
+    birthYear: number
+    relationship: string
+  }>
+  vehicles?: Array<{ type: 'motorbike' | 'car' | 'bicycle'; quantity: number }>
+  emergencyContact?: { fullName: string; relationship: string; phone: string }
+  selectedPaymentCycleMonths?: 1 | 3 | 6
+  viewingBookingId?: string
+  feeScheduleId?: string
+  feeScheduleVersion?: number
+  feeContentHash?: string
+  feeAcknowledgedHash?: string
 }
 export interface RentalApplicationItem {
   _id: string
@@ -96,6 +137,23 @@ export interface RentalApplicationItem {
   createdAt: string
   updatedAt: string
   occupants: number
+  occupantsDetail?: Array<{
+    fullName: string
+    birthYear: number
+    relationship: string
+  }> | null
+  vehicles?: Array<{
+    type: 'motorbike' | 'car' | 'bicycle'
+    quantity: number
+  }> | null
+  emergencyContact?: {
+    fullName: string
+    relationship: string
+    phone: string
+  } | null
+  selectedPaymentCycleMonths?: 1 | 3 | 6 | null
+  viewingBookingId?: string | null
+  feeSnapshot?: FeeSnapshot | null
   moveInDate: string
   occupation: string
   hasPets: boolean
@@ -164,6 +222,7 @@ export async function respondToRentalApplication(
     expectedRevision?: number | undefined
     idempotencyKey?: string | undefined
     note?: string | undefined
+    landlordFeeAck?: string | undefined
   }
 ): Promise<RentalApplicationItem> {
   return apiClient.patch<RentalApplicationItem>(
@@ -177,6 +236,14 @@ export function isRentalPackageStaleError(error: unknown): boolean {
   return (
     error.message.includes('PACKAGE_STALE') ||
     error.body?.code === 'PACKAGE_STALE'
+  )
+}
+
+export function isRentalFeeQuoteStaleError(error: unknown): boolean {
+  if (!(error instanceof ApiClientError)) return false
+  return (
+    error.message.includes('PLATFORM_FEE_QUOTE_STALE') ||
+    error.body?.code === 'PLATFORM_FEE_QUOTE_STALE'
   )
 }
 

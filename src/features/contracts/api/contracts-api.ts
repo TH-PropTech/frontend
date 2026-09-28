@@ -363,6 +363,50 @@ export interface ContractViewDto {
   access?: ContractAccessView
   ledger: ContractLedgerSummary
   flow?: ContractFlowView
+  settlement?: MoveInSettlementView | null
+  financialSummary?: ContractFinancialSummaryView
+}
+
+export interface ContractFinancialSummaryView {
+  initialPaymentTotal: number
+  holdingDeposit: number
+  securityTopUpAmount: number
+  tenantServiceFee: number
+  landlordCommission: number
+}
+
+export interface MoveInSettlementView {
+  id: string
+  status: 'pending' | 'overdue' | 'paid'
+  total: number
+  dueAt: string
+  statementHash: string
+  lines: Array<{
+    kind: string
+    amount: number
+    paymentId: string | null
+  }>
+  handover: {
+    revision: number
+    handedOverAt: string
+    meterReadings: { electricity: number; water: number }
+    keyCount: number
+    inventoryReference: string | null
+    notes: string | null
+    handoverHash: string
+    tenantConfirmation: { at: string; hash: string } | null
+    landlordConfirmation: { at: string; hash: string } | null
+    completedAt: string | null
+  } | null
+}
+
+export interface HandoverInput {
+  handedOverAt: string
+  electricity: number
+  water: number
+  keyCount: number
+  inventoryReference?: string
+  notes?: string
 }
 
 export interface ContractAuditEventDto {

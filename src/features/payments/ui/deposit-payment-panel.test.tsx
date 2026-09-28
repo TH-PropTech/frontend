@@ -36,6 +36,7 @@ describe('DepositPaymentPanel', () => {
     amount: 15000000,
     paidAt: '2026-03-14T02:00:00Z',
     txHash: '0xmockdepositpay123',
+    paymentProofUrl: 'https://receipt.test/deposit-1',
   }
 
   afterEach(() => {
@@ -59,6 +60,9 @@ describe('DepositPaymentPanel', () => {
     )
     expect(screen.getByTestId('deposit-status-paid')).toBeInTheDocument()
     expect(screen.getByText('0xmockdepositpay123')).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: 'Xem biên nhận thanh toán' })
+    ).toHaveAttribute('href', 'https://receipt.test/deposit-1')
     expect(screen.getByText(/15\.000\.000/)).toBeInTheDocument()
   })
 
@@ -87,10 +91,11 @@ describe('DepositPaymentPanel', () => {
 
     expect(paymentsApi.initDepositPayment).toHaveBeenCalledWith('dpa-123')
     await waitFor(() => {
-      expect(
-        screen.getByText('Mở cổng thanh toán Mock Bank')
-      ).toBeInTheDocument()
+      expect(screen.getByText('Mở cổng thanh toán')).toBeInTheDocument()
     })
+    expect(screen.getByText('Nội dung:')).toBeInTheDocument()
+    expect(screen.getByText(/Hạn:/)).toBeInTheDocument()
+    expect(screen.getByText('Mô phỏng')).toBeInTheDocument()
   })
 
   it('lets the tenant consent before showing the Mock Bank payment action', async () => {

@@ -131,4 +131,36 @@ describe('ContractSummaryCard', () => {
       'Hoàn tất'
     )
   })
+
+  it('shows only the fee for the current party', () => {
+    const props = {
+      contract,
+      parties: {
+        tenant: party('tenant', 'A'),
+        landlord: party('landlord', 'B'),
+      },
+      ledger,
+      activeStage: 'move-in' as const,
+      financialSummary: {
+        initialPaymentTotal: 44_000_000,
+        holdingDeposit: 14_000_000,
+        securityTopUpAmount: 16_000_000,
+        tenantServiceFee: 330_000,
+        landlordCommission: 1_100_000,
+      },
+    }
+    const { rerender } = render(
+      <ContractSummaryCard {...props} viewerRole="tenant" />
+    )
+    expect(screen.getByTestId('contract-summary-card')).toHaveTextContent(
+      '330.000'
+    )
+    expect(screen.queryByText('Hoa hồng chủ nhà')).not.toBeInTheDocument()
+
+    rerender(<ContractSummaryCard {...props} viewerRole="landlord" />)
+    expect(screen.getByTestId('contract-summary-card')).toHaveTextContent(
+      '1.100.000'
+    )
+    expect(screen.queryByText('Phí dịch vụ tenant')).not.toBeInTheDocument()
+  })
 })

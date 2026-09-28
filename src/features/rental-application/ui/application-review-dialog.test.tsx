@@ -95,6 +95,41 @@ describe('ApplicationReviewDialog', () => {
     })
   })
 
+  it('requires landlord fee acknowledgement before approving an application', () => {
+    render(
+      <ApplicationReviewDialog
+        application={{
+          ...mockApp,
+          feeSnapshot: {
+            scheduleId: 'fee-1',
+            version: 2,
+            contentHash: 'fee-hash',
+            quote: [
+              {
+                feeKind: 'LANDLORD_COMMISSION',
+                payerRole: 'landlord',
+                amountBeforeVat: 1_000_000,
+                vatAmount: 100_000,
+                amount: 1_100_000,
+              },
+            ],
+          },
+        }}
+        open
+        onOpenChange={vi.fn()}
+        onRespond={vi.fn()}
+      />
+    )
+    const submit = screen.getByTestId('submit-decision-btn')
+    expect(submit).toBeDisabled()
+    fireEvent.click(
+      screen
+        .getByTestId('landlord-fee-acknowledgement')
+        .querySelector('button')!
+    )
+    expect(submit).not.toBeDisabled()
+  })
+
   it('switches to reject mode and submits rejection with reason and note', async () => {
     const onRespondMock = vi.fn().mockResolvedValue({})
     const onOpenChangeMock = vi.fn()

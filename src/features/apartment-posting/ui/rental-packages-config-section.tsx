@@ -158,6 +158,50 @@ export function RentalPackagesConfigSection({
     )
   }
 
+  const handleToggleSettlementPolicy = (
+    duration: number,
+    enabled: boolean
+  ): void => {
+    setValue(
+      'rentalPackages',
+      currentPackages.map(pkg =>
+        pkg.durationMonths !== duration
+          ? pkg
+          : {
+              ...pkg,
+              settlementPolicy: enabled
+                ? {
+                    holdingDeposit: {
+                      type: 'PERCENT_OF_SECURITY',
+                      percent: 30,
+                    },
+                    allowedPaymentCycles: [1, 3, 6],
+                    defaultPaymentCycle: 1,
+                    firstPaymentDueOffsetDays: 3,
+                  }
+                : undefined,
+            }
+      ),
+      { shouldValidate: true }
+    )
+  }
+
+  const updateSettlementPolicy = (
+    duration: number,
+    update: (
+      policy: NonNullable<RentalPackagePostingSchemaType['settlementPolicy']>
+    ) => NonNullable<RentalPackagePostingSchemaType['settlementPolicy']>
+  ): void => {
+    setValue(
+      'rentalPackages',
+      currentPackages.map(pkg => {
+        if (pkg.durationMonths !== duration || !pkg.settlementPolicy) return pkg
+        return { ...pkg, settlementPolicy: update(pkg.settlementPolicy) }
+      }),
+      { shouldValidate: true }
+    )
+  }
+
   const handleToggleExecutionPolicy = (
     duration: number,
     policy: RentalExecutionPolicyRecord,
@@ -467,6 +511,150 @@ export function RentalPackagesConfigSection({
                       </div>
                     </div>
                   ) : null}
+
+                  <section
+                    className="space-y-2 rounded-lg border border-border/70 bg-surface-muted/30 p-3"
+                    data-testid={`settlement-policy-${duration}`}
+                  >
+                    <label className="flex items-center gap-2 text-[11px] font-semibold text-fg">
+                      <Checkbox
+                        checked={Boolean(pkg.settlementPolicy)}
+                        onCheckedChange={checked =>
+                          handleToggleSettlementPolicy(
+                            duration,
+                            checked === true
+                          )
+                        }
+                      />
+                      Quyết toán nhận nhà và chọn chu kỳ thanh toán
+                    </label>
+                    {pkg.settlementPolicy ? (
+                      <div className="space-y-2 pl-6">
+                        <div className="flex flex-wrap gap-3 text-[11px] text-muted">
+                          {[1, 3, 6].map(value => {
+                            const cycle = value as 1 | 3 | 6
+                            const checked =
+                              pkg.settlementPolicy?.allowedPaymentCycles.includes(
+                                cycle
+                              ) ?? false
+                            return (
+                              <label
+                                key={cycle}
+                                className="flex items-center gap-1.5"
+                              >
+                                <Checkbox
+                                  checked={checked}
+                                  onCheckedChange={next =>
+                                    updateSettlementPolicy(duration, policy => {
+                                      const cycles: (1 | 3 | 6)[] = next
+                                        ? [
+                                            ...new Set([
+                                              ...policy.allowedPaymentCycles,
+                                              cycle,
+                                            ]),
+                                          ].sort((a, b) => a - b)
+                                        : policy.allowedPaymentCycles.filter(
+                                            item => item !== cycle
+                                          )
+                                      const allowed: (1 | 3 | 6)[] =
+                                        cycles.length ? cycles : [1]
+                                      return {
+                                        ...policy,
+                                        allowedPaymentCycles: allowed,
+                                        defaultPaymentCycle: allowed.includes(
+                                          policy.defaultPaymentCycle
+                                        )
+                                          ? policy.defaultPaymentCycle
+                                          : (allowed[0] ?? 1),
+                                      }
+                                    })
+                                  }
+                                />
+                                {cycle} tháng
+                              </label>
+                            )
+                          })}
+                        </div>
+                        <label className="block space-y-1 text-[11px] text-muted">
+                          Chu kỳ mặc định
+                          <select
+                            aria-label={`Chu kỳ mặc định ${duration} tháng`}
+                            className="h-8 w-full rounded-md border border-border bg-surface px-2 text-fg"
+                            value={pkg.settlementPolicy.defaultPaymentCycle}
+                            onChange={event =>
+                              updateSettlementPolicy(duration, policy => ({
+                                ...policy,
+                                defaultPaymentCycle: Number(
+                                  event.target.value
+                                ) as 1 | 3 | 6,
+                              }))
+                            }
+                          >
+                            {pkg.settlementPolicy.allowedPaymentCycles.map(
+                              cycle => (
+                                <option key={cycle} value={cycle}>
+                                  {cycle} tháng
+                                </option>
+                              )
+                            )}
+                          </select>
+                        </label>
+                        <label className="block space-y-1 text-[11px] text-muted">
+                          Cọc giữ chỗ (% cọc bảo đảm)
+                          <Input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={
+                              pkg.settlementPolicy.holdingDeposit?.type ===
+                              'PERCENT_OF_SECURITY'
+                                ? pkg.settlementPolicy.holdingDeposit.percent
+                                : 30
+                            }
+                            onChange={event =>
+                              updateSettlementPolicy(duration, policy => ({
+                                ...policy,
+                                holdingDeposit: {
+                                  type: 'PERCENT_OF_SECURITY',
+                                  percent: Number(event.target.value) || 1,
+                                },
+                              }))
+                            }
+                            className="h-8 text-xs bg-surface"
+                          />
+                        </label>
+                        <label className="block space-y-1 text-[11px] text-muted">
+                          Hạn thanh toán trước ngày nhận nhà (ngày)
+                          <Input
+                            type="number"
+                            min="0"
+                            max="15"
+                            value={
+                              pkg.settlementPolicy.firstPaymentDueOffsetDays
+                            }
+                            onChange={event =>
+                              updateSettlementPolicy(duration, policy => ({
+                                ...policy,
+                                firstPaymentDueOffsetDays: Math.min(
+                                  15,
+                                  Math.max(0, Number(event.target.value) || 0)
+                                ),
+                              }))
+                            }
+                            className="h-8 text-xs bg-surface"
+                          />
+                        </label>
+                        <p className="text-[10px] text-muted">
+                          Kỳ đầu:{' '}
+                          {formatVnd(
+                            pkg.monthlyRent *
+                              pkg.settlementPolicy.defaultPaymentCycle
+                          )}{' '}
+                          ₫ thuê + bù cọc được tính khi gửi hồ sơ.
+                        </p>
+                      </div>
+                    ) : null}
+                  </section>
                 </div>
               )}
             </div>

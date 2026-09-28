@@ -23,6 +23,7 @@ export interface RespondApplicationParams {
   reasonCode: string
   note?: string | undefined
   expectedRevision?: number | undefined
+  landlordFeeAck?: string | undefined
 }
 
 export function useLandlordApplications() {

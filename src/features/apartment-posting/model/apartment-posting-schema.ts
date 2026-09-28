@@ -28,6 +28,27 @@ export const rentalPackagePostingSchema = z.object({
       amount: z.number().gt(0, 'Số tiền cọc cố định phải lớn hơn 0'),
     }),
   ]),
+  settlementPolicy: z
+    .object({
+      holdingDeposit: z
+        .discriminatedUnion('type', [
+          z.object({
+            type: z.literal('FIXED_AMOUNT'),
+            amount: z.number().int().gt(0),
+          }),
+          z.object({
+            type: z.literal('PERCENT_OF_SECURITY'),
+            percent: z.number().gt(0).lte(100),
+          }),
+        ])
+        .optional(),
+      allowedPaymentCycles: z
+        .array(z.union([z.literal(1), z.literal(3), z.literal(6)]))
+        .min(1),
+      defaultPaymentCycle: z.union([z.literal(1), z.literal(3), z.literal(6)]),
+      firstPaymentDueOffsetDays: z.number().int().min(0).max(15),
+    })
+    .optional(),
   status: z.enum(['active', 'inactive']).default('active'),
   allowedExecutionPolicies: z
     .array(rentalExecutionPolicyRefSchema)

@@ -36,6 +36,14 @@ export interface ApplyStepInfoValues {
   occupation: string
   hasPets: boolean
   notes?: string
+  occupantsDetail?: Array<{
+    fullName: string
+    birthYear: number
+    relationship: string
+  }>
+  vehicles?: Array<{ type: 'motorbike' | 'car' | 'bicycle'; quantity: number }>
+  emergencyContact?: { fullName: string; relationship: string; phone: string }
+  viewingBookingId?: string
 }
 
 export interface ApplyStepInfoProps {
@@ -115,6 +123,38 @@ export function validateStepInfo(
   const trimmedOccupation = (values.occupation || '').trim()
   if (!trimmedOccupation || trimmedOccupation.length > 200) {
     errors.occupation = 'Vui lòng nhập nghề nghiệp (1 đến 200 ký tự).'
+  }
+
+  if (values.occupantsDetail?.length) {
+    if (values.occupantsDetail.length !== values.occupants) {
+      errors.occupantsDetail = 'Thêm thông tin cho đủ số người ở đã khai báo.'
+    } else if (
+      values.occupantsDetail.some(
+        occupant =>
+          !occupant.fullName.trim() ||
+          !Number.isInteger(occupant.birthYear) ||
+          occupant.birthYear < 1900 ||
+          occupant.birthYear > new Date().getFullYear() ||
+          !occupant.relationship.trim()
+      )
+    ) {
+      errors.occupantsDetail =
+        'Vui lòng nhập tên, năm sinh và quan hệ của từng người ở.'
+    }
+  }
+
+  const emergency = values.emergencyContact
+  if (
+    emergency &&
+    [emergency.fullName, emergency.relationship, emergency.phone].some(
+      value => value.trim().length > 0
+    ) &&
+    [emergency.fullName, emergency.relationship, emergency.phone].some(
+      value => value.trim().length === 0
+    )
+  ) {
+    errors.emergencyContact =
+      'Nhập đủ tên, mối quan hệ và số điện thoại liên hệ khẩn cấp.'
   }
 
   const allowNotes = config?.allowNotes ?? true
@@ -579,6 +619,185 @@ export function ApplyStepInfo({
               ))}
             </div>
           </div>
+        ) : null}
+      </section>
+
+      <section className="space-y-4 rounded-xl border border-border bg-surface p-3.5 shadow-sm sm:rounded-2xl sm:p-5">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
+          Thông tin bổ sung (không bắt buộc)
+        </h3>
+        <div className="space-y-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() =>
+              onChange({
+                occupantsDetail: Array.from(
+                  { length: values.occupants },
+                  (_, index) =>
+                    values.occupantsDetail?.[index] ?? {
+                      fullName: '',
+                      birthYear: 0,
+                      relationship: '',
+                    }
+                ),
+              })
+            }
+          >
+            {values.occupantsDetail?.length
+              ? 'Cập nhật danh sách người ở'
+              : 'Thêm thông tin người ở'}
+          </Button>
+          {values.occupantsDetail?.map((occupant, index) => (
+            <div key={index} className="grid gap-2 sm:grid-cols-3">
+              <Input
+                aria-label={`Họ tên người ở ${index + 1}`}
+                placeholder={`Họ tên người ở ${index + 1}`}
+                value={occupant.fullName}
+                onChange={event => {
+                  const occupantsDetail = [...(values.occupantsDetail ?? [])]
+                  occupantsDetail[index] = {
+                    ...occupant,
+                    fullName: event.target.value,
+                  }
+                  onChange({ occupantsDetail })
+                }}
+              />
+              <Input
+                aria-label={`Năm sinh người ở ${index + 1}`}
+                type="number"
+                min="1900"
+                max={new Date().getFullYear()}
+                value={occupant.birthYear || ''}
+                onChange={event => {
+                  const occupantsDetail = [...(values.occupantsDetail ?? [])]
+                  occupantsDetail[index] = {
+                    ...occupant,
+                    birthYear: Number(event.target.value),
+                  }
+                  onChange({ occupantsDetail })
+                }}
+              />
+              <Input
+                aria-label={`Quan hệ người ở ${index + 1}`}
+                placeholder="Quan hệ"
+                value={occupant.relationship}
+                onChange={event => {
+                  const occupantsDetail = [...(values.occupantsDetail ?? [])]
+                  occupantsDetail[index] = {
+                    ...occupant,
+                    relationship: event.target.value,
+                  }
+                  onChange({ occupantsDetail })
+                }}
+              />
+            </div>
+          ))}
+          {errors.occupantsDetail ? (
+            <p role="alert" className="text-[11px] text-danger">
+              {errors.occupantsDetail}
+            </p>
+          ) : null}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1 text-xs">
+            <span>Liên hệ khẩn cấp</span>
+            <Input
+              aria-label="Tên liên hệ khẩn cấp"
+              value={values.emergencyContact?.fullName ?? ''}
+              onChange={event =>
+                onChange({
+                  emergencyContact: {
+                    fullName: event.target.value,
+                    relationship: values.emergencyContact?.relationship ?? '',
+                    phone: values.emergencyContact?.phone ?? '',
+                  },
+                })
+              }
+            />
+          </label>
+          <label className="space-y-1 text-xs">
+            <span>Mối quan hệ</span>
+            <Input
+              aria-label="Mối quan hệ liên hệ khẩn cấp"
+              value={values.emergencyContact?.relationship ?? ''}
+              onChange={event =>
+                onChange({
+                  emergencyContact: {
+                    fullName: values.emergencyContact?.fullName ?? '',
+                    relationship: event.target.value,
+                    phone: values.emergencyContact?.phone ?? '',
+                  },
+                })
+              }
+            />
+          </label>
+          <label className="space-y-1 text-xs">
+            <span>Số điện thoại</span>
+            <Input
+              aria-label="Số điện thoại liên hệ khẩn cấp"
+              type="tel"
+              value={values.emergencyContact?.phone ?? ''}
+              onChange={event =>
+                onChange({
+                  emergencyContact: {
+                    fullName: values.emergencyContact?.fullName ?? '',
+                    relationship: values.emergencyContact?.relationship ?? '',
+                    phone: event.target.value,
+                  },
+                })
+              }
+            />
+          </label>
+          <label className="space-y-1 text-xs">
+            <span>Mã lịch xem căn hộ</span>
+            <Input
+              aria-label="Mã lịch xem căn hộ"
+              value={values.viewingBookingId ?? ''}
+              onChange={event =>
+                onChange({ viewingBookingId: event.target.value })
+              }
+            />
+          </label>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {(
+            [
+              ['motorbike', 'Xe máy'],
+              ['car', 'Ô tô'],
+              ['bicycle', 'Xe đạp'],
+            ] as const
+          ).map(([type, label]) => (
+            <label key={type} className="space-y-1 text-xs">
+              <span>{label}</span>
+              <Input
+                aria-label={`Số lượng ${label.toLocaleLowerCase()}`}
+                type="number"
+                min="0"
+                value={
+                  values.vehicles?.find(vehicle => vehicle.type === type)
+                    ?.quantity ?? 0
+                }
+                onChange={event => {
+                  const quantity = Number(event.target.value)
+                  const vehicles = (values.vehicles ?? []).filter(
+                    vehicle => vehicle.type !== type
+                  )
+                  onChange({
+                    vehicles:
+                      quantity > 0
+                        ? [...vehicles, { type, quantity }]
+                        : vehicles,
+                  })
+                }}
+              />
+            </label>
+          ))}
+        </div>
+        {errors.emergencyContact ? (
+          <p role="alert" className="text-[11px] text-danger">
+            {errors.emergencyContact}
+          </p>
         ) : null}
       </section>
 

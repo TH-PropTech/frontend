@@ -28,6 +28,9 @@ export function PaymentSchedulePanel({
   const [lastPaymentRef, setLastPaymentRef] = React.useState<string | null>(
     null
   )
+  const [lastPaymentUrl, setLastPaymentUrl] = React.useState<string | null>(
+    null
+  )
 
   const load = React.useCallback(async (): Promise<void> => {
     setLoading(true)
@@ -58,6 +61,18 @@ export function PaymentSchedulePanel({
     return () => window.clearTimeout(scheduleLoad)
   }, [load])
 
+  React.useEffect(() => {
+    const refreshWhenVisible = (): void => {
+      if (document.visibilityState === 'visible') void load()
+    }
+    window.addEventListener('focus', refreshWhenVisible)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    return () => {
+      window.removeEventListener('focus', refreshWhenVisible)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+    }
+  }, [load])
+
   const handleLinkWallet = async (): Promise<void> => {
     setLinking(true)
     setError(null)
@@ -80,6 +95,7 @@ export function PaymentSchedulePanel({
     try {
       const init = await initRentPayment(payment._id)
       setLastPaymentRef(init.txRef)
+      setLastPaymentUrl(init.deepLink)
     } catch (paymentError) {
       setError(
         paymentError instanceof Error
@@ -106,7 +122,11 @@ export function PaymentSchedulePanel({
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border bg-surface p-5">
+    <section
+      id="payment-schedule"
+      data-testid="payment-schedule-panel"
+      className="space-y-4 rounded-2xl border border-border bg-surface p-5"
+    >
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-semibold text-fg">Lịch thanh toán</h3>
@@ -187,9 +207,22 @@ export function PaymentSchedulePanel({
       )}
 
       {lastPaymentRef ? (
-        <p className="text-xs text-info">
-          Đã tạo payment intent {lastPaymentRef}; chờ callback sandbox xác nhận.
-        </p>
+        <div className="space-y-2 text-xs text-info">
+          <p>
+            Đã tạo payment intent {lastPaymentRef}; chờ callback sandbox xác
+            nhận.
+          </p>
+          {lastPaymentUrl ? (
+            <a
+              href={lastPaymentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex rounded-lg border border-border px-3 py-2 font-semibold"
+            >
+              Mở ngân hàng mô phỏng
+            </a>
+          ) : null}
+        </div>
       ) : null}
       {error ? <p className="text-sm text-danger">{error}</p> : null}
     </section>

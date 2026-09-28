@@ -22,11 +22,14 @@ import type {
   RentalApplicationContext,
   RentalExecutionPolicyRef,
 } from '../api/rental-application-api'
+import { FeeBreakdown } from '@/features/platform-fees'
 
 export interface ApplyStepPackageProps {
   packages: RentalApplicationContext['packages']
   selectedPackageId: string
   selectedExecutionPolicy?: RentalExecutionPolicyRef | null
+  selectedPaymentCycleMonths?: 1 | 3 | 6
+  onSelectPaymentCycle?: (cycle: 1 | 3 | 6) => void
   onSelectPackage: (packageId: string) => void
   onSelectExecutionPolicy?: (policy: RentalExecutionPolicyRef) => void
   onBack: () => void
@@ -41,6 +44,8 @@ export function ApplyStepPackage({
   packages,
   selectedPackageId,
   selectedExecutionPolicy = null,
+  selectedPaymentCycleMonths = 1,
+  onSelectPaymentCycle = () => undefined,
   onSelectPackage,
   onSelectExecutionPolicy = () => undefined,
   onBack,
@@ -217,6 +222,44 @@ export function ApplyStepPackage({
             đồng.
           </p>
         </div>
+      ) : null}
+
+      {selectedPkg ? (
+        <section
+          className="space-y-3 rounded-xl border border-border bg-surface p-4"
+          data-testid="payment-cycle-selection"
+        >
+          <label
+            htmlFor="payment-cycle"
+            className="block text-xs font-semibold text-fg"
+          >
+            Chu kỳ thanh toán tiền thuê
+          </label>
+          <select
+            id="payment-cycle"
+            value={selectedPaymentCycleMonths}
+            onChange={event =>
+              onSelectPaymentCycle(Number(event.target.value) as 1 | 3 | 6)
+            }
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-fg"
+          >
+            {(selectedPkg.settlementPolicy?.allowedPaymentCycles ?? [1]).map(
+              cycle => (
+                <option key={cycle} value={cycle}>
+                  {cycle === 1 ? 'Hàng tháng' : `Mỗi ${cycle} tháng`}
+                </option>
+              )
+            )}
+          </select>
+          <p className="text-xs text-muted">
+            Kỳ đầu dự kiến:{' '}
+            {formatVnd(selectedPkg.monthlyRent * selectedPaymentCycleMonths)} ₫
+            {selectedPkg.resolvedSecurityTopUpAmount
+              ? ` + bù cọc ${formatVnd(selectedPkg.resolvedSecurityTopUpAmount)} ₫`
+              : ''}
+          </p>
+          <FeeBreakdown snapshot={selectedPkg.feeSnapshot ?? null} />
+        </section>
       ) : null}
 
       {selectedPkg && executionPolicies.length > 0 ? (

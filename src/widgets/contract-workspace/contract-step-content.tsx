@@ -12,6 +12,8 @@ import {
   type ContractViewDto,
 } from '@/features/contracts'
 import { DepositPaymentPanel } from '@/features/payments'
+import { PaymentSchedulePanel } from '@/features/payments/ui/payment-schedule-panel'
+import { MoveInSettlementPanel } from '@/features/move-in-settlement'
 import type { ContractAuditEventDto } from '@/features/contracts'
 import type { UseContractWorkspaceOptions } from './use-contract-workspace'
 
@@ -249,16 +251,19 @@ export function ContractStepContent({
 
   if (step === 'move-in') {
     return (
-      <section
-        data-testid="contract-step-move-in"
-        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"
-      >
-        <h2 className="text-sm font-bold">Quyết toán và bàn giao nhận nhà</h2>
-        <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
-          Khoản quyết toán nhận nhà, yêu cầu thanh toán và biên bản bàn giao sẽ
-          hiển thị tại đây khi hợp đồng có quyết toán.
-        </p>
-      </section>
+      <div data-testid="contract-step-move-in" className="space-y-4">
+        <MoveInSettlementPanel
+          settlement={data.settlement ?? null}
+          role={signerRole}
+          onRefresh={() => void refresh()}
+          onOpenInvoices={() =>
+            document
+              .getElementById('payment-schedule')
+              ?.scrollIntoView({ behavior: 'smooth' })
+          }
+        />
+        <PaymentSchedulePanel contractId={contractId} />
+      </div>
     )
   }
 

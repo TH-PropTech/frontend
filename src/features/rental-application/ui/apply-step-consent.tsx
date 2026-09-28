@@ -22,6 +22,7 @@ import {
 } from '@/shared/ui/accordion'
 import type { PublicLegalTermsResponse } from '@/features/legal-terms'
 import type {
+  FeeSnapshot,
   RentalApplicationDisclosure,
   RentalExecutionPolicyRef,
 } from '../api/rental-application-api'
@@ -35,6 +36,9 @@ export interface ApplyStepConsentProps {
   termsAccepted: boolean
   executionPolicy?: RentalExecutionPolicyRef | null
   executionPolicyAccepted?: boolean
+  feeSnapshot?: FeeSnapshot | null
+  feeAcknowledged?: boolean
+  onToggleFeeAcknowledged?: (accepted: boolean) => void
   submitting?: boolean
   onToggleDisclosure: (id: string) => void
   onToggleTermsAccepted: (accepted: boolean) => void
@@ -82,6 +86,9 @@ export function ApplyStepConsent({
   termsAccepted,
   executionPolicy = null,
   executionPolicyAccepted = false,
+  feeSnapshot = null,
+  feeAcknowledged = false,
+  onToggleFeeAcknowledged = () => undefined,
   submitting = false,
   onToggleDisclosure,
   onToggleTermsAccepted,
@@ -102,6 +109,10 @@ export function ApplyStepConsent({
     !loadingTerms &&
     allRequiredAcknowledged &&
     termsAccepted &&
+    (!feeSnapshot?.quote.some(
+      line => line.payerRole === 'tenant' && line.amount > 0
+    ) ||
+      feeAcknowledged) &&
     (!executionPolicy || executionPolicyAccepted) &&
     !submitting
 
@@ -164,6 +175,33 @@ export function ApplyStepConsent({
                 đồng có hiệu lực.
               </span>
             </div>
+          </div>
+        </section>
+      ) : null}
+
+      {feeSnapshot?.quote.some(
+        line => line.payerRole === 'tenant' && line.amount > 0
+      ) ? (
+        <section
+          className="rounded-2xl border border-primary/30 bg-primary-soft/15 p-4"
+          data-testid="tenant-fee-acknowledgement"
+        >
+          <div
+            className="flex cursor-pointer items-start gap-3"
+            onClick={() => onToggleFeeAcknowledged(!feeAcknowledged)}
+          >
+            <Checkbox
+              checked={feeAcknowledged}
+              onCheckedChange={checked =>
+                onToggleFeeAcknowledged(checked === true)
+              }
+              onClick={event => event.stopPropagation()}
+              className="mt-0.5"
+            />
+            <span className="text-xs leading-relaxed text-fg">
+              Tôi đã xem và đồng ý với phí dịch vụ người thuê đã được công bố
+              trong báo giá biểu phí này.
+            </span>
           </div>
         </section>
       ) : null}
