@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from '@/shared/ui/dialog'
 import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
 import { Label } from '@/shared/ui/label'
 import { Textarea } from '@/shared/ui/textarea'
 import {
@@ -118,6 +119,13 @@ function ApplicationReviewForm({
   )
   const [policyOverride, setPolicyOverride] =
     React.useState<string>('keep-tenant')
+  const [feeAcknowledgement, setFeeAcknowledgement] = React.useState<{
+    applicationId: string
+    acknowledged: boolean
+  } | null>(null)
+  const landlordFeeAcknowledged =
+    feeAcknowledgement?.applicationId === application._id &&
+    feeAcknowledgement.acknowledged
 
   const snapshot = application.packageSnapshot
   const duration = snapshot?.durationMonths ?? 12
@@ -143,7 +151,15 @@ function ApplicationReviewForm({
   const isAccepted = application.status === 'accepted'
   const isProvisioningFailed =
     isAccepted && application.provisioningStatus === 'failed'
+  const landlordFeeSnapshot = application.feeSnapshot
+  const hasLandlordFee = Boolean(
+    landlordFeeSnapshot?.quote.some(
+      line => line.payerRole === 'landlord' && line.amount > 0
+    )
+  )
   const canSubmit = isPending || isProvisioningFailed
+  const approvalBlocked =
+    decisionMode === 'approve' && hasLandlordFee && !landlordFeeAcknowledged
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -173,6 +189,9 @@ function ApplicationReviewForm({
           reasonCode: 'APPROVED',
           note: finalNote || undefined,
           expectedRevision: application.applicationRevision ?? 1,
+          ...(hasLandlordFee && landlordFeeSnapshot && landlordFeeAcknowledged
+            ? { landlordFeeAck: landlordFeeSnapshot.contentHash }
+            : {}),
         })
       } else {
         await onRespond({
@@ -444,6 +463,48 @@ function ApplicationReviewForm({
                 )}
               </div>
 
+              {application.occupantsDetail?.length ||
+              application.vehicles?.length ||
+              application.emergencyContact ||
+              application.selectedPaymentCycleMonths ||
+              application.viewingBookingId ? (
+                <div
+                  className="grid gap-2 rounded-xl border border-border bg-surface-muted/30 p-4 text-xs sm:grid-cols-2"
+                  data-testid="application-household-details"
+                >
+                  <p>
+                    <strong className="text-fg">Chu kỳ thanh toán:</strong>{' '}
+                    {application.selectedPaymentCycleMonths ?? 1} tháng
+                  </p>
+                  {application.occupantsDetail?.map((occupant, index) => (
+                    <p key={`${occupant.fullName}-${index}`}>
+                      <strong className="text-fg">Người ở cùng:</strong>{' '}
+                      {occupant.fullName}, {occupant.birthYear} ·{' '}
+                      {occupant.relationship}
+                    </p>
+                  ))}
+                  {application.vehicles?.map(vehicle => (
+                    <p key={vehicle.type}>
+                      <strong className="text-fg">Phương tiện:</strong>{' '}
+                      {vehicle.type} × {vehicle.quantity}
+                    </p>
+                  ))}
+                  {application.emergencyContact ? (
+                    <p>
+                      <strong className="text-fg">Liên hệ khẩn cấp:</strong>{' '}
+                      {application.emergencyContact.fullName} ·{' '}
+                      {application.emergencyContact.phone}
+                    </p>
+                  ) : null}
+                  {application.viewingBookingId ? (
+                    <p>
+                      <strong className="text-fg">Lịch xem căn hộ:</strong>{' '}
+                      {application.viewingBookingId}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
               {/* Trình tự thực hiện hợp đồng */}
               <div className="rounded-xl border border-primary/20 bg-primary-soft/10 p-4 flex items-start gap-3 text-xs">
                 <Landmark className="h-4 w-4 text-primary shrink-0 mt-0.5" />
@@ -673,6 +734,34 @@ function ApplicationReviewForm({
             </div>
 
             <div className="p-5 space-y-4">
+              {canSubmit &&
+              hasLandlordFee &&
+              decisionMode === 'approve' &&
+              landlordFeeSnapshot ? (
+                <div
+                  className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary-soft/15 p-4"
+                  data-testid="landlord-fee-acknowledgement"
+                >
+                  <Checkbox
+                    checked={landlordFeeAcknowledged}
+                    onCheckedChange={checked =>
+                      setFeeAcknowledgement({
+                        applicationId: application._id,
+                        acknowledged: checked === true,
+                      })
+                    }
+                  />
+                  <span className="text-xs leading-relaxed text-fg">
+                    Tôi xác nhận đã xem và đồng ý hoa hồng nền tảng{' '}
+                    {formatVnd(
+                      landlordFeeSnapshot.quote.find(
+                        line => line.payerRole === 'landlord'
+                      )?.amount ?? 0
+                    )}{' '}
+                    ₫ theo biểu phí {landlordFeeSnapshot.version}.
+                  </span>
+                </div>
+              ) : null}
               {canSubmit ? (
                 <div className="space-y-4">
                   {/* Switcher Phê duyệt / Từ chối */}
@@ -879,7 +968,7 @@ function ApplicationReviewForm({
             <Button
               type="submit"
               size="sm"
-              disabled={isResponding}
+              disabled={isResponding || approvalBlocked}
               className={`text-xs cursor-pointer font-semibold px-4 shadow-sm ${
                 decisionMode === 'approve'
                   ? 'bg-control text-on-control hover:opacity-90'

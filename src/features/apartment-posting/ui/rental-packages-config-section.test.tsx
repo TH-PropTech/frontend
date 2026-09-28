@@ -115,6 +115,18 @@ describe('RentalPackagesConfigSection', () => {
     expect(screen.getByText(/15\.000\.000/)).toBeDefined()
   })
 
+  it('configures settlement and updates the first-cycle rent estimate', () => {
+    render(<TestHarness initialValues={{ priceMonthly: 15 }} />)
+    fireEvent.click(screen.getByTestId('toggle-duration-12'))
+    const section = screen.getByTestId('settlement-policy-12')
+    fireEvent.click(section.querySelector('button')!)
+    fireEvent.change(
+      screen.getByRole('combobox', { name: 'Chu kỳ mặc định 12 tháng' }),
+      { target: { value: '3' } }
+    )
+    expect(screen.getByText(/Kỳ đầu: 45\.000\.000 ₫/)).toBeInTheDocument()
+  })
+
   it('allows editing monthly price for an active package', () => {
     render(
       <TestHarness

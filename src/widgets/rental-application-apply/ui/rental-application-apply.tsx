@@ -330,6 +330,8 @@ export function RentalApplicationApply({
                 packages={state.context.packages}
                 selectedPackageId={state.selectedPackageId}
                 selectedExecutionPolicy={state.selectedExecutionPolicy}
+                selectedPaymentCycleMonths={state.selectedPaymentCycleMonths}
+                onSelectPaymentCycle={actions.selectPaymentCycle}
                 onSelectPackage={actions.selectPackage}
                 onSelectExecutionPolicy={actions.selectExecutionPolicy}
                 onBack={() => actions.backToStep(1)}
@@ -347,12 +349,15 @@ export function RentalApplicationApply({
                 termsAccepted={state.termsAccepted}
                 executionPolicy={state.selectedExecutionPolicy}
                 executionPolicyAccepted={state.executionPolicyAccepted}
+                feeSnapshot={selectedPkg?.feeSnapshot ?? null}
+                feeAcknowledged={state.feeAcknowledged}
                 submitting={state.submitting}
                 onToggleDisclosure={actions.toggleDisclosure}
                 onToggleTermsAccepted={actions.setTermsAccepted}
                 onToggleExecutionPolicyAccepted={
                   actions.setExecutionPolicyAccepted
                 }
+                onToggleFeeAcknowledged={actions.setFeeAcknowledged}
                 onBack={() => actions.backToStep(2)}
                 onSubmit={actions.submitApplication}
               />

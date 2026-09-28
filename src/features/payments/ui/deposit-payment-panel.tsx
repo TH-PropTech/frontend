@@ -14,6 +14,7 @@ import {
   consentDepositAgreement,
   initDepositPayment,
 } from '../api/payments-api'
+import type { PaymentInit } from '../api/payments-api'
 
 export interface DepositPaymentPanelProps {
   deposit: ContractDepositView | null
@@ -37,6 +38,7 @@ export function DepositPaymentPanel({
   const [loading, setLoading] = useState(false)
   const [consenting, setConsenting] = useState(false)
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null)
+  const [paymentRequest, setPaymentRequest] = useState<PaymentInit | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   if (!deposit) {
@@ -74,6 +76,7 @@ export function DepositPaymentPanel({
       setErrorMsg(null)
       const res = await initDepositPayment(targetAgreementId)
       if (res?.deepLink) {
+        setPaymentRequest(res)
         setPaymentUrl(res.deepLink)
       } else {
         // Mock payment completed simulation
@@ -201,6 +204,16 @@ export function DepositPaymentPanel({
                 </span>
               </div>
             )}
+            {deposit.paymentProofUrl ? (
+              <a
+                href={deposit.paymentProofUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[var(--primary)] underline"
+              >
+                Xem biên nhận thanh toán
+              </a>
+            ) : null}
           </div>
         )}
 
@@ -232,15 +245,52 @@ export function DepositPaymentPanel({
                 </button>
 
                 {paymentUrl && (
-                  <a
-                    href={paymentUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--fg)] hover:bg-[var(--surface)] transition-colors"
-                  >
-                    <span>Mở cổng thanh toán Mock Bank</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                  <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <strong className="text-[var(--fg)]">
+                        Yêu cầu chuyển khoản
+                      </strong>
+                      <span className="rounded-full bg-[var(--surface)] px-2 py-1 text-[var(--warning)]">
+                        Mô phỏng
+                      </span>
+                    </div>
+                    <p className="text-[var(--muted)]">
+                      Nội dung:{' '}
+                      <span className="font-mono text-[var(--fg)]">
+                        {paymentRequest?.txRef}
+                      </span>
+                    </p>
+                    {paymentRequest?.expiresAt ? (
+                      <p className="text-[var(--muted)]">
+                        Hạn:{' '}
+                        {new Date(paymentRequest.expiresAt).toLocaleString(
+                          'vi-VN'
+                        )}
+                      </p>
+                    ) : null}
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void navigator.clipboard?.writeText(
+                            paymentRequest?.txRef ?? ''
+                          )
+                        }
+                        className="rounded-lg border border-[var(--border)] px-3 py-2 font-semibold text-[var(--fg)]"
+                      >
+                        Sao chép nội dung
+                      </button>
+                      <a
+                        href={paymentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 font-semibold text-[var(--fg)]"
+                      >
+                        Mở cổng thanh toán
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </div>
                 )}
               </div>
             ) : isTenant && canConsent ? (

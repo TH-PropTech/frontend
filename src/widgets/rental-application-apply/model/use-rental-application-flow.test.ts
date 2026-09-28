@@ -115,6 +115,8 @@ describe('use-rental-application-flow reducer & hook', () => {
         hasPets: false,
       },
       selectedPackageId: '',
+      selectedPaymentCycleMonths: 1,
+      feeAcknowledged: false,
       selectedExecutionPolicy: null,
       executionPolicyAccepted: false,
       acknowledgedDisclosures: [],
@@ -330,6 +332,9 @@ describe('use-rental-application-flow reducer & hook', () => {
         acknowledgedDisclosureIds: ['req-item'],
         acceptedTermsVersion: 2,
         acceptedTermsHash: 'terms-hash-matching',
+        flowProfileVersion: undefined,
+        flowProfileHash: undefined,
+        selectedPaymentCycleMonths: 1,
       })
 
       expect(result.current.state.step).toBe(4)

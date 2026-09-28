@@ -84,6 +84,57 @@ describe('ApplyStepPackage Component', () => {
     expect(screen.getByText('168.000.000 ₫')).toBeInTheDocument()
   })
 
+  it('lets the tenant choose an allowed payment cycle and updates the first invoice estimate', () => {
+    const onSelectPaymentCycle = vi.fn()
+    const packageWithSettlement = {
+      ...mockPackages[0]!,
+      settlementPolicy: {
+        holdingDeposit: { type: 'PERCENT_OF_SECURITY' as const, percent: 30 },
+        allowedPaymentCycles: [1, 3] as Array<1 | 3 | 6>,
+        defaultPaymentCycle: 1 as const,
+        firstPaymentDueOffsetDays: 3,
+      },
+      resolvedHoldingDepositAmount: 4_500_000,
+      resolvedSecurityTopUpAmount: 10_500_000,
+    }
+    const { rerender } = render(
+      <ApplyStepPackage
+        packages={[packageWithSettlement]}
+        selectedPackageId={packageWithSettlement.packageId}
+        selectedPaymentCycleMonths={1}
+        onSelectPaymentCycle={onSelectPaymentCycle}
+        onSelectPackage={vi.fn()}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+      />
+    )
+    expect(
+      screen.getByText(
+        /Kỳ đầu dự kiến: 15\.000\.000 ₫ \+ bù cọc 10\.500\.000 ₫/
+      )
+    ).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Chu kỳ thanh toán tiền thuê'), {
+      target: { value: '3' },
+    })
+    expect(onSelectPaymentCycle).toHaveBeenCalledWith(3)
+    rerender(
+      <ApplyStepPackage
+        packages={[packageWithSettlement]}
+        selectedPackageId={packageWithSettlement.packageId}
+        selectedPaymentCycleMonths={3}
+        onSelectPaymentCycle={onSelectPaymentCycle}
+        onSelectPackage={vi.fn()}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+      />
+    )
+    expect(
+      screen.getByText(
+        /Kỳ đầu dự kiến: 45\.000\.000 ₫ \+ bù cọc 10\.500\.000 ₫/
+      )
+    ).toBeInTheDocument()
+  })
+
   it('disables next button when no package is selected', () => {
     render(
       <ApplyStepPackage

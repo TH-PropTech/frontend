@@ -90,6 +90,40 @@ describe('ApplyStepConsent Component', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1)
   })
 
+  it('requires tenant acknowledgement when the fee quote contains a service fee', () => {
+    const feeSnapshot = {
+      scheduleId: 'fee-1',
+      version: 2,
+      contentHash: 'fee-hash',
+      quote: [
+        {
+          feeKind: 'TENANT_SERVICE' as const,
+          payerRole: 'tenant' as const,
+          amountBeforeVat: 100_000,
+          vatAmount: 10_000,
+          amount: 110_000,
+        },
+      ],
+    }
+    render(
+      <ApplyStepConsent
+        disclosure={mockDisclosure}
+        terms={mockTerms}
+        acknowledgedDisclosures={['req-1']}
+        termsAccepted
+        feeSnapshot={feeSnapshot}
+        onToggleDisclosure={vi.fn()}
+        onToggleTermsAccepted={vi.fn()}
+        onBack={vi.fn()}
+        onSubmit={vi.fn()}
+      />
+    )
+    expect(
+      screen.getByRole('button', { name: /Gửi hồ sơ đặt thuê/i })
+    ).toBeDisabled()
+    expect(screen.getByTestId('tenant-fee-acknowledgement')).toBeInTheDocument()
+  })
+
   it('triggers onToggleDisclosure and onToggleTermsAccepted when checkboxes are toggled', () => {
     const onToggleDisclosure = vi.fn()
     const onToggleTerms = vi.fn()

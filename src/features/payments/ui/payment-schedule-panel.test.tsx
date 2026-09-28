@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PaymentSchedulePanel } from './payment-schedule-panel'
 
@@ -34,5 +34,14 @@ describe('PaymentSchedulePanel', () => {
       expect(screen.getByText(/Chưa có kỳ thanh toán/i)).toBeTruthy()
     )
     expect(screen.getByText(/Mô phỏng sandbox/i)).toBeTruthy()
+  })
+
+  it('refreshes the schedule when returning to the tab', async () => {
+    mocks.schedule.mockResolvedValue([])
+    mocks.wallet.mockResolvedValue({ status: 'linked', balance: null })
+    render(<PaymentSchedulePanel contractId="contract-1" />)
+    await waitFor(() => expect(mocks.schedule).toHaveBeenCalledTimes(1))
+    fireEvent.focus(window)
+    await waitFor(() => expect(mocks.schedule).toHaveBeenCalledTimes(2))
   })
 })

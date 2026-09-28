@@ -159,6 +159,43 @@ describe('ApplyStepInfo Component', () => {
     })
   })
 
+  it('collects optional occupant, vehicle, emergency-contact, and viewing details', () => {
+    const onChange = vi.fn()
+    render(
+      <ApplyStepInfo
+        values={validValues}
+        onChange={onChange}
+        onNext={vi.fn()}
+      />
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Thêm thông tin người ở' })
+    )
+    expect(onChange).toHaveBeenCalledWith({
+      occupantsDetail: [
+        { fullName: '', birthYear: 0, relationship: '' },
+        { fullName: '', birthYear: 0, relationship: '' },
+      ],
+    })
+    fireEvent.change(screen.getByLabelText('Tên liên hệ khẩn cấp'), {
+      target: { value: 'Nguyễn An' },
+    })
+    expect(onChange).toHaveBeenCalledWith({
+      emergencyContact: { fullName: 'Nguyễn An', relationship: '', phone: '' },
+    })
+    fireEvent.change(screen.getByLabelText('Số lượng xe máy'), {
+      target: { value: '1' },
+    })
+    expect(onChange).toHaveBeenCalledWith({
+      vehicles: [{ type: 'motorbike', quantity: 1 }],
+    })
+    fireEvent.change(screen.getByLabelText('Mã lịch xem căn hộ'), {
+      target: { value: 'booking-1' },
+    })
+    expect(onChange).toHaveBeenCalledWith({ viewingBookingId: 'booking-1' })
+  })
+
   describe('Dynamic step1Config integration', () => {
     const customConfig = {
       moveInDateLabel: 'Thời điểm nhận chìa khóa',

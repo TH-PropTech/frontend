@@ -6,6 +6,7 @@ import type {
   ContractLedgerSummary,
   ContractOverviewSnapshot,
   ContractPartyView,
+  ContractFinancialSummaryView,
 } from '../api/contracts-api'
 import type { ContractActiveStep } from '../lib/resolve-contract-active-step'
 
@@ -14,6 +15,8 @@ export interface ContractSummaryCardProps {
   parties: { tenant: ContractPartyView; landlord: ContractPartyView }
   ledger: ContractLedgerSummary
   activeStage: ContractActiveStep
+  financialSummary?: ContractFinancialSummaryView
+  viewerRole?: 'tenant' | 'landlord'
 }
 
 const STAGE_LABELS: Record<ContractActiveStep, string> = {
@@ -50,6 +53,8 @@ export function ContractSummaryCard({
   parties,
   ledger,
   activeStage,
+  financialSummary,
+  viewerRole,
 }: ContractSummaryCardProps): ReactElement {
   const { commercial, property } = contract
   const ledgerLabel = `${LEDGER_LABELS[ledger.status]}${
@@ -70,6 +75,38 @@ export function ContractSummaryCard({
     },
     { label: 'Tiền thuê/tháng', value: formatVnd(commercial.monthlyRent) },
     { label: 'Tiền cọc', value: formatVnd(commercial.deposit) },
+    ...(financialSummary
+      ? [
+          {
+            label: 'Thanh toán ban đầu',
+            value: formatVnd(financialSummary.initialPaymentTotal),
+          },
+          {
+            label: 'Cọc giữ chỗ',
+            value: formatVnd(financialSummary.holdingDeposit),
+          },
+          {
+            label: 'Bù cọc bảo đảm',
+            value: formatVnd(financialSummary.securityTopUpAmount),
+          },
+          ...(viewerRole === 'tenant'
+            ? [
+                {
+                  label: 'Phí dịch vụ tenant',
+                  value: formatVnd(financialSummary.tenantServiceFee),
+                },
+              ]
+            : []),
+          ...(viewerRole === 'landlord'
+            ? [
+                {
+                  label: 'Hoa hồng chủ nhà',
+                  value: formatVnd(financialSummary.landlordCommission),
+                },
+              ]
+            : []),
+        ]
+      : []),
   ]
 
   return (

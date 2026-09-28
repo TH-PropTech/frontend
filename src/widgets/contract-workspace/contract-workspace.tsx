@@ -210,6 +210,10 @@ export function ContractWorkspace({
         parties={parties}
         ledger={ledger}
         activeStage={activeStep}
+        {...(data.financialSummary
+          ? { financialSummary: data.financialSummary }
+          : {})}
+        viewerRole={signerRole}
       />
       <NextActionBanner contractId={contractId} flow={flow} />
 

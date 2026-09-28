@@ -6,6 +6,7 @@ import {
   getMyRentalApplications,
   getRentalApplicationContext,
   isRentalPackageStaleError,
+  isRentalFeeQuoteStaleError,
   isRentalTermsStaleError,
   isFlowConfigStaleError,
   isRentalExecutionPolicyStaleError,
@@ -38,6 +39,8 @@ export interface FlowState {
   termsError: string | null
   details: ApplyStepInfoValues
   selectedPackageId: string
+  selectedPaymentCycleMonths: 1 | 3 | 6
+  feeAcknowledged: boolean
   selectedExecutionPolicy: RentalExecutionPolicyRef | null
   executionPolicyAccepted: boolean
   acknowledgedDisclosures: string[]
@@ -60,6 +63,8 @@ export type FlowAction =
   | { type: 'UPDATE_DETAILS'; details: Partial<ApplyStepInfoValues> }
   | { type: 'SET_STEP'; step: FlowStep }
   | { type: 'SELECT_PACKAGE'; packageId: string }
+  | { type: 'SELECT_PAYMENT_CYCLE'; cycle: 1 | 3 | 6 }
+  | { type: 'SET_FEE_ACKNOWLEDGED'; acknowledged: boolean }
   | { type: 'SELECT_EXECUTION_POLICY'; policy: RentalExecutionPolicyRef }
   | { type: 'SET_EXECUTION_POLICY_ACCEPTED'; accepted: boolean }
   | { type: 'TOGGLE_DISCLOSURE'; id: string }
@@ -69,6 +74,7 @@ export type FlowAction =
   | { type: 'REFRESH_SUBMITTED_SUCCESS'; application: RentalApplicationItem }
   | { type: 'SUBMIT_ERROR'; error: string }
   | { type: 'HANDLE_PACKAGE_STALE'; error: string }
+  | { type: 'HANDLE_FEE_STALE'; error: string }
   | { type: 'HANDLE_EXECUTION_POLICY_STALE'; error: string }
   | { type: 'HANDLE_TERMS_STALE'; error: string }
   | { type: 'HANDLE_PENDING_APPLICATION_EXISTS' }
@@ -114,6 +120,7 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
           ? state.selectedExecutionPolicy
           : defaultPolicy,
         executionPolicyAccepted: false,
+        feeAcknowledged: false,
         error: null,
       }
     }
@@ -152,11 +159,14 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
       return {
         ...state,
         selectedPackageId: action.packageId,
+        selectedPaymentCycleMonths:
+          selectedPackage?.settlementPolicy?.defaultPaymentCycle ?? 1,
         selectedExecutionPolicy:
           policies.length === 1
             ? (selectedPackage?.defaultExecutionPolicy ?? policies[0] ?? null)
             : null,
         executionPolicyAccepted: false,
+        feeAcknowledged: false,
       }
     }
 
@@ -166,6 +176,12 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         selectedExecutionPolicy: action.policy,
         executionPolicyAccepted: false,
       }
+
+    case 'SELECT_PAYMENT_CYCLE':
+      return { ...state, selectedPaymentCycleMonths: action.cycle }
+
+    case 'SET_FEE_ACKNOWLEDGED':
+      return { ...state, feeAcknowledged: action.acknowledged }
 
     case 'SET_EXECUTION_POLICY_ACCEPTED':
       return { ...state, executionPolicyAccepted: action.accepted }
@@ -212,6 +228,15 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         selectedPackageId: '',
         selectedExecutionPolicy: null,
         executionPolicyAccepted: false,
+        step: 2,
+        error: action.error,
+      }
+
+    case 'HANDLE_FEE_STALE':
+      return {
+        ...state,
+        submitting: false,
+        feeAcknowledged: false,
         step: 2,
         error: action.error,
       }
@@ -277,6 +302,8 @@ export function useRentalApplicationFlow(apartmentId: string) {
         notes: '',
       },
       selectedPackageId: '',
+      selectedPaymentCycleMonths: 1,
+      feeAcknowledged: false,
       selectedExecutionPolicy: null,
       executionPolicyAccepted: false,
       acknowledgedDisclosures: [],
@@ -428,12 +455,37 @@ export function useRentalApplicationFlow(apartmentId: string) {
       notes: trimmedNotes || undefined,
       disclosureVersion: state.context.disclosure.version,
       acknowledgedDisclosureIds: state.acknowledgedDisclosures,
+      ...(state.details.occupantsDetail?.length
+        ? { occupantsDetail: state.details.occupantsDetail }
+        : {}),
+      ...(state.details.vehicles?.length
+        ? { vehicles: state.details.vehicles }
+        : {}),
+      ...(state.details.emergencyContact?.fullName.trim() &&
+      state.details.emergencyContact.relationship.trim() &&
+      state.details.emergencyContact.phone.trim()
+        ? { emergencyContact: state.details.emergencyContact }
+        : {}),
+      ...(state.details.viewingBookingId?.trim()
+        ? { viewingBookingId: state.details.viewingBookingId.trim() }
+        : {}),
       acceptedTermsVersion: state.context.terms?.version,
       acceptedTermsHash: state.context.terms?.hash,
       flowProfileVersion: state.context.flowProfile?.version,
       flowProfileHash: state.context.flowProfile?.hash,
       ...(state.selectedExecutionPolicy
         ? { selectedExecutionPolicy: state.selectedExecutionPolicy }
+        : {}),
+      selectedPaymentCycleMonths: state.selectedPaymentCycleMonths,
+      ...(selectedPkg.feeSnapshot
+        ? {
+            feeScheduleId: selectedPkg.feeSnapshot.scheduleId,
+            feeScheduleVersion: selectedPkg.feeSnapshot.version,
+            feeContentHash: selectedPkg.feeSnapshot.contentHash,
+            ...(state.feeAcknowledged
+              ? { feeAcknowledgedHash: selectedPkg.feeSnapshot.contentHash }
+              : {}),
+          }
         : {}),
     }
 
@@ -456,6 +508,16 @@ export function useRentalApplicationFlow(apartmentId: string) {
           type: 'HANDLE_PACKAGE_STALE',
           error:
             'Gói thuê đã được chủ nhà cập nhật mới. Vui lòng chọn lại gói thuê phù hợp.',
+        })
+        return
+      }
+
+      if (isRentalFeeQuoteStaleError(err)) {
+        await loadContext()
+        dispatch({
+          type: 'HANDLE_FEE_STALE',
+          error:
+            'Báo giá phí đã thay đổi. Vui lòng xem lại phí ở bước chọn gói.',
         })
         return
       }
@@ -504,6 +566,10 @@ export function useRentalApplicationFlow(apartmentId: string) {
         dispatch({ type: 'UPDATE_DETAILS', details }),
       selectPackage: (packageId: string) =>
         dispatch({ type: 'SELECT_PACKAGE', packageId }),
+      selectPaymentCycle: (cycle: 1 | 3 | 6) =>
+        dispatch({ type: 'SELECT_PAYMENT_CYCLE', cycle }),
+      setFeeAcknowledged: (acknowledged: boolean) =>
+        dispatch({ type: 'SET_FEE_ACKNOWLEDGED', acknowledged }),
       selectExecutionPolicy: (policy: RentalExecutionPolicyRef) =>
         dispatch({ type: 'SELECT_EXECUTION_POLICY', policy }),
       setExecutionPolicyAccepted: (accepted: boolean) =>
