@@ -6,13 +6,13 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-  ExternalLink,
   Info,
 } from 'lucide-react'
 import type { ContractDepositView } from '@/features/contracts/api/contracts-api'
 import {
   consentDepositAgreement,
   initDepositPayment,
+  simulateMockPayment,
 } from '../api/payments-api'
 
 export interface DepositPaymentPanelProps {
@@ -33,7 +33,6 @@ export function DepositPaymentPanel({
 }: DepositPaymentPanelProps) {
   const [loading, setLoading] = useState(false)
   const [consenting, setConsenting] = useState(false)
-  const [paymentUrl, setPaymentUrl] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   if (!deposit) {
@@ -70,8 +69,13 @@ export function DepositPaymentPanel({
       setLoading(true)
       setErrorMsg(null)
       const res = await initDepositPayment(targetAgreementId)
-      if (res?.deepLink) {
-        setPaymentUrl(res.deepLink)
+      if (res.provider === 'vnpay' && res.deepLink) {
+        window.location.assign(res.deepLink)
+      } else if (res.deepLink?.startsWith('mockbank://')) {
+        await simulateMockPayment(res.txRef)
+        onPaymentSuccess?.()
+      } else if (res.deepLink) {
+        window.open(res.deepLink, '_blank', 'noopener,noreferrer')
       } else {
         // Mock payment completed simulation
         onPaymentSuccess?.()
@@ -171,12 +175,12 @@ export function DepositPaymentPanel({
           </span>
         </div>
 
-        {/* PoC Mock Bank Simulation Note */}
+        {/* Payment environment notice */}
         <div className="flex items-start gap-2 p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-xs text-[var(--fg)]">
           <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
           <p className="text-[11px] leading-relaxed">
             {deposit.mockSimulationNotice ||
-              'Môi trường thử nghiệm PoC: Thanh toán cọc qua ngân hàng mô phỏng để bảo đảm an toàn giao dịch trước khi kích hoạt quy trình ký e-Consent.'}
+              'Môi trường thử nghiệm: Thanh toán cọc được xác nhận bởi cổng thanh toán trước khi kích hoạt quy trình ký e-Consent.'}
           </p>
         </div>
 
@@ -221,23 +225,9 @@ export function DepositPaymentPanel({
                 >
                   <CreditCard className="w-4 h-4" />
                   <span>
-                    {loading
-                      ? 'Đang tạo giao dịch...'
-                      : 'Thanh toán cọc ngay (Mock Bank)'}
+                    {loading ? 'Đang tạo giao dịch...' : 'Thanh toán cọc ngay'}
                   </span>
                 </button>
-
-                {paymentUrl && (
-                  <a
-                    href={paymentUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--fg)] hover:bg-[var(--surface)] transition-colors"
-                  >
-                    <span>Mở cổng thanh toán Mock Bank</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                )}
               </div>
             ) : isTenant && canConsent ? (
               <button

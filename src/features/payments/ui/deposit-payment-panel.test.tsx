@@ -63,7 +63,9 @@ describe('DepositPaymentPanel', () => {
   })
 
   it('renders pending state and allows tenant to initiate payment', async () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null)
     vi.mocked(paymentsApi.initDepositPayment).mockResolvedValue({
+      provider: 'mock-bank',
       txRef: 'ref-1',
       amount: 15000000,
       description: 'Deposit',
@@ -87,9 +89,44 @@ describe('DepositPaymentPanel', () => {
 
     expect(paymentsApi.initDepositPayment).toHaveBeenCalledWith('dpa-123')
     await waitFor(() => {
-      expect(
-        screen.getByText('Mở cổng thanh toán Mock Bank')
-      ).toBeInTheDocument()
+      expect(open).toHaveBeenCalledWith(
+        'https://mockbank.test/pay',
+        '_blank',
+        'noopener,noreferrer'
+      )
+    })
+  })
+
+  it('redirects the current tab to a returned VNPay URL', async () => {
+    vi.mocked(paymentsApi.initDepositPayment).mockResolvedValue({
+      provider: 'vnpay',
+      txRef: 'VNPAY-1',
+      amount: 15000000,
+      description: 'Deposit',
+      qrCode: 'qr',
+      deepLink: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?x=1',
+      expiresAt: '2026-03-14T03:00:00Z',
+      status: 'pending',
+    })
+    const assign = vi.fn()
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { assign },
+    })
+
+    render(
+      <DepositPaymentPanel
+        deposit={mockPendingDeposit}
+        isTenant={true}
+        contractId="c1"
+      />
+    )
+    fireEvent.click(screen.getByLabelText('Thanh toán cọc ngay'))
+
+    await waitFor(() => {
+      expect(assign).toHaveBeenCalledWith(
+        'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?x=1'
+      )
     })
   })
 
