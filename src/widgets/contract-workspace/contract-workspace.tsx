@@ -102,7 +102,11 @@ export function ContractWorkspace({
           </p>
         </div>
         <Link
-          href={'/rental-applications' as Route}
+          href={
+            (signerRole === 'landlord'
+              ? '/profile?tab=landlord-applications'
+              : '/rental-applications') as Route
+          }
           className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 transition-opacity"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -164,7 +168,11 @@ export function ContractWorkspace({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3 sm:pb-4">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
-            href={'/rental-applications' as Route}
+            href={
+              (signerRole === 'landlord'
+                ? '/profile?tab=landlord-applications'
+                : '/rental-applications') as Route
+            }
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--muted)] hover:text-[var(--primary)] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />

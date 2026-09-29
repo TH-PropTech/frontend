@@ -75,7 +75,9 @@ export function DepositPaymentPanel({
       setLoading(true)
       setErrorMsg(null)
       const res = await initDepositPayment(targetAgreementId)
-      if (res?.deepLink) {
+      if (res.provider === 'vnpay' && res.deepLink) {
+        window.location.assign(res.deepLink)
+      } else if (res.deepLink) {
         setPaymentRequest(res)
         setPaymentUrl(res.deepLink)
       } else {

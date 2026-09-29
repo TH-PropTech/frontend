@@ -19,6 +19,7 @@ export interface PaymentItem {
 }
 
 export interface PaymentInit {
+  provider: 'mock-bank' | 'vnpay' | 'momo' | 'sepay' | 'techcombank'
   txRef: string
   amount: number
   description: string
@@ -86,4 +87,8 @@ export async function processPaymentReminders(): Promise<{
   reminders: number
 }> {
   return apiClient.post('/payments/overdue/process', {})
+}
+
+export async function simulateMockPayment(txRef: string): Promise<void> {
+  await apiClient.get(`/bank/simulate-success/${txRef}`)
 }

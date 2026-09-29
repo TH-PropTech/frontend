@@ -10,6 +10,8 @@ vi.mock('../api/payments-api', () => ({
 }))
 
 describe('DepositPaymentPanel', () => {
+  const originalLocation = window.location
+
   const mockPendingDeposit: ContractDepositView = {
     agreementId: 'dpa-123',
     status: 'pending',
@@ -41,6 +43,10 @@ describe('DepositPaymentPanel', () => {
 
   afterEach(() => {
     vi.clearAllMocks()
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: originalLocation,
+    })
   })
 
   it('renders empty notice when deposit is null', () => {
@@ -68,6 +74,7 @@ describe('DepositPaymentPanel', () => {
 
   it('renders pending state and allows tenant to initiate payment', async () => {
     vi.mocked(paymentsApi.initDepositPayment).mockResolvedValue({
+      provider: 'mock-bank',
       txRef: 'ref-1',
       amount: 15000000,
       description: 'Deposit',
@@ -96,6 +103,39 @@ describe('DepositPaymentPanel', () => {
     expect(screen.getByText('Nội dung:')).toBeInTheDocument()
     expect(screen.getByText(/Hạn:/)).toBeInTheDocument()
     expect(screen.getByText('Mô phỏng')).toBeInTheDocument()
+  })
+
+  it('redirects the current tab to a returned VNPay URL', async () => {
+    vi.mocked(paymentsApi.initDepositPayment).mockResolvedValue({
+      provider: 'vnpay',
+      txRef: 'VNPAY-1',
+      amount: 15000000,
+      description: 'Deposit',
+      qrCode: 'qr',
+      deepLink: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?x=1',
+      expiresAt: '2026-03-14T03:00:00Z',
+      status: 'pending',
+    })
+    const assign = vi.fn()
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { assign },
+    })
+
+    render(
+      <DepositPaymentPanel
+        deposit={mockPendingDeposit}
+        isTenant={true}
+        contractId="c1"
+      />
+    )
+    fireEvent.click(screen.getByLabelText('Thanh toán cọc ngay'))
+
+    await waitFor(() => {
+      expect(assign).toHaveBeenCalledWith(
+        'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?x=1'
+      )
+    })
   })
 
   it('lets the tenant consent before showing the Mock Bank payment action', async () => {
