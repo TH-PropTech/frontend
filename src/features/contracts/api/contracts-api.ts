@@ -87,6 +87,20 @@ export interface ContractDocumentAnnex {
   required: boolean
 }
 
+export interface ContractDocumentLayoutBlock {
+  blockId: string
+  order: number
+  title: string
+  visible: boolean
+}
+
+export interface ContractDocumentSupplementaryClause {
+  id: string
+  title: string
+  content: string
+  enabled?: boolean
+}
+
 export interface ContractDocumentView {
   mode: 'draft' | 'locked'
   revision: number
@@ -105,6 +119,12 @@ export interface ContractDocumentView {
   canonicalArtifact?: ContractCanonicalArtifactView | null
   sections: ContractDocumentSection[]
   annexes: ContractDocumentAnnex[]
+  layout?: {
+    profileKey: string
+    version: number
+    blocks: ContractDocumentLayoutBlock[]
+  } | null
+  supplementaryClauses?: ContractDocumentSupplementaryClause[]
   integrity: 'not-locked' | 'valid' | 'mismatch' | 'unavailable'
 }
 
@@ -424,6 +444,37 @@ export interface ContractAuditEventDto {
   description: string
 }
 
+export type LedgerEvidenceStatus =
+  | 'pending'
+  | 'processing'
+  | 'confirmed'
+  | 'failed-retryable'
+  | 'failed-terminal'
+
+export interface LedgerEvidenceEvent {
+  id: string
+  eventType: string
+  aggregateType: string
+  aggregateRef: string
+  status: LedgerEvidenceStatus
+  networkMode: 'fabric' | 'simulation'
+  txId: string | null
+  blockNumber: number | null
+  recordedAt: string | null
+  payloadHash: string
+  dependsOn: string | null
+  attempts: number
+  errorCode: string | null
+  explorerUrl: string | null
+}
+
+export interface ContractLedgerEvidence {
+  networkMode: 'fabric' | 'simulation'
+  connectionState: 'disabled' | 'connected' | 'unavailable'
+  explorerAvailable: boolean
+  events: LedgerEvidenceEvent[]
+}
+
 export interface VerifySignerResponseDto {
   verified: boolean
   faceMatch: boolean
@@ -450,6 +501,23 @@ export interface ContractIntegrityResult {
   artifactHash?: string | null
   signatureIntegrity?: 'valid' | 'invalid' | 'not-available'
   amendmentChainIntegrity?: 'valid' | 'invalid' | 'not-available'
+  layers?: {
+    offChain: {
+      status: 'valid' | 'mismatch' | 'unavailable' | 'not-recorded'
+      hash: string | null
+      reason: string | null
+    }
+    artifact: {
+      status: 'valid' | 'mismatch' | 'unavailable' | 'not-recorded'
+      hash: string | null
+      reason: string | null
+    }
+    onChain: {
+      status: 'valid' | 'mismatch' | 'unavailable' | 'not-recorded'
+      hash: string | null
+      reason: string | null
+    }
+  }
 }
 
 export type PublicServiceChecklistItem = {
@@ -549,6 +617,14 @@ export async function getContractAuditEvents(
 ): Promise<ContractAuditEventDto[]> {
   return apiClient.get<ContractAuditEventDto[]>(
     `/contracts/${contractId}/audit-events`
+  )
+}
+
+export async function getContractLedgerEvidence(
+  contractId: string
+): Promise<ContractLedgerEvidence> {
+  return apiClient.get<ContractLedgerEvidence>(
+    `/contracts/${contractId}/ledger-evidence`
   )
 }
 

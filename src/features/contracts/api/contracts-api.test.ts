@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { apiClient } from '@/shared/api'
 import {
   downloadContractArtifact,
+  getContractLedgerEvidence,
   issueSigningGrant,
   lockContractContent,
   saveContractContent,
@@ -28,6 +29,7 @@ describe('contracts API', () => {
     vi.mocked(apiClient.getBlob).mockResolvedValue(new Blob(['pdf']))
 
     await verifyContractIntegrity('contract-1')
+    await getContractLedgerEvidence('contract-1')
     await issueSigningGrant('contract-1', {
       biometricGrantId: 'bio-1',
       otpSessionId: 'otp-1',
@@ -38,6 +40,9 @@ describe('contracts API', () => {
     await lockContractContent('contract-1', 3)
 
     expect(apiClient.get).toHaveBeenCalledWith('/contracts/contract-1/verify')
+    expect(apiClient.get).toHaveBeenCalledWith(
+      '/contracts/contract-1/ledger-evidence'
+    )
     expect(apiClient.post).toHaveBeenCalledWith(
       '/contracts/contract-1/signing-grant',
       { biometricGrantId: 'bio-1', otpSessionId: 'otp-1' }

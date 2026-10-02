@@ -14,6 +14,7 @@ import {
   RefreshCw,
   ShieldCheck,
 } from 'lucide-react'
+import { LedgerEvidenceDrawer } from './ledger-evidence-drawer'
 
 export interface FabricLedgerEvidenceCardProps {
   contractId: string
@@ -31,7 +32,18 @@ export interface FabricLedgerEvidenceCardProps {
     isValid: boolean | null
     verificationStatus?: 'valid' | 'invalid' | 'not-recorded' | 'unavailable'
     message?: string
+    layers?: {
+      offChain: IntegrityLayerView
+      artifact: IntegrityLayerView
+      onChain: IntegrityLayerView
+    }
   } | null
+}
+
+interface IntegrityLayerView {
+  status: 'valid' | 'mismatch' | 'unavailable' | 'not-recorded'
+  hash: string | null
+  reason: string | null
 }
 
 function formatDate(dateStr?: string | null): string {
@@ -76,6 +88,7 @@ export function FabricLedgerEvidenceCard({
 }: FabricLedgerEvidenceCardProps): React.ReactElement {
   const [copiedTx, setCopiedTx] = React.useState(false)
   const [copiedHash, setCopiedHash] = React.useState(false)
+  const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false)
 
   const isSimulation = networkMode === 'simulation'
 
@@ -319,6 +332,61 @@ export function FabricLedgerEvidenceCard({
           </div>
         </div>
       )}
+
+      {integrityResult?.layers ? (
+        <section
+          data-testid="integrity-layers"
+          className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3"
+        >
+          <h5 className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+            Ba lớp xác minh
+          </h5>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {(
+              [
+                ['offChain', 'Off-chain'],
+                ['artifact', 'Artifact'],
+                ['onChain', 'On-chain'],
+              ] as const
+            ).map(([key, label]) => {
+              const layer = integrityResult.layers?.[key]
+              return (
+                <div
+                  key={key}
+                  className="rounded border border-[var(--border)] p-2 text-[11px]"
+                >
+                  <div className="font-semibold text-[var(--fg)]">{label}</div>
+                  <div
+                    data-testid={`integrity-layer-${key}`}
+                    className="mt-1 font-mono text-[var(--muted)]"
+                  >
+                    {layer?.status ?? 'unavailable'}
+                  </div>
+                  {layer?.reason ? (
+                    <p className="mt-1 text-[10px] text-[var(--muted)]">
+                      {layer.reason}
+                    </p>
+                  ) : null}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      <button
+        type="button"
+        data-testid="open-ledger-evidence"
+        onClick={() => setIsEvidenceOpen(true)}
+        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-[var(--surface-muted)] border border-[var(--border)] text-[var(--fg)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors"
+      >
+        Xem chi tiết sổ cái
+      </button>
+      <LedgerEvidenceDrawer
+        contractId={contractId}
+        open={isEvidenceOpen}
+        onOpenChange={setIsEvidenceOpen}
+      />
 
       {/* Action Button */}
       {onVerifyIntegrity && (
