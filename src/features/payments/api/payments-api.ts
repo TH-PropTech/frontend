@@ -1,7 +1,12 @@
 import { apiClient } from '@/shared/api'
 
-export type PaymentStatus = 'unpaid' | 'paid' | 'overdue'
-export type PaymentType = 'deposit' | 'rent' | 'penalty'
+export type PaymentStatus = 'unpaid' | 'paid' | 'overdue' | 'waived'
+export type PaymentType =
+  | 'deposit'
+  | 'rent'
+  | 'penalty'
+  | 'deposit-topup'
+  | 'platform-fee'
 
 export interface PaymentItem {
   _id: string
@@ -68,6 +73,12 @@ export async function consentDepositAgreement(
 
 export async function initRentPayment(paymentId: string): Promise<PaymentInit> {
   return apiClient.post<PaymentInit>('/bank/rent/init', { paymentId })
+}
+
+export async function initInvoicePayment(
+  paymentId: string
+): Promise<PaymentInit> {
+  return apiClient.post<PaymentInit>('/bank/invoice/init', { paymentId })
 }
 
 export async function getLinkedWallet(): Promise<LinkedWallet> {

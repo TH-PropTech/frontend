@@ -4,7 +4,11 @@ import { useState, type FormEvent, type ReactElement } from 'react'
 import { CheckCircle2, ClipboardList, Loader2 } from 'lucide-react'
 import type { MoveInSettlementView } from '@/features/contracts/api/contracts-api'
 import { Button } from '@/shared/ui/button'
-import { confirmHandover, updateHandover } from '../api/move-in-settlement-api'
+import {
+  confirmHandover,
+  initSettlementPayment,
+  updateHandover,
+} from '../api/move-in-settlement-api'
 
 export interface MoveInSettlementPanelProps {
   settlement: MoveInSettlementView | null
@@ -30,6 +34,11 @@ export function MoveInSettlementPanel({
   const [keyCount, setKeyCount] = useState('')
   const [inventoryReference, setInventoryReference] = useState('')
   const [notes, setNotes] = useState('')
+  const [paymentRequest, setPaymentRequest] = useState<{
+    txRef: string
+    deepLink: string
+    expiresAt: string
+  } | null>(null)
 
   if (!settlement) {
     return (
@@ -88,6 +97,24 @@ export function MoveInSettlementPanel({
     }
   }
 
+  const handleSettlementPayment = async (): Promise<void> => {
+    setBusy(true)
+    setError(null)
+    try {
+      const request = await initSettlementPayment(settlement.id)
+      setPaymentRequest(request)
+      onOpenInvoices()
+    } catch (paymentError) {
+      setError(
+        paymentError instanceof Error
+          ? paymentError.message
+          : 'Unable to create the settlement payment request.'
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <section
       data-testid="move-in-settlement-panel"
@@ -127,9 +154,35 @@ export function MoveInSettlementPanel({
         <strong>{formatMoney(settlement.total)}</strong>
       </div>
       {role === 'tenant' && settlement.status !== 'paid' ? (
-        <Button type="button" variant="secondary" onClick={onOpenInvoices}>
-          Mở hóa đơn cần thanh toán
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={busy}
+          onClick={() => void handleSettlementPayment()}
+        >
+          {busy ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ClipboardList className="h-4 w-4" />
+          )}
+          Tạo yêu cầu thanh toán
         </Button>
+      ) : null}
+      {paymentRequest ? (
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-xs">
+          <p className="text-[var(--muted)]">
+            Mã giao dịch {paymentRequest.txRef} · hết hạn{' '}
+            {new Date(paymentRequest.expiresAt).toLocaleString('vi-VN')}
+          </p>
+          <a
+            href={paymentRequest.deepLink}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-flex rounded-lg border border-[var(--border)] px-3 py-2 font-semibold text-[var(--fg)]"
+          >
+            Mở cổng thanh toán
+          </a>
+        </div>
       ) : null}
       {role === 'landlord' && !handover?.completedAt ? (
         <form
