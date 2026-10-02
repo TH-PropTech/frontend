@@ -2,7 +2,13 @@
 
 import * as React from 'react'
 import type { Route } from 'next'
-import { ArrowRightLeft, Cpu, DollarSign, LayoutTemplate } from 'lucide-react'
+import {
+  Activity,
+  ArrowRightLeft,
+  Cpu,
+  DollarSign,
+  LayoutTemplate,
+} from 'lucide-react'
 import { OverviewView } from './views/overview-view'
 import { ContractMonitorView } from './views/contract-monitor-view'
 import { AiConsultationView } from './views/ai-consultation-view'
@@ -16,6 +22,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { OwnershipTransferPanel } from '@/features/property-ownership-transfer'
 import { LayoutProfileEditor } from '@/features/contract-layouts'
 import { FeeRevenueReport, FeeScheduleEditor } from '@/features/platform-fees'
+import { StuckTransactionsView } from '@/features/rental-transactions'
 
 type TabType =
   | 'overview'
@@ -28,6 +35,7 @@ type TabType =
   | 'ai-engine'
   | 'contract-layouts'
   | 'fees'
+  | 'rental-ops'
 
 const ADMIN_TABS: readonly TabType[] = [
   'overview',
@@ -40,6 +48,7 @@ const ADMIN_TABS: readonly TabType[] = [
   'ai-engine',
   'contract-layouts',
   'fees',
+  'rental-ops',
 ]
 
 export function resolveAdminTab(pathname: string): TabType {
@@ -211,6 +220,11 @@ export function AdminDashboard({
       label: 'Biểu phí & doanh thu',
       icon: <DollarSign className="h-[18px] w-[18px]" />,
     },
+    {
+      type: 'rental-ops',
+      label: 'Vận hành giao dịch thuê',
+      icon: <Activity className="h-[18px] w-[18px]" aria-hidden="true" />,
+    },
   ]
 
   const handleSidebarItemClick = (type: TabType): void => {
@@ -264,6 +278,8 @@ export function AdminDashboard({
             <FeeRevenueReport />
           </div>
         )
+      case 'rental-ops':
+        return <StuckTransactionsView />
       default:
         return <OverviewView />
     }

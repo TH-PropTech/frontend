@@ -31,6 +31,7 @@ import {
   resolveContractActiveStep,
   resolvePanelActivity,
 } from '@/features/contracts'
+import { TransactionTimeline } from '@/features/rental-transactions'
 import { DepositPaymentPanel } from '@/features/payments'
 import { useContractWorkspace } from './use-contract-workspace'
 
@@ -562,6 +563,17 @@ export function ContractWorkspace({
               onVerifyIntegrity={handleVerifyIntegrity}
               isVerifying={isVerifyingIntegrity}
               integrityResult={integrityResult}
+            />
+          </div>
+
+          <div
+            className={
+              activeMobileTab === 'audit' ? 'block' : 'hidden lg:block'
+            }
+          >
+            <TransactionTimeline
+              applicationId={contractId}
+              initialEvents={[]}
             />
           </div>
 
