@@ -11,4 +11,8 @@ describe('admin dashboard navigation', () => {
   it('falls back to overview for an unknown admin section', () => {
     expect(resolveAdminTab('/admin/not-a-section')).toBe('overview')
   })
+
+  it('resolves the fee management section from the admin route', () => {
+    expect(resolveAdminTab('/admin/fees')).toBe('fees')
+  })
 })

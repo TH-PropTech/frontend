@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
 
 interface TxLog {
   hash: string
@@ -86,6 +87,12 @@ export function ContractMonitorView(): React.ReactElement {
           Theo dõi hoạt động, giao dịch và trạng thái ví ký thác cọc của các hợp
           đồng thuê nhà trên chuỗi khối Blockchain.
         </p>
+        <Link
+          href="/admin/contracts"
+          className="mt-3 inline-flex rounded-md border border-line px-3 py-2 text-xs font-semibold text-primary hover:bg-surface-muted"
+        >
+          Mở danh sách hợp đồng vận hành
+        </Link>
       </div>
 
       {/* Contract Template Status cards */}

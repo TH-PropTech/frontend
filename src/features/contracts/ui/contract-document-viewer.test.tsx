@@ -145,6 +145,65 @@ describe('ContractDocumentViewer', () => {
     expect(screen.getAllByText('Bắt buộc')).toHaveLength(2)
   })
 
+  it('renders a published layout in configured order and separates supplementary clauses', () => {
+    const documentWithLayout: ContractDocumentView = {
+      ...mockDocument,
+      layout: {
+        profileKey: 'lease-v2',
+        version: 4,
+        blocks: [
+          {
+            blockId: 'SIGNATURES',
+            order: 1,
+            title: 'Signatures',
+            visible: true,
+          },
+          {
+            blockId: 'LEGAL_ARTICLES',
+            order: 2,
+            title: 'Articles',
+            visible: true,
+          },
+          { blockId: 'PARTIES', order: 3, title: 'Parties', visible: true },
+          { blockId: 'PROPERTY', order: 4, title: 'Property', visible: true },
+          {
+            blockId: 'SUPPLEMENTARY_CLAUSES',
+            order: 5,
+            title: 'Supplementary',
+            visible: true,
+          },
+          { blockId: 'ANNEXES', order: 6, title: 'Annexes', visible: false },
+          { blockId: 'HEADER', order: 7, title: 'Header', visible: true },
+        ],
+      },
+      supplementaryClauses: [
+        {
+          id: 'custom-1',
+          title: 'Pet clause',
+          content: 'Pets are allowed with prior notice.',
+        },
+      ],
+    }
+
+    render(
+      <ContractDocumentViewer {...defaultProps} document={documentWithLayout} />
+    )
+
+    expect(screen.getByTestId('contract-layout-profile')).toHaveTextContent(
+      'lease-v2'
+    )
+    expect(screen.getByTestId('contract-layout-blocks')).toHaveTextContent(
+      'SignaturesArticlesPartiesPropertySupplementaryHeader'
+    )
+    expect(screen.getByTestId('supplementary-clauses')).toHaveTextContent(
+      'Pet clause'
+    )
+    expect(
+      screen.getByTestId('supplementary-clause-custom-1')
+    ).toHaveTextContent('Pets are allowed with prior notice.')
+    expect(screen.queryByTestId('annex-annex-1')).not.toBeInTheDocument()
+  })
+
   it('filters articles by search input', () => {
     render(<ContractDocumentViewer {...defaultProps} />)
     const searchInput = screen.getByLabelText('Tìm kiếm điều khoản')

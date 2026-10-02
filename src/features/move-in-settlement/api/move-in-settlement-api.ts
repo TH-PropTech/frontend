@@ -4,6 +4,21 @@ import type {
   MoveInSettlementView,
 } from '@/features/contracts/api/contracts-api'
 
+export interface SettlementPaymentRequest {
+  txRef: string
+  deepLink: string
+  expiresAt: string
+  status: 'pending'
+}
+
+export async function initSettlementPayment(
+  settlementId: string
+): Promise<SettlementPaymentRequest> {
+  return apiClient.post<SettlementPaymentRequest>('/bank/settlement/init', {
+    settlementId,
+  })
+}
+
 export async function updateHandover(
   settlementId: string,
   input: HandoverInput

@@ -6,6 +6,7 @@ import { Button } from '@/shared/ui/button'
 import {
   getLinkedWallet,
   getPaymentsByContract,
+  initInvoicePayment,
   initRentPayment,
   linkWallet,
   type LinkedWallet,
@@ -93,7 +94,10 @@ export function PaymentSchedulePanel({
     setBusyPaymentId(payment._id)
     setError(null)
     try {
-      const init = await initRentPayment(payment._id)
+      const init =
+        payment.type === 'platform-fee'
+          ? await initInvoicePayment(payment._id)
+          : await initRentPayment(payment._id)
       setLastPaymentRef(init.txRef)
       setLastPaymentUrl(init.deepLink)
     } catch (paymentError) {
@@ -185,7 +189,7 @@ export function PaymentSchedulePanel({
                 <span className="text-xs font-semibold text-muted">
                   {payment.status}
                 </span>
-                {payment.status !== 'paid' ? (
+                {payment.status === 'unpaid' || payment.status === 'overdue' ? (
                   <Button
                     type="button"
                     size="sm"

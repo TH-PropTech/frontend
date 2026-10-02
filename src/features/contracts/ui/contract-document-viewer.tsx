@@ -147,8 +147,39 @@ export function ContractDocumentViewer({
 
   const isSimulation = networkMode === 'simulation'
 
+  const configuredLayoutBlocks = useMemo(
+    () =>
+      document.layout?.blocks
+        ? [...document.layout.blocks].sort(
+            (left, right) => left.order - right.order
+          )
+        : [],
+    [document.layout]
+  )
+  const hasConfiguredLayout = configuredLayoutBlocks.length > 0
+  const layoutBlockVisibility = useMemo(
+    () =>
+      new Map(
+        configuredLayoutBlocks.map(block => [block.blockId, block.visible])
+      ),
+    [configuredLayoutBlocks]
+  )
+  const isLayoutBlockVisible = (blockId: string): boolean =>
+    !hasConfiguredLayout || layoutBlockVisibility.get(blockId) === true
+  const legalArticlesVisible = isLayoutBlockVisible('LEGAL_ARTICLES')
+  const annexesVisible = isLayoutBlockVisible('ANNEXES')
+  const signaturesVisible = isLayoutBlockVisible('SIGNATURES')
+  const partiesVisible = isLayoutBlockVisible('PARTIES')
+  const headerVisible = isLayoutBlockVisible('HEADER')
+  const supplementaryClausesVisible = isLayoutBlockVisible(
+    'SUPPLEMENTARY_CLAUSES'
+  )
+  const supplementaryClauses = (document.supplementaryClauses ?? []).filter(
+    clause => clause.enabled !== false
+  )
+
   const filteredSections = useMemo(() => {
-    let list = document.sections || []
+    let list = legalArticlesVisible ? document.sections || [] : []
     if (selectedSectionId !== 'all') {
       list = list.filter(
         s =>
@@ -165,7 +196,7 @@ export function ContractDocumentViewer({
       )
     }
     return list
-  }, [document.sections, selectedSectionId, searchTerm])
+  }, [document.sections, legalArticlesVisible, selectedSectionId, searchTerm])
 
   const handlePrint = () => {
     window.print()
@@ -204,16 +235,17 @@ export function ContractDocumentViewer({
     selectedSectionId !== 'all' || searchTerm.trim().length > 0
 
   // Group sections by page for Paginated A4 View (Standard 4 Pages)
-  const page1Sections = (document.sections || []).filter(
+  const renderSections = legalArticlesVisible ? document.sections || [] : []
+  const page1Sections = renderSections.filter(
     s => s.number === 1 || s.number === 2
   )
-  const page2Sections = (document.sections || []).filter(
+  const page2Sections = renderSections.filter(
     s => s.number >= 3 && s.number <= 6
   )
-  const page3Sections = (document.sections || []).filter(
+  const page3Sections = renderSections.filter(
     s => s.number >= 7 && s.number <= 9
   )
-  const page4Sections = (document.sections || []).filter(
+  const page4Sections = renderSections.filter(
     s => s.number >= 10 && s.number <= 12
   )
 
@@ -475,47 +507,82 @@ export function ContractDocumentViewer({
           </div>
         </div>
 
+        {hasConfiguredLayout ? (
+          <section
+            data-testid="contract-layout-profile"
+            aria-label="Contract layout profile"
+            className="relative mb-6 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/10 p-3 text-xs"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="font-bold text-[var(--fg)]">
+                Bố cục hợp đồng: {document.layout?.profileKey}
+              </h2>
+              <span className="font-mono text-[var(--muted)]">
+                v{document.layout?.version}
+              </span>
+            </div>
+            <ol
+              data-testid="contract-layout-blocks"
+              className="mt-2 flex flex-wrap gap-1.5"
+            >
+              {configuredLayoutBlocks
+                .filter(block => block.visible)
+                .map(block => (
+                  <li
+                    key={block.blockId}
+                    data-testid={`layout-block-${block.blockId}`}
+                    className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[10px] text-[var(--muted)]"
+                  >
+                    {block.title}
+                  </li>
+                ))}
+            </ol>
+          </section>
+        ) : null}
+
         {/* ==================================================================== */}
         {/* PAGE 1: NATIONAL HEADER, CONTRACT TITLE, CITATIONS, PARTIES, ART 1-2 */}
         {/* ==================================================================== */}
         <section className="space-y-6">
           {/* National Header */}
-          <div className="text-center border-b border-[var(--border)] pb-6">
-            <p className="text-xs sm:text-sm font-bold tracking-wider text-[var(--fg)] uppercase">
-              CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-            </p>
-            <p className="text-xs sm:text-sm font-semibold text-[var(--muted)] mt-0.5">
-              Độc lập - Tự do - Hạnh phúc
-            </p>
-            <div className="w-28 h-0.5 bg-[var(--fg)] mx-auto my-3" />
-            <p className="text-xs text-[var(--muted)] italic mt-2">
-              {formatNationalDate(createdAt || startDate)}
-            </p>
+          {headerVisible ? (
+            <div className="text-center border-b border-[var(--border)] pb-6">
+              <p className="text-xs sm:text-sm font-bold tracking-wider text-[var(--fg)] uppercase">
+                CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+              </p>
+              <p className="text-xs sm:text-sm font-semibold text-[var(--muted)] mt-0.5">
+                Độc lập - Tự do - Hạnh phúc
+              </p>
+              <div className="w-28 h-0.5 bg-[var(--fg)] mx-auto my-3" />
+              <p className="text-xs text-[var(--muted)] italic mt-2">
+                {formatNationalDate(createdAt || startDate)}
+              </p>
 
-            <h1 className="text-lg sm:text-2xl font-bold uppercase tracking-tight text-[var(--fg)] mt-4">
-              HỢP ĐỒNG THUÊ CĂN HỘ CHUNG CƯ
-            </h1>
-            <p className="text-xs text-[var(--muted)] mt-1.5">
-              Số:{' '}
-              <span className="font-semibold text-[var(--fg)]">
-                {contractCode}
-              </span>{' '}
-              | Trạng thái:{' '}
-              <span className="font-semibold text-[var(--primary)] uppercase">
-                {status}
-              </span>
-            </p>
-            {document?.lockedHash && (
-              <p className="text-[11px] text-[var(--muted)] mt-1.5 truncate max-w-md mx-auto">
-                <span>Mã toàn vẹn hợp đồng:</span>{' '}
-                <span className="font-mono font-semibold text-[var(--fg)]">
-                  {document.lockedHash.length > 20
-                    ? `${document.lockedHash.slice(0, 10)}...${document.lockedHash.slice(-8)}`
-                    : document.lockedHash}
+              <h1 className="text-lg sm:text-2xl font-bold uppercase tracking-tight text-[var(--fg)] mt-4">
+                HỢP ĐỒNG THUÊ CĂN HỘ CHUNG CƯ
+              </h1>
+              <p className="text-xs text-[var(--muted)] mt-1.5">
+                Số:{' '}
+                <span className="font-semibold text-[var(--fg)]">
+                  {contractCode}
+                </span>{' '}
+                | Trạng thái:{' '}
+                <span className="font-semibold text-[var(--primary)] uppercase">
+                  {status}
                 </span>
               </p>
-            )}
-          </div>
+              {document?.lockedHash && (
+                <p className="text-[11px] text-[var(--muted)] mt-1.5 truncate max-w-md mx-auto">
+                  <span>Mã toàn vẹn hợp đồng:</span>{' '}
+                  <span className="font-mono font-semibold text-[var(--fg)]">
+                    {document.lockedHash.length > 20
+                      ? `${document.lockedHash.slice(0, 10)}...${document.lockedHash.slice(-8)}`
+                      : document.lockedHash}
+                  </span>
+                </p>
+              )}
+            </div>
+          ) : null}
 
           {/* Canonical Artifact Panel (if available) */}
           {document.canonicalArtifact ? (
@@ -727,100 +794,102 @@ export function ContractDocumentViewer({
           </div>
 
           {/* Parties Information Box */}
-          <div className="space-y-4 text-xs">
-            <p className="font-bold text-[var(--fg)] italic">
-              Hai bên chúng tôi gồm:
-            </p>
+          {partiesVisible ? (
+            <div className="space-y-4 text-xs">
+              <p className="font-bold text-[var(--fg)] italic">
+                Hai bên chúng tôi gồm:
+              </p>
 
-            {/* BÊN A */}
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/30 p-4 space-y-2.5">
-              <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-[var(--primary)] shrink-0" />
-                  <h3 className="font-bold text-xs uppercase tracking-wide text-[var(--fg)]">
-                    I. BÊN CHO THUÊ NHÀ Ở (BÊN A)
-                  </h3>
+              {/* BÊN A */}
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/30 p-4 space-y-2.5">
+                <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-[var(--primary)] shrink-0" />
+                    <h3 className="font-bold text-xs uppercase tracking-wide text-[var(--fg)]">
+                      I. BÊN CHO THUÊ NHÀ Ở (BÊN A)
+                    </h3>
+                  </div>
+                  {parties?.landlord?.kycStatus === 'verified' && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--success)]">
+                      <ShieldCheck className="w-3.5 h-3.5" /> Đã xác thực eKYC
+                    </span>
+                  )}
                 </div>
-                {parties?.landlord?.kycStatus === 'verified' && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--success)]">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Đã xác thực eKYC
-                  </span>
-                )}
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                <p>
-                  <span className="text-[var(--muted)]">
-                    Họ và tên chủ nhà:
-                  </span>{' '}
-                  <strong className="text-[var(--fg)]">
-                    {parties?.landlord?.name || 'Nguyễn Văn Chủ Nhà'}
-                  </strong>
-                </p>
-                <p>
-                  <span className="text-[var(--muted)]">Số CCCD/ĐDPL:</span>{' '}
-                  <strong className="font-mono text-[var(--fg)]">
-                    {parties?.landlord?.maskedCccd || 'Chưa cung cấp'}
-                  </strong>
-                </p>
-                <p className="sm:col-span-2">
-                  <span className="text-[var(--muted)]">
-                    Nơi đăng ký thường trú / Địa chỉ:
-                  </span>{' '}
-                  <span className="text-[var(--fg)]">
-                    {parties?.landlord?.address ||
-                      property?.address ||
-                      'Thành phố Hồ Chí Minh'}
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            {/* BÊN B */}
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/30 p-4 space-y-2.5">
-              <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-[var(--primary)] shrink-0" />
-                  <h3 className="font-bold text-xs uppercase tracking-wide text-[var(--fg)]">
-                    II. BÊN THUÊ NHÀ Ở (BÊN B)
-                  </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                  <p>
+                    <span className="text-[var(--muted)]">
+                      Họ và tên chủ nhà:
+                    </span>{' '}
+                    <strong className="text-[var(--fg)]">
+                      {parties?.landlord?.name || 'Nguyễn Văn Chủ Nhà'}
+                    </strong>
+                  </p>
+                  <p>
+                    <span className="text-[var(--muted)]">Số CCCD/ĐDPL:</span>{' '}
+                    <strong className="font-mono text-[var(--fg)]">
+                      {parties?.landlord?.maskedCccd || 'Chưa cung cấp'}
+                    </strong>
+                  </p>
+                  <p className="sm:col-span-2">
+                    <span className="text-[var(--muted)]">
+                      Nơi đăng ký thường trú / Địa chỉ:
+                    </span>{' '}
+                    <span className="text-[var(--fg)]">
+                      {parties?.landlord?.address ||
+                        property?.address ||
+                        'Thành phố Hồ Chí Minh'}
+                    </span>
+                  </p>
                 </div>
-                {parties?.tenant?.kycStatus === 'verified' && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--success)]">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Đã xác thực eKYC
-                  </span>
-                )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                <p>
-                  <span className="text-[var(--muted)]">
-                    Họ và tên khách thuê:
-                  </span>{' '}
-                  <strong className="text-[var(--fg)]">
-                    {parties?.tenant?.name || 'Trần Thị Thuê Nhà'}
-                  </strong>
-                </p>
-                <p>
-                  <span className="text-[var(--muted)]">Số CCCD/ĐDPL:</span>{' '}
-                  <strong className="font-mono text-[var(--fg)]">
-                    {parties?.tenant?.maskedCccd || 'Chưa cung cấp'}
-                  </strong>
-                </p>
-                <p className="sm:col-span-2">
-                  <span className="text-[var(--muted)]">
-                    Nơi đăng ký thường trú / Địa chỉ:
-                  </span>{' '}
-                  <span className="text-[var(--fg)]">
-                    {parties?.tenant?.address || 'Quận 1, TP.HCM'}
-                  </span>
-                </p>
-              </div>
-            </div>
 
-            <p className="italic text-[var(--fg)] pt-1">
-              Hai bên chúng tôi thống nhất ký kết hợp đồng cho thuê nhà ở với
-              các điều khoản chi tiết sau đây:
-            </p>
-          </div>
+              {/* BÊN B */}
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/30 p-4 space-y-2.5">
+                <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-[var(--primary)] shrink-0" />
+                    <h3 className="font-bold text-xs uppercase tracking-wide text-[var(--fg)]">
+                      II. BÊN THUÊ NHÀ Ở (BÊN B)
+                    </h3>
+                  </div>
+                  {parties?.tenant?.kycStatus === 'verified' && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--success)]">
+                      <ShieldCheck className="w-3.5 h-3.5" /> Đã xác thực eKYC
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                  <p>
+                    <span className="text-[var(--muted)]">
+                      Họ và tên khách thuê:
+                    </span>{' '}
+                    <strong className="text-[var(--fg)]">
+                      {parties?.tenant?.name || 'Trần Thị Thuê Nhà'}
+                    </strong>
+                  </p>
+                  <p>
+                    <span className="text-[var(--muted)]">Số CCCD/ĐDPL:</span>{' '}
+                    <strong className="font-mono text-[var(--fg)]">
+                      {parties?.tenant?.maskedCccd || 'Chưa cung cấp'}
+                    </strong>
+                  </p>
+                  <p className="sm:col-span-2">
+                    <span className="text-[var(--muted)]">
+                      Nơi đăng ký thường trú / Địa chỉ:
+                    </span>{' '}
+                    <span className="text-[var(--fg)]">
+                      {parties?.tenant?.address || 'Quận 1, TP.HCM'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <p className="italic text-[var(--fg)] pt-1">
+                Hai bên chúng tôi thống nhất ký kết hợp đồng cho thuê nhà ở với
+                các điều khoản chi tiết sau đây:
+              </p>
+            </div>
+          ) : null}
 
           {/* When Filtered or Continuous mode: Render matching articles */}
           {(isFilteredOrSearched || viewMode === 'continuous') && (
@@ -918,8 +987,39 @@ export function ContractDocumentViewer({
             </section>
           )}
 
-        {/* 4 Annexes Section */}
-        {document?.annexes &&
+        {supplementaryClausesVisible && supplementaryClauses.length > 0 && (
+          <section
+            data-testid="supplementary-clauses"
+            className="mt-10 pt-8 border-t border-[var(--border)]"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="w-4 h-4 text-[var(--primary)]" />
+              <h3 className="text-xs sm:text-sm font-bold text-[var(--fg)] uppercase tracking-wider">
+                ĐIỀU KHOẢN BỔ SUNG
+              </h3>
+            </div>
+            <div className="space-y-3">
+              {supplementaryClauses.map(clause => (
+                <article
+                  key={clause.id}
+                  data-testid={`supplementary-clause-${clause.id}`}
+                  className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/40 p-3.5 sm:p-4"
+                >
+                  <h4 className="font-bold text-xs text-[var(--fg)]">
+                    {clause.title}
+                  </h4>
+                  <p className="mt-2 whitespace-pre-line text-[11px] leading-relaxed text-[var(--muted)]">
+                    {clause.content}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Annexes Section */}
+        {annexesVisible &&
+          document?.annexes &&
           document.annexes.length > 0 &&
           selectedSectionId === 'all' && (
             <div className="mt-10 pt-8 border-t border-[var(--border)]">
@@ -974,83 +1074,85 @@ export function ContractDocumentViewer({
           )}
 
         {/* Closing Seal & Official Signatures Box */}
-        <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-[var(--border)] grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-center text-xs">
-          {/* Bên A Signature */}
-          <div className="rounded-xl border border-[var(--border)]/60 bg-[var(--surface-muted)]/20 p-4 flex flex-col justify-between">
-            <div>
-              <p className="font-bold text-[var(--fg)] uppercase tracking-wide">
-                ĐẠI DIỆN BÊN CHO THUÊ (BÊN A)
-              </p>
-              <p className="text-[11px] text-[var(--muted)] italic mt-0.5">
-                (Ký điện tử / Chữ ký số VNPT SmartCA)
-              </p>
-              <div className="h-20 flex flex-col items-center justify-center text-xs mt-2">
-                {parties?.landlord?.hasSigned ||
-                status === 'active' ||
-                status === 'completed' ? (
-                  <div className="flex flex-col items-center gap-1 text-[var(--success)] font-semibold">
-                    <CheckCircle2 className="w-5 h-5 text-[var(--success)]" />
-                    <span>Đã ký số xác nhận</span>
-                    <span className="text-[10px] font-normal text-[var(--muted)]">
-                      {parties?.landlord?.signedAt
-                        ? formatDisplayDate(parties.landlord.signedAt)
-                        : 'Chứng thư số X.509 hợp lệ'}
+        {signaturesVisible ? (
+          <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-[var(--border)] grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-center text-xs">
+            {/* Bên A Signature */}
+            <div className="rounded-xl border border-[var(--border)]/60 bg-[var(--surface-muted)]/20 p-4 flex flex-col justify-between">
+              <div>
+                <p className="font-bold text-[var(--fg)] uppercase tracking-wide">
+                  ĐẠI DIỆN BÊN CHO THUÊ (BÊN A)
+                </p>
+                <p className="text-[11px] text-[var(--muted)] italic mt-0.5">
+                  (Ký điện tử / Chữ ký số VNPT SmartCA)
+                </p>
+                <div className="h-20 flex flex-col items-center justify-center text-xs mt-2">
+                  {parties?.landlord?.hasSigned ||
+                  status === 'active' ||
+                  status === 'completed' ? (
+                    <div className="flex flex-col items-center gap-1 text-[var(--success)] font-semibold">
+                      <CheckCircle2 className="w-5 h-5 text-[var(--success)]" />
+                      <span>Đã ký số xác nhận</span>
+                      <span className="text-[10px] font-normal text-[var(--muted)]">
+                        {parties?.landlord?.signedAt
+                          ? formatDisplayDate(parties.landlord.signedAt)
+                          : 'Chứng thư số X.509 hợp lệ'}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-[var(--muted)] text-[11px] italic">
+                      Chờ bên cho thuê ký
                     </span>
-                  </div>
-                ) : (
-                  <span className="text-[var(--muted)] text-[11px] italic">
-                    Chờ bên cho thuê ký
-                  </span>
-                )}
+                  )}
+                </div>
+                <SignatureEvidence
+                  party={parties?.landlord ?? null}
+                  role="landlord"
+                />
               </div>
-              <SignatureEvidence
-                party={parties?.landlord ?? null}
-                role="landlord"
-              />
+              <p className="font-semibold text-xs text-[var(--fg)] mt-3 pt-2 border-t border-[var(--border)]/40">
+                {parties?.landlord?.name || 'Nguyễn Văn Chủ Nhà'}
+              </p>
             </div>
-            <p className="font-semibold text-xs text-[var(--fg)] mt-3 pt-2 border-t border-[var(--border)]/40">
-              {parties?.landlord?.name || 'Nguyễn Văn Chủ Nhà'}
-            </p>
-          </div>
 
-          {/* Bên B Signature */}
-          <div className="rounded-xl border border-[var(--border)]/60 bg-[var(--surface-muted)]/20 p-4 flex flex-col justify-between">
-            <div>
-              <p className="font-bold text-[var(--fg)] uppercase tracking-wide">
-                ĐẠI DIỆN BÊN THUÊ (BÊN B)
-              </p>
-              <p className="text-[11px] text-[var(--muted)] italic mt-0.5">
-                (Ký điện tử / Chữ ký số VNPT SmartCA)
-              </p>
-              <div className="h-20 flex flex-col items-center justify-center text-xs mt-2">
-                {parties?.tenant?.hasSigned ||
-                status === 'active' ||
-                status === 'completed' ? (
-                  <div className="flex flex-col items-center gap-1 text-[var(--success)] font-semibold">
-                    <CheckCircle2 className="w-5 h-5 text-[var(--success)]" />
-                    <span>Đã ký số xác nhận</span>
-                    <span className="text-[10px] font-normal text-[var(--muted)]">
-                      {parties?.tenant?.signedAt
-                        ? formatDisplayDate(parties.tenant.signedAt)
-                        : 'Chứng thư số X.509 hợp lệ'}
+            {/* Bên B Signature */}
+            <div className="rounded-xl border border-[var(--border)]/60 bg-[var(--surface-muted)]/20 p-4 flex flex-col justify-between">
+              <div>
+                <p className="font-bold text-[var(--fg)] uppercase tracking-wide">
+                  ĐẠI DIỆN BÊN THUÊ (BÊN B)
+                </p>
+                <p className="text-[11px] text-[var(--muted)] italic mt-0.5">
+                  (Ký điện tử / Chữ ký số VNPT SmartCA)
+                </p>
+                <div className="h-20 flex flex-col items-center justify-center text-xs mt-2">
+                  {parties?.tenant?.hasSigned ||
+                  status === 'active' ||
+                  status === 'completed' ? (
+                    <div className="flex flex-col items-center gap-1 text-[var(--success)] font-semibold">
+                      <CheckCircle2 className="w-5 h-5 text-[var(--success)]" />
+                      <span>Đã ký số xác nhận</span>
+                      <span className="text-[10px] font-normal text-[var(--muted)]">
+                        {parties?.tenant?.signedAt
+                          ? formatDisplayDate(parties.tenant.signedAt)
+                          : 'Chứng thư số X.509 hợp lệ'}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-[var(--muted)] text-[11px] italic">
+                      Chờ bên thuê ký
                     </span>
-                  </div>
-                ) : (
-                  <span className="text-[var(--muted)] text-[11px] italic">
-                    Chờ bên thuê ký
-                  </span>
-                )}
+                  )}
+                </div>
+                <SignatureEvidence
+                  party={parties?.tenant ?? null}
+                  role="tenant"
+                />
               </div>
-              <SignatureEvidence
-                party={parties?.tenant ?? null}
-                role="tenant"
-              />
+              <p className="font-semibold text-xs text-[var(--fg)] mt-3 pt-2 border-t border-[var(--border)]/40">
+                {parties?.tenant?.name || 'Trần Thị Thuê Nhà'}
+              </p>
             </div>
-            <p className="font-semibold text-xs text-[var(--fg)] mt-3 pt-2 border-t border-[var(--border)]/40">
-              {parties?.tenant?.name || 'Trần Thị Thuê Nhà'}
-            </p>
           </div>
-        </div>
+        ) : null}
 
         {!isFilteredOrSearched && viewMode === 'pages' && (
           <div className="mt-8 pt-4 border-t border-dashed border-[var(--border)] text-center text-[11px] text-[var(--muted)]">

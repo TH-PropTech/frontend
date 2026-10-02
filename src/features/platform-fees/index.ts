@@ -1,2 +1,4 @@
 export * from './api/platform-fees-api'
 export * from './ui/fee-breakdown'
+export * from './ui/fee-schedule-editor'
+export * from './ui/fee-revenue-report'

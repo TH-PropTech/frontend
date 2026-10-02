@@ -117,6 +117,40 @@ describe('FabricLedgerEvidenceCard', () => {
     expect(screen.getByText('Cảnh báo sai lệch toàn vẹn dữ liệu')).toBeDefined()
   })
 
+  it('renders the three integrity layers with unavailable explanations', () => {
+    render(
+      <FabricLedgerEvidenceCard
+        contractId="ctr-123"
+        integrityResult={{
+          isValid: null,
+          verificationStatus: 'unavailable',
+          layers: {
+            offChain: { status: 'valid', hash: 'a'.repeat(64), reason: null },
+            artifact: {
+              status: 'unavailable',
+              hash: null,
+              reason: 'Artifact chưa được lưu',
+            },
+            onChain: {
+              status: 'not-recorded',
+              hash: null,
+              reason: 'Chưa có transaction',
+            },
+          },
+        }}
+      />
+    )
+
+    expect(screen.getByTestId('integrity-layers')).toBeDefined()
+    expect(screen.getByTestId('integrity-layer-offChain')).toHaveTextContent(
+      'valid'
+    )
+    expect(screen.getByTestId('integrity-layer-artifact')).toHaveTextContent(
+      'unavailable'
+    )
+    expect(screen.getByText('Artifact chưa được lưu')).toBeDefined()
+  })
+
   it('handles missing/null properties gracefully', () => {
     render(
       <FabricLedgerEvidenceCard

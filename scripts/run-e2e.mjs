@@ -6,7 +6,13 @@ const startupTimeoutMs = 120_000
 
 const server = spawn(
   process.execPath,
-  ['./node_modules/next/dist/bin/next', 'dev', '--hostname', 'localhost'],
+  [
+    ...process.execArgv,
+    './node_modules/next/dist/bin/next',
+    'dev',
+    '--hostname',
+    'localhost',
+  ],
   {
     cwd: process.cwd(),
     env: process.env,
@@ -60,7 +66,7 @@ function runPlaywright() {
   return new Promise(resolve => {
     const testProcess = spawn(
       process.execPath,
-      ['./node_modules/@playwright/test/cli.js', 'test'],
+      [...process.execArgv, './node_modules/@playwright/test/cli.js', 'test'],
       {
         cwd: process.cwd(),
         env: process.env,

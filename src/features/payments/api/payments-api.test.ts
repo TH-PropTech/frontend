@@ -3,6 +3,7 @@ import { apiClient } from '@/shared/api'
 import {
   getLinkedWallet,
   getPaymentsByContract,
+  initInvoicePayment,
   initRentPayment,
   linkWallet,
 } from './payments-api'
@@ -23,6 +24,7 @@ describe('payments API', () => {
 
     await getPaymentsByContract('contract-1')
     await initRentPayment('payment-1')
+    await initInvoicePayment('invoice-1')
     await getLinkedWallet()
     await linkWallet()
 
@@ -31,6 +33,9 @@ describe('payments API', () => {
     )
     expect(apiClient.post).toHaveBeenCalledWith('/bank/rent/init', {
       paymentId: 'payment-1',
+    })
+    expect(apiClient.post).toHaveBeenCalledWith('/bank/invoice/init', {
+      paymentId: 'invoice-1',
     })
     expect(apiClient.post).toHaveBeenCalledWith('/bank/wallet/link', {})
   })

@@ -90,6 +90,9 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
               Cập nhật theo Smart Contract • Giao dịch được xử lý tự động qua
               cổng ngân hàng liên kết Techcombank
             </p>
+            <Badge variant="outline" className="mt-2 w-fit">
+              Demo
+            </Badge>
           </div>
         </div>
 

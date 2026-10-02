@@ -5,6 +5,7 @@ import { MoveInSettlementPanel } from './move-in-settlement-panel'
 import * as api from '../api/move-in-settlement-api'
 
 vi.mock('../api/move-in-settlement-api', () => ({
+  initSettlementPayment: vi.fn(),
   updateHandover: vi.fn(),
   confirmHandover: vi.fn(),
 }))
@@ -31,8 +32,14 @@ const settlement: MoveInSettlementView = {
 }
 
 describe('MoveInSettlementPanel', () => {
-  it('shows invoices action and lets tenant confirm a recorded handover', async () => {
+  it('creates a settlement payment request and lets tenant confirm a recorded handover', async () => {
     vi.mocked(api.confirmHandover).mockResolvedValue(settlement)
+    vi.mocked(api.initSettlementPayment).mockResolvedValue({
+      txRef: 'STL-1',
+      deepLink: 'mockbank://pay?txRef=STL-1',
+      expiresAt: '2026-10-01T00:00:00.000Z',
+      status: 'pending',
+    })
     const onOpenInvoices = vi.fn()
     const onRefresh = vi.fn()
     render(
@@ -46,9 +53,15 @@ describe('MoveInSettlementPanel', () => {
 
     expect(screen.getByText(/44\.000\.000/)).toBeInTheDocument()
     fireEvent.click(
-      screen.getByRole('button', { name: 'Mở hóa đơn cần thanh toán' })
+      screen.getByRole('button', { name: 'Tạo yêu cầu thanh toán' })
+    )
+    await waitFor(() =>
+      expect(api.initSettlementPayment).toHaveBeenCalledWith('settle-1')
     )
     expect(onOpenInvoices).toHaveBeenCalledOnce()
+    expect(
+      screen.getByRole('link', { name: 'Mở cổng thanh toán' })
+    ).toHaveAttribute('href', 'mockbank://pay?txRef=STL-1')
     fireEvent.click(screen.getByRole('button', { name: 'Xác nhận biên bản' }))
     await waitFor(() =>
       expect(api.confirmHandover).toHaveBeenCalledWith(
