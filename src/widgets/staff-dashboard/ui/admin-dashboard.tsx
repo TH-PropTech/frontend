@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import type { Route } from 'next'
-import { ArrowRightLeft, Cpu } from 'lucide-react'
+import { ArrowRightLeft, Cpu, DollarSign, LayoutTemplate } from 'lucide-react'
 import { OverviewView } from './views/overview-view'
 import { ContractMonitorView } from './views/contract-monitor-view'
 import { AiConsultationView } from './views/ai-consultation-view'
@@ -14,6 +14,8 @@ import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { OwnershipTransferPanel } from '@/features/property-ownership-transfer'
+import { LayoutProfileEditor } from '@/features/contract-layouts'
+import { FeeRevenueReport, FeeScheduleEditor } from '@/features/platform-fees'
 
 type TabType =
   | 'overview'
@@ -24,6 +26,8 @@ type TabType =
   | 'rental-flow'
   | 'ownership-transfer'
   | 'ai-engine'
+  | 'contract-layouts'
+  | 'fees'
 
 const ADMIN_TABS: readonly TabType[] = [
   'overview',
@@ -34,6 +38,8 @@ const ADMIN_TABS: readonly TabType[] = [
   'rental-flow',
   'ownership-transfer',
   'ai-engine',
+  'contract-layouts',
+  'fees',
 ]
 
 export function resolveAdminTab(pathname: string): TabType {
@@ -195,6 +201,16 @@ export function AdminDashboard({
       label: 'Cấu hình AI Engine',
       icon: <Cpu className="h-[18px] w-[18px]" />,
     },
+    {
+      type: 'contract-layouts',
+      label: 'Bố cục hợp đồng',
+      icon: <LayoutTemplate className="h-[18px] w-[18px]" />,
+    },
+    {
+      type: 'fees',
+      label: 'Biểu phí & doanh thu',
+      icon: <DollarSign className="h-[18px] w-[18px]" />,
+    },
   ]
 
   const handleSidebarItemClick = (type: TabType): void => {
@@ -239,6 +255,15 @@ export function AdminDashboard({
         return <OwnershipTransferPanel />
       case 'ai-engine':
         return <RecommendationEngineView />
+      case 'contract-layouts':
+        return <LayoutProfileEditor profileKey="default" />
+      case 'fees':
+        return (
+          <div className="space-y-5">
+            <FeeScheduleEditor />
+            <FeeRevenueReport />
+          </div>
+        )
       default:
         return <OverviewView />
     }
