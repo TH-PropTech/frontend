@@ -18,6 +18,7 @@ import {
 import type { PaymentInit } from '../api/payments-api'
 import {
   PaymentProviderPicker,
+  choiceLimitNote,
   usePaymentProviders,
 } from './payment-provider-picker'
 
@@ -45,7 +46,14 @@ export function DepositPaymentPanel({
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null)
   const [paymentRequest, setPaymentRequest] = useState<PaymentInit | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const { providers, selected, setSelected } = usePaymentProviders()
+  const {
+    providers,
+    selected,
+    setSelected,
+    momoMethod,
+    setMomoMethod,
+    choice,
+  } = usePaymentProviders()
   const selectedLabel =
     providers.find(option => option.provider === selected)?.label ?? 'Mock Bank'
 
@@ -68,6 +76,7 @@ export function DepositPaymentPanel({
     Boolean(deposit.agreementId) &&
     Number.isInteger(deposit.contentRevision) &&
     Boolean(deposit.contentHash)
+  const limitNote = choiceLimitNote(providers, choice, deposit.amount)
   const formattedAmount = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
@@ -82,9 +91,7 @@ export function DepositPaymentPanel({
     try {
       setLoading(true)
       setErrorMsg(null)
-      const res = await initDepositPayment(targetAgreementId, {
-        provider: selected,
-      })
+      const res = await initDepositPayment(targetAgreementId, choice)
       if (isExternalGateway(res) && res.deepLink) {
         // Real gateway page; the return URL brings the tenant back here.
         window.location.assign(res.deepLink)
@@ -248,12 +255,23 @@ export function DepositPaymentPanel({
                   providers={providers}
                   value={selected}
                   onChange={setSelected}
+                  momoMethod={momoMethod}
+                  onMomoMethodChange={setMomoMethod}
+                  amount={deposit.amount}
                   disabled={loading || consenting}
                 />
+                {limitNote ? (
+                  <p
+                    data-testid="payment-limit-note"
+                    className="text-[11px] text-[var(--warning)]"
+                  >
+                    {limitNote}
+                  </p>
+                ) : null}
                 <button
                   type="button"
                   onClick={handleInitPayment}
-                  disabled={loading || consenting}
+                  disabled={loading || consenting || limitNote !== null}
                   aria-label="Thanh toán cọc ngay"
                   className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm"
                 >

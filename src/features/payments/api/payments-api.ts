@@ -42,11 +42,34 @@ export interface PaymentInit {
   status: 'pending'
 }
 
+export type MomoPaymentMethod = 'wallet' | 'atm' | 'card'
+
+/** MoMo payment method with its per-order VND limits (from the backend). */
+export interface MomoMethodOption {
+  method: MomoPaymentMethod
+  label: string
+  minAmount: number
+  maxAmount: number
+}
+
 /** Gateways the backend allow-list exposes for the picker (no credentials). */
 export interface PaymentProviderOption {
   provider: PaymentProviderName
   label: string
   simulation: boolean
+  /** MoMo only. */
+  methods?: MomoMethodOption[]
+}
+
+/** True when `amount` fits the method's limits (unknown amount = allowed). */
+export function isMomoMethodAvailable(
+  option: Pick<MomoMethodOption, 'minAmount' | 'maxAmount'>,
+  amount?: number
+): boolean {
+  return (
+    amount === undefined ||
+    (amount >= option.minAmount && amount <= option.maxAmount)
+  )
 }
 
 export interface GatewayPaymentResult {
@@ -69,15 +92,23 @@ export async function getGatewayPaymentResult(
 /** Tenant's gateway choice; the server enforces the allow-list. */
 export interface PaymentChoice {
   provider?: PaymentProviderName
+  /** Only sent when `provider` is MoMo. */
+  momoMethod?: MomoPaymentMethod
 }
 
 function choiceBody(choice: PaymentChoice): {
   provider?: PaymentProviderName
+  momoMethod?: MomoPaymentMethod
   clientChannel: 'web'
 } {
-  return choice.provider
-    ? { provider: choice.provider, clientChannel: 'web' }
-    : { clientChannel: 'web' }
+  if (!choice.provider) return { clientChannel: 'web' }
+  return choice.provider === 'momo' && choice.momoMethod
+    ? {
+        provider: choice.provider,
+        momoMethod: choice.momoMethod,
+        clientChannel: 'web',
+      }
+    : { provider: choice.provider, clientChannel: 'web' }
 }
 
 export async function getPaymentProviders(): Promise<PaymentProviderOption[]> {
