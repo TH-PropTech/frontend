@@ -5,14 +5,30 @@ import type {
   ApiBuildingItem,
 } from '@/entities/properties/model/types'
 
+function sanitizeApartmentPayload(
+  values: ApartmentFormValues
+): Record<string, unknown> {
+  const sanitizedPackages = values.rentalPackages?.map(pkg => {
+    // Strip computed / read-only fields returned from API to avoid validation errors
+    const cleanPackage = { ...(pkg as Record<string, unknown>) }
+    delete cleanPackage.resolvedDepositAmount
+    delete cleanPackage.resolvedHoldingDepositAmount
+    delete cleanPackage.resolvedSecurityTopUpAmount
+    return cleanPackage
+  })
+
+  return {
+    ...values,
+    priceMonthly: values.priceMonthly * 1000000,
+    ...(sanitizedPackages ? { rentalPackages: sanitizedPackages } : {}),
+  }
+}
+
 export async function createApartment(
   values: ApartmentFormValues
 ): Promise<LandlordApartmentItem> {
   // Convert priceMonthly back to absolute VND (e.g. 10 million -> 10,000,000)
-  const payload = {
-    ...values,
-    priceMonthly: values.priceMonthly * 1000000,
-  }
+  const payload = sanitizeApartmentPayload(values)
   return apiClient.post<LandlordApartmentItem>('/apartments', payload)
 }
 
@@ -49,10 +65,7 @@ export async function resubmitApartment(
   id: string,
   values: ApartmentFormValues
 ): Promise<LandlordApartmentItem> {
-  const payload = {
-    ...values,
-    priceMonthly: values.priceMonthly * 1000000,
-  }
+  const payload = sanitizeApartmentPayload(values)
   return apiClient.patch<LandlordApartmentItem>(
     `/apartments/${id}/resubmit`,
     payload
