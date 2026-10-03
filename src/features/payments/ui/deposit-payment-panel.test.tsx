@@ -363,6 +363,7 @@ describe('DepositPaymentPanel', () => {
       await waitFor(() => {
         expect(paymentsApi.initDepositPayment).toHaveBeenCalledWith('dpa-123', {
           provider: 'momo',
+          momoMethod: 'wallet',
         })
         expect(assign).toHaveBeenCalledWith(
           'https://test-payment.momo.vn/pay?t=1'

@@ -15,6 +15,7 @@ import {
 } from '../api/payments-api'
 import {
   PaymentProviderPicker,
+  choiceLimitNote,
   usePaymentProviders,
 } from './payment-provider-picker'
 
@@ -37,7 +38,14 @@ export function PaymentSchedulePanel({
   const [lastPaymentUrl, setLastPaymentUrl] = React.useState<string | null>(
     null
   )
-  const { providers, selected, setSelected } = usePaymentProviders()
+  const {
+    providers,
+    selected,
+    setSelected,
+    momoMethod,
+    setMomoMethod,
+    choice,
+  } = usePaymentProviders()
 
   const load = React.useCallback(async (): Promise<void> => {
     setLoading(true)
@@ -100,7 +108,6 @@ export function PaymentSchedulePanel({
     setBusyPaymentId(payment._id)
     setError(null)
     try {
-      const choice = { provider: selected }
       const init =
         payment.type === 'platform-fee'
           ? await initInvoicePayment(payment._id, choice)
@@ -180,6 +187,8 @@ export function PaymentSchedulePanel({
         providers={providers}
         value={selected}
         onChange={setSelected}
+        momoMethod={momoMethod}
+        onMomoMethodChange={setMomoMethod}
         disabled={busyPaymentId !== null}
       />
 
@@ -208,19 +217,16 @@ export function PaymentSchedulePanel({
                   {payment.status}
                 </span>
                 {payment.status === 'unpaid' || payment.status === 'overdue' ? (
-                  <Button
-                    type="button"
-                    size="sm"
+                  <PayButton
+                    busy={busyPaymentId === payment._id}
                     disabled={busyPaymentId !== null}
-                    onClick={() => void handlePay(payment)}
-                  >
-                    {busyPaymentId === payment._id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Banknote className="h-4 w-4" />
+                    limitNote={choiceLimitNote(
+                      providers,
+                      choice,
+                      payment.amount
                     )}
-                    Thanh toán
-                  </Button>
+                    onPay={() => void handlePay(payment)}
+                  />
                 ) : null}
               </div>
             </div>
@@ -248,5 +254,41 @@ export function PaymentSchedulePanel({
       ) : null}
       {error ? <p className="text-sm text-danger">{error}</p> : null}
     </section>
+  )
+}
+
+interface PayButtonProps {
+  busy: boolean
+  disabled: boolean
+  /** Set when the chosen MoMo method cannot cover this amount. */
+  limitNote: string | null
+  onPay: () => void
+}
+
+function PayButton({
+  busy,
+  disabled,
+  limitNote,
+  onPay,
+}: PayButtonProps): React.ReactElement {
+  return (
+    <span className="flex flex-col items-end gap-1">
+      <Button
+        type="button"
+        size="sm"
+        disabled={disabled || limitNote !== null}
+        onClick={onPay}
+      >
+        {busy ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Banknote className="h-4 w-4" />
+        )}
+        Thanh toán
+      </Button>
+      {limitNote ? (
+        <span className="text-[10px] text-warning">{limitNote}</span>
+      ) : null}
+    </span>
   )
 }

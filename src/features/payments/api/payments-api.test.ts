@@ -71,6 +71,28 @@ describe('payments API', () => {
     })
   })
 
+  it('sends momoMethod only for MoMo', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({ status: 'pending' })
+
+    await initRentPayment('payment-1', { provider: 'momo', momoMethod: 'card' })
+    await initRentPayment('payment-2', {
+      provider: 'vnpay',
+      momoMethod: 'card',
+    })
+
+    expect(apiClient.post).toHaveBeenCalledWith('/bank/rent/init', {
+      paymentId: 'payment-1',
+      provider: 'momo',
+      momoMethod: 'card',
+      clientChannel: 'web',
+    })
+    expect(apiClient.post).toHaveBeenCalledWith('/bank/rent/init', {
+      paymentId: 'payment-2',
+      provider: 'vnpay',
+      clientChannel: 'web',
+    })
+  })
+
   it('loads the enabled gateway list', async () => {
     vi.mocked(apiClient.get).mockResolvedValue([])
 
