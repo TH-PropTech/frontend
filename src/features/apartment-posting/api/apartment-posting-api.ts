@@ -61,6 +61,14 @@ export async function searchBuildings(
   return apiClient.get<ApiBuildingItem[]>(url)
 }
 
+export async function updateApartment(
+  id: string,
+  values: ApartmentFormValues
+): Promise<LandlordApartmentItem> {
+  const payload = sanitizeApartmentPayload(values)
+  return apiClient.patch<LandlordApartmentItem>(`/apartments/${id}`, payload)
+}
+
 export async function resubmitApartment(
   id: string,
   values: ApartmentFormValues

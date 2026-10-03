@@ -16,6 +16,7 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('../api/apartment-posting-api', () => ({
   createApartment: vi.fn(),
+  updateApartment: vi.fn(),
   resubmitApartment: vi.fn(),
   uploadApartmentImages: vi.fn(),
   searchProjects: vi.fn().mockResolvedValue([]),
