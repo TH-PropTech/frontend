@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apiClient } from '@/shared/api'
 import {
+  cancelSmartCaSigningSession,
   createSmartCaSigningSession,
   getSmartCaCertificates,
   getSmartCaSigningSession,
+  pollSmartCaSigningSession,
 } from './contracts-api'
 
 describe('SmartCA signing API', () => {
@@ -30,7 +32,38 @@ describe('SmartCA signing API', () => {
     )
   })
 
-  it('creates a v2 session with transient credentials only in the request body', async () => {
+  it('creates a v1 session without any credential field in the request body', async () => {
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({
+      id: 'session-1',
+      contractId: 'contract-1',
+      signerId: 'tenant-1',
+      signerRole: 'tenant',
+      artifactHash: 'a'.repeat(64),
+      providerTransactionId: 'sca-1',
+      status: 'pending',
+      documentId: 'contract-contract-1-r1',
+      expiresAt: '2030-01-01T00:00:00.000Z',
+    })
+    const input = {
+      idempotencyKey: 'request-1',
+      certificateSerial: 'SERIAL-001',
+    }
+
+    await expect(
+      createSmartCaSigningSession('contract-1', input)
+    ).resolves.toMatchObject({
+      status: 'pending',
+      documentId: expect.any(String),
+    })
+    expect(post).toHaveBeenCalledWith(
+      '/contracts/contract-1/smartca/signing-sessions',
+      input
+    )
+    expect(input).not.toHaveProperty('smartCaPassword')
+    expect(input).not.toHaveProperty('smartCaOtp')
+  })
+
+  it('polls a pending session via the poll endpoint', async () => {
     const post = vi.spyOn(apiClient, 'post').mockResolvedValue({
       id: 'session-1',
       contractId: 'contract-1',
@@ -41,23 +74,35 @@ describe('SmartCA signing API', () => {
       status: 'signed',
       expiresAt: '2030-01-01T00:00:00.000Z',
     })
-    const input = {
-      idempotencyKey: 'request-1',
-      certificateSerial: 'SERIAL-001',
-      smartCaPassword: 'password-redacted',
-      smartCaOtp: '000000',
-    }
 
     await expect(
-      createSmartCaSigningSession('contract-1', input)
+      pollSmartCaSigningSession('contract-1', 'session-1')
     ).resolves.toMatchObject({ status: 'signed' })
     expect(post).toHaveBeenCalledWith(
-      '/contracts/contract-1/smartca/signing-sessions',
-      input
+      '/contracts/contract-1/smartca/signing-sessions/session-1/poll',
+      {}
     )
-    const calledUrl = post.mock.calls[0]?.[0]
-    expect(calledUrl).not.toContain(input.smartCaPassword)
-    expect(calledUrl).not.toContain(input.smartCaOtp)
+  })
+
+  it('cancels a pending session via the cancel endpoint', async () => {
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({
+      id: 'session-1',
+      contractId: 'contract-1',
+      signerId: 'tenant-1',
+      signerRole: 'tenant',
+      artifactHash: 'a'.repeat(64),
+      providerTransactionId: 'sca-1',
+      status: 'cancelled',
+      expiresAt: '2030-01-01T00:00:00.000Z',
+    })
+
+    await expect(
+      cancelSmartCaSigningSession('contract-1', 'session-1')
+    ).resolves.toMatchObject({ status: 'cancelled' })
+    expect(post).toHaveBeenCalledWith(
+      '/contracts/contract-1/smartca/signing-sessions/session-1/cancel',
+      {}
+    )
   })
 
   it('reads a sanitized session without secret or raw signature fields', async () => {

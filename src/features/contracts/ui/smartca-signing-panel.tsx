@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-import { AlertCircle, CheckCircle2, Clock3, RefreshCw } from 'lucide-react'
 import {
-  createSmartCaSigningSession,
-  getSmartCaCertificates,
-  getSmartCaSigningSession,
-  type SmartCaCertificate,
-  type SmartCaSigningSession,
-} from '../api/contracts-api'
+  AlertCircle,
+  CheckCircle2,
+  Clock3,
+  RefreshCw,
+  Smartphone,
+  XCircle,
+} from 'lucide-react'
+import { useSmartCaSigning } from '../model/use-smartca-signing'
+import type { SmartCaSigningSession } from '../api/contracts-api'
 
 interface SmartCaSigningPanelProps {
   contractId: string
@@ -17,29 +18,17 @@ interface SmartCaSigningPanelProps {
   onSigned?: () => void
 }
 
-/** Sau các trạng thái này, lần thử kế tiếp phải là giao dịch mới. */
-const RETRYABLE_TERMINAL_STATUSES: ReadonlySet<
-  SmartCaSigningSession['status']
-> = new Set(['rejected', 'expired', 'cancelled'])
-const PENDING_STATUSES: ReadonlySet<SmartCaSigningSession['status']> = new Set([
-  'pending',
-  'pending-user-confirmation',
-])
-
 type Notice = {
   label: string
   guidance: string
   tone: 'info' | 'success' | 'warning' | 'danger'
 }
 
-function createIdempotencyKey(): string {
-  if (typeof globalThis.crypto?.randomUUID === 'function') {
-    return globalThis.crypto.randomUUID()
-  }
-
-  const random = new Uint32Array(4)
-  globalThis.crypto.getRandomValues(random)
-  return `smartca-${Array.from(random, value => value.toString(16)).join('-')}`
+function formatRemaining(ms: number): string {
+  const totalSeconds = Math.ceil(ms / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
 function sessionNotice(status: SmartCaSigningSession['status']): Notice {
@@ -54,28 +43,27 @@ function sessionNotice(status: SmartCaSigningSession['status']): Notice {
     case 'rejected':
       return {
         label: 'Giao dịch bị VNPT SmartCA từ chối.',
-        guidance: 'Kiểm tra thông tin và nhập lại mật khẩu, OTP để thử lại.',
+        guidance: 'Bạn có thể bắt đầu một giao dịch ký mới.',
         tone: 'danger',
       }
     case 'expired':
       return {
         label: 'Phiên ký VNPT SmartCA đã hết hạn.',
-        guidance:
-          'Nhập lại mật khẩu, OTP để tạo giao dịch mới trên cùng tài liệu.',
+        guidance: 'Hãy tạo một giao dịch mới trên cùng tài liệu.',
         tone: 'warning',
       }
     case 'cancelled':
       return {
         label: 'Phiên ký VNPT SmartCA đã bị hủy.',
-        guidance: 'Bạn có thể nhập lại thông tin để bắt đầu một giao dịch mới.',
+        guidance: 'Bạn có thể bắt đầu một giao dịch ký mới.',
         tone: 'warning',
       }
-    case 'pending-user-confirmation':
     case 'pending':
+    default:
       return {
-        label: 'Đang chờ VNPT SmartCA xác nhận giao dịch.',
+        label: 'Đang chờ duyệt trong app VNPT SmartCA.',
         guidance:
-          'Hoàn tất bước xác nhận theo hướng dẫn của VNPT SmartCA rồi đối soát lại.',
+          'Mở app VNPT SmartCA đã cài trên điện thoại, kiểm tra đúng mã tài liệu rồi duyệt giao dịch. Hệ thống sẽ tự nhận kết quả.',
         tone: 'info',
       }
   }
@@ -99,105 +87,30 @@ export function SmartCaSigningPanel({
   disabled,
   onSigned,
 }: SmartCaSigningPanelProps) {
-  const [certificates, setCertificates] = useState<SmartCaCertificate[] | null>(
-    null
-  )
-  const [selectedSerial, setSelectedSerial] = useState('')
-  const [password, setPassword] = useState('')
-  const [otp, setOtp] = useState('')
-  const [session, setSession] = useState<SmartCaSigningSession | null>(null)
-  const [loadingCertificates, setLoadingCertificates] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [idempotencyKey, setIdempotencyKey] = useState(createIdempotencyKey)
-  const [checking, setChecking] = useState(false)
-
-  const applySession = (next: SmartCaSigningSession): void => {
-    setSession(next)
-    if (next.status === 'signed') onSigned?.()
-    if (RETRYABLE_TERMINAL_STATUSES.has(next.status)) {
-      setIdempotencyKey(createIdempotencyKey())
-    }
-  }
-
-  const recheck = async (): Promise<void> => {
-    if (!session) return
-    setChecking(true)
-    setError(null)
-    try {
-      applySession(await getSmartCaSigningSession(contractId, session.id))
-    } catch (caught: unknown) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Không thể kiểm tra trạng thái phiên ký VNPT SmartCA.'
-      )
-    } finally {
-      setChecking(false)
-    }
-  }
-
-  const loadCertificates = async (): Promise<void> => {
-    setLoadingCertificates(true)
-    setError(null)
-    try {
-      const result = await getSmartCaCertificates(contractId)
-      setCertificates(result.certificates)
-      setSelectedSerial(
-        result.certificates.length === 1
-          ? (result.certificates[0]?.serialNumber ?? '')
-          : ''
-      )
-      if (result.certificates.length === 0) {
-        setError('Không có chứng thư SmartCA hợp lệ.')
-      }
-    } catch (caught: unknown) {
-      setCertificates(null)
-      setSelectedSerial('')
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Không thể tải chứng thư VNPT SmartCA.'
-      )
-    } finally {
-      setLoadingCertificates(false)
-    }
-  }
-
-  const submit = async (): Promise<void> => {
-    if (!selectedSerial || !password || !otp) return
-
-    setSubmitting(true)
-    setError(null)
-    try {
-      const result = await createSmartCaSigningSession(contractId, {
-        idempotencyKey,
-        certificateSerial: selectedSerial,
-        smartCaPassword: password,
-        smartCaOtp: otp,
-      })
-      applySession(result)
-    } catch (caught: unknown) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : 'Không thể gửi giao dịch đến VNPT SmartCA.'
-      )
-    } finally {
-      setPassword('')
-      setOtp('')
-      setSubmitting(false)
-    }
-  }
+  const {
+    certificates,
+    selectedSerial,
+    setSelectedSerial,
+    session,
+    loadingCertificates,
+    submitting,
+    cancelling,
+    error,
+    remainingMs,
+    loadCertificates,
+    submit,
+    cancel,
+  } = useSmartCaSigning(contractId, onSigned)
 
   const notice = session ? sessionNotice(session.status) : null
+  const isPending = session?.status === 'pending'
 
   return (
     <section className="rounded-lg border border-[var(--primary)]/30 bg-[var(--primary-soft)] p-3 text-[11px] text-[var(--fg)]">
       <p className="font-semibold">Ký số VNPT SmartCA</p>
       <p className="mt-1 text-[var(--muted)]">
-        Mật khẩu và OTP chỉ được dùng cho yêu cầu hiện tại, không được lưu vào
-        hồ sơ hợp đồng.
+        Ký bằng cách duyệt giao dịch trong app VNPT SmartCA trên điện thoại,
+        không cần nhập mật khẩu hay OTP SmartCA trên web.
       </p>
 
       {certificates === null && !error ? (
@@ -213,7 +126,7 @@ export function SmartCaSigningPanel({
         </button>
       ) : null}
 
-      {certificates && certificates.length > 0 ? (
+      {certificates && certificates.length > 0 && !session ? (
         <div className="mt-3 space-y-3">
           <label className="block font-semibold" htmlFor="smartca-certificate">
             Chứng thư VNPT SmartCA
@@ -237,43 +150,15 @@ export function SmartCaSigningPanel({
             ))}
           </select>
 
-          <label className="block font-semibold" htmlFor="smartca-password">
-            Mật khẩu VNPT SmartCA
-          </label>
-          <input
-            id="smartca-password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={event => setPassword(event.target.value)}
-            maxLength={256}
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[var(--fg)]"
-          />
-
-          <label className="block font-semibold" htmlFor="smartca-otp">
-            OTP VNPT SmartCA
-          </label>
-          <input
-            id="smartca-otp"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            value={otp}
-            onChange={event => setOtp(event.target.value)}
-            maxLength={32}
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[var(--fg)]"
-          />
-
           <button
             type="button"
             onClick={() => void submit()}
-            disabled={
-              disabled || submitting || !selectedSerial || !password || !otp
-            }
+            disabled={disabled || submitting || !selectedSerial}
             className="inline-flex w-full items-center justify-center rounded-lg bg-[var(--primary)] px-3 py-2 font-semibold text-white disabled:opacity-50"
           >
             {submitting
-              ? 'Đang xác nhận với SmartCA…'
-              : 'Xác nhận ký VNPT SmartCA'}
+              ? 'Đang gửi yêu cầu ký…'
+              : 'Gửi yêu cầu ký VNPT SmartCA'}
           </button>
         </div>
       ) : null}
@@ -288,25 +173,49 @@ export function SmartCaSigningPanel({
             {notice.tone === 'success' ? (
               <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             ) : notice.tone === 'info' ? (
-              <Clock3 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <Smartphone className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             ) : (
               <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             )}
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="font-semibold">{notice.label}</p>
               <p className="mt-0.5 text-[var(--muted)]">{notice.guidance}</p>
+              {session.documentId ? (
+                <p className="mt-1 break-all font-mono text-[10px]">
+                  Mã tài liệu (doc_id): {session.documentId}
+                </p>
+              ) : null}
               <p className="mt-1 break-all font-mono text-[10px]">
                 Giao dịch: {session.providerTransactionId}
               </p>
-              {PENDING_STATUSES.has(session.status) ? (
+              {isPending && remainingMs !== null ? (
+                <p className="mt-1 flex items-center gap-1 font-mono text-[10px]">
+                  <Clock3 className="h-3 w-3" aria-hidden="true" />
+                  Còn lại: {formatRemaining(remainingMs)}
+                </p>
+              ) : null}
+              {isPending ? (
                 <button
                   type="button"
-                  onClick={() => void recheck()}
-                  disabled={checking}
+                  onClick={() => void cancel()}
+                  disabled={cancelling}
+                  className="mt-2 inline-flex items-center gap-1.5 font-semibold underline underline-offset-2 disabled:opacity-50"
+                >
+                  <XCircle className="h-3 w-3" aria-hidden="true" />
+                  {cancelling ? 'Đang hủy…' : 'Hủy giao dịch'}
+                </button>
+              ) : null}
+              {session.status === 'rejected' ||
+              session.status === 'expired' ||
+              session.status === 'cancelled' ? (
+                <button
+                  type="button"
+                  onClick={() => void submit()}
+                  disabled={submitting || !selectedSerial}
                   className="mt-2 inline-flex items-center gap-1.5 font-semibold underline underline-offset-2 disabled:opacity-50"
                 >
                   <RefreshCw className="h-3 w-3" aria-hidden="true" />
-                  {checking ? 'Đang kiểm tra…' : 'Kiểm tra lại'}
+                  {submitting ? 'Đang gửi lại…' : 'Thử ký lại'}
                 </button>
               ) : null}
             </div>

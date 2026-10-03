@@ -2,12 +2,17 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SigningCeremonyModal } from './signing-ceremony-modal'
 
-const { createSmartCaSigningSession, getSmartCaCertificates } = vi.hoisted(
-  () => ({
-    createSmartCaSigningSession: vi.fn(),
-    getSmartCaCertificates: vi.fn(),
-  })
-)
+const {
+  cancelSmartCaSigningSession,
+  createSmartCaSigningSession,
+  getSmartCaCertificates,
+  pollSmartCaSigningSession,
+} = vi.hoisted(() => ({
+  cancelSmartCaSigningSession: vi.fn(),
+  createSmartCaSigningSession: vi.fn(),
+  getSmartCaCertificates: vi.fn(),
+  pollSmartCaSigningSession: vi.fn(),
+}))
 
 vi.mock('../api/contracts-api', () => ({
   initiateContractOtp: vi.fn(),
@@ -15,8 +20,10 @@ vi.mock('../api/contracts-api', () => ({
   issueSigningGrant: vi.fn(),
   signContract: vi.fn(),
   verifySigner: vi.fn(),
+  cancelSmartCaSigningSession,
   createSmartCaSigningSession,
   getSmartCaCertificates,
+  pollSmartCaSigningSession,
 }))
 
 const props = {
@@ -37,19 +44,22 @@ async function openSmartCaForm(): Promise<void> {
   fireEvent.click(
     screen.getByRole('button', { name: 'Chuẩn bị ký VNPT SmartCA' })
   )
-  await screen.findByLabelText('Mật khẩu VNPT SmartCA')
+  await screen.findByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
 }
 
-function enterSmartCaCredentials(
-  password = 'password-redacted',
-  otp = '654321'
-): void {
-  fireEvent.change(screen.getByLabelText('Mật khẩu VNPT SmartCA'), {
-    target: { value: password },
-  })
-  fireEvent.change(screen.getByLabelText('OTP VNPT SmartCA'), {
-    target: { value: otp },
-  })
+function pendingSession(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'session-1',
+    contractId: 'c1',
+    signerId: 'tenant-1',
+    signerRole: 'tenant',
+    artifactHash: 'a'.repeat(64),
+    providerTransactionId: 'sca-1',
+    status: 'pending',
+    documentId: 'contract-c1-r1',
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+    ...overrides,
+  }
 }
 
 describe('SigningCeremonyModal', () => {
@@ -89,45 +99,36 @@ describe('SigningCeremonyModal', () => {
     expect(screen.getByTestId('face-verify-camera')).toBeInTheDocument()
   })
 
-  it('loads one certificate, validates transient credentials and signs with VNPT OTP', async () => {
-    createSmartCaSigningSession.mockResolvedValue({
-      id: 'session-1',
-      contractId: 'c1',
-      signerId: 'tenant-1',
-      signerRole: 'tenant',
-      artifactHash: 'a'.repeat(64),
-      providerTransactionId: 'sca-signed-1',
-      status: 'signed',
-      expiresAt: '2030-01-01T00:00:00.000Z',
-    })
+  it('never shows a SmartCA password or OTP field', async () => {
+    renderModal()
+    await openSmartCaForm()
+
+    expect(screen.queryByLabelText(/mật khẩu/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/otp vnpt/i)).not.toBeInTheDocument()
+  })
+
+  it('loads one certificate and submits a signing request without credentials', async () => {
+    createSmartCaSigningSession.mockResolvedValue(pendingSession())
     renderModal()
 
     await openSmartCaForm()
     expect(screen.getByDisplayValue('SERIAL-001')).toBeInTheDocument()
-    const submit = screen.getByRole('button', {
-      name: 'Xác nhận ký VNPT SmartCA',
-    })
-    expect(submit).toBeDisabled()
-    enterSmartCaCredentials()
-    expect(submit).toBeEnabled()
-    fireEvent.click(submit)
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
+    )
 
     await waitFor(() =>
       expect(createSmartCaSigningSession).toHaveBeenCalledWith(
         'c1',
         expect.objectContaining({
           certificateSerial: 'SERIAL-001',
-          smartCaPassword: 'password-redacted',
-          smartCaOtp: '654321',
           idempotencyKey: expect.any(String),
         })
       )
     )
     expect(screen.getByTestId('smartca-session-status')).toHaveTextContent(
-      'bằng chứng giao dịch SmartCA đã được xác minh'
+      'Đang chờ duyệt trong app VNPT SmartCA'
     )
-    expect(screen.getByLabelText('Mật khẩu VNPT SmartCA')).toHaveValue('')
-    expect(screen.getByLabelText('OTP VNPT SmartCA')).toHaveValue('')
   })
 
   it('requires explicit selection when multiple certificates are available', async () => {
@@ -170,33 +171,20 @@ describe('SigningCeremonyModal', () => {
     )
   })
 
-  it('keeps one idempotency key across retry and clears credentials after each request', async () => {
+  it('keeps one idempotency key across a transient failure retry', async () => {
     createSmartCaSigningSession
       .mockRejectedValueOnce(new Error('SMARTCA_PROVIDER_UNAVAILABLE'))
-      .mockResolvedValueOnce({
-        id: 'session-1',
-        contractId: 'c1',
-        signerId: 'tenant-1',
-        signerRole: 'tenant',
-        artifactHash: 'a'.repeat(64),
-        providerTransactionId: 'sca-signed-1',
-        status: 'signed',
-        expiresAt: '2030-01-01T00:00:00.000Z',
-      })
+      .mockResolvedValueOnce(pendingSession())
     renderModal()
     await openSmartCaForm()
 
-    enterSmartCaCredentials('first-password', '111111')
     fireEvent.click(
-      screen.getByRole('button', { name: 'Xác nhận ký VNPT SmartCA' })
+      screen.getByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
     )
     await screen.findByText(/SMARTCA_PROVIDER_UNAVAILABLE/)
-    expect(screen.getByLabelText('Mật khẩu VNPT SmartCA')).toHaveValue('')
-    expect(screen.getByLabelText('OTP VNPT SmartCA')).toHaveValue('')
 
-    enterSmartCaCredentials('second-password', '222222')
     fireEvent.click(
-      screen.getByRole('button', { name: 'Xác nhận ký VNPT SmartCA' })
+      screen.getByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
     )
     await waitFor(() =>
       expect(createSmartCaSigningSession).toHaveBeenCalledTimes(2)
@@ -208,13 +196,12 @@ describe('SigningCeremonyModal', () => {
     expect(secondKey).toBe(firstKey)
   })
 
-  it('resets SmartCA credential UI when the modal is closed and reopened', async () => {
+  it('resets the SmartCA signing UI when the modal is closed and reopened', async () => {
     const onClose = vi.fn()
     const { rerender } = render(
       <SigningCeremonyModal {...props} onClose={onClose} />
     )
     await openSmartCaForm()
-    enterSmartCaCredentials()
 
     fireEvent.click(screen.getByLabelText('Đóng cửa sổ'))
     expect(onClose).toHaveBeenCalledTimes(1)
@@ -224,7 +211,7 @@ describe('SigningCeremonyModal', () => {
     rerender(<SigningCeremonyModal {...props} onClose={onClose} />)
 
     expect(
-      screen.queryByLabelText('Mật khẩu VNPT SmartCA')
+      screen.queryByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
     ).not.toBeInTheDocument()
   })
 })

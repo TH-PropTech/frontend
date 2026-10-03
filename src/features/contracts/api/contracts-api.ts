@@ -573,6 +573,7 @@ export interface SmartCaSigningSession {
   signatureHash?: string | null
   signatureAlgorithm?: string | null
   providerStatus?: string | null
+  documentId?: string | null
   signedAt?: string | null
   verifiedAt?: string | null
   expiresAt: string
@@ -593,8 +594,6 @@ export interface SmartCaCertificateList {
 export interface CreateSmartCaSigningSessionInput {
   idempotencyKey: string
   certificateSerial?: string
-  smartCaPassword: string
-  smartCaOtp: string
 }
 
 // ── API Functions ──
@@ -663,6 +662,26 @@ export async function getSmartCaSigningSession(
 ): Promise<SmartCaSigningSession> {
   return apiClient.get<SmartCaSigningSession>(
     `/contracts/${contractId}/smartca/signing-sessions/${sessionId}`
+  )
+}
+
+export async function pollSmartCaSigningSession(
+  contractId: string,
+  sessionId: string
+): Promise<SmartCaSigningSession> {
+  return apiClient.post<SmartCaSigningSession>(
+    `/contracts/${contractId}/smartca/signing-sessions/${sessionId}/poll`,
+    {}
+  )
+}
+
+export async function cancelSmartCaSigningSession(
+  contractId: string,
+  sessionId: string
+): Promise<SmartCaSigningSession> {
+  return apiClient.post<SmartCaSigningSession>(
+    `/contracts/${contractId}/smartca/signing-sessions/${sessionId}/cancel`,
+    {}
   )
 }
 
