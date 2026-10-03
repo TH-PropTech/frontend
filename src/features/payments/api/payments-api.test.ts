@@ -1,8 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { apiClient } from '@/shared/api'
 import {
+  readPaymentReturnParam,
+  stripPaymentReturnParam,
   getLinkedWallet,
+  getPaymentProviders,
+  getGatewayPaymentResult,
   getPaymentsByContract,
+  initDepositPayment,
   initInvoicePayment,
   initRentPayment,
   linkWallet,
@@ -33,10 +38,65 @@ describe('payments API', () => {
     )
     expect(apiClient.post).toHaveBeenCalledWith('/bank/rent/init', {
       paymentId: 'payment-1',
+      clientChannel: 'web',
     })
     expect(apiClient.post).toHaveBeenCalledWith('/bank/invoice/init', {
       paymentId: 'invoice-1',
+      clientChannel: 'web',
     })
     expect(apiClient.post).toHaveBeenCalledWith('/bank/wallet/link', {})
+  })
+
+  it('sends the chosen gateway with the web channel on every init', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({ status: 'pending' })
+
+    await initDepositPayment('deposit-1', { provider: 'zalopay' })
+    await initRentPayment('payment-1', { provider: 'momo' })
+    await initInvoicePayment('invoice-1', { provider: 'vnpay' })
+
+    expect(apiClient.post).toHaveBeenCalledWith('/bank/deposit/init', {
+      depositAgreementId: 'deposit-1',
+      provider: 'zalopay',
+      clientChannel: 'web',
+    })
+    expect(apiClient.post).toHaveBeenCalledWith('/bank/rent/init', {
+      paymentId: 'payment-1',
+      provider: 'momo',
+      clientChannel: 'web',
+    })
+    expect(apiClient.post).toHaveBeenCalledWith('/bank/invoice/init', {
+      paymentId: 'invoice-1',
+      provider: 'vnpay',
+      clientChannel: 'web',
+    })
+  })
+
+  it('loads the enabled gateway list', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue([])
+
+    await getPaymentProviders()
+
+    expect(apiClient.get).toHaveBeenCalledWith('/bank/providers')
+  })
+
+  it('loads a gateway result by server reference', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ targetPaid: true })
+
+    await getGatewayPaymentResult('MOMO-1')
+
+    expect(apiClient.get).toHaveBeenCalledWith('/bank/attempts/MOMO-1/result')
+  })
+
+  it('reads the payment return hint and strips it from the URL', () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/contracts/c-1?payment=succeeded&provider=momo&tab=1'
+    )
+
+    expect(readPaymentReturnParam()).toBe('succeeded')
+    stripPaymentReturnParam()
+    expect(window.location.search).toBe('?tab=1')
+    expect(readPaymentReturnParam()).toBeNull()
   })
 })

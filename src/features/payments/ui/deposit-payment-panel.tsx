@@ -13,8 +13,13 @@ import type { ContractDepositView } from '@/features/contracts/api/contracts-api
 import {
   consentDepositAgreement,
   initDepositPayment,
+  isExternalGateway,
 } from '../api/payments-api'
 import type { PaymentInit } from '../api/payments-api'
+import {
+  PaymentProviderPicker,
+  usePaymentProviders,
+} from './payment-provider-picker'
 
 export interface DepositPaymentPanelProps {
   deposit: ContractDepositView | null
@@ -40,6 +45,9 @@ export function DepositPaymentPanel({
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null)
   const [paymentRequest, setPaymentRequest] = useState<PaymentInit | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const { providers, selected, setSelected } = usePaymentProviders()
+  const selectedLabel =
+    providers.find(option => option.provider === selected)?.label ?? 'Mock Bank'
 
   if (!deposit) {
     return (
@@ -74,8 +82,11 @@ export function DepositPaymentPanel({
     try {
       setLoading(true)
       setErrorMsg(null)
-      const res = await initDepositPayment(targetAgreementId)
-      if (res.provider === 'vnpay' && res.deepLink) {
+      const res = await initDepositPayment(targetAgreementId, {
+        provider: selected,
+      })
+      if (isExternalGateway(res) && res.deepLink) {
+        // Real gateway page; the return URL brings the tenant back here.
         window.location.assign(res.deepLink)
       } else if (res.deepLink) {
         setPaymentRequest(res)
@@ -181,13 +192,15 @@ export function DepositPaymentPanel({
         </div>
 
         {/* PoC Mock Bank Simulation Note */}
-        <div className="flex items-start gap-2 p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-xs text-[var(--fg)]">
-          <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
-          <p className="text-[11px] leading-relaxed">
-            {deposit.mockSimulationNotice ||
-              'Môi trường thử nghiệm PoC: Thanh toán cọc qua ngân hàng mô phỏng để bảo đảm an toàn giao dịch trước khi kích hoạt quy trình ký e-Consent.'}
-          </p>
-        </div>
+        {selected === 'mock-bank' ? (
+          <div className="flex items-start gap-2 p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-xs text-[var(--fg)]">
+            <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
+            <p className="text-[11px] leading-relaxed">
+              {deposit.mockSimulationNotice ||
+                'Môi trường thử nghiệm PoC: Thanh toán cọc qua ngân hàng mô phỏng để bảo đảm an toàn giao dịch trước khi kích hoạt quy trình ký e-Consent.'}
+            </p>
+          </div>
+        ) : null}
 
         {/* Paid Details */}
         {isPaid && (
@@ -231,6 +244,12 @@ export function DepositPaymentPanel({
 
             {isTenant && hasConsent ? (
               <div className="flex flex-col gap-2">
+                <PaymentProviderPicker
+                  providers={providers}
+                  value={selected}
+                  onChange={setSelected}
+                  disabled={loading || consenting}
+                />
                 <button
                   type="button"
                   onClick={handleInitPayment}
@@ -242,7 +261,7 @@ export function DepositPaymentPanel({
                   <span>
                     {loading
                       ? 'Đang tạo giao dịch...'
-                      : 'Thanh toán cọc ngay (Mock Bank)'}
+                      : `Thanh toán cọc ngay (${selectedLabel})`}
                   </span>
                 </button>
 
