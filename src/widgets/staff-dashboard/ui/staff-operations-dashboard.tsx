@@ -13,7 +13,9 @@ import { SafetyReportsView } from './views/safety-reports-view'
 import { SupportQueueView } from './views/support-queue-view'
 import { ApartmentManagementView } from './views/apartment-management-view'
 import { RecommendationEngineView } from './views/recommendation-engine-view'
+import { FabricAuditView } from './views/fabric-audit-view'
 import {
+  Blocks,
   LifeBuoy,
   ShieldAlert,
   Building2,
@@ -36,6 +38,7 @@ type TabType =
   | 'safety-reports'
   | 'support-tickets'
   | 'ai-engine'
+  | 'fabric-audit'
 
 const STAFF_TABS: readonly TabType[] = [
   'overview',
@@ -49,9 +52,10 @@ const STAFF_TABS: readonly TabType[] = [
   'safety-reports',
   'support-tickets',
   'ai-engine',
+  'fabric-audit',
 ]
 
-function resolveStaffTab(pathname: string): TabType {
+export function resolveStaffTab(pathname: string): TabType {
   const section = pathname.split('/')[2]
   return STAFF_TABS.includes(section as TabType)
     ? (section as TabType)
@@ -209,6 +213,12 @@ export function StaffOperationsDashboard({
     },
   ]
 
+  sidebarItems.push({
+    type: 'fabric-audit',
+    label: 'Fabric Audit Center',
+    icon: <Blocks className="h-[18px] w-[18px]" aria-hidden="true" />,
+  })
+
   // Only administrators can access and configure the AI Recommendation Engine
   if (initialUser?.roles?.includes('admin')) {
     sidebarItems.push({
@@ -266,6 +276,8 @@ export function StaffOperationsDashboard({
         return <SupportQueueView />
       case 'ai-engine':
         return <RecommendationEngineView />
+      case 'fabric-audit':
+        return <FabricAuditView />
       default:
         return <HomeView onNavigateTab={handleSidebarItemClick} />
     }

@@ -1,0 +1,25 @@
+▲ Next.js 16.2.7 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://localhost:3000
+✓ Ready in 576ms
+Creating turbopack project { dir: 'E:\\KLTN\\New_Code\\th-proptech\\frontend', testMode: true }
+
+ HEAD / 200 in 541ms (next.js: 188ms, application-code: 352ms)
+ GET /admin/fees 200 in 761ms (next.js: 547ms, application-code: 215ms)
+ GET /admin/contract-layouts 200 in 61ms (next.js: 11ms, application-code: 50ms)
+ GET /contracts/contract-1 200 in 610ms (next.js: 529ms, application-code: 81ms)
+ GET /contracts/contract-1/steps/move-in 200 in 692ms (next.js: 589ms, application-code: 103ms)
+ GET /admin/fabric-audit 200 in 70ms (next.js: 21ms, application-code: 49ms)
+ GET /admin/fabric-audit?tab=reconciliation 200 in 44ms (next.js: 4ms, application-code: 39ms)
+ GET / 200 in 89ms (next.js: 4ms, application-code: 84ms)
+ GET /process 200 in 121ms (next.js: 25ms, application-code: 96ms)
+ GET /process 200 in 56ms (next.js: 5ms, application-code: 51ms)
+ GET /admin/ownership-transfer 200 in 52ms (next.js: 9ms, application-code: 43ms)
+ GET /properties/apt-1 200 in 739ms (next.js: 574ms, application-code: 166ms)
+ GET /properties/apt-1/apply 200 in 575ms (next.js: 548ms, application-code: 27ms)
+ GET /properties/apt-1 200 in 61ms (next.js: 9ms, application-code: 52ms)
+ GET /properties/apt-1/apply 200 in 35ms (next.js: 10ms, application-code: 25ms)
+ GET /properties/apt-1 200 in 79ms (next.js: 9ms, application-code: 69ms)
+ GET /properties/apt-1/apply 200 in 36ms (next.js: 10ms, application-code: 26ms)
+ GET /properties/apt-1 200 in 75ms (next.js: 9ms, application-code: 66ms)
+[?25h

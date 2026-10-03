@@ -386,4 +386,58 @@ test.describe('Contract workspace flow (DEPOSIT_FIRST, route mock)', () => {
     await expect(page.getByTestId('move-in-settlement-panel')).toBeVisible()
     await expect(page.getByTestId('contract-step-guard')).toHaveCount(0)
   })
+
+  test('participant downloads the evidence package from the Fabric ledger step', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        'user',
+        JSON.stringify({ id: 'tenant-1', roles: ['tenant'] })
+      )
+    })
+    const viewState = buildContractView({
+      depositStatus: 'paid',
+      consentGiven: true,
+      contractStatus: 'active',
+      tenantSigned: true,
+      landlordSigned: true,
+      ledgerStatus: 'confirmed-simulation',
+      ledgerTxHash: 'tx-evidence-1',
+      stages: [
+        stage('document', 'done'),
+        stage('deposit', 'done'),
+        stage('signing', 'done'),
+        stage('ledger', 'active'),
+      ],
+      activeStage: 'ledger',
+      nextActions: [],
+    })
+    await page.route(`**/contracts/${CONTRACT_ID}/view`, route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, data: viewState, error: null }),
+      })
+    )
+    await mockAuditEvents(page)
+    await page.route(`**/contracts/${CONTRACT_ID}/evidence-package`, route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/zip',
+        headers: {
+          'content-disposition':
+            'attachment; filename="evidence-HD-2030-001-r1.zip"',
+        },
+        body: 'fixture zip bytes',
+      })
+    )
+
+    await page.goto(`/contracts/${CONTRACT_ID}`)
+    const download = page.waitForEvent('download')
+    await page.getByRole('button', { name: 'Tải gói bằng chứng' }).click()
+    expect((await download).suggestedFilename()).toBe(
+      'evidence-package-contract-1.zip'
+    )
+  })
 })

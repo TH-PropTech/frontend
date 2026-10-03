@@ -8,6 +8,11 @@ import {
   type LedgerEvidenceEvent,
 } from '../api/contracts-api'
 import {
+  deriveGovernanceReference,
+  layerStateLabel,
+  ledgerEventPresentation,
+} from '../lib/ledger-evidence-view'
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -36,6 +41,7 @@ function eventLabel(event: LedgerEvidenceEvent): string {
 
 function EvidenceRow({ event }: { event: LedgerEvidenceEvent }) {
   const [copied, setCopied] = React.useState(false)
+  const presentation = ledgerEventPresentation(event)
 
   const copyTx = async () => {
     if (!event.txId) return
@@ -55,17 +61,21 @@ function EvidenceRow({ event }: { event: LedgerEvidenceEvent }) {
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold text-[var(--fg)]">
-          {event.eventType}
+          {presentation.title}
         </span>
         <span className="text-[var(--muted)]">{eventLabel(event)}</span>
       </div>
       <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--muted)]">
         <span>
-          Aggregate: {event.aggregateType}:{event.aggregateRef}
+          Aggregate: {presentation.aggregateLabel}:{event.aggregateRef}
         </span>
         <span>{formatRecordedAt(event.recordedAt)}</span>
-        <span>Network: {event.networkMode}</span>
-        <span>Block: {event.blockNumber ?? '—'}</span>
+        <span>
+          Network: {event.networkMode === 'simulation' ? 'Mô phỏng' : 'Fabric'}
+        </span>
+        {presentation.blockLabel ? (
+          <span>Block: {presentation.blockLabel}</span>
+        ) : null}
       </div>
       <div className="flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-[var(--fg)]">
@@ -135,6 +145,10 @@ export function LedgerEvidenceDrawer({
     }
   }, [contractId, open])
 
+  const governanceReference = data
+    ? deriveGovernanceReference(data.events)
+    : null
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -171,6 +185,19 @@ export function LedgerEvidenceDrawer({
                     : 'Hyperledger Fabric'}
                 </span>
                 <span>{data.events.length} sự kiện</span>
+              </div>
+              <div
+                data-testid="ledger-governance-reference"
+                className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-3 text-xs text-[var(--muted)]"
+              >
+                <span className="font-semibold text-[var(--fg)]">
+                  Governance snapshot: {governanceReference?.snapshotRef ?? '—'}
+                </span>
+                <span className="ml-2">
+                  {layerStateLabel(
+                    governanceReference?.state ?? 'not-recorded'
+                  )}
+                </span>
               </div>
               <ul className="space-y-2">
                 {data.events.map(event => (

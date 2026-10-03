@@ -5,6 +5,7 @@ import type { Route } from 'next'
 import {
   Activity,
   ArrowRightLeft,
+  Blocks,
   Cpu,
   DollarSign,
   LayoutTemplate,
@@ -16,6 +17,7 @@ import { PermissionMatrixView } from './views/permission-matrix-view'
 import { PoliciesView } from './views/policies-view'
 import { RentalFlowControlView } from './views/rental-flow-control-view'
 import { RecommendationEngineView } from './views/recommendation-engine-view'
+import { FabricAuditView } from './views/fabric-audit-view'
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -36,6 +38,7 @@ type TabType =
   | 'contract-layouts'
   | 'fees'
   | 'rental-ops'
+  | 'fabric-audit'
 
 const ADMIN_TABS: readonly TabType[] = [
   'overview',
@@ -49,6 +52,7 @@ const ADMIN_TABS: readonly TabType[] = [
   'contract-layouts',
   'fees',
   'rental-ops',
+  'fabric-audit',
 ]
 
 export function resolveAdminTab(pathname: string): TabType {
@@ -225,6 +229,11 @@ export function AdminDashboard({
       label: 'Vận hành giao dịch thuê',
       icon: <Activity className="h-[18px] w-[18px]" aria-hidden="true" />,
     },
+    {
+      type: 'fabric-audit',
+      label: 'Fabric Audit Center',
+      icon: <Blocks className="h-[18px] w-[18px]" aria-hidden="true" />,
+    },
   ]
 
   const handleSidebarItemClick = (type: TabType): void => {
@@ -280,6 +289,8 @@ export function AdminDashboard({
         )
       case 'rental-ops':
         return <StuckTransactionsView />
+      case 'fabric-audit':
+        return <FabricAuditView />
       default:
         return <OverviewView />
     }

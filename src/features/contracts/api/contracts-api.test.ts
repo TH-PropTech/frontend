@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { apiClient } from '@/shared/api'
 import {
   downloadContractArtifact,
+  downloadContractEvidencePackage,
   getContractLedgerEvidence,
   issueSigningGrant,
   lockContractContent,
@@ -16,6 +17,7 @@ vi.mock('@/shared/api', () => ({
     post: vi.fn(),
     put: vi.fn(),
     getBlob: vi.fn(),
+    getFile: vi.fn(),
   },
 }))
 
@@ -163,6 +165,36 @@ describe('contracts API', () => {
     )
     expect(apiClient.getBlob).toHaveBeenCalledWith(
       '/contracts/c1/amendments/a1/artifact'
+    )
+  })
+
+  it('downloads the evidence package as a binary file from the participant-scoped endpoint', async () => {
+    const blob = new Blob(['zip'], { type: 'application/zip' })
+    vi.mocked(apiClient.getFile).mockResolvedValue({
+      blob,
+      filename: 'evidence.zip',
+      contentType: 'application/zip',
+    })
+
+    const result = await downloadContractEvidencePackage('contract-1')
+
+    expect(apiClient.getFile).toHaveBeenCalledWith(
+      '/contracts/contract-1/evidence-package'
+    )
+    expect(result.blob).toBe(blob)
+    expect(result.filename).toBe('evidence.zip')
+    expect(apiClient.get).not.toHaveBeenCalled()
+  })
+
+  it('encodes the contract id in the evidence package path', async () => {
+    vi.mocked(apiClient.getFile).mockResolvedValue({
+      blob: new Blob(['zip']),
+      filename: null,
+      contentType: null,
+    })
+    await downloadContractEvidencePackage('a/b')
+    expect(apiClient.getFile).toHaveBeenCalledWith(
+      '/contracts/a%2Fb/evidence-package'
     )
   })
 })

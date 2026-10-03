@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api'
+import type { ApiFile } from '@/shared/api'
 
 export type ContractStatus =
   | 'draft'
@@ -748,6 +749,14 @@ export async function downloadContractArtifact(
   format: 'pdf' | 'docx' = 'pdf'
 ): Promise<Blob> {
   return apiClient.getBlob(`/contracts/${contractId}/pdf?format=${format}`)
+}
+
+export async function downloadContractEvidencePackage(
+  contractId: string
+): Promise<ApiFile> {
+  return apiClient.getFile(
+    `/contracts/${encodeURIComponent(contractId)}/evidence-package`
+  )
 }
 
 export async function getAdminContractEditor(

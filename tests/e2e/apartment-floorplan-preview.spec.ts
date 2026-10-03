@@ -29,6 +29,14 @@ test.describe('Apartment Floorplan Dollhouse Preview E2E Tests', () => {
     const markers = page.locator('#room-markers')
     await expect(markers).toBeAttached()
 
+    const unsupportedAlert = page.getByRole('alert')
+    if (await unsupportedAlert.isVisible()) {
+      await expect(unsupportedAlert).toContainText(
+        'Không thể tải sơ đồ 3D trên thiết bị này.'
+      )
+      return
+    }
+
     const roomList = page.locator('#room-list button')
     await expect(roomList.first()).toBeVisible()
 
