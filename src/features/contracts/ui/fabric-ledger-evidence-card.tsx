@@ -14,6 +14,13 @@ import {
   RefreshCw,
   ShieldCheck,
 } from 'lucide-react'
+import {
+  layerStateLabel,
+  normalizeLayerStatus,
+  resolveIntegrityState,
+  type VerificationLayerState,
+} from '../lib/ledger-evidence-view'
+import { EvidencePackageDownload } from './evidence-package-download'
 import { LedgerEvidenceDrawer } from './ledger-evidence-drawer'
 
 export interface FabricLedgerEvidenceCardProps {
@@ -30,7 +37,13 @@ export interface FabricLedgerEvidenceCardProps {
   isVerifying?: boolean
   integrityResult?: {
     isValid: boolean | null
-    verificationStatus?: 'valid' | 'invalid' | 'not-recorded' | 'unavailable'
+    verificationStatus?:
+      | 'valid'
+      | 'verified'
+      | 'invalid'
+      | 'mismatch'
+      | 'not-recorded'
+      | 'unavailable'
     message?: string
     layers?: {
       offChain: IntegrityLayerView
@@ -41,7 +54,7 @@ export interface FabricLedgerEvidenceCardProps {
 }
 
 interface IntegrityLayerView {
-  status: 'valid' | 'mismatch' | 'unavailable' | 'not-recorded'
+  status: string
   hash: string | null
   reason: string | null
 }
@@ -73,6 +86,41 @@ function truncateString(
   return `${str.slice(0, startChars)}...${str.slice(-endChars)}`
 }
 
+function integrityBanner(state: VerificationLayerState): {
+  title: string
+  message: string
+  tone: 'success' | 'warning' | 'danger'
+} {
+  switch (state) {
+    case 'verified':
+      return {
+        title: 'Xác thực toàn vẹn thành công',
+        message:
+          'Mã băm văn bản hợp đồng khớp với dữ liệu đã cam kết trên Hyperledger Fabric.',
+        tone: 'success',
+      }
+    case 'mismatch':
+      return {
+        title: 'Cảnh báo sai lệch toàn vẹn dữ liệu',
+        message:
+          'Phát hiện sai lệch giữa nội dung văn bản hiện tại và dữ liệu đã cam kết trên sổ cái.',
+        tone: 'danger',
+      }
+    case 'not-recorded':
+      return {
+        title: 'Chưa có bản ghi',
+        message: 'Bằng chứng này chưa được ghi nhận trên sổ cái.',
+        tone: 'warning',
+      }
+    default:
+      return {
+        title: 'Chưa thể xác minh',
+        message: 'Không thể truy vấn sổ cái tại thời điểm này.',
+        tone: 'warning',
+      }
+  }
+}
+
 export function FabricLedgerEvidenceCard({
   contractId,
   contractHash,
@@ -91,6 +139,10 @@ export function FabricLedgerEvidenceCard({
   const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false)
 
   const isSimulation = networkMode === 'simulation'
+  const integrityState = integrityResult
+    ? resolveIntegrityState(integrityResult)
+    : null
+  const banner = integrityState ? integrityBanner(integrityState) : null
 
   const handleCopyTx = async () => {
     if (!txHash) return
@@ -201,10 +253,10 @@ export function FabricLedgerEvidenceCard({
                 data-testid="fabric-block-number"
                 className="font-mono font-bold text-[var(--fg)] text-xs truncate"
               >
-                {blockNumber != null
-                  ? `#${blockNumber}`
-                  : isSimulation
-                    ? 'Mô phỏng'
+                {isSimulation
+                  ? 'Mô phỏng'
+                  : blockNumber != null
+                    ? `#${blockNumber}`
                     : 'Đang xử lý...'}
               </span>
             </div>
@@ -303,31 +355,26 @@ export function FabricLedgerEvidenceCard({
       </div>
 
       {/* Integrity Verification Result Banner */}
-      {integrityResult && (
+      {integrityResult && banner && (
         <div
           data-testid="integrity-result-banner"
           className={`flex items-start gap-2 p-3 rounded-lg border text-xs ${
-            integrityResult.isValid
+            banner.tone === 'success'
               ? 'border-[var(--success)] bg-[var(--surface-muted)] text-[var(--success)]'
-              : 'border-[var(--danger)] bg-[var(--surface-muted)] text-[var(--danger)]'
+              : banner.tone === 'danger'
+                ? 'border-[var(--danger)] bg-[var(--surface-muted)] text-[var(--danger)]'
+                : 'border-[var(--warning)] bg-[var(--surface-muted)] text-[var(--warning)]'
           }`}
         >
-          {integrityResult.isValid ? (
+          {banner.tone === 'success' ? (
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
           ) : (
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
           )}
           <div className="flex flex-col">
-            <span className="font-bold">
-              {integrityResult.isValid
-                ? 'Xác thực toàn vẹn thành công'
-                : 'Cảnh báo sai lệch toàn vẹn dữ liệu'}
-            </span>
+            <span className="font-bold">{banner.title}</span>
             <span className="text-[11px] text-[var(--muted)] mt-0.5">
-              {integrityResult.message ||
-                (integrityResult.isValid
-                  ? 'Mã băm văn bản hợp đồng khớp 100% với dữ liệu bất biến được cam kết trên khối sổ cái Hyperledger Fabric.'
-                  : 'Phát hiện sai lệch giữa nội dung văn bản hiện tại và dữ liệu đã cam kết trên sổ cái chuỗi khối.')}
+              {integrityResult.message || banner.message}
             </span>
           </div>
         </div>
@@ -360,7 +407,7 @@ export function FabricLedgerEvidenceCard({
                     data-testid={`integrity-layer-${key}`}
                     className="mt-1 font-mono text-[var(--muted)]"
                   >
-                    {layer?.status ?? 'unavailable'}
+                    {layerStateLabel(normalizeLayerStatus(layer?.status))}
                   </div>
                   {layer?.reason ? (
                     <p className="mt-1 text-[10px] text-[var(--muted)]">
@@ -382,6 +429,7 @@ export function FabricLedgerEvidenceCard({
       >
         Xem chi tiết sổ cái
       </button>
+      <EvidencePackageDownload contractId={contractId} />
       <LedgerEvidenceDrawer
         contractId={contractId}
         open={isEvidenceOpen}

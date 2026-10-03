@@ -79,15 +79,18 @@ test('completes the admin preview-confirm-result flow without credentials', asyn
   )
 
   await page.goto('/admin/ownership-transfer')
-  await expect(page.getByTestId('ownership-transfer-panel')).toBeVisible()
+  const transferPanel = page.getByTestId('ownership-transfer-panel')
+  await expect(transferPanel).toBeVisible()
 
-  await page
+  await transferPanel
     .locator('#ownership-transfer-target-email')
     .fill('owner@example.com')
-  await page.getByTestId('ownership-transfer-preview-button').click()
-  await expect(page.getByTestId('ownership-transfer-preview')).toBeVisible()
+  await transferPanel.getByTestId('ownership-transfer-preview-button').click()
+  await expect(
+    transferPanel.getByTestId('ownership-transfer-preview')
+  ).toBeVisible()
 
-  await page.getByTestId('ownership-transfer-confirm-open').click()
+  await transferPanel.getByTestId('ownership-transfer-confirm-open').click()
   await expect(page.getByRole('alertdialog')).toBeVisible()
   await page.getByTestId('ownership-transfer-confirm-submit').click()
 

@@ -5,7 +5,7 @@ test('renders the home dashboard', async ({ page }) => {
 
   await expect(
     page.getByRole('heading', {
-      name: /frontend foundation for scalable property workflows/i,
+      name: /Tìm căn hộ phù hợp, minh bạch từng bước/i,
     })
   ).toBeVisible()
 })

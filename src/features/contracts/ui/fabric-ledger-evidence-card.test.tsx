@@ -143,10 +143,10 @@ describe('FabricLedgerEvidenceCard', () => {
 
     expect(screen.getByTestId('integrity-layers')).toBeDefined()
     expect(screen.getByTestId('integrity-layer-offChain')).toHaveTextContent(
-      'valid'
+      'Đã xác minh'
     )
     expect(screen.getByTestId('integrity-layer-artifact')).toHaveTextContent(
-      'unavailable'
+      'Không khả dụng'
     )
     expect(screen.getByText('Artifact chưa được lưu')).toBeDefined()
   })
@@ -165,5 +165,121 @@ describe('FabricLedgerEvidenceCard', () => {
     expect(screen.getByTestId('fabric-ledger-evidence-card')).toBeDefined()
     expect(screen.queryByTestId('copy-tx-btn')).toBeNull()
     expect(screen.queryByTestId('copy-hash-btn')).toBeNull()
+  })
+})
+
+describe('FabricLedgerEvidenceCard tri-state verification', () => {
+  const layers = (
+    offChain: string,
+    artifact: string,
+    onChain: string,
+    reason: string | null = null
+  ) => ({
+    offChain: { status: offChain, hash: null, reason: null },
+    artifact: { status: artifact, hash: null, reason: null },
+    onChain: { status: onChain, hash: null, reason },
+  })
+
+  function renderWithLayers(
+    isValid: boolean | null,
+    verificationStatus: 'valid' | 'invalid' | 'not-recorded' | 'unavailable',
+    layerSet: ReturnType<typeof layers>
+  ) {
+    return render(
+      <FabricLedgerEvidenceCard
+        contractId="ctr-1"
+        integrityResult={{
+          isValid,
+          verificationStatus,
+          layers: layerSet as never,
+        }}
+      />
+    )
+  }
+
+  it('labels verified, mismatch, unavailable and not-recorded layers distinctly', () => {
+    renderWithLayers(
+      false,
+      'invalid',
+      layers('valid', 'mismatch', 'unavailable') as ReturnType<typeof layers>
+    )
+    expect(screen.getByTestId('integrity-layer-offChain')).toHaveTextContent(
+      'Đã xác minh'
+    )
+    expect(screen.getByTestId('integrity-layer-artifact')).toHaveTextContent(
+      'Sai lệch'
+    )
+    expect(screen.getByTestId('integrity-layer-onChain')).toHaveTextContent(
+      'Không khả dụng'
+    )
+  })
+
+  it('accepts the spec status "verified" as well as the legacy "valid"', () => {
+    renderWithLayers(true, 'valid', layers('verified', 'valid', 'not-recorded'))
+    expect(screen.getByTestId('integrity-layer-offChain')).toHaveTextContent(
+      'Đã xác minh'
+    )
+    expect(screen.getByTestId('integrity-layer-artifact')).toHaveTextContent(
+      'Đã xác minh'
+    )
+    expect(screen.getByTestId('integrity-layer-onChain')).toHaveTextContent(
+      'Chưa ghi nhận'
+    )
+  })
+
+  it('never reports an unknown layer status as a mismatch', () => {
+    renderWithLayers(
+      null,
+      'unavailable',
+      layers('valid', 'valid', 'future-state')
+    )
+    const onChain = screen.getByTestId('integrity-layer-onChain')
+    expect(onChain).toHaveTextContent('Không khả dụng')
+    expect(onChain).not.toHaveTextContent('Sai lệch')
+  })
+
+  it('does not claim a mismatch (or success) when verification is unavailable', () => {
+    renderWithLayers(
+      null,
+      'unavailable',
+      layers('valid', 'valid', 'unavailable')
+    )
+    const banner = screen.getByTestId('integrity-result-banner')
+    expect(banner).toHaveTextContent('Chưa thể xác minh')
+    expect(banner).not.toHaveTextContent('sai lệch')
+    expect(banner).not.toHaveTextContent('thành công')
+  })
+
+  it('reports not-recorded evidence without calling it a mismatch', () => {
+    renderWithLayers(
+      null,
+      'not-recorded',
+      layers('valid', 'not-recorded', 'not-recorded')
+    )
+    const banner = screen.getByTestId('integrity-result-banner')
+    expect(banner).toHaveTextContent('Chưa có bản ghi')
+    expect(banner).not.toHaveTextContent('sai lệch')
+  })
+
+  it('keeps simulation labelled and shows no Fabric block', () => {
+    render(
+      <FabricLedgerEvidenceCard
+        contractId="ctr-1"
+        networkMode="simulation"
+        blockNumber={123}
+      />
+    )
+    expect(screen.getByTestId('network-mode-simulation')).toBeInTheDocument()
+    expect(screen.getByTestId('fabric-block-number')).toHaveTextContent(
+      'Mô phỏng'
+    )
+    expect(screen.queryByText('#123')).toBeNull()
+  })
+
+  it('offers the evidence package download for the current contract', () => {
+    render(<FabricLedgerEvidenceCard contractId="ctr-1" />)
+    expect(
+      screen.getByRole('button', { name: /Tải gói bằng chứng/ })
+    ).toBeInTheDocument()
   })
 })

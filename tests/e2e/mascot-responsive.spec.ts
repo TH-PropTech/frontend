@@ -7,6 +7,8 @@ test.describe('Mascot Responsive & Session E2E Tests', () => {
     // Go to the process guide page
     await page.goto('/process')
 
+    await page.getByRole('button', { name: /Sản phẩm & Dịch vụ/i }).click()
+
     // The AI Guide Bot should be visible by default
     const guideBot = page.locator('.checklist-box')
     await expect(guideBot).toBeVisible()
@@ -32,6 +34,8 @@ test.describe('Mascot Responsive & Session E2E Tests', () => {
     await page.setViewportSize({ width: 375, height: 812 })
 
     await page.goto('/process')
+
+    await page.getByRole('button', { name: /Sản phẩm & Dịch vụ/i }).click()
 
     // On mobile, the desktop track is hidden
     const desktopMascot = page.locator('#mascot-track-col')

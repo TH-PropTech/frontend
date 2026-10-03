@@ -1,4 +1,5 @@
 import { env } from '@/shared/config/env'
+import { parseContentDispositionFilename } from './content-disposition'
 import type { ApiErrorBody, ApiResponse } from './api-response'
 
 type ApiClientOptions = {
@@ -11,6 +12,13 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
 }
 
 type PostOptions = Omit<RequestOptions, 'body' | 'method'>
+
+export type ApiFile = {
+  blob: Blob
+  contentType: string | null
+  /** Filename advertised by `Content-Disposition`, or null when it is absent/unreadable. */
+  filename: string | null
+}
 
 export class ApiClientError extends Error {
   constructor(
@@ -75,6 +83,37 @@ export class ApiClient {
       )
     }
     return response.blob()
+  }
+
+  /**
+   * Downloads a binary response (for example an evidence ZIP) without interpreting its bytes.
+   * A failed download keeps the stable JSON error envelope so callers can map domain codes.
+   */
+  async getFile(path: string): Promise<ApiFile> {
+    const headers = new Headers({
+      Accept: 'application/zip, application/octet-stream, application/json',
+    })
+    const token = this.getAccessToken?.()
+    if (token) headers.set('Authorization', `Bearer ${token}`)
+    const response = await fetchWithNetworkError(
+      createApiUrl(this.baseUrl, path),
+      { headers }
+    )
+    if (!response.ok) {
+      const body = await readErrorBody(response)
+      throw new ApiClientError(
+        body?.message ?? 'Không thể tải tệp được bảo vệ',
+        response.status,
+        body
+      )
+    }
+    return {
+      blob: await response.blob(),
+      contentType: response.headers.get('Content-Type'),
+      filename: parseContentDispositionFilename(
+        response.headers.get('Content-Disposition')
+      ),
+    }
   }
 
   private async request<TData>(
@@ -196,6 +235,15 @@ export function createApiUrl(baseUrl: string, path: string): string {
   const normalizedPath = path.startsWith('/') ? path.slice(1) : path
 
   return new URL(normalizedPath, normalizedBase).toString()
+}
+
+async function readErrorBody(response: Response): Promise<ApiErrorBody | null> {
+  try {
+    const payload = (await response.json()) as Partial<ApiResponse<unknown>>
+    return payload.error ?? null
+  } catch {
+    return null
+  }
 }
 
 async function fetchWithNetworkError(
