@@ -17,6 +17,24 @@ import {
   type ContractAuditEventDto,
   type ContractIntegrityResult,
 } from '@/features/contracts'
+import {
+  readPaymentReturnParam,
+  stripPaymentReturnParam,
+  type PaymentReturnStatus,
+} from '@/features/payments'
+
+/** Notice shown after a gateway return; paid state comes only from the server view. */
+export function paymentReturnNotice(
+  hint: PaymentReturnStatus,
+  depositStatus: string | null | undefined
+): string {
+  if (depositStatus === 'paid' || depositStatus === 'transferred') {
+    return 'Thanh toán đã được hệ thống xác nhận.'
+  }
+  return hint === 'succeeded'
+    ? 'Đã quay lại từ cổng thanh toán. Hệ thống đang chờ cổng xác nhận giao dịch; trạng thái sẽ tự cập nhật.'
+    : 'Thanh toán chưa hoàn tất hoặc đã bị hủy. Bạn có thể thử lại.'
+}
 
 export interface UseContractWorkspaceOptions {
   contractId: string
@@ -78,7 +96,18 @@ export function useContractWorkspace({
     verificationStatus?: 'valid' | 'invalid' | 'not-recorded' | 'unavailable'
     message?: string
   } | null>(null)
-  const [noticeMessage, setNoticeMessage] = useState<string | null>(null)
+  const [explicitNotice, setExplicitNotice] = useState<string | null>(null)
+  // Gateway return hint (?payment=): read once, then strip it from the URL.
+  // The notice itself is derived from the server view below.
+  const [paymentReturn, setPaymentReturn] =
+    useState<PaymentReturnStatus | null>(readPaymentReturnParam)
+  useEffect(() => {
+    if (paymentReturn) stripPaymentReturnParam()
+  }, [paymentReturn])
+  const setNoticeMessage = useCallback((message: string | null): void => {
+    setPaymentReturn(null)
+    setExplicitNotice(message)
+  }, [])
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -143,6 +172,12 @@ export function useContractWorkspace({
       active = false
     }
   }, [contractId])
+
+  const noticeMessage =
+    explicitNotice ??
+    (paymentReturn && data
+      ? paymentReturnNotice(paymentReturn, data.deposit?.status)
+      : null)
 
   /** Làm mới nền: không bật spinner toàn trang, không remount panel. */
   const refresh = useCallback(() => loadData(true), [loadData])

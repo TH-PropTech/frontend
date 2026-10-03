@@ -4,10 +4,21 @@ import { DepositPaymentPanel } from './deposit-payment-panel'
 import type { ContractDepositView } from '@/features/contracts/api/contracts-api'
 import * as paymentsApi from '../api/payments-api'
 
-vi.mock('../api/payments-api', () => ({
-  consentDepositAgreement: vi.fn(),
-  initDepositPayment: vi.fn(),
-}))
+vi.mock('../api/payments-api', async importOriginal => {
+  const actual = await importOriginal<typeof import('../api/payments-api')>()
+  return {
+    consentDepositAgreement: vi.fn(),
+    initDepositPayment: vi.fn(),
+    getPaymentProviders: vi.fn().mockResolvedValue([
+      {
+        provider: 'mock-bank',
+        label: 'Mock Bank (sandbox)',
+        simulation: true,
+      },
+    ]),
+    isExternalGateway: actual.isExternalGateway,
+  }
+})
 
 describe('DepositPaymentPanel', () => {
   const originalLocation = window.location
@@ -96,7 +107,9 @@ describe('DepositPaymentPanel', () => {
     const payBtn = screen.getByLabelText('Thanh toán cọc ngay')
     fireEvent.click(payBtn)
 
-    expect(paymentsApi.initDepositPayment).toHaveBeenCalledWith('dpa-123')
+    expect(paymentsApi.initDepositPayment).toHaveBeenCalledWith('dpa-123', {
+      provider: 'mock-bank',
+    })
     await waitFor(() => {
       expect(screen.getByText('Mở cổng thanh toán')).toBeInTheDocument()
     })
@@ -308,6 +321,91 @@ describe('DepositPaymentPanel', () => {
       expect(wrapper.className).not.toContain('ring-2')
       expect(wrapper.className).not.toContain('opacity-50')
       expect(wrapper.className).not.toContain('pointer-events-none')
+    })
+  })
+
+  describe('gateway picker', () => {
+    const gateways = [
+      { provider: 'vnpay' as const, label: 'VNPAY', simulation: false },
+      { provider: 'momo' as const, label: 'MoMo', simulation: false },
+      { provider: 'zalopay' as const, label: 'ZaloPay', simulation: false },
+    ]
+
+    it('sends the chosen gateway and redirects to its payment page', async () => {
+      vi.mocked(paymentsApi.getPaymentProviders).mockResolvedValueOnce(gateways)
+      vi.mocked(paymentsApi.initDepositPayment).mockResolvedValue({
+        provider: 'momo',
+        txRef: 'MOMO-1',
+        amount: 15000000,
+        description: 'Deposit',
+        qrCode: 'qr',
+        deepLink: 'https://test-payment.momo.vn/pay?t=1',
+        expiresAt: '2026-03-14T03:00:00Z',
+        status: 'pending',
+      })
+      const assign = vi.fn()
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: { assign },
+      })
+
+      render(
+        <DepositPaymentPanel
+          deposit={mockPendingDeposit}
+          isTenant={true}
+          contractId="c1"
+        />
+      )
+      const momo = await screen.findByLabelText('MoMo')
+      fireEvent.click(momo)
+      fireEvent.click(screen.getByLabelText('Thanh toán cọc ngay'))
+
+      await waitFor(() => {
+        expect(paymentsApi.initDepositPayment).toHaveBeenCalledWith('dpa-123', {
+          provider: 'momo',
+        })
+        expect(assign).toHaveBeenCalledWith(
+          'https://test-payment.momo.vn/pay?t=1'
+        )
+      })
+      expect(screen.queryByText(/ngân hàng mô phỏng/)).toBeNull()
+    })
+
+    it('shows the server error when the gateway is not enabled or unavailable', async () => {
+      vi.mocked(paymentsApi.getPaymentProviders).mockResolvedValueOnce(gateways)
+      vi.mocked(paymentsApi.initDepositPayment).mockRejectedValue(
+        new Error('PAYMENT_GATEWAY_UNAVAILABLE')
+      )
+
+      render(
+        <DepositPaymentPanel
+          deposit={mockPendingDeposit}
+          isTenant={true}
+          contractId="c1"
+        />
+      )
+      await screen.findByLabelText('VNPAY')
+      fireEvent.click(screen.getByLabelText('Thanh toán cọc ngay'))
+
+      expect(
+        await screen.findByText('PAYMENT_GATEWAY_UNAVAILABLE')
+      ).toBeInTheDocument()
+    })
+
+    it('hides the picker when only Mock Bank is enabled', async () => {
+      render(
+        <DepositPaymentPanel
+          deposit={mockPendingDeposit}
+          isTenant={true}
+          contractId="c1"
+        />
+      )
+
+      await waitFor(() =>
+        expect(paymentsApi.getPaymentProviders).toHaveBeenCalled()
+      )
+      expect(screen.queryByTestId('payment-provider-picker')).toBeNull()
+      expect(screen.getByText(/Mock Bank/)).toBeInTheDocument()
     })
   })
 })

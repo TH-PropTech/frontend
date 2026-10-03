@@ -7,18 +7,29 @@ const mocks = vi.hoisted(() => ({
   wallet: vi.fn(),
   initRentPayment: vi.fn(),
   initInvoicePayment: vi.fn(),
+  providers: vi.fn(),
 }))
 
-vi.mock('../api/payments-api', () => ({
-  getPaymentsByContract: mocks.schedule,
-  getLinkedWallet: mocks.wallet,
-  initRentPayment: mocks.initRentPayment,
-  initInvoicePayment: mocks.initInvoicePayment,
-  linkWallet: vi.fn(),
-}))
+vi.mock('../api/payments-api', async importOriginal => {
+  const actual = await importOriginal<typeof import('../api/payments-api')>()
+  return {
+    getPaymentsByContract: mocks.schedule,
+    getLinkedWallet: mocks.wallet,
+    initRentPayment: mocks.initRentPayment,
+    initInvoicePayment: mocks.initInvoicePayment,
+    linkWallet: vi.fn(),
+    getPaymentProviders: mocks.providers,
+    isExternalGateway: actual.isExternalGateway,
+  }
+})
 
 describe('PaymentSchedulePanel', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.providers.mockResolvedValue([
+      { provider: 'mock-bank', label: 'Mock Bank (sandbox)', simulation: true },
+    ])
+  })
 
   it('renders an empty state after loading an unconfigured schedule', async () => {
     mocks.schedule.mockResolvedValue([])
@@ -78,10 +89,62 @@ describe('PaymentSchedulePanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Thanh toán' }))
 
     await waitFor(() =>
-      expect(mocks.initInvoicePayment).toHaveBeenCalledWith('fee-1')
+      expect(mocks.initInvoicePayment).toHaveBeenCalledWith('fee-1', {
+        provider: 'mock-bank',
+      })
     )
     expect(
       screen.getByRole('link', { name: 'Mở ngân hàng mô phỏng' })
     ).toHaveAttribute('href', 'https://bank.example/invoice-ref')
+  })
+
+  it('redirects rent payment to the chosen external gateway', async () => {
+    mocks.providers.mockResolvedValue([
+      { provider: 'zalopay', label: 'ZaloPay', simulation: false },
+    ])
+    mocks.schedule.mockResolvedValue([
+      {
+        _id: 'rent-1',
+        contractId: 'contract-1',
+        amount: 5000000,
+        description: 'Rent 2030-01',
+        dueDate: '2030-01-01T00:00:00.000Z',
+        paidAt: null,
+        status: 'unpaid',
+        type: 'rent',
+        txHash: null,
+        txRef: null,
+        ledgerStatus: 'pending',
+      },
+    ])
+    mocks.wallet.mockResolvedValue({ status: 'linked', balance: null })
+    mocks.initRentPayment.mockResolvedValue({
+      provider: 'zalopay',
+      txRef: '300101_x',
+      deepLink: 'https://qcgateway.zalopay.vn/openinapp?order=x',
+    })
+    const assign = vi.fn()
+    const originalLocation = window.location
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { assign },
+    })
+
+    render(<PaymentSchedulePanel contractId="contract-1" />)
+    await screen.findByLabelText('ZaloPay')
+    fireEvent.click(screen.getByRole('button', { name: 'Thanh toán' }))
+
+    await waitFor(() =>
+      expect(assign).toHaveBeenCalledWith(
+        'https://qcgateway.zalopay.vn/openinapp?order=x'
+      )
+    )
+    expect(mocks.initRentPayment).toHaveBeenCalledWith('rent-1', {
+      provider: 'zalopay',
+    })
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: originalLocation,
+    })
   })
 })

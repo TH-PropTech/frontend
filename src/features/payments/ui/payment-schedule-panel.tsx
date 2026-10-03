@@ -8,10 +8,15 @@ import {
   getPaymentsByContract,
   initInvoicePayment,
   initRentPayment,
+  isExternalGateway,
   linkWallet,
   type LinkedWallet,
   type PaymentItem,
 } from '../api/payments-api'
+import {
+  PaymentProviderPicker,
+  usePaymentProviders,
+} from './payment-provider-picker'
 
 export interface PaymentSchedulePanelProps {
   contractId: string
@@ -32,6 +37,7 @@ export function PaymentSchedulePanel({
   const [lastPaymentUrl, setLastPaymentUrl] = React.useState<string | null>(
     null
   )
+  const { providers, selected, setSelected } = usePaymentProviders()
 
   const load = React.useCallback(async (): Promise<void> => {
     setLoading(true)
@@ -94,10 +100,15 @@ export function PaymentSchedulePanel({
     setBusyPaymentId(payment._id)
     setError(null)
     try {
+      const choice = { provider: selected }
       const init =
         payment.type === 'platform-fee'
-          ? await initInvoicePayment(payment._id)
-          : await initRentPayment(payment._id)
+          ? await initInvoicePayment(payment._id, choice)
+          : await initRentPayment(payment._id, choice)
+      if (isExternalGateway(init) && init.deepLink) {
+        window.location.assign(init.deepLink)
+        return
+      }
       setLastPaymentRef(init.txRef)
       setLastPaymentUrl(init.deepLink)
     } catch (paymentError) {
@@ -164,6 +175,13 @@ export function PaymentSchedulePanel({
           </Button>
         ) : null}
       </div>
+
+      <PaymentProviderPicker
+        providers={providers}
+        value={selected}
+        onChange={setSelected}
+        disabled={busyPaymentId !== null}
+      />
 
       {payments.length === 0 ? (
         <p className="rounded-xl border border-border bg-surface-muted p-4 text-sm text-muted">

@@ -523,4 +523,49 @@ describe('ContractWorkspace', () => {
       ).not.toBeInTheDocument()
     })
   })
+
+  describe('gateway return hint (?payment=)', () => {
+    it('never shows paid when the hint says succeeded but the server says unpaid', async () => {
+      vi.mocked(contractsApi.getContractView).mockResolvedValue({
+        ...mockView,
+        deposit: mockView.deposit
+          ? {
+              ...mockView.deposit,
+              status: 'pending',
+              paidAt: null,
+              txHash: null,
+            }
+          : null,
+      })
+      window.history.replaceState(
+        null,
+        '',
+        '/contracts/c-100?payment=succeeded&provider=vnpay'
+      )
+
+      render(<ContractWorkspace contractId="c-100" />)
+
+      expect(
+        await screen.findByText(/đang chờ cổng xác nhận giao dịch/)
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByText('Thanh toán đã được hệ thống xác nhận.')
+      ).toBeNull()
+      expect(window.location.search).toBe('')
+    })
+
+    it('confirms payment only from the server-reported paid deposit', async () => {
+      window.history.replaceState(
+        null,
+        '',
+        '/contracts/c-100?payment=succeeded'
+      )
+
+      render(<ContractWorkspace contractId="c-100" />)
+
+      expect(
+        await screen.findByText('Thanh toán đã được hệ thống xác nhận.')
+      ).toBeInTheDocument()
+    })
+  })
 })
