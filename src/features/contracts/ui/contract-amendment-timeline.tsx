@@ -59,28 +59,36 @@ export function ContractAmendmentTimeline({
     Record<string, File>
   >({})
 
-  const load = React.useCallback(async (): Promise<void> => {
-    setLoading(true)
-    try {
-      setItems(await getContractAmendments(contractId))
-    } catch (cause: unknown) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : 'Không tải được lịch sử phụ lục.'
-      )
-    } finally {
-      setLoading(false)
-    }
-  }, [contractId])
+  const load = React.useCallback(
+    async (signal?: AbortSignal): Promise<void> => {
+      if (signal?.aborted) return
+      setLoading(true)
+      try {
+        const result = await getContractAmendments(contractId)
+        if (signal?.aborted) return
+        setItems(result)
+      } catch (cause: unknown) {
+        if (signal?.aborted) return
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : 'Không tải được lịch sử phụ lục.'
+        )
+      } finally {
+        if (!signal?.aborted) setLoading(false)
+      }
+    },
+    [contractId]
+  )
 
   React.useEffect(() => {
-    let cancelled = false
-    queueMicrotask(() => {
-      if (!cancelled) void load()
-    })
+    const controller = new AbortController()
+    async function run(): Promise<void> {
+      await load(controller.signal)
+    }
+    void run()
     return () => {
-      cancelled = true
+      controller.abort()
     }
   }, [load])
 
