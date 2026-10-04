@@ -87,11 +87,11 @@ export function HomeHeader(): React.ReactElement {
     <header
       className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
         isLightHeader
-          ? 'border-b border-border bg-surface/80 py-3 shadow-sm backdrop-blur-md'
+          ? 'border-b border-border bg-surface/95 py-3 shadow-sm backdrop-blur-md'
           : 'bg-gradient-to-b from-black/40 to-transparent py-5 text-white'
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 md:px-10">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 md:px-10">
         <Link
           href="/"
           onClick={() => handleTabClick('/')}
@@ -127,7 +127,7 @@ export function HomeHeader(): React.ReactElement {
           })}
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {user ? (
             <Link
               href={'/properties/favorites' as Route}
@@ -238,7 +238,7 @@ export function HomeHeader(): React.ReactElement {
               onClick={() => handleTabClick('/login')}
             >
               <Button
-                className={`h-[44px] rounded-full px-5 py-2.5 text-sm font-bold shadow-[0_12px_32px_rgba(43,33,30,0.15)] transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+                className={`h-[44px] whitespace-nowrap rounded-full px-4 sm:px-5 py-2.5 text-sm font-bold shadow-[0_12px_32px_rgba(43,33,30,0.15)] transition-all hover:-translate-y-0.5 active:translate-y-0 ${
                   isLightHeader
                     ? 'bg-control text-on-control hover:bg-primary-hover active:bg-primary-hover'
                     : 'bg-control text-on-control border border-white/15 hover:bg-primary-hover active:bg-primary-hover'

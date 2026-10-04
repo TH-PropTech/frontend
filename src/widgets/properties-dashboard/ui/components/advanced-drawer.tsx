@@ -315,7 +315,7 @@ export function AdvancedDrawer({
                   <select
                     value={electricityPriceFilter}
                     onChange={e => setElectricityPriceFilter(e.target.value)}
-                    className="px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
+                    className="w-40 px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="all">Tất cả</option>
                     {['Giá nhà nước', 'Giá kinh doanh', 'Tự thỏa thuận'].map(
@@ -332,7 +332,7 @@ export function AdvancedDrawer({
                   <select
                     value={waterPriceFilter}
                     onChange={e => setWaterPriceFilter(e.target.value)}
-                    className="px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
+                    className="w-40 px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="all">Tất cả</option>
                     {['Giá nhà nước', 'Giá kinh doanh', 'Tự thỏa thuận'].map(
@@ -351,7 +351,7 @@ export function AdvancedDrawer({
                   <select
                     value={internetPriceFilter}
                     onChange={e => setInternetPriceFilter(e.target.value)}
-                    className="px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
+                    className="w-40 px-2 py-1.5 font-bold rounded-lg border border-border bg-white focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="all">Tất cả</option>
                     {['Miễn phí', 'Cố định', 'Tự lắp'].map(t => (

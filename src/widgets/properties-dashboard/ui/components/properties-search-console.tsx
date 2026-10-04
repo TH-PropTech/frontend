@@ -86,18 +86,18 @@ export function PropertiesSearchConsole({
   revertLocationFilters,
 }: PropertiesSearchConsoleProps): React.ReactElement {
   return (
-    <section className="mx-auto -mt-10 max-w-5xl px-6 relative z-30">
+    <section className="mx-auto -mt-10 max-w-5xl px-4 sm:px-6 relative z-30">
       <div className="rounded-[24px] lg:rounded-full bg-white border border-border shadow-[0_0_0_1px_rgba(var(--primary-rgb),0.08),0_20px_50px_rgba(var(--fg-rgb),0.12)] p-2">
         <form
           onSubmit={handleSearchSubmit}
-          className={`grid grid-cols-1 items-center w-full gap-3 lg:gap-0 ${
+          className={`grid grid-cols-2 items-center w-full gap-1 lg:gap-0 ${
             activeTab === 'project'
               ? 'lg:grid-cols-[1.5fr_1.2fr_1.2fr_auto_auto]'
               : 'lg:grid-cols-[1.4fr_1.1fr_1fr_1fr_auto_auto]'
           }`}
         >
           {/* Keyword Section */}
-          <div className="flex items-center gap-3 rounded-2xl lg:rounded-none lg:rounded-l-full hover:bg-primary/5 px-5 py-2.5 transition-all cursor-text focus-within:bg-primary/5 lg:border-r lg:border-primary/15">
+          <div className="col-span-2 lg:col-span-1 flex items-center gap-3 rounded-2xl lg:rounded-none lg:rounded-l-full hover:bg-primary/5 px-4 sm:px-5 py-2.5 transition-all cursor-text focus-within:bg-primary/5 lg:border-r lg:border-primary/15">
             <svg
               className="h-5 w-5 text-primary shrink-0"
               fill="none"
@@ -137,7 +137,7 @@ export function PropertiesSearchConsole({
             }}
           >
             <PopoverTrigger asChild>
-              <div className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
+              <div className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-4 sm:px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
                 <svg
                   className="h-5 w-5 text-primary shrink-0"
                   fill="none"
@@ -191,7 +191,7 @@ export function PropertiesSearchConsole({
           {/* Price Range Section */}
           <Popover open={isPriceModalOpen} onOpenChange={setIsPriceModalOpen}>
             <PopoverTrigger asChild>
-              <div className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
+              <div className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-4 sm:px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
                 <svg
                   className="h-5 w-5 text-primary shrink-0"
                   fill="none"
@@ -233,7 +233,7 @@ export function PropertiesSearchConsole({
           {activeTab === 'single' && (
             <Popover open={isAreaModalOpen} onOpenChange={setIsAreaOpen}>
               <PopoverTrigger asChild>
-                <div className="flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
+                <div className="col-span-2 lg:col-span-1 flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-4 sm:px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
                   <svg
                     className="h-5 w-5 text-primary shrink-0"
                     fill="none"
@@ -277,7 +277,7 @@ export function PropertiesSearchConsole({
             <button
               type="button"
               onClick={() => setIsAdvancedDrawerOpen(true)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+              className={`flex min-h-11 items-center gap-2 px-4 py-2.5 lg:min-h-0 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
                 activeFiltersCount > 0
                   ? 'border-primary bg-primary-soft text-primary'
                   : 'border-border bg-white text-muted hover:bg-surface-muted'
