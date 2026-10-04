@@ -204,4 +204,20 @@ describe('BilateralSigningTimeline', () => {
       'whitespace-nowrap'
     )
   })
+  it('draws a single frame when active: ring on the wrapper, no inner border colour', () => {
+    render(
+      <BilateralSigningTimeline
+        tenant={tenantBase}
+        landlord={landlordBase}
+        isActiveStep
+      />
+    )
+
+    expect(
+      screen.getByTestId('bilateral-signing-timeline-wrapper')
+    ).toHaveClass('ring-2')
+    expect(screen.getByTestId('bilateral-signing-timeline')).toHaveClass(
+      'border-transparent'
+    )
+  })
 })

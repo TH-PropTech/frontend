@@ -265,7 +265,8 @@ describe('ContractWorkspace', () => {
     expect(rail).toHaveClass(
       'lg:sticky',
       'lg:max-h-[calc(100vh-2rem)]',
-      'lg:overflow-y-auto'
+      'lg:overflow-y-auto',
+      'lg:p-1'
     )
 
     fireEvent.click(screen.getByLabelText('Mở rộng toàn màn hình'))

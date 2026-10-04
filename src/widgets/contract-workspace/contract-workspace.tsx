@@ -400,7 +400,7 @@ export function ContractWorkspace({
           className={`${
             isDocumentExpanded
               ? 'lg:col-span-1'
-              : 'lg:sticky lg:top-4 lg:col-span-5 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1 xl:col-span-4'
+              : 'lg:sticky lg:top-4 lg:col-span-5 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:overscroll-contain lg:p-1 xl:col-span-4'
           } flex-col gap-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] [scrollbar-width:thin] ${
             activeMobileTab !== 'document' ? 'flex' : 'hidden lg:flex'
           }`}
