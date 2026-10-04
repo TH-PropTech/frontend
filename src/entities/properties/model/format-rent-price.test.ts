@@ -10,6 +10,12 @@ describe('formatRentPrice', () => {
     expect(formatRentPrice(100000)).toBe('100 tỷ/tháng')
   })
 
+  it('shows amounts below one million as đ', () => {
+    expect(formatRentPrice(0.1)).toBe(
+      `${(100000).toLocaleString('vi-VN')} đ/tháng`
+    )
+  })
+
   it('falls back when price is not a finite number', () => {
     expect(formatRentPrice(undefined, 'Liên hệ')).toBe('Liên hệ')
     expect(formatRentPrice(Number.NaN, 'Liên hệ')).toBe('Liên hệ')
@@ -20,5 +26,6 @@ describe('formatRentPriceCompact', () => {
   it('returns short marker labels', () => {
     expect(formatRentPriceCompact(14.5)).toBe('14,5tr')
     expect(formatRentPriceCompact(500000)).toBe('500 tỷ')
+    expect(formatRentPriceCompact(0.1)).toBe('100k')
   })
 })

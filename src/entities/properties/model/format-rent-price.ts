@@ -1,4 +1,5 @@
 const MILLION_PER_BILLION = 1000
+const VND_PER_MILLION = 1_000_000
 
 function formatNumber(value: number): string {
   return value.toLocaleString('vi-VN', { maximumFractionDigits: 2 })
@@ -20,6 +21,9 @@ export function formatRentPrice(
   if (priceInMillions >= MILLION_PER_BILLION) {
     return `${formatNumber(priceInMillions / MILLION_PER_BILLION)} tỷ/tháng`
   }
+  if (priceInMillions < 1) {
+    return `${formatNumber(Math.round(priceInMillions * VND_PER_MILLION))} đ/tháng`
+  }
   return `${formatNumber(priceInMillions)} triệu/tháng`
 }
 
@@ -31,6 +35,9 @@ export function formatRentPriceCompact(
   if (!isUsable(priceInMillions)) return fallback
   if (priceInMillions >= MILLION_PER_BILLION) {
     return `${formatNumber(priceInMillions / MILLION_PER_BILLION)} tỷ`
+  }
+  if (priceInMillions < 1) {
+    return `${formatNumber(Math.round(priceInMillions * 1000))}k`
   }
   return `${formatNumber(priceInMillions)}tr`
 }
