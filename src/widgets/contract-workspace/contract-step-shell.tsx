@@ -75,30 +75,33 @@ export function ContractStepShell({
             {contractCode} · Trạng thái: {contractStatus}
           </p>
         </div>
-        <span className="rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--primary)]">
+        <span className="rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">
           Bước {steps.findIndex(item => item.key === step) + 1}/{steps.length}
         </span>
       </header>
 
       <nav aria-label="Tiến trình hợp đồng" data-testid="contract-stepper">
-        <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <ol className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0">
           {steps.map(item => {
             const state = getContractStepState(item.key, activeStep, steps)
             const href = toContractStepHref(contractId, item.key)
             const isCurrent = item.key === step
 
             return (
-              <li key={item.key}>
+              <li
+                key={item.key}
+                className="min-w-[8.5rem] shrink-0 snap-start sm:min-w-0"
+              >
                 {state === 'upcoming' ? (
                   <span
                     aria-disabled="true"
                     data-state={state}
-                    className="flex min-h-12 cursor-not-allowed flex-col justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-left opacity-60"
+                    className="flex min-h-12 cursor-not-allowed flex-col justify-center rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-left"
                   >
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">
                       {item.label}
                     </span>
-                    <span className="text-[10px] text-[var(--muted)]">
+                    <span className="text-[11px] text-[var(--muted)]">
                       {stateLabel(state)}
                     </span>
                   </span>
@@ -113,10 +116,10 @@ export function ContractStepShell({
                         : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--primary)]'
                     }`}
                   >
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fg)]">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--fg)]">
                       {item.label}
                     </span>
-                    <span className="text-[10px] text-[var(--muted)]">
+                    <span className="text-[11px] text-[var(--muted)]">
                       {stateLabel(state)}
                     </span>
                   </Link>
@@ -158,7 +161,7 @@ export function ContractStepShell({
       )}
 
       {!isGuarded ? (
-        <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+        <footer className="sticky bottom-0 z-10 -mx-4 flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--bg)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:px-0 sm:pb-0 sm:pt-4">
           {currentStep && currentStep.key !== 'document' ? (
             <Link
               href={

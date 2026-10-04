@@ -71,7 +71,7 @@ describe('ContractDocumentViewer', () => {
       screen.getByText(/CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM/i)
     ).toBeInTheDocument()
     expect(screen.getByText('HD-2026-001')).toBeInTheDocument()
-    expect(screen.getByText(/awaiting-signature/i)).toBeInTheDocument()
+    expect(screen.getByText(/Chờ ký/i)).toBeInTheDocument()
     expect(screen.getByTestId('simulation-banner')).toBeInTheDocument()
     expect(screen.getByTestId('contract-watermark')).toBeInTheDocument()
   })
@@ -358,5 +358,48 @@ describe('ContractDocumentViewer', () => {
     const zoomOutBtn = screen.getByTitle('Thu nhỏ')
     fireEvent.click(zoomOutBtn)
     expect(screen.getByText('100%')).toBeInTheDocument()
+  })
+
+  it('keeps technical metadata collapsed by default', () => {
+    render(<ContractDocumentViewer {...defaultProps} />)
+
+    const details = screen.getByTestId('contract-technical-details')
+    expect(details.tagName).toBe('DETAILS')
+    expect(details).not.toHaveAttribute('open')
+    expect(details).toContainElement(
+      screen.getByTestId('canonical-artifact-panel')
+    )
+  })
+
+  it('renders articles numbered above 12 in paginated mode', () => {
+    render(
+      <ContractDocumentViewer
+        {...defaultProps}
+        document={{
+          ...mockDocument,
+          sections: [
+            ...mockDocument.sections,
+            {
+              id: 'article-13',
+              number: 13,
+              title: 'Điều khoản bổ sung',
+              content: 'Nội dung điều 13.',
+              protected: false,
+              hash: 'hash-13',
+            },
+          ],
+        }}
+      />
+    )
+
+    expect(screen.getByTestId('article-13')).toBeInTheDocument()
+  })
+
+  it('does not invent party names when data is missing', () => {
+    render(<ContractDocumentViewer {...defaultProps} parties={{}} />)
+
+    expect(screen.queryByText('Nguyễn Văn Chủ Nhà')).not.toBeInTheDocument()
+    expect(screen.queryByText('Trần Thị Thuê Nhà')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Chưa cập nhật').length).toBeGreaterThan(0)
   })
 })

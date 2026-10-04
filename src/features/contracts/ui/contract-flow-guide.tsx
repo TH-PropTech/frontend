@@ -239,7 +239,7 @@ export function ContractFlowGuide({
 
                 {/* Label */}
                 <span
-                  className={`max-w-[52px] text-center text-[9px] font-medium leading-tight ${
+                  className={`max-w-[64px] text-center text-[10px] font-medium leading-tight ${
                     state === 'active'
                       ? 'text-[var(--primary)]'
                       : state === 'done'

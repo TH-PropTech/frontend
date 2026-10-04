@@ -208,7 +208,7 @@ describe('ContractWorkspace', () => {
     render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
 
     const timeline = await screen.findByTestId('contract-amendment-timeline')
-    const rightColumn = timeline.parentElement as HTMLElement
+    const rightColumn = timeline.parentElement?.parentElement as HTMLElement
     const leftColumn = screen.getByTestId('contract-document-paper')
       .parentElement?.parentElement as HTMLElement
 
@@ -218,6 +218,26 @@ describe('ContractWorkspace', () => {
     }
     expect(leftColumn).toHaveClass('flex')
     expect(rightColumn).toHaveClass('hidden', 'lg:flex')
+  })
+
+  it('exposes the mobile sections as an accessible tablist and switches panels', async () => {
+    render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
+
+    const tablist = await screen.findByRole('tablist')
+    const tabs = within(tablist).getAllByRole('tab')
+    expect(tabs.map(tab => tab.textContent)).toEqual([
+      'Hợp đồng',
+      'Các bên',
+      'Tiến trình',
+      'Pháp lý',
+      'Bằng chứng',
+    ])
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'true')
+
+    fireEvent.click(tabs[1] as HTMLElement)
+
+    expect(tabs[1]).toHaveAttribute('aria-selected', 'true')
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'false')
   })
 
   it('resolves the viewer from the stored login user when the route passes no currentUserId', async () => {
