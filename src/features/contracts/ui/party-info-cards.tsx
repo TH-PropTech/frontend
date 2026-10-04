@@ -141,7 +141,7 @@ export function PartyInfoCards({
             {party.hasSigned ? (
               <span className="inline-flex items-center gap-1 text-[var(--success)]">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Đã ký e-Consent</span>
+                <span>Đã ký xác nhận</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 text-[var(--muted)]">

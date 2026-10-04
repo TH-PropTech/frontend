@@ -28,7 +28,7 @@ const ACTION_LABELS: Record<ContractFlowActionKey, string> = {
   PAY_FEE: 'Thanh toán phí dịch vụ',
   RECORD_HANDOVER: 'Ghi biên bản bàn giao',
   CONFIRM_HANDOVER: 'Xác nhận biên bản bàn giao',
-  VERIFY_LEDGER: 'Đối soát bằng chứng sổ cái',
+  VERIFY_LEDGER: 'Đối soát bằng chứng lưu vết',
 }
 
 const REASON_LABELS: Record<string, string> = {

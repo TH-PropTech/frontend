@@ -6,6 +6,7 @@ import {
   BilateralSigningTimeline,
   ContractDocumentViewer,
   FabricLedgerEvidenceCard,
+  getLedgerStatusLabel,
   lockContractContent,
   SigningCeremonyModal,
   type ContractRouteStep,
@@ -15,6 +16,7 @@ import { DepositPaymentPanel } from '@/features/payments'
 import { PaymentSchedulePanel } from '@/features/payments/ui/payment-schedule-panel'
 import { MoveInSettlementPanel } from '@/features/move-in-settlement'
 import type { ContractAuditEventDto } from '@/features/contracts'
+import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
 import type { UseContractWorkspaceOptions } from './use-contract-workspace'
 
 export interface ContractStepContentProps {
@@ -109,11 +111,11 @@ function ContractArtifactStep({
             aria-hidden="true"
           />
           <div className="flex-1">
-            <h2 className="text-sm font-bold">Artifact hợp đồng</h2>
+            <h2 className="text-sm font-bold">Bản PDF hợp đồng</h2>
             <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
               {data.document.lockedHash
-                ? 'Nội dung đã khóa và sẵn sàng cho các bước thanh toán, ký số và ghi nhận Fabric.'
-                : 'Hãy kiểm tra nội dung trước khi khóa artifact để bảo toàn cùng một digest cho hai chữ ký.'}
+                ? 'Nội dung đã khóa và sẵn sàng cho các bước thanh toán, ký số và lưu vết hợp đồng.'
+                : 'Hãy kiểm tra nội dung trước khi khóa bản PDF để cả hai bên cùng ký đúng một bản.'}
             </p>
             {canLock ? (
               <button
@@ -123,13 +125,13 @@ function ContractArtifactStep({
                 className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
               >
                 <LockKeyhole className="h-4 w-4" aria-hidden="true" />
-                {isLocking ? 'Đang khóa nội dung...' : 'Khóa artifact hợp đồng'}
+                {isLocking ? 'Đang khóa nội dung...' : 'Khóa bản PDF hợp đồng'}
               </button>
             ) : (
               <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--success)]">
                 <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                 {data.document.lockedHash
-                  ? 'Artifact hợp đồng đã được khóa bảo toàn và sẵn sàng ký kết'
+                  ? 'Bản PDF hợp đồng đã được khóa và sẵn sàng ký kết'
                   : 'Đang chờ Chủ nhà kiểm tra và khóa nội dung hợp đồng'}
               </p>
             )}
@@ -215,7 +217,7 @@ export function ContractStepContent({
     return (
       <div className="space-y-4">
         <section className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-5">
-          <h2 className="text-sm font-bold">Ký số trên cùng artifact</h2>
+          <h2 className="text-sm font-bold">Ký số trên cùng một bản PDF</h2>
           <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
             {signingEligibility.eligible
               ? 'Bạn có thể bắt đầu xác thực eKYC, Smart OTP và phiên ký VNPT SmartCA.'
@@ -276,10 +278,12 @@ export function ContractStepContent({
             aria-hidden="true"
           />
           <div>
-            <h2 className="text-sm font-bold">Ghi nhận và đối soát Fabric</h2>
+            <h2 className="text-sm font-bold">
+              Lưu vết và đối soát chống sửa đổi
+            </h2>
             <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
-              Bằng chứng chỉ được xác nhận sau khi worker commit transaction
-              thật qua Fabric Gateway.
+              Bằng chứng chỉ được xác nhận sau khi hệ thống ghi nhận xong giao
+              dịch lưu vết thật.
             </p>
           </div>
         </div>
@@ -299,7 +303,7 @@ export function ContractStepContent({
         integrityResult={integrityResult}
       />
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
-        <h2 className="text-sm font-bold">Audit trail</h2>
+        <h2 className="text-sm font-bold">Nhật ký bằng chứng</h2>
         {auditEvents.length === 0 ? (
           <p className="mt-2 text-xs text-[var(--muted)]">
             Chưa có sự kiện ledger để hiển thị.
@@ -312,8 +316,10 @@ export function ContractStepContent({
                 className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-xs"
               >
                 <div className="flex flex-wrap justify-between gap-2 font-semibold">
-                  <span>{event.displayCode}</span>
-                  <span className="text-[var(--muted)]">{event.status}</span>
+                  <span>{ledgerEventLabel(event.eventType)}</span>
+                  <span className="text-[var(--muted)]">
+                    {getLedgerStatusLabel(event.status)}
+                  </span>
                 </div>
                 <p className="mt-1 text-[var(--muted)]">{event.description}</p>
               </li>

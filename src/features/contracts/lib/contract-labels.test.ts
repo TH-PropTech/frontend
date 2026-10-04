@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   getContractStatusLabel,
   getExecutionStrategyLabel,
+  getLedgerStatusLabel,
+  getLegalBasisLabel,
+  getLegalBasisSourceUrl,
+  getLegalProfileLabel,
+  getTemplateLabel,
+  humanizeCode,
 } from './contract-labels'
 
 describe('contract labels', () => {
@@ -13,5 +19,27 @@ describe('contract labels', () => {
   it('maps execution strategies', () => {
     expect(getExecutionStrategyLabel('DEPOSIT_FIRST')).toBe('Cọc trước, ký sau')
     expect(getExecutionStrategyLabel('SIGN_FIRST')).toBe('Ký trước, cọc sau')
+  })
+
+  it('resolves legal basis names and sources, humanizing unknown ids', () => {
+    expect(
+      getLegalBasisLabel('DECREE_96_2024_APPENDIX_II_RESIDENTIAL_LEASE')
+    ).toContain('Nghị định 96/2024/NĐ-CP')
+    expect(
+      getLegalBasisSourceUrl('DECREE_96_2024_APPENDIX_II_RESIDENTIAL_LEASE')
+    ).toMatch(/^https:\/\//)
+    expect(getLegalBasisLabel('NEW_UNKNOWN_BASIS')).toBe('New unknown basis')
+    expect(getLegalBasisSourceUrl('NEW_UNKNOWN_BASIS')).toBeNull()
+  })
+
+  it('labels legal profile, template and ledger status', () => {
+    expect(getLegalProfileLabel('PRIVATE_CIVIL_APARTMENT_LEASE')).toBe(
+      'Thuê căn hộ giữa cá nhân'
+    )
+    expect(getTemplateLabel('VN_INDIVIDUAL_RESIDENTIAL_LEASE', 7)).toBe(
+      'Mẫu thuê nhà ở cá nhân (bản 7)'
+    )
+    expect(getLedgerStatusLabel('failed-retryable')).toBe('Lỗi, đang thử lại')
+    expect(humanizeCode('SOME_RAW_CODE')).toBe('Some raw code')
   })
 })

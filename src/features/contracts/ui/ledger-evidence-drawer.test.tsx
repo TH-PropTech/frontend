@@ -201,7 +201,7 @@ describe('LedgerEvidenceDrawer', () => {
     )
     expect(screen.queryByText(/#88|#99|Block: 88|Block: 99/)).toBeNull()
     for (const row of screen.getAllByTestId('ledger-evidence-event')) {
-      expect(row).toHaveTextContent('Mô phỏng')
+      expect(row).toHaveTextContent('Thử nghiệm')
     }
     const reference = screen.getByTestId('ledger-governance-reference')
     expect(reference).toHaveTextContent('Không khả dụng')

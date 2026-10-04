@@ -17,7 +17,7 @@ function itemLabel(id: PublicServiceChecklist['items'][number]['id']): string {
     case 'locked-contract-copy':
       return 'Bản hợp đồng đã khóa'
     case 'signing-evidence':
-      return 'Bằng chứng ký trong phạm vi PoC'
+      return 'Bằng chứng ký trong phạm vi thử nghiệm'
     case 'notarization-or-authentication':
       return 'Công chứng hoặc chứng thực'
   }

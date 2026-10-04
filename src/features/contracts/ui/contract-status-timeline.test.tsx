@@ -13,7 +13,7 @@ describe('ContractStatusTimeline', () => {
     expect(screen.getByText('Khởi tạo dự thảo')).toBeInTheDocument()
     expect(screen.getByText('Đặt cọc bảo đảm')).toBeInTheDocument()
     expect(screen.getByText('Ký số VNPT SmartCA')).toBeInTheDocument()
-    expect(screen.getByText('Ghi nhận sổ cái & Kích hoạt')).toBeInTheDocument()
+    expect(screen.getByText('Lưu vết & Kích hoạt')).toBeInTheDocument()
   })
 
   it('marks draft creation as the current step for a draft contract', () => {
@@ -68,7 +68,7 @@ describe('ContractStatusTimeline', () => {
       />
     )
     expect(
-      screen.getByText('Đã kích hoạt & neo hash sổ cái')
+      screen.getByText('Đã kích hoạt & lưu vết hợp đồng')
     ).toBeInTheDocument()
   })
 

@@ -204,7 +204,7 @@ export function DepositPaymentPanel({
             <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
             <p className="text-[11px] leading-relaxed">
               {deposit.mockSimulationNotice ||
-                'Môi trường thử nghiệm PoC: Thanh toán cọc qua ngân hàng mô phỏng để bảo đảm an toàn giao dịch trước khi kích hoạt quy trình ký e-Consent.'}
+                'Chế độ thử nghiệm: Thanh toán cọc qua ngân hàng mô phỏng để bảo đảm an toàn giao dịch trước khi kích hoạt quy trình ký e-Consent.'}
             </p>
           </div>
         ) : null}

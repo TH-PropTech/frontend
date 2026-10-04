@@ -64,7 +64,7 @@ describe('PartyInfoCards', () => {
     expect(screen.getByText('Đã xác thực KYC')).toBeInTheDocument()
     expect(screen.getByText('Chưa hoàn tất KYC')).toBeInTheDocument()
 
-    expect(screen.getByText('Đã ký e-Consent')).toBeInTheDocument()
+    expect(screen.getByText('Đã ký xác nhận')).toBeInTheDocument()
     expect(screen.getByText('Chưa ký')).toBeInTheDocument()
   })
 })

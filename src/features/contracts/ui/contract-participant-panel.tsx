@@ -169,7 +169,7 @@ export function ContractParticipantPanel({
           className={verified ? 'text-sm text-success' : 'text-sm text-danger'}
         >
           {verified
-            ? 'Nội dung khớp với bằng chứng blockchain.'
+            ? 'Nội dung khớp với bằng chứng lưu vết.'
             : 'Phát hiện sai lệch nội dung.'}
         </p>
       ) : null}

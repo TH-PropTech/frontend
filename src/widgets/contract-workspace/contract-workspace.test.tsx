@@ -195,7 +195,7 @@ describe('ContractWorkspace', () => {
       expect(
         screen.getByTestId('contract-execution-policy')
       ).toBeInTheDocument()
-      expect(screen.getByText('Mô phỏng PoC')).toBeInTheDocument()
+      expect(screen.getAllByText('Chế độ thử nghiệm').length).toBeGreaterThan(0)
       expect(
         within(screen.getByTestId('contract-status-timeline'))
           .getAllByTestId(/^step-/)
@@ -238,6 +238,20 @@ describe('ContractWorkspace', () => {
 
     expect(tabs[1]).toHaveAttribute('aria-selected', 'true')
     expect(tabs[0]).toHaveAttribute('aria-selected', 'false')
+  })
+
+  it('does not leak internal jargon into the visible workspace text', async () => {
+    render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
+
+    const workspace = await screen.findByTestId('contract-workspace')
+    const clone = workspace.cloneNode(true) as HTMLElement
+    clone
+      .querySelectorAll('[data-testid="contract-technical-details"]')
+      .forEach(node => node.remove())
+
+    expect(clone.textContent).not.toMatch(
+      /Hyperledger|[Bb]lockchain|sổ cái|artifact|PoC|TxID|Digest/i
+    )
   })
 
   it('resolves the viewer from the stored login user when the route passes no currentUserId', async () => {

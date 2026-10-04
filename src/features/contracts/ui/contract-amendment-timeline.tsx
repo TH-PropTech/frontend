@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+import { getAmendmentFieldLabel } from '../lib/contract-labels'
 import {
   createContractAmendment,
   downloadContractAmendmentArtifact,
@@ -30,7 +31,7 @@ export interface ContractAmendmentTimelineProps {
 
 function statusLabel(status: string): string {
   const labels: Record<string, string> = {
-    locked: 'Đã khóa nội dung, chờ artifact',
+    locked: 'Đã khóa nội dung, chờ bản PDF',
     'in-review': 'Đang rà soát',
     draft: 'Bản nháp',
     'pending-signature': 'Chờ hai bên ký',
@@ -165,7 +166,7 @@ export function ContractAmendmentTimeline({
       setError(
         cause instanceof Error
           ? cause.message
-          : 'KhÃ´ng táº£i Ä‘Æ°á»£c artifact phá»¥ lá»¥c.'
+          : 'Không tải được bản PDF phụ lục.'
       )
     } finally {
       setBusy(false)
@@ -263,27 +264,29 @@ export function ContractAmendmentTimeline({
               </div>
               <div className="mt-3 grid gap-2 text-xs text-muted md:grid-cols-2">
                 <p className="font-mono text-[10px]">
-                  Artifact:{' '}
+                  Mã bản PDF:{' '}
                   {item.artifactHash
                     ? `${item.artifactHash.slice(0, 12)}...${item.artifactHash.slice(-8)}`
                     : 'Chưa khóa'}
                 </p>
                 {item.changes.map(change => (
                   <p key={change.field}>
-                    <strong className="text-fg">{change.field}</strong>:{' '}
-                    {String(change.before)} → {String(change.after)}
+                    <strong className="text-fg">
+                      {getAmendmentFieldLabel(change.field)}
+                    </strong>
+                    : {String(change.before)} → {String(change.after)}
                   </p>
                 ))}
                 <p>
-                  Tenant: {item.tenantSignature ? 'Đã ký' : 'Chưa ký'} ·
-                  Landlord: {item.landlordSignature ? 'Đã ký' : 'Chưa ký'}
+                  Bên thuê: {item.tenantSignature ? 'Đã ký' : 'Chưa ký'} · Bên
+                  cho thuê: {item.landlordSignature ? 'Đã ký' : 'Chưa ký'}
                 </p>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {canManage && item.status === 'locked' ? (
                   <>
                     <label className="inline-flex cursor-pointer items-center rounded-md border border-border px-2 py-1 text-xs text-muted">
-                      Chọn PDF canonical
+                      Chọn bản PDF
                       <input
                         type="file"
                         accept="application/pdf"
@@ -317,13 +320,13 @@ export function ContractAmendmentTimeline({
                             setError(
                               cause instanceof Error
                                 ? cause.message
-                                : 'KhÃ´ng khÃ³a artifact phá»¥ lá»¥c.'
+                                : 'Không khóa được bản PDF phụ lục.'
                             )
                           )
                           .finally(() => setBusy(false))
                       }}
                     >
-                      Khóa artifact
+                      Khóa bản PDF{' '}
                     </Button>
                   </>
                 ) : null}
@@ -334,7 +337,7 @@ export function ContractAmendmentTimeline({
                     disabled={busy}
                     onClick={() => void downloadArtifact(item)}
                   >
-                    <Download className="mr-1 h-3.5 w-3.5" /> Tải artifact
+                    <Download className="mr-1 h-3.5 w-3.5" /> Tải bản PDF
                   </Button>
                 ) : null}
                 {canManage && item.status === 'draft' ? (

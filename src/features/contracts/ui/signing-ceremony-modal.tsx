@@ -133,7 +133,7 @@ export function SigningCeremonyModal({
               <div className="p-4 rounded-xl bg-[var(--surface-muted)] border border-[var(--border)] space-y-2.5 text-xs text-[var(--fg)]">
                 <div className="flex items-center gap-2 font-bold text-[var(--fg)]">
                   <FileCheck className="w-4 h-4 text-[var(--primary)] shrink-0" />
-                  <span>Điều kiện xác nhận ký kết điện tử (PoC)</span>
+                  <span>Điều kiện xác nhận ký kết điện tử (thử nghiệm)</span>
                 </div>
                 <p className="text-[11px] text-[var(--muted)] leading-relaxed">
                   Quy trình ký kết tuân thủ nghị định về giao dịch điện tử trong

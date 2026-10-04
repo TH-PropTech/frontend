@@ -71,7 +71,8 @@ function EvidenceRow({ event }: { event: LedgerEvidenceEvent }) {
         </span>
         <span>{formatRecordedAt(event.recordedAt)}</span>
         <span>
-          Network: {event.networkMode === 'simulation' ? 'Mô phỏng' : 'Fabric'}
+          Chế độ:{' '}
+          {event.networkMode === 'simulation' ? 'Thử nghiệm' : 'Lưu vết thật'}
         </span>
         {presentation.blockLabel ? (
           <span>Block: {presentation.blockLabel}</span>
@@ -79,13 +80,13 @@ function EvidenceRow({ event }: { event: LedgerEvidenceEvent }) {
       </div>
       <div className="flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-[var(--fg)]">
-          {event.txId ?? 'Chưa có TxID'}
+          {event.txId ?? 'Chưa có mã giao dịch'}
         </span>
         {event.txId ? (
           <button
             type="button"
             data-testid="copy-ledger-tx"
-            aria-label="Sao chép TxID ledger"
+            aria-label="Sao chép mã giao dịch"
             className="rounded border border-[var(--border)] p-1 text-[var(--muted)] hover:text-[var(--fg)]"
             onClick={() => void copyTx()}
           >
@@ -156,7 +157,7 @@ export function LedgerEvidenceDrawer({
         className="w-full overflow-y-auto sm:max-w-lg"
       >
         <SheetHeader>
-          <SheetTitle>Bằng chứng sổ cái</SheetTitle>
+          <SheetTitle>Bằng chứng lưu vết</SheetTitle>
           <SheetDescription>
             Dòng thời gian đã làm sạch theo contract và các aggregate liên quan.
           </SheetDescription>
@@ -182,7 +183,7 @@ export function LedgerEvidenceDrawer({
                 <span>
                   {data.networkMode === 'simulation'
                     ? 'Chế độ mô phỏng'
-                    : 'Hyperledger Fabric'}
+                    : 'Lưu vết thật'}
                 </span>
                 <span>{data.events.length} sự kiện</span>
               </div>
@@ -191,7 +192,8 @@ export function LedgerEvidenceDrawer({
                 className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-3 text-xs text-[var(--muted)]"
               >
                 <span className="font-semibold text-[var(--fg)]">
-                  Governance snapshot: {governanceReference?.snapshotRef ?? '—'}
+                  Mã bản quy định áp dụng:{' '}
+                  {governanceReference?.snapshotRef ?? '—'}
                 </span>
                 <span className="ml-2">
                   {layerStateLabel(
@@ -210,7 +212,7 @@ export function LedgerEvidenceDrawer({
               data-testid="ledger-evidence-empty"
               className="text-xs text-[var(--muted)]"
             >
-              Chưa có bằng chứng sổ cái.
+              Chưa có bằng chứng lưu vết.
             </p>
           )}
         </div>

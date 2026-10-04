@@ -136,15 +136,15 @@ export function ContractStatusTimeline({
 
   const ledgerStep: TimelineStep = {
     id: 'step-ledger',
-    title: 'Ghi nhận sổ cái & Kích hoạt',
+    title: 'Lưu vết & Kích hoạt',
     description: isTerminated
       ? 'Hợp đồng đã chấm dứt'
       : isSignFirst && isFullySignedPendingDeposit
-        ? 'Chờ cọc để neo Fabric'
+        ? 'Chờ cọc để lưu vết'
         : isActive
           ? txHash
-            ? 'Đã kích hoạt & neo hash sổ cái'
-            : 'Đã kích hoạt (Đang chờ đồng bộ sổ cái)'
+            ? 'Đã kích hoạt & lưu vết hợp đồng'
+            : 'Đã kích hoạt (Đang chờ lưu vết)'
           : 'Kích hoạt sau khi hai bên ký',
     state: isTerminated ? 'failed' : isActive ? 'completed' : 'upcoming',
     icon: isTerminated ? AlertTriangle : CheckCircle2,

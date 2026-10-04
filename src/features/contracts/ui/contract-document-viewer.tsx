@@ -30,7 +30,13 @@ import type {
   ContractPropertySnapshot,
   ContractCommercialSnapshot,
 } from '../api/contracts-api'
-import { getContractStatusLabel } from '../lib/contract-labels'
+import {
+  getContractStatusLabel,
+  getLegalBasisLabel,
+  getLegalBasisSourceUrl,
+  getLegalProfileLabel,
+  getTemplateLabel,
+} from '../lib/contract-labels'
 
 export interface ContractDocumentViewerProps {
   document: ContractDocumentView
@@ -68,6 +74,26 @@ const OFFICIAL_CITATIONS = [
   },
 ] as const
 
+function LegalBasisChip({ id }: { id: string }) {
+  const label = getLegalBasisLabel(id)
+  const sourceUrl = getLegalBasisSourceUrl(id)
+  const className =
+    'rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[10px] leading-snug text-[var(--fg)]'
+
+  return sourceUrl ? (
+    <a
+      href={sourceUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${className} text-[var(--primary)] underline underline-offset-2`}
+    >
+      {label}
+    </a>
+  ) : (
+    <span className={className}>{label}</span>
+  )
+}
+
 function SignatureEvidence({
   party,
   role,
@@ -90,11 +116,11 @@ function SignatureEvidence({
         </span>
       </div>
       <p className="font-mono break-all text-[9.5px]">
-        TxID: {party.providerTransactionId}
+        Mã giao dịch ký: {party.providerTransactionId}
       </p>
       {party.certificateSerial ? (
         <p className="font-mono break-all text-[9.5px]">
-          Serial chứng thư: {party.certificateSerial}
+          Số hiệu chứng thư: {party.certificateSerial}
         </p>
       ) : null}
       {party.signatureAlgorithm ? (
@@ -284,12 +310,7 @@ export function ContractDocumentViewer({
         {section.citationIds?.length ? (
           <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[var(--border)]/40 pt-2">
             {section.citationIds.map(citationId => (
-              <span
-                key={citationId}
-                className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 font-mono text-[9px] text-[var(--muted)]"
-              >
-                {citationId}
-              </span>
+              <LegalBasisChip key={citationId} id={citationId} />
             ))}
           </div>
         ) : null}
@@ -307,9 +328,8 @@ export function ContractDocumentViewer({
         >
           <Info className="w-4 h-4 text-[var(--warning)] shrink-0" />
           <span className="leading-relaxed">
-            <strong>MÔ PHỎNG BLOCKCHAIN (SIMULATION):</strong> Bản thể hiện điện
-            tử này được khởi tạo trong môi trường thử nghiệm PoC phục vụ đối
-            soát quy trình ký số e-Consent.
+            <strong>CHẾ ĐỘ THỬ NGHIỆM:</strong> Bản hợp đồng điện tử này được
+            tạo trong môi trường thử nghiệm, dùng để kiểm tra quy trình ký số.
           </span>
         </div>
       )}
@@ -504,7 +524,7 @@ export function ContractDocumentViewer({
           className="absolute inset-0 pointer-events-none flex items-center justify-center select-none overflow-hidden"
         >
           <div className="text-[var(--muted)] opacity-[0.05] -rotate-45 text-4xl sm:text-6xl font-black uppercase tracking-widest text-center leading-tight">
-            {isSimulation ? 'MÔ PHỎNG BLOCKCHAIN' : 'BẢN THUÊ ĐIỆN TỬ'}
+            {isSimulation ? 'BẢN THỬ NGHIỆM' : 'BẢN THUÊ ĐIỆN TỬ'}
             <br />
             {contractCode}
           </div>
@@ -513,12 +533,15 @@ export function ContractDocumentViewer({
         {hasConfiguredLayout ? (
           <section
             data-testid="contract-layout-profile"
-            aria-label="Contract layout profile"
+            aria-label="Bố cục hợp đồng"
             className="relative mb-6 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/10 p-3 text-xs"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-bold text-[var(--fg)]">
-                Bố cục hợp đồng: {document.layout?.profileKey}
+                Bố cục hợp đồng:{' '}
+                {document.layout?.profileKey
+                  ? getLegalProfileLabel(document.layout.profileKey)
+                  : ''}
               </h2>
               <span className="font-mono text-[var(--muted)]">
                 v{document.layout?.version}
@@ -593,7 +616,7 @@ export function ContractDocumentViewer({
               role="status"
               className="rounded-xl border border-[var(--warning)]/40 bg-[var(--surface-muted)] p-4 text-xs text-[var(--fg)]"
             >
-              Chưa có canonical PDF artifact. Hợp đồng chưa đủ điều kiện để ký
+              Chưa có bản PDF hợp đồng. Hợp đồng chưa đủ điều kiện để ký
               SmartCA.
             </section>
           ) : null}
@@ -620,33 +643,35 @@ export function ContractDocumentViewer({
               {document.canonicalArtifact ? (
                 <section
                   data-testid="canonical-artifact-panel"
-                  aria-label="Canonical PDF artifact"
+                  aria-label="Bản PDF hợp đồng"
                   className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-4 text-xs"
                 >
                   <div className="flex items-start gap-2">
                     <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
                     <div className="min-w-0 flex-1">
                       <h2 className="font-bold text-[var(--fg)]">
-                        Artifact PDF chuẩn dùng cho view, tải xuống và ký số
+                        Bản PDF chuẩn dùng để xem, tải xuống và ký số
                       </h2>
                       <div className="mt-2 grid gap-1 text-[var(--muted)] sm:grid-cols-2">
                         <p>
-                          Mã artifact:{' '}
+                          Mã bản PDF:{' '}
                           <span className="font-mono text-[var(--fg)]">
                             {document.canonicalArtifact.artifactId}
                           </span>
                         </p>
                         <p>
-                          Revision{' '}
+                          Bản sửa đổi{' '}
                           <span className="font-semibold text-[var(--fg)]">
                             {document.canonicalArtifact.revision}
                           </span>
                         </p>
                         <p>
-                          Template:{' '}
+                          Mẫu hợp đồng:{' '}
                           <span className="font-mono text-[var(--fg)]">
-                            {document.canonicalArtifact.templateKey}@
-                            {document.canonicalArtifact.templateVersion}
+                            {getTemplateLabel(
+                              document.canonicalArtifact.templateKey,
+                              document.canonicalArtifact.templateVersion
+                            )}
                           </span>
                         </p>
                         <p>
@@ -657,7 +682,8 @@ export function ContractDocumentViewer({
                         </p>
                       </div>
                       <p className="mt-2 break-all font-mono text-[10px] text-[var(--fg)]">
-                        SHA-256: {document.canonicalArtifact.artifactHash}
+                        Mã xác thực (SHA-256):{' '}
+                        {document.canonicalArtifact.artifactHash}
                       </p>
                       {document.canonicalArtifact.canonicalContentHash ? (
                         <p className="mt-1 break-all font-mono text-[10px] text-[var(--muted)]">
@@ -668,7 +694,7 @@ export function ContractDocumentViewer({
                       <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[var(--muted)]">
                         {document.canonicalArtifact.rendererVersion ? (
                           <span>
-                            Renderer:{' '}
+                            Công cụ tạo PDF:{' '}
                             <span className="font-mono text-[var(--fg)]">
                               {document.canonicalArtifact.rendererVersion}
                             </span>
@@ -676,7 +702,7 @@ export function ContractDocumentViewer({
                         ) : null}
                         {document.canonicalArtifact.sourceSchemaVersion ? (
                           <span>
-                            Schema:{' '}
+                            Cấu trúc dữ liệu:{' '}
                             <span className="font-semibold text-[var(--fg)]">
                               v{document.canonicalArtifact.sourceSchemaVersion}
                             </span>
@@ -701,7 +727,7 @@ export function ContractDocumentViewer({
 
               <section
                 data-testid="legal-template-panel"
-                aria-label="Legal template metadata"
+                aria-label="Thông tin mẫu pháp lý"
                 className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/50 p-4 text-xs"
               >
                 <div className="flex items-start gap-2">
@@ -712,19 +738,21 @@ export function ContractDocumentViewer({
                     </h2>
                     <div className="mt-2 grid gap-1 text-[var(--muted)] sm:grid-cols-2">
                       <p>
-                        Hồ sơ pháp lý:{' '}
+                        Loại hợp đồng:{' '}
                         <span className="font-semibold text-[var(--fg)]">
-                          {document.legalProfile ?? 'Chưa xác định'}
+                          {document.legalProfile
+                            ? getLegalProfileLabel(document.legalProfile)
+                            : 'Chưa xác định'}
                         </span>
                       </p>
                       <p>
-                        Template:{' '}
+                        Mẫu hợp đồng:{' '}
                         <span className="font-mono text-[var(--fg)]">
-                          {document.templateVersion ?? 'Chưa gắn template'}
+                          {document.templateVersion ?? 'Chưa gắn mẫu'}
                         </span>
                       </p>
                       <p>
-                        Schema hash:{' '}
+                        Cấu trúc dữ liệu:{' '}
                         <span className="font-semibold text-[var(--fg)]">
                           v{document.hashSchemaVersion}
                         </span>
@@ -761,17 +789,12 @@ export function ContractDocumentViewer({
                     {document.citationIds?.length ? (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {document.citationIds.map(citationId => (
-                          <span
-                            key={citationId}
-                            className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 font-mono text-[10px] text-[var(--fg)]"
-                          >
-                            {citationId}
-                          </span>
+                          <LegalBasisChip key={citationId} id={citationId} />
                         ))}
                       </div>
                     ) : (
                       <p className="mt-2 text-[var(--warning)]">
-                        Chưa có mã căn cứ pháp lý được gắn vào template.
+                        Chưa có mã căn cứ pháp lý được gắn vào mẫu hợp đồng.
                       </p>
                     )}
                   </div>
