@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { HelpTip } from './help-tip'
 import {
   CheckCircle2,
   Clock,
@@ -86,8 +87,8 @@ export function BilateralSigningTimeline({
         className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm space-y-4"
       >
         {/* Header */}
-        <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] pb-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3">
+          <div className="flex min-w-0 items-center gap-2">
             <PenTool className="h-4 w-4 text-[var(--primary)]" />
             <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
               Tiến trình ký số song phương VNPT SmartCA
@@ -95,7 +96,7 @@ export function BilateralSigningTimeline({
           </div>
           <span
             data-testid="signing-status-badge"
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+            className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
               isBothSigned
                 ? 'bg-[var(--surface-muted)] text-[var(--success)] border-[var(--border)]'
                 : isOneSigned
@@ -123,7 +124,7 @@ export function BilateralSigningTimeline({
         </div>
 
         {/* 2-Column Signer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
           {/* Tenant Card */}
           <div
             data-testid="tenant-signing-card"
@@ -133,10 +134,10 @@ export function BilateralSigningTimeline({
                 : 'border-[var(--border)] bg-[var(--surface)]'
             }`}
           >
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                  className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${
                     tenant.hasSigned
                       ? 'bg-[var(--success)] text-white'
                       : 'bg-[var(--surface-muted)] text-[var(--muted)] border border-[var(--border)]'
@@ -150,17 +151,19 @@ export function BilateralSigningTimeline({
                 </div>
                 <div>
                   <p className="text-xs font-bold text-[var(--fg)]">
-                    Khách thuê (Tenant)
+                    Khách thuê
                   </p>
-                  <p className="text-[11px] text-[var(--muted)]">
-                    {tenant.name}
-                  </p>
+                  {tenant.name && tenant.name !== 'Khách thuê' ? (
+                    <p className="text-[11px] text-[var(--muted)]">
+                      {tenant.name}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
               <span
                 data-testid="tenant-signed-badge"
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                className={`shrink-0 whitespace-nowrap text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                   tenant.hasSigned
                     ? 'bg-[var(--surface-muted)] text-[var(--success)] border border-[var(--border)]'
                     : 'bg-[var(--surface-muted)] text-[var(--muted)] border border-[var(--border)]'
@@ -188,7 +191,10 @@ export function BilateralSigningTimeline({
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Mã băm chữ ký:</span>
+                    <span className="inline-flex items-center gap-1">
+                      Mã xác thực chữ ký:
+                      <HelpTip term="signatureHash" />
+                    </span>
                     <span
                       className="font-mono text-[var(--primary)] text-[10px]"
                       title={tenant.signatureHash || ''}
@@ -226,10 +232,10 @@ export function BilateralSigningTimeline({
                 : 'border-[var(--border)] bg-[var(--surface)]'
             }`}
           >
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                  className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${
                     landlord.hasSigned
                       ? 'bg-[var(--success)] text-white'
                       : 'bg-[var(--surface-muted)] text-[var(--muted)] border border-[var(--border)]'
@@ -242,18 +248,18 @@ export function BilateralSigningTimeline({
                   )}
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[var(--fg)]">
-                    Chủ nhà (Landlord)
-                  </p>
-                  <p className="text-[11px] text-[var(--muted)]">
-                    {landlord.name}
-                  </p>
+                  <p className="text-xs font-bold text-[var(--fg)]">Chủ nhà</p>
+                  {landlord.name && landlord.name !== 'Chủ nhà' ? (
+                    <p className="text-[11px] text-[var(--muted)]">
+                      {landlord.name}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
               <span
                 data-testid="landlord-signed-badge"
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                className={`shrink-0 whitespace-nowrap text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
                   landlord.hasSigned
                     ? 'bg-[var(--surface-muted)] text-[var(--success)] border border-[var(--border)]'
                     : 'bg-[var(--surface-muted)] text-[var(--muted)] border border-[var(--border)]'
@@ -281,7 +287,10 @@ export function BilateralSigningTimeline({
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Mã băm chữ ký:</span>
+                    <span className="inline-flex items-center gap-1">
+                      Mã xác thực chữ ký:
+                      <HelpTip term="signatureHash" />
+                    </span>
                     <span
                       className="font-mono text-[var(--primary)] text-[10px]"
                       title={landlord.signatureHash || ''}

@@ -30,6 +30,7 @@ import type {
   ContractPropertySnapshot,
   ContractCommercialSnapshot,
 } from '../api/contracts-api'
+import { HelpTip } from './help-tip'
 import {
   getContractStatusLabel,
   getLegalBasisLabel,
@@ -114,6 +115,7 @@ function SignatureEvidence({
           Chữ ký số{' '}
           {party.provider === 'smartca' ? 'VNPT SmartCA' : 'nhà cung cấp'}
         </span>
+        <HelpTip term="signatureCertificate" />
       </div>
       <p className="font-mono break-all text-[9.5px]">
         Mã giao dịch ký: {party.providerTransactionId}
