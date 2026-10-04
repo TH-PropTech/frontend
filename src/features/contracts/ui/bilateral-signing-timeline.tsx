@@ -72,7 +72,7 @@ export function BilateralSigningTimeline({
 
   const wrapperClass =
     isActiveStep === true
-      ? 'ring-2 ring-[var(--primary)] rounded-xl'
+      ? ''
       : isActiveStep === false
         ? 'opacity-50 pointer-events-none'
         : ''
@@ -84,11 +84,7 @@ export function BilateralSigningTimeline({
     >
       <div
         data-testid="bilateral-signing-timeline"
-        className={`rounded-xl border bg-[var(--surface)] p-5 shadow-sm space-y-4 ${
-          isActiveStep === true
-            ? 'border-transparent'
-            : 'border-[var(--border)]'
-        }`}
+        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm space-y-4"
       >
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3">
