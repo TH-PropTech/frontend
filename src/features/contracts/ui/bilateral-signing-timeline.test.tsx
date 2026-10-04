@@ -155,7 +155,7 @@ describe('BilateralSigningTimeline', () => {
   // isActiveStep visual state tests
   // ---------------------------------------------------------------------------
   describe('isActiveStep prop', () => {
-    it('adds ring highlight class when isActiveStep=true', () => {
+    it('adds no ring or dimming when isActiveStep=true', () => {
       render(
         <BilateralSigningTimeline
           tenant={tenantBase}
@@ -164,8 +164,8 @@ describe('BilateralSigningTimeline', () => {
         />
       )
       const wrapper = screen.getByTestId('bilateral-signing-timeline-wrapper')
-      expect(wrapper.className).toContain('ring-2')
-      expect(wrapper.className).toContain('ring-[var(--primary)]')
+      expect(wrapper.className).not.toContain('ring-2')
+      expect(wrapper.className).not.toContain('opacity-50')
     })
 
     it('adds opacity-50 and pointer-events-none when isActiveStep=false', () => {
@@ -202,6 +202,22 @@ describe('BilateralSigningTimeline', () => {
     )
     expect(screen.getByTestId('signing-status-badge')).toHaveClass(
       'whitespace-nowrap'
+    )
+  })
+  it('has no highlight ring when it is the active step', () => {
+    render(
+      <BilateralSigningTimeline
+        tenant={tenantBase}
+        landlord={landlordBase}
+        isActiveStep
+      />
+    )
+
+    expect(
+      screen.getByTestId('bilateral-signing-timeline-wrapper')
+    ).not.toHaveClass('ring-2')
+    expect(screen.getByTestId('bilateral-signing-timeline')).toHaveClass(
+      'border-[var(--border)]'
     )
   })
 })

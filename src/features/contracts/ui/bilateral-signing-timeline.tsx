@@ -72,7 +72,7 @@ export function BilateralSigningTimeline({
 
   const wrapperClass =
     isActiveStep === true
-      ? 'ring-2 ring-[var(--primary)] rounded-xl'
+      ? ''
       : isActiveStep === false
         ? 'opacity-50 pointer-events-none'
         : ''
