@@ -61,7 +61,7 @@ export function BlockchainVerifyBadge({
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-[var(--primary)]" />
           <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
-            Xác thực Blockchain & Sổ cái
+            Xác thực lưu vết chống sửa đổi
           </h4>
         </div>
 
@@ -146,7 +146,7 @@ export function BlockchainVerifyBadge({
 
           <div className="p-2 rounded-lg bg-[var(--surface-muted)] border border-[var(--border)]">
             <span className="text-[10px] uppercase font-bold text-[var(--muted)] block">
-              Trạng thái sổ cái
+              Trạng thái lưu vết
             </span>
             <span className="font-medium text-[var(--primary)] text-[11px] uppercase">
               {ledger?.status || 'Chưa ghi nhận'}

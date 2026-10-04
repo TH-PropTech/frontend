@@ -370,7 +370,7 @@ export function AdminContractCommercialEditor({
         </h3>
         <p className="mt-1 text-xs text-muted">
           Điều khoản pháp lý, danh tính, quyền tài sản, template version, chữ
-          ký, hash và ledger evidence do server quản lý.
+          ký, mã xác thực và bằng chứng lưu vết do máy chủ quản lý.
         </p>
       </div>
 

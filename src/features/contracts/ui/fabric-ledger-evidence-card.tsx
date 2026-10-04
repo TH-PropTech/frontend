@@ -102,19 +102,19 @@ function integrityBanner(state: VerificationLayerState): {
       return {
         title: 'Cảnh báo sai lệch toàn vẹn dữ liệu',
         message:
-          'Phát hiện sai lệch giữa nội dung văn bản hiện tại và dữ liệu đã cam kết trên sổ cái.',
+          'Phát hiện sai lệch giữa nội dung văn bản hiện tại và dữ liệu đã lưu vết.',
         tone: 'danger',
       }
     case 'not-recorded':
       return {
         title: 'Chưa có bản ghi',
-        message: 'Bằng chứng này chưa được ghi nhận trên sổ cái.',
+        message: 'Bằng chứng này chưa được lưu vết.',
         tone: 'warning',
       }
     default:
       return {
         title: 'Chưa thể xác minh',
-        message: 'Không thể truy vấn sổ cái tại thời điểm này.',
+        message: 'Không thể truy vấn hệ thống lưu vết lúc này.',
         tone: 'warning',
       }
   }
@@ -246,7 +246,7 @@ export function FabricLedgerEvidenceCard({
             <Blocks className="h-4 w-4 text-[var(--primary)] shrink-0" />
             <div className="flex flex-col min-w-0">
               <span className="text-[10px] uppercase text-[var(--muted)] font-semibold">
-                Khối sổ cái (Block Height)
+                Số khối lưu vết
               </span>
               <span
                 data-testid="fabric-block-number"
@@ -268,7 +268,7 @@ export function FabricLedgerEvidenceCard({
             <Clock className="h-4 w-4 text-[var(--primary)] shrink-0" />
             <div className="flex flex-col min-w-0">
               <span className="text-[10px] uppercase text-[var(--muted)] font-semibold">
-                Thời điểm ghi sổ cái
+                Thời điểm lưu vết
               </span>
               <span
                 data-testid="fabric-timestamp"
@@ -428,7 +428,7 @@ export function FabricLedgerEvidenceCard({
         onClick={() => setIsEvidenceOpen(true)}
         className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-[var(--surface-muted)] border border-[var(--border)] text-[var(--fg)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors"
       >
-        Xem chi tiết sổ cái
+        Xem chi tiết lưu vết
       </button>
       <EvidencePackageDownload contractId={contractId} />
       <LedgerEvidenceDrawer
@@ -451,8 +451,8 @@ export function FabricLedgerEvidenceCard({
           />
           <span>
             {isVerifying
-              ? 'Đang đối soát sổ cái...'
-              : 'Đối soát toàn vẹn sổ cái Blockchain'}
+              ? 'Đang đối soát lưu vết...'
+              : 'Đối soát toàn vẹn nội dung hợp đồng'}
           </span>
         </button>
       )}

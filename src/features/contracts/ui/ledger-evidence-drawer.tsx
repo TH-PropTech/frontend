@@ -157,7 +157,7 @@ export function LedgerEvidenceDrawer({
         className="w-full overflow-y-auto sm:max-w-lg"
       >
         <SheetHeader>
-          <SheetTitle>Bằng chứng sổ cái</SheetTitle>
+          <SheetTitle>Bằng chứng lưu vết</SheetTitle>
           <SheetDescription>
             Dòng thời gian đã làm sạch theo contract và các aggregate liên quan.
           </SheetDescription>
@@ -212,7 +212,7 @@ export function LedgerEvidenceDrawer({
               data-testid="ledger-evidence-empty"
               className="text-xs text-[var(--muted)]"
             >
-              Chưa có bằng chứng sổ cái.
+              Chưa có bằng chứng lưu vết.
             </p>
           )}
         </div>

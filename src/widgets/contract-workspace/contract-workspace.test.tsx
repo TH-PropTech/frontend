@@ -240,6 +240,20 @@ describe('ContractWorkspace', () => {
     expect(tabs[0]).toHaveAttribute('aria-selected', 'false')
   })
 
+  it('does not leak internal jargon into the visible workspace text', async () => {
+    render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
+
+    const workspace = await screen.findByTestId('contract-workspace')
+    const clone = workspace.cloneNode(true) as HTMLElement
+    clone
+      .querySelectorAll('[data-testid="contract-technical-details"]')
+      .forEach(node => node.remove())
+
+    expect(clone.textContent).not.toMatch(
+      /Hyperledger|[Bb]lockchain|sổ cái|artifact|PoC|TxID|Digest/i
+    )
+  })
+
   it('resolves the viewer from the stored login user when the route passes no currentUserId', async () => {
     window.localStorage.setItem(
       'user',

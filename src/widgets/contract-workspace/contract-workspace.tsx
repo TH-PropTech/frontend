@@ -218,7 +218,7 @@ export function ContractWorkspace({
                 variant="outline"
                 className="text-[10px] font-bold text-[var(--success)] bg-[var(--surface-muted)]"
               >
-                Hyperledger
+                Lưu vết thật
               </Badge>
             )}
           </div>
@@ -256,7 +256,8 @@ export function ContractWorkspace({
             <p className="mt-1 leading-relaxed text-[var(--muted)]">
               Bạn được phép xem workspace theo transfer đã hoàn tất. Chủ nhà
               pháp lý gốc vẫn là {parties.landlord.name}; quyền kế nhiệm không
-              thay thế chữ ký, snapshot pháp lý hoặc bằng chứng blockchain.
+              thay thế chữ ký, bản chốt quy định pháp lý hoặc bằng chứng lưu
+              vết.
             </p>
           </div>
         </div>

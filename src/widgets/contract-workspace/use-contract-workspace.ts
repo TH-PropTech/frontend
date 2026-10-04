@@ -291,35 +291,34 @@ export function useContractWorkspace({
           isValid: true,
           verificationStatus: 'valid',
           message:
-            'Tính toàn vẹn hợp lệ: Hash đối soát khớp tuyệt đối với sổ cái Hyperledger Fabric.',
+            'Nội dung hợp đồng toàn vẹn: mã xác thực khớp tuyệt đối với bản đã lưu vết.',
         })
       } else if (res.verificationStatus === 'not-recorded') {
         setIntegrityResult({
           isValid: null,
           verificationStatus: 'not-recorded',
-          message:
-            'Chưa ghi nhận trên sổ cái: Hợp đồng chưa có bản ghi xác nhận trên blockchain.',
+          message: 'Chưa lưu vết: hợp đồng chưa có bản ghi xác nhận.',
         })
       } else if (res.verificationStatus === 'unavailable') {
         setIntegrityResult({
           isValid: null,
           verificationStatus: 'unavailable',
           message:
-            'Hệ thống sổ cái tạm thời không khả dụng: Không thể kết nối tới nút mạng Hyperledger Fabric.',
+            'Hệ thống lưu vết tạm thời không khả dụng: không thể kết nối để đối soát.',
         })
       } else {
         setIntegrityResult({
           isValid: false,
           verificationStatus: 'invalid',
           message:
-            'Cảnh báo: Phát hiện sai lệch giữa mã băm hiện tại và bản ghi trên sổ cái!',
+            'Cảnh báo: phát hiện sai lệch giữa mã xác thực hiện tại và bản đã lưu vết!',
         })
       }
     } catch {
       setIntegrityResult({
         isValid: null,
         verificationStatus: 'unavailable',
-        message: 'Không thể kết nối đến node sổ cái để đối soát mã băm.',
+        message: 'Không thể kết nối hệ thống lưu vết để đối soát.',
       })
     } finally {
       setIsVerifyingIntegrity(false)
