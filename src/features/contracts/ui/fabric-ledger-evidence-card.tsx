@@ -21,6 +21,7 @@ import {
   type VerificationLayerState,
 } from '../lib/ledger-evidence-view'
 import { EvidencePackageDownload } from './evidence-package-download'
+import { HelpTip } from './help-tip'
 import { LedgerEvidenceDrawer } from './ledger-evidence-drawer'
 
 export interface FabricLedgerEvidenceCardProps {
@@ -178,6 +179,7 @@ export function FabricLedgerEvidenceCard({
           <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
             Minh chứng lưu vết chống sửa đổi
           </h4>
+          <HelpTip term="ledgerTrace" />
         </div>
 
         {isSimulation ? (
@@ -285,8 +287,9 @@ export function FabricLedgerEvidenceCard({
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <Hash className="h-4 w-4 text-[var(--primary)] shrink-0" />
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[10px] uppercase text-[var(--muted)] font-semibold">
+              <span className="inline-flex items-center gap-1 text-[10px] uppercase text-[var(--muted)] font-semibold">
                 Mã giao dịch lưu vết
+                <HelpTip term="transactionId" />
               </span>
               <span
                 data-testid="fabric-tx-hash"
@@ -322,8 +325,9 @@ export function FabricLedgerEvidenceCard({
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <FileCheck2 className="h-4 w-4 text-[var(--primary)] shrink-0" />
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[10px] uppercase text-[var(--muted)] font-semibold">
+              <span className="inline-flex items-center gap-1 text-[10px] uppercase text-[var(--muted)] font-semibold">
                 Mã xác thực nội dung hợp đồng
+                <HelpTip term="contentHash" />
               </span>
               <span
                 data-testid="fabric-contract-hash"

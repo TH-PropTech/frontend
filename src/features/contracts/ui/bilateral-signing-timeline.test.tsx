@@ -191,4 +191,17 @@ describe('BilateralSigningTimeline', () => {
       expect(wrapper.className).not.toContain('pointer-events-none')
     })
   })
+  it('uses Vietnamese-only role names and keeps status badges on one line', () => {
+    render(
+      <BilateralSigningTimeline tenant={tenantBase} landlord={landlordBase} />
+    )
+
+    expect(screen.queryByText(/(Tenant)|(Landlord)/)).toBeNull()
+    expect(screen.getByTestId('tenant-signed-badge')).toHaveClass(
+      'whitespace-nowrap'
+    )
+    expect(screen.getByTestId('signing-status-badge')).toHaveClass(
+      'whitespace-nowrap'
+    )
+  })
 })
