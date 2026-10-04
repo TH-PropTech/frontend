@@ -83,7 +83,7 @@ export const SaveSearchDialog: React.FC<SaveSearchDialogProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 border-primary-200 text-primary-700 hover:bg-primary-50"
+            className="gap-1.5 border-primary-200 text-primary-700 hover:bg-primary-50 max-sm:min-h-11"
           >
             <BookmarkPlus className="w-4 h-4 text-primary-600" />
             <span>Lưu tìm kiếm</span>

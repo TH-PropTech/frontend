@@ -7,6 +7,7 @@ import { Button } from '@/shared/ui/button'
 import { useFavorites } from '@/shared/lib/use-favorites'
 import { AuthRequiredModal } from '@/widgets/community-dashboard/ui/components/auth-required-modal'
 import {
+  formatRentPrice,
   getRentalAvailabilityPresentation,
   type RentalAvailabilityStatus,
 } from '@/entities/properties'
@@ -68,6 +69,7 @@ export function ApartmentCard({
             <img
               src={apt.image}
               alt={apt.title}
+              loading="lazy"
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 hover:scale-105"
             />
           ) : (
@@ -143,7 +145,7 @@ export function ApartmentCard({
         </h3>
         <div className="mt-1 flex items-baseline">
           <span className="text-base font-extrabold text-primary">
-            {apt.price}
+            {formatRentPrice(apt.priceNum, apt.price)}
           </span>
         </div>
         <p className="mt-2.5 font-body text-xs text-muted leading-relaxed line-clamp-2 min-h-[36px]">

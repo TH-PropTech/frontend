@@ -13,7 +13,7 @@ export function SavedSearchControl({
   filters,
 }: SavedSearchControlProps): React.ReactElement {
   return (
-    <div className="mx-auto mt-5 flex max-w-6xl justify-end px-6 md:px-10">
+    <div className="mx-auto mt-5 flex max-w-6xl justify-end px-4 sm:px-6 md:px-10">
       <SaveSearchDialog currentFilters={filters} />
     </div>
   )

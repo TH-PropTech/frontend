@@ -14,6 +14,7 @@ import { ProjectGridView } from './components/project-grid-view'
 import { LandlordActionBar } from './components/landlord-action-bar'
 import { SavedSearchControl } from './components/saved-search-control'
 import type { SavedSearchFilters } from '@/features/saved-searches'
+import { getRentalAvailabilityPresentation } from '@/entities/properties'
 import { toast } from 'sonner'
 
 export function PropertiesDashboard(): React.ReactElement {
@@ -70,7 +71,7 @@ export function PropertiesDashboard(): React.ReactElement {
     activeFiltersCount,
     filteredProjects,
     filteredApiProjects,
-    filteredApartments,
+    filteredApartments: matchedApartments,
     apartmentsError,
     locationLabel,
     priceLabel,
@@ -90,6 +91,17 @@ export function PropertiesDashboard(): React.ReactElement {
     revertLocationFilters,
     triggerSearch,
   } = usePropertiesFilters()
+
+  const [onlyAvailable, setOnlyAvailable] = React.useState(false)
+  const filteredApartments = React.useMemo(
+    () =>
+      onlyAvailable
+        ? matchedApartments.filter(
+            apt => getRentalAvailabilityPresentation(apt).status === 'available'
+          )
+        : matchedApartments,
+    [onlyAvailable, matchedApartments]
+  )
 
   const selectedBuildingName = React.useMemo(() => {
     if (!selectedBuildingId) return null
@@ -183,7 +195,7 @@ export function PropertiesDashboard(): React.ReactElement {
   }
 
   return (
-    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative overflow-x-hidden">
+    <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative overflow-x-clip">
       <HomeHeader />
 
       <main className="w-full pb-20">
@@ -277,7 +289,7 @@ export function PropertiesDashboard(): React.ReactElement {
                 {activeTab === 'single'
                   ? selectedBuildingId
                     ? `Căn hộ tại ${selectedBuildingName} (${filteredApartments.length})`
-                    : `Căn hộ khả dụng (${filteredApartments.length})`
+                    : `${onlyAvailable ? 'Căn hộ còn trống' : 'Căn hộ cho thuê'} (${filteredApartments.length})`
                   : selectedApiProjectId
                     ? `Tòa nhà trong dự án (${apiBuildings.length})`
                     : `Dự án từ Chủ đầu tư (${apiProjects.length > 0 ? apiProjects.length : filteredProjects.length})`}
@@ -333,11 +345,22 @@ export function PropertiesDashboard(): React.ReactElement {
                   Quay lại danh sách dự án
                 </button>
               )}
+              {activeTab === 'single' && (
+                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-xs font-bold text-muted sm:min-h-0">
+                  <input
+                    type="checkbox"
+                    checked={onlyAvailable}
+                    onChange={e => setOnlyAvailable(e.target.checked)}
+                    className="h-4 w-4 cursor-pointer accent-primary"
+                  />
+                  Chỉ căn còn trống
+                </label>
+              )}
               <div className="flex rounded-lg bg-surface-muted p-1 border border-border">
                 <button
                   type="button"
                   onClick={() => setViewMode('list')}
-                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                  className={`min-h-10 px-3 py-1.5 sm:min-h-0 rounded-md text-xs font-bold transition-all cursor-pointer ${
                     viewMode === 'list'
                       ? 'bg-white text-primary shadow-sm'
                       : 'text-muted hover:text-fg'
@@ -348,7 +371,7 @@ export function PropertiesDashboard(): React.ReactElement {
                 <button
                   type="button"
                   onClick={() => setViewMode('map')}
-                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                  className={`min-h-10 px-3 py-1.5 sm:min-h-0 rounded-md text-xs font-bold transition-all cursor-pointer ${
                     viewMode === 'map'
                       ? 'bg-white text-primary shadow-sm'
                       : 'text-muted hover:text-fg'
@@ -461,7 +484,7 @@ export function PropertiesDashboard(): React.ReactElement {
 
       {/* Floating Compare Action Bar for Guest and Authenticated Users */}
       {compareIds.length >= 2 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-surface/95 backdrop-blur-md border border-border-strong text-fg px-6 py-4 rounded-2xl shadow-2xl flex items-center justify-between gap-8 z-[999] w-[90%] max-w-xl animate-in slide-in-from-bottom duration-300">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-surface/95 backdrop-blur-md border border-border-strong text-fg px-4 py-3 sm:px-6 sm:py-4 rounded-2xl shadow-2xl flex flex-wrap items-center justify-between gap-3 sm:gap-8 z-[999] w-[90%] max-w-xl animate-in slide-in-from-bottom duration-300">
           <div className="space-y-0.5">
             <p className="font-marketing text-xs font-bold text-fg flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />

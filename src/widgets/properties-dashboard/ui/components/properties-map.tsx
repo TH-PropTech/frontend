@@ -3,7 +3,17 @@
 import * as React from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
+import { formatRentPrice, formatRentPriceCompact } from '@/entities/properties'
 import 'leaflet/dist/leaflet.css'
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
 export const PROPERTY_MAP_TILE_URL =
   'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
@@ -97,7 +107,13 @@ export function PropertiesMap({
         // Generate coordinates around HCMC using deterministic math
         const { lat, lng } = getDeterministicCoords(item.id, index)
 
-        const labelText = activeTab === 'single' ? item.price : item.title
+        const labelText = escapeHtml(
+          String(
+            activeTab === 'single'
+              ? formatRentPriceCompact(item.priceNum, item.price)
+              : item.title
+          )
+        )
         const colorClass =
           activeTab === 'single' ? 'bg-[#C65A3A]' : 'bg-[#10B981]'
         const arrowColorClass =
@@ -167,7 +183,10 @@ export function PropertiesMap({
                 {selectedMapApt.title || selectedMapApt.name}
               </h4>
               <p className="text-xs text-primary font-extrabold mt-1">
-                {selectedMapApt.price || selectedMapApt.priceRange}
+                {formatRentPrice(
+                  selectedMapApt.priceNum,
+                  selectedMapApt.price || selectedMapApt.priceRange
+                )}
               </p>
             </div>
             <button

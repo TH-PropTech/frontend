@@ -35,7 +35,7 @@ export function Logo({
         priority
       />
       <span
-        className={`font-display font-bold tracking-tight ${textColor} ${text}`}
+        className={`font-display font-bold tracking-tight whitespace-nowrap ${textColor} ${text}`}
       >
         TH-<span className={accentColor}>PropTech</span>
       </span>
