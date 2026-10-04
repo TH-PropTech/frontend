@@ -35,6 +35,7 @@ import {
 import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
 import { TransactionTimeline } from '@/features/rental-transactions'
 import { DepositPaymentPanel } from '@/features/payments'
+import { RailGroup } from './rail-group'
 import { useContractWorkspace } from './use-contract-workspace'
 
 export interface ContractWorkspaceProps {
@@ -404,25 +405,9 @@ export function ContractWorkspace({
             activeMobileTab !== 'document' ? 'flex' : 'hidden lg:flex'
           }`}
         >
-          <div
-            className={
-              activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
-            }
-          >
-            <ContractAmendmentTimeline
-              contractId={contractId}
-              canManage={Boolean(
-                data.actions.canEditContent && !data.access?.canSign
-              )}
-              canSign={Boolean(data.access?.canSign)}
-            />
-          </div>
-
-          {/* Contract Flow Guide — chỉ rõ bước hiện tại theo strategy (Actions tab on mobile) */}
-          <div
-            className={
-              activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
-            }
+          <RailGroup
+            title="Tiến trình hợp đồng"
+            isMobileActive={activeMobileTab === 'actions'}
           >
             <ContractFlowGuide
               contractId={contractId}
@@ -433,56 +418,34 @@ export function ContractWorkspace({
               signedByLandlord={parties.landlord.hasSigned}
               serverFlow={flow}
             />
-          </div>
 
-          {/* Party Info Cards (Parties tab on mobile) */}
-          <div
-            className={
-              activeMobileTab === 'parties' ? 'block' : 'hidden lg:block'
-            }
-          >
-            <PartyInfoCards
-              tenant={parties.tenant}
-              landlord={parties.landlord}
-              currentUserId={currentUserId}
-            />
-          </div>
-
-          {/* Deposit Payment Panel & Policy (Actions tab on mobile) */}
-          {contract.executionPolicy ? (
-            <section
-              data-testid="contract-execution-policy"
-              className={`rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-4 sm:p-5 shadow-sm ${
-                activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <Landmark
-                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)]"
-                  aria-hidden="true"
-                />
-                <div className="space-y-1 text-xs">
-                  <h3 className="font-bold text-[var(--fg)]">
-                    Trình tự cọc và ký đã chốt
-                  </h3>
-                  <p className="font-semibold text-[var(--primary)]">
-                    {contract.executionPolicy.strategy === 'DEPOSIT_FIRST'
-                      ? 'Cọc trước, sau đó ký hợp đồng'
-                      : 'Ký hợp đồng trước, sau đó thanh toán cọc'}
-                  </p>
-                  <p className="leading-relaxed text-[var(--muted)]">
-                    {contract.executionPolicy.nextAction}
-                  </p>
+            {contract.executionPolicy ? (
+              <section
+                data-testid="contract-execution-policy"
+                className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-4 sm:p-5 shadow-sm"
+              >
+                <div className="flex items-start gap-3">
+                  <Landmark
+                    className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)]"
+                    aria-hidden="true"
+                  />
+                  <div className="space-y-1 text-xs">
+                    <h3 className="font-bold text-[var(--fg)]">
+                      Trình tự cọc và ký đã chốt
+                    </h3>
+                    <p className="font-semibold text-[var(--primary)]">
+                      {contract.executionPolicy.strategy === 'DEPOSIT_FIRST'
+                        ? 'Cọc trước, sau đó ký hợp đồng'
+                        : 'Ký hợp đồng trước, sau đó thanh toán cọc'}
+                    </p>
+                    <p className="leading-relaxed text-[var(--muted)]">
+                      {contract.executionPolicy.nextAction}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </section>
-          ) : null}
+              </section>
+            ) : null}
 
-          <div
-            className={
-              activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
-            }
-          >
             <DepositPaymentPanel
               deposit={deposit}
               isTenant={isTenant}
@@ -491,14 +454,7 @@ export function ContractWorkspace({
               onRefresh={() => void refresh()}
               isActiveStep={resolvePanelActivity('deposit', activeStep, flow)}
             />
-          </div>
 
-          {/* Bilateral Signing Stepper (Actions tab on mobile) */}
-          <div
-            className={
-              activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
-            }
-          >
             <BilateralSigningTimeline
               tenant={parties.tenant}
               landlord={parties.landlord}
@@ -509,14 +465,7 @@ export function ContractWorkspace({
               onSignClick={() => setIsSigningModalOpen(true)}
               isActiveStep={resolvePanelActivity('signing', activeStep, flow)}
             />
-          </div>
 
-          {/* Contract Status Timeline (Actions tab on mobile) */}
-          <div
-            className={
-              activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
-            }
-          >
             <ContractStatusTimeline
               status={contract.status}
               {...(contract.executionPolicy?.strategy
@@ -528,25 +477,42 @@ export function ContractWorkspace({
               txHash={ledger.txHash}
               serverFlow={flow}
             />
-          </div>
 
-          {/* Public Service & Legal Citation Panel (Public-service tab on mobile) */}
-          <div
-            className={
-              activeMobileTab === 'public-service' ? 'block' : 'hidden lg:block'
-            }
+            <ContractAmendmentTimeline
+              contractId={contractId}
+              canManage={Boolean(
+                data.actions.canEditContent && !data.access?.canSign
+              )}
+              canSign={Boolean(data.access?.canSign)}
+            />
+          </RailGroup>
+
+          <RailGroup
+            title="Các bên tham gia"
+            isMobileActive={activeMobileTab === 'parties'}
+          >
+            <PartyInfoCards
+              tenant={parties.tenant}
+              landlord={parties.landlord}
+              currentUserId={currentUserId}
+            />
+          </RailGroup>
+
+          <RailGroup
+            title="Pháp lý và dịch vụ công"
+            defaultOpen={false}
+            isMobileActive={activeMobileTab === 'public-service'}
           >
             <PublicServiceCitationPanel
               contractId={contractId}
               contractCode={contract.code}
             />
-          </div>
+          </RailGroup>
 
-          {/* Fabric Ledger Evidence Card (Audit tab on mobile) */}
-          <div
-            className={
-              activeMobileTab === 'audit' ? 'block' : 'hidden lg:block'
-            }
+          <RailGroup
+            title="Bằng chứng và nhật ký"
+            defaultOpen={false}
+            isMobileActive={activeMobileTab === 'audit'}
           >
             <FabricLedgerEvidenceCard
               contractId={contractId}
@@ -562,63 +528,52 @@ export function ContractWorkspace({
               isVerifying={isVerifyingIntegrity}
               integrityResult={integrityResult}
             />
-          </div>
 
-          <div
-            className={
-              activeMobileTab === 'audit' ? 'block' : 'hidden lg:block'
-            }
-          >
             <TransactionTimeline
               applicationId={contractId}
               initialEvents={[]}
             />
-          </div>
 
-          {/* Audit Events Trail Drawer (Audit tab on mobile) */}
-          {auditEvents && auditEvents.length > 0 && (
-            <div
-              data-testid="audit-events-panel"
-              className={`rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 shadow-sm flex flex-col gap-3 ${
-                activeMobileTab === 'audit' ? 'block' : 'hidden lg:block'
-              }`}
-            >
-              <div className="flex items-center justify-between">
+            {auditEvents && auditEvents.length > 0 && (
+              <div
+                data-testid="audit-events-panel"
+                className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 shadow-sm flex flex-col gap-3"
+              >
                 <div className="flex items-center gap-2">
                   <History className="w-4 h-4 text-[var(--primary)]" />
                   <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
                     Nhật ký sự kiện lưu vết ({auditEvents.length})
                   </h4>
                 </div>
-              </div>
 
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                {auditEvents.map(evt => (
-                  <div
-                    key={evt.id}
-                    className="p-2.5 rounded-lg bg-[var(--surface-muted)] border border-[var(--border)] text-xs flex flex-col gap-1"
-                  >
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="font-bold font-mono text-[var(--primary)]">
-                        {ledgerEventLabel(evt.eventType)}
-                      </span>
-                      <span className="text-[var(--muted)]">
-                        {new Date(evt.occurredAt).toLocaleTimeString('vi-VN')}
-                      </span>
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  {auditEvents.map(evt => (
+                    <div
+                      key={evt.id}
+                      className="p-2.5 rounded-lg bg-[var(--surface-muted)] border border-[var(--border)] text-xs flex flex-col gap-1"
+                    >
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="font-bold font-mono text-[var(--primary)]">
+                          {ledgerEventLabel(evt.eventType)}
+                        </span>
+                        <span className="text-[var(--muted)]">
+                          {new Date(evt.occurredAt).toLocaleTimeString('vi-VN')}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[var(--fg)]">
+                        {evt.description}
+                      </p>
+                      {evt.txHash && (
+                        <span className="font-mono text-[10px] text-[var(--muted)] truncate">
+                          Mã giao dịch: {evt.txHash}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-[11px] text-[var(--fg)]">
-                      {evt.description}
-                    </p>
-                    {evt.txHash && (
-                      <span className="font-mono text-[10px] text-[var(--muted)] truncate">
-                        Mã giao dịch: {evt.txHash}
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </RailGroup>
         </aside>
       </div>
 
