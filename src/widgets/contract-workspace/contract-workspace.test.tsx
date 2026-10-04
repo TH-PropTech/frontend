@@ -254,6 +254,25 @@ describe('ContractWorkspace', () => {
     )
   })
 
+  it('keeps the right rail sticky on desktop and releases it in reading mode', async () => {
+    render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
+
+    const rail = await screen.findByRole('complementary', {
+      hidden: true,
+      name: 'Tiến trình và bằng chứng hợp đồng',
+    })
+    expect(rail).toHaveClass(
+      'lg:sticky',
+      'lg:max-h-[calc(100vh-2rem)]',
+      'lg:overflow-y-auto'
+    )
+
+    fireEvent.click(screen.getByLabelText('Mở rộng toàn màn hình'))
+
+    expect(rail).not.toHaveClass('lg:sticky')
+    expect(rail).not.toHaveClass('lg:overflow-y-auto')
+  })
+
   it('resolves the viewer from the stored login user when the route passes no currentUserId', async () => {
     window.localStorage.setItem(
       'user',
