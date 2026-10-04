@@ -30,6 +30,7 @@ import type {
   ContractPropertySnapshot,
   ContractCommercialSnapshot,
 } from '../api/contracts-api'
+import { getContractStatusLabel } from '../lib/contract-labels'
 
 export interface ContractDocumentViewerProps {
   document: ContractDocumentView
@@ -245,9 +246,7 @@ export function ContractDocumentViewer({
   const page3Sections = renderSections.filter(
     s => s.number >= 7 && s.number <= 9
   )
-  const page4Sections = renderSections.filter(
-    s => s.number >= 10 && s.number <= 12
-  )
+  const page4Sections = renderSections.filter(s => s.number >= 10)
 
   const renderArticle = (
     section: (typeof document.sections)[0],
@@ -320,7 +319,7 @@ export function ContractDocumentViewer({
         {/* Tier 1: Search, Filter & Action Buttons */}
         <div className="flex flex-wrap items-center justify-between gap-2.5 w-full">
           {/* Search & Article Dropdown */}
-          <div className="flex flex-1 items-center gap-2 min-w-[240px]">
+          <div className="flex w-full flex-1 items-center gap-2 sm:min-w-[240px]">
             <div className="relative flex-1 min-w-[130px]">
               <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)] pointer-events-none" />
               <input
@@ -341,7 +340,7 @@ export function ContractDocumentViewer({
                 className="w-full appearance-none px-2.5 py-1.5 pr-7 text-xs rounded-md border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] cursor-pointer truncate"
               >
                 <option value="all">
-                  Tất cả ({document?.sections?.length || 12} điều)
+                  Tất cả ({document?.sections?.length ?? 0} điều)
                 </option>
                 {document?.sections?.map(s => (
                   <option key={s.id} value={s.id}>
@@ -363,7 +362,7 @@ export function ContractDocumentViewer({
                 onClick={onDownloadPdf}
                 disabled={isDownloading}
                 aria-label="Tải bản PDF"
-                className="h-8 px-2.5 text-xs font-semibold"
+                className="h-10 px-3 text-xs font-semibold sm:h-8 sm:px-2.5"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>PDF</span>
@@ -378,7 +377,7 @@ export function ContractDocumentViewer({
                 onClick={onDownloadDocx}
                 disabled={isDownloading}
                 aria-label="Tải bản DOCX"
-                className="h-8 px-2.5 text-xs"
+                className="h-10 px-3 text-xs sm:h-8 sm:px-2.5"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span>DOCX</span>
@@ -391,7 +390,7 @@ export function ContractDocumentViewer({
               variant="secondary"
               onClick={handlePrint}
               aria-label="In hợp đồng"
-              className="h-8 px-2.5 text-xs"
+              className="h-10 px-3 text-xs sm:h-8 sm:px-2.5"
               title="In văn bản"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -399,23 +398,25 @@ export function ContractDocumentViewer({
             </Button>
 
             {/* Expand / Collapse Full Width Button */}
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={handleToggleExpand}
-              aria-label={
-                isExpanded ? 'Thu gọn màn hình' : 'Mở rộng toàn màn hình'
-              }
-              className="h-8 px-2 text-xs"
-              title={isExpanded ? 'Thu gọn 2 cột' : 'Mở rộng full màn hình'}
-            >
-              {isExpanded ? (
-                <Minimize2 className="w-3.5 h-3.5 text-[var(--primary)]" />
-              ) : (
-                <Maximize2 className="w-3.5 h-3.5" />
-              )}
-            </Button>
+            <div className="hidden lg:block">
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={handleToggleExpand}
+                aria-label={
+                  isExpanded ? 'Thu gọn màn hình' : 'Mở rộng toàn màn hình'
+                }
+                className="h-8 px-2 text-xs"
+                title={isExpanded ? 'Thu gọn 2 cột' : 'Mở rộng full màn hình'}
+              >
+                {isExpanded ? (
+                  <Minimize2 className="w-3.5 h-3.5 text-[var(--primary)]" />
+                ) : (
+                  <Maximize2 className="w-3.5 h-3.5" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -453,7 +454,7 @@ export function ContractDocumentViewer({
 
           {/* Right: Zoom Controls & Security Status */}
           <div className="flex items-center gap-2">
-            <div className="inline-flex items-center gap-1 px-1 py-0.5 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-[11px]">
+            <div className="hidden items-center gap-1 px-1 py-0.5 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-[11px] sm:inline-flex">
               <button
                 type="button"
                 onClick={handleZoomOut}
@@ -479,7 +480,9 @@ export function ContractDocumentViewer({
 
             <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-[var(--muted)] font-medium">
               <ShieldCheck className="w-3.5 h-3.5 text-[var(--success)]" />
-              <span>12 Điều · Chuẩn NĐ 96/2024</span>
+              <span>
+                {document.sections?.length ?? 0} Điều · Chuẩn NĐ 96/2024
+              </span>
             </span>
           </div>
         </div>
@@ -568,7 +571,7 @@ export function ContractDocumentViewer({
                 </span>{' '}
                 | Trạng thái:{' '}
                 <span className="font-semibold text-[var(--primary)] uppercase">
-                  {status}
+                  {getContractStatusLabel(status)}
                 </span>
               </p>
               {document?.lockedHash && (
@@ -584,88 +587,7 @@ export function ContractDocumentViewer({
             </div>
           ) : null}
 
-          {/* Canonical Artifact Panel (if available) */}
-          {document.canonicalArtifact ? (
-            <section
-              data-testid="canonical-artifact-panel"
-              aria-label="Canonical PDF artifact"
-              className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-4 text-xs"
-            >
-              <div className="flex items-start gap-2">
-                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
-                <div className="min-w-0 flex-1">
-                  <h2 className="font-bold text-[var(--fg)]">
-                    Artifact PDF chuẩn dùng cho view, tải xuống và ký số
-                  </h2>
-                  <div className="mt-2 grid gap-1 text-[var(--muted)] sm:grid-cols-2">
-                    <p>
-                      Mã artifact:{' '}
-                      <span className="font-mono text-[var(--fg)]">
-                        {document.canonicalArtifact.artifactId}
-                      </span>
-                    </p>
-                    <p>
-                      Revision{' '}
-                      <span className="font-semibold text-[var(--fg)]">
-                        {document.canonicalArtifact.revision}
-                      </span>
-                    </p>
-                    <p>
-                      Template:{' '}
-                      <span className="font-mono text-[var(--fg)]">
-                        {document.canonicalArtifact.templateKey}@
-                        {document.canonicalArtifact.templateVersion}
-                      </span>
-                    </p>
-                    <p>
-                      Định dạng:{' '}
-                      <span className="font-mono text-[var(--fg)]">
-                        {document.canonicalArtifact.contentType}
-                      </span>
-                    </p>
-                  </div>
-                  <p className="mt-2 break-all font-mono text-[10px] text-[var(--fg)]">
-                    SHA-256: {document.canonicalArtifact.artifactHash}
-                  </p>
-                  {document.canonicalArtifact.canonicalContentHash ? (
-                    <p className="mt-1 break-all font-mono text-[10px] text-[var(--muted)]">
-                      Mã nội dung pháp lý:{' '}
-                      {document.canonicalArtifact.canonicalContentHash}
-                    </p>
-                  ) : null}
-                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[var(--muted)]">
-                    {document.canonicalArtifact.rendererVersion ? (
-                      <span>
-                        Renderer:{' '}
-                        <span className="font-mono text-[var(--fg)]">
-                          {document.canonicalArtifact.rendererVersion}
-                        </span>
-                      </span>
-                    ) : null}
-                    {document.canonicalArtifact.sourceSchemaVersion ? (
-                      <span>
-                        Schema:{' '}
-                        <span className="font-semibold text-[var(--fg)]">
-                          v{document.canonicalArtifact.sourceSchemaVersion}
-                        </span>
-                      </span>
-                    ) : null}
-                    {document.canonicalArtifact.byteLength ? (
-                      <span>
-                        Kích thước:{' '}
-                        <span className="font-semibold text-[var(--fg)]">
-                          {document.canonicalArtifact.byteLength.toLocaleString(
-                            'vi-VN'
-                          )}{' '}
-                          bytes
-                        </span>
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </section>
-          ) : (
+          {!document.canonicalArtifact ? (
             <section
               data-testid="canonical-artifact-empty"
               role="status"
@@ -674,86 +596,189 @@ export function ContractDocumentViewer({
               Chưa có canonical PDF artifact. Hợp đồng chưa đủ điều kiện để ký
               SmartCA.
             </section>
-          )}
+          ) : null}
 
-          <section
-            data-testid="legal-template-panel"
-            aria-label="Legal template metadata"
-            className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/50 p-4 text-xs"
+          {/* Metadata kỹ thuật: gập mặc định để văn bản hợp đồng lên trước */}
+          <details
+            data-testid="contract-technical-details"
+            className="group rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/30 text-xs"
           >
-            <div className="flex items-start gap-2">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
-              <div className="min-w-0 flex-1">
-                <h2 className="font-bold text-[var(--fg)]">
-                  Căn cứ pháp lý và trạng thái nội dung
-                </h2>
-                <div className="mt-2 grid gap-1 text-[var(--muted)] sm:grid-cols-2">
-                  <p>
-                    Hồ sơ pháp lý:{' '}
-                    <span className="font-semibold text-[var(--fg)]">
-                      {document.legalProfile ?? 'Chưa xác định'}
-                    </span>
-                  </p>
-                  <p>
-                    Template:{' '}
-                    <span className="font-mono text-[var(--fg)]">
-                      {document.templateVersion ?? 'Chưa gắn template'}
-                    </span>
-                  </p>
-                  <p>
-                    Schema hash:{' '}
-                    <span className="font-semibold text-[var(--fg)]">
-                      v{document.hashSchemaVersion}
-                    </span>
-                  </p>
-                  <p>
-                    Trạng thái:{' '}
-                    <span className="font-semibold text-[var(--fg)]">
-                      {document.mode === 'locked'
-                        ? 'Đã khóa nội dung'
-                        : 'Bản nháp'}
-                    </span>
-                  </p>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span className="text-[var(--muted)]">Đối soát:</span>
-                  <Badge
-                    variant={
-                      document.integrity === 'valid'
-                        ? 'default'
-                        : document.integrity === 'mismatch'
-                          ? 'destructive'
-                          : 'outline'
-                    }
-                  >
-                    {document.integrity === 'valid'
-                      ? 'Đã xác minh'
-                      : document.integrity === 'mismatch'
-                        ? 'Không khớp'
-                        : document.integrity === 'unavailable'
-                          ? 'Chưa khả dụng'
-                          : 'Chưa khóa'}
-                  </Badge>
-                </div>
-                {document.citationIds?.length ? (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {document.citationIds.map(citationId => (
-                      <span
-                        key={citationId}
-                        className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 font-mono text-[10px] text-[var(--fg)]"
-                      >
-                        {citationId}
-                      </span>
-                    ))}
+            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-4 py-2 font-semibold text-[var(--fg)] [&::-webkit-details-marker]:hidden">
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck
+                  className="h-4 w-4 text-[var(--primary)]"
+                  aria-hidden="true"
+                />
+                Chi tiết kỹ thuật và căn cứ pháp lý
+              </span>
+              <ChevronDown
+                className="h-4 w-4 text-[var(--muted)] transition-transform group-open:rotate-180"
+                aria-hidden="true"
+              />
+            </summary>
+            <div className="space-y-4 px-4 pb-4">
+              {document.canonicalArtifact ? (
+                <section
+                  data-testid="canonical-artifact-panel"
+                  aria-label="Canonical PDF artifact"
+                  className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-4 text-xs"
+                >
+                  <div className="flex items-start gap-2">
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
+                    <div className="min-w-0 flex-1">
+                      <h2 className="font-bold text-[var(--fg)]">
+                        Artifact PDF chuẩn dùng cho view, tải xuống và ký số
+                      </h2>
+                      <div className="mt-2 grid gap-1 text-[var(--muted)] sm:grid-cols-2">
+                        <p>
+                          Mã artifact:{' '}
+                          <span className="font-mono text-[var(--fg)]">
+                            {document.canonicalArtifact.artifactId}
+                          </span>
+                        </p>
+                        <p>
+                          Revision{' '}
+                          <span className="font-semibold text-[var(--fg)]">
+                            {document.canonicalArtifact.revision}
+                          </span>
+                        </p>
+                        <p>
+                          Template:{' '}
+                          <span className="font-mono text-[var(--fg)]">
+                            {document.canonicalArtifact.templateKey}@
+                            {document.canonicalArtifact.templateVersion}
+                          </span>
+                        </p>
+                        <p>
+                          Định dạng:{' '}
+                          <span className="font-mono text-[var(--fg)]">
+                            {document.canonicalArtifact.contentType}
+                          </span>
+                        </p>
+                      </div>
+                      <p className="mt-2 break-all font-mono text-[10px] text-[var(--fg)]">
+                        SHA-256: {document.canonicalArtifact.artifactHash}
+                      </p>
+                      {document.canonicalArtifact.canonicalContentHash ? (
+                        <p className="mt-1 break-all font-mono text-[10px] text-[var(--muted)]">
+                          Mã nội dung pháp lý:{' '}
+                          {document.canonicalArtifact.canonicalContentHash}
+                        </p>
+                      ) : null}
+                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[var(--muted)]">
+                        {document.canonicalArtifact.rendererVersion ? (
+                          <span>
+                            Renderer:{' '}
+                            <span className="font-mono text-[var(--fg)]">
+                              {document.canonicalArtifact.rendererVersion}
+                            </span>
+                          </span>
+                        ) : null}
+                        {document.canonicalArtifact.sourceSchemaVersion ? (
+                          <span>
+                            Schema:{' '}
+                            <span className="font-semibold text-[var(--fg)]">
+                              v{document.canonicalArtifact.sourceSchemaVersion}
+                            </span>
+                          </span>
+                        ) : null}
+                        {document.canonicalArtifact.byteLength ? (
+                          <span>
+                            Kích thước:{' '}
+                            <span className="font-semibold text-[var(--fg)]">
+                              {document.canonicalArtifact.byteLength.toLocaleString(
+                                'vi-VN'
+                              )}{' '}
+                              bytes
+                            </span>
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <p className="mt-2 text-[var(--warning)]">
-                    Chưa có mã căn cứ pháp lý được gắn vào template.
-                  </p>
-                )}
-              </div>
+                </section>
+              ) : null}
+
+              <section
+                data-testid="legal-template-panel"
+                aria-label="Legal template metadata"
+                className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/50 p-4 text-xs"
+              >
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" />
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-bold text-[var(--fg)]">
+                      Căn cứ pháp lý và trạng thái nội dung
+                    </h2>
+                    <div className="mt-2 grid gap-1 text-[var(--muted)] sm:grid-cols-2">
+                      <p>
+                        Hồ sơ pháp lý:{' '}
+                        <span className="font-semibold text-[var(--fg)]">
+                          {document.legalProfile ?? 'Chưa xác định'}
+                        </span>
+                      </p>
+                      <p>
+                        Template:{' '}
+                        <span className="font-mono text-[var(--fg)]">
+                          {document.templateVersion ?? 'Chưa gắn template'}
+                        </span>
+                      </p>
+                      <p>
+                        Schema hash:{' '}
+                        <span className="font-semibold text-[var(--fg)]">
+                          v{document.hashSchemaVersion}
+                        </span>
+                      </p>
+                      <p>
+                        Trạng thái:{' '}
+                        <span className="font-semibold text-[var(--fg)]">
+                          {document.mode === 'locked'
+                            ? 'Đã khóa nội dung'
+                            : 'Bản nháp'}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="text-[var(--muted)]">Đối soát:</span>
+                      <Badge
+                        variant={
+                          document.integrity === 'valid'
+                            ? 'default'
+                            : document.integrity === 'mismatch'
+                              ? 'destructive'
+                              : 'outline'
+                        }
+                      >
+                        {document.integrity === 'valid'
+                          ? 'Đã xác minh'
+                          : document.integrity === 'mismatch'
+                            ? 'Không khớp'
+                            : document.integrity === 'unavailable'
+                              ? 'Chưa khả dụng'
+                              : 'Chưa khóa'}
+                      </Badge>
+                    </div>
+                    {document.citationIds?.length ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {document.citationIds.map(citationId => (
+                          <span
+                            key={citationId}
+                            className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 font-mono text-[10px] text-[var(--fg)]"
+                          >
+                            {citationId}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-[var(--warning)]">
+                        Chưa có mã căn cứ pháp lý được gắn vào template.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </section>
             </div>
-          </section>
+          </details>
 
           {/* Legal Citations Box (Phụ lục II Nghị định 96/2024/NĐ-CP) */}
           <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)]/50 p-4 text-xs text-[var(--muted)] leading-relaxed space-y-1.5 italic">
@@ -821,7 +846,7 @@ export function ContractDocumentViewer({
                       Họ và tên chủ nhà:
                     </span>{' '}
                     <strong className="text-[var(--fg)]">
-                      {parties?.landlord?.name || 'Nguyễn Văn Chủ Nhà'}
+                      {parties?.landlord?.name || 'Chưa cập nhật'}
                     </strong>
                   </p>
                   <p>
@@ -837,7 +862,7 @@ export function ContractDocumentViewer({
                     <span className="text-[var(--fg)]">
                       {parties?.landlord?.address ||
                         property?.address ||
-                        'Thành phố Hồ Chí Minh'}
+                        'Chưa cập nhật'}
                     </span>
                   </p>
                 </div>
@@ -864,7 +889,7 @@ export function ContractDocumentViewer({
                       Họ và tên khách thuê:
                     </span>{' '}
                     <strong className="text-[var(--fg)]">
-                      {parties?.tenant?.name || 'Trần Thị Thuê Nhà'}
+                      {parties?.tenant?.name || 'Chưa cập nhật'}
                     </strong>
                   </p>
                   <p>
@@ -878,7 +903,7 @@ export function ContractDocumentViewer({
                       Nơi đăng ký thường trú / Địa chỉ:
                     </span>{' '}
                     <span className="text-[var(--fg)]">
-                      {parties?.tenant?.address || 'Quận 1, TP.HCM'}
+                      {parties?.tenant?.address || 'Chưa cập nhật'}
                     </span>
                   </p>
                 </div>
@@ -1110,7 +1135,7 @@ export function ContractDocumentViewer({
                 />
               </div>
               <p className="font-semibold text-xs text-[var(--fg)] mt-3 pt-2 border-t border-[var(--border)]/40">
-                {parties?.landlord?.name || 'Nguyễn Văn Chủ Nhà'}
+                {parties?.landlord?.name || 'Chưa cập nhật'}
               </p>
             </div>
 
@@ -1148,7 +1173,7 @@ export function ContractDocumentViewer({
                 />
               </div>
               <p className="font-semibold text-xs text-[var(--fg)] mt-3 pt-2 border-t border-[var(--border)]/40">
-                {parties?.tenant?.name || 'Trần Thị Thuê Nhà'}
+                {parties?.tenant?.name || 'Chưa cập nhật'}
               </p>
             </div>
           </div>

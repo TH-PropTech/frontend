@@ -28,6 +28,7 @@ import {
   ContractAmendmentTimeline,
   ContractSummaryCard,
   NextActionBanner,
+  getContractStatusLabel,
   resolveContractActiveStep,
   resolvePanelActivity,
 } from '@/features/contracts'
@@ -41,6 +42,14 @@ export interface ContractWorkspaceProps {
 }
 
 type MobileTab = 'document' | 'parties' | 'actions' | 'public-service' | 'audit'
+
+const MOBILE_TABS: readonly { key: MobileTab; label: string }[] = [
+  { key: 'document', label: 'Hợp đồng' },
+  { key: 'parties', label: 'Các bên' },
+  { key: 'actions', label: 'Tiến trình' },
+  { key: 'public-service', label: 'Pháp lý' },
+  { key: 'audit', label: 'Bằng chứng' },
+]
 
 export function ContractWorkspace({
   contractId,
@@ -130,6 +139,11 @@ export function ContractWorkspace({
   const { signingEligibility } = actions
   const isSimulation = ledger?.networkMode === 'simulation'
   const isSuccessorOwner = access?.isSuccessorOwner === true
+  const nextEnabledAction = flow?.nextActions.find(item => item.enabled)?.action
+  const isSigningNextAction =
+    signingEligibility.eligible &&
+    (nextEnabledAction === 'SIGN_SMARTCA' ||
+      nextEnabledAction === 'SIGN_ECONSENT')
 
   // Compute active step once — used by ContractFlowGuide, DepositPaymentPanel, BilateralSigningTimeline
   const activeStep = resolveContractActiveStep({
@@ -142,7 +156,8 @@ export function ContractWorkspace({
   })
 
   const getReasonMessage = (reason: string | null) => {
-    if (!reason) return `Hợp đồng đang ở trạng thái ${contract.status}.`
+    const statusLabel = getContractStatusLabel(contract.status)
+    if (!reason) return `Hợp đồng đang ở trạng thái ${statusLabel}.`
     switch (reason) {
       case 'DEPOSIT_NOT_PAID':
       case 'DEPOSIT_REQUIRED':
@@ -156,7 +171,7 @@ export function ContractWorkspace({
       case 'NOT_PARTICIPANT':
         return 'Bạn không phải là bên tham gia (Chủ nhà hoặc Khách thuê) của hợp đồng này.'
       default:
-        return `Hợp đồng đang ở trạng thái ${contract.status}.`
+        return `Hợp đồng đang ở trạng thái ${statusLabel}.`
     }
   }
 
@@ -188,7 +203,7 @@ export function ContractWorkspace({
               variant="outline"
               className="text-[10px] font-bold uppercase text-[var(--primary)] bg-[var(--surface-muted)]"
             >
-              {contract.status}
+              {getContractStatusLabel(contract.status)}
             </Badge>
             {isSimulation ? (
               <Badge
@@ -224,7 +239,10 @@ export function ContractWorkspace({
           : {})}
         viewerRole={signerRole}
       />
-      <NextActionBanner contractId={contractId} flow={flow} />
+      {/* Hero ký bên dưới đã là việc cần làm tiếp theo nên không lặp banner. */}
+      {isSigningNextAction ? null : (
+        <NextActionBanner contractId={contractId} flow={flow} />
+      )}
 
       {isSuccessorOwner ? (
         <div
@@ -265,110 +283,78 @@ export function ContractWorkspace({
       )}
 
       {/* Prominent Signing Action Hero Banner */}
+      {signingEligibility.eligible || !flow ? (
+        <div
+          data-testid="signing-eligibility-banner"
+          className={`p-3.5 sm:p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 transition-all ${
+            signingEligibility.eligible
+              ? 'sticky bottom-3 z-20 bg-[var(--surface)] border-[var(--primary)] shadow-lg lg:static lg:shadow-sm'
+              : 'bg-[var(--surface-muted)] border-[var(--border)] text-[var(--muted)]'
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border ${
+                signingEligibility.eligible
+                  ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                  : 'bg-[var(--surface)] text-[var(--muted)] border-[var(--border)]'
+              }`}
+            >
+              <FileSignature className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
+                {signingEligibility.eligible
+                  ? 'Sẵn sàng ký hợp đồng điện tử'
+                  : 'Trạng thái ký kết hợp đồng'}
+              </h3>
+              <p className="text-xs leading-relaxed mt-0.5 text-[var(--fg)]">
+                {signingEligibility.eligible
+                  ? 'Toàn bộ điều kiện tiên quyết đã hoàn tất. Bạn có thể xác thực sinh trắc học và Smart OTP để ký số VNPT SmartCA.'
+                  : signingEligibility.message ||
+                    getReasonMessage(signingEligibility.reasonCode)}
+              </p>
+            </div>
+          </div>
+
+          {signingEligibility.eligible && (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => setIsSigningModalOpen(true)}
+              aria-label="Tiến hành ký hợp đồng điện tử"
+              className="h-11 w-full sm:w-auto px-4 sm:px-5 text-xs font-bold shrink-0 shadow hover:scale-[1.02] transition-transform"
+            >
+              <Sparkles className="w-4 h-4 mr-1.5" />
+              <span>Ký số VNPT SmartCA ngay</span>
+            </Button>
+          )}
+        </div>
+      ) : null}
+
+      {/* Mobile Tab Bar (hidden on desktop lg): sticky, 5 nhóm ngắn */}
       <div
-        data-testid="signing-eligibility-banner"
-        className={`p-3.5 sm:p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 transition-all ${
-          signingEligibility.eligible
-            ? 'bg-[var(--surface)] border-[var(--primary)] shadow-sm'
-            : 'bg-[var(--surface-muted)] border-[var(--border)] text-[var(--muted)]'
-        }`}
+        role="tablist"
+        aria-label="Các phần của hợp đồng"
+        className="sticky top-0 z-30 -mx-3 flex items-center gap-1.5 overflow-x-auto border-b border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-xs font-medium no-scrollbar sm:-mx-6 sm:px-6 lg:hidden"
       >
-        <div className="flex items-start gap-3">
-          <div
-            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border ${
-              signingEligibility.eligible
-                ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
-                : 'bg-[var(--surface)] text-[var(--muted)] border-[var(--border)]'
+        {MOBILE_TABS.map(tab => (
+          <button
+            key={tab.key}
+            type="button"
+            role="tab"
+            id={`contract-tab-${tab.key}`}
+            aria-selected={activeMobileTab === tab.key}
+            onClick={() => setActiveMobileTab(tab.key)}
+            className={`min-h-11 shrink-0 whitespace-nowrap rounded-lg px-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] ${
+              activeMobileTab === tab.key
+                ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
+                : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
             }`}
           >
-            <FileSignature className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
-              {signingEligibility.eligible
-                ? 'Sẵn sàng ký hợp đồng điện tử'
-                : 'Trạng thái ký kết hợp đồng'}
-            </h3>
-            <p className="text-xs leading-relaxed mt-0.5 text-[var(--fg)]">
-              {signingEligibility.eligible
-                ? 'Toàn bộ điều kiện tiên quyết đã hoàn tất. Bạn có thể xác thực sinh trắc học và Smart OTP để ký số VNPT SmartCA.'
-                : signingEligibility.message ||
-                  getReasonMessage(signingEligibility.reasonCode)}
-            </p>
-          </div>
-        </div>
-
-        {signingEligibility.eligible && (
-          <Button
-            type="button"
-            variant="primary"
-            onClick={() => setIsSigningModalOpen(true)}
-            aria-label="Tiến hành ký hợp đồng điện tử"
-            className="h-10 px-4 sm:px-5 text-xs font-bold shrink-0 shadow hover:scale-[1.02] transition-transform"
-          >
-            <Sparkles className="w-4 h-4 mr-1.5" />
-            <span>Ký số VNPT SmartCA ngay</span>
-          </Button>
-        )}
-      </div>
-
-      {/* Mobile Tab Switching Bar (hidden on desktop lg) */}
-      <div className="flex lg:hidden items-center border-b border-[var(--border)] pb-2 overflow-x-auto gap-1.5 text-xs font-medium no-scrollbar">
-        <button
-          type="button"
-          onClick={() => setActiveMobileTab('document')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
-            activeMobileTab === 'document'
-              ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
-              : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
-          }`}
-        >
-          Văn bản hợp đồng
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveMobileTab('parties')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
-            activeMobileTab === 'parties'
-              ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
-              : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
-          }`}
-        >
-          Bên tham gia
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveMobileTab('actions')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
-            activeMobileTab === 'actions'
-              ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
-              : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
-          }`}
-        >
-          Đặt cọc & Tiến trình
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveMobileTab('public-service')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
-            activeMobileTab === 'public-service'
-              ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
-              : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
-          }`}
-        >
-          Dịch vụ công & Pháp lý
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveMobileTab('audit')}
-          className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
-            activeMobileTab === 'audit'
-              ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
-              : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'
-          }`}
-        >
-          Sổ cái & Audit
-        </button>
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Responsive Workspace Grid (Supports 2-Column Split or Full-Width Reading Mode) */}
@@ -412,13 +398,19 @@ export function ContractWorkspace({
             activeMobileTab !== 'document' ? 'flex' : 'hidden lg:flex'
           }`}
         >
-          <ContractAmendmentTimeline
-            contractId={contractId}
-            canManage={Boolean(
-              data.actions.canEditContent && !data.access?.canSign
-            )}
-            canSign={Boolean(data.access?.canSign)}
-          />
+          <div
+            className={
+              activeMobileTab === 'actions' ? 'block' : 'hidden lg:block'
+            }
+          >
+            <ContractAmendmentTimeline
+              contractId={contractId}
+              canManage={Boolean(
+                data.actions.canEditContent && !data.access?.canSign
+              )}
+              canSign={Boolean(data.access?.canSign)}
+            />
+          </div>
 
           {/* Contract Flow Guide — chỉ rõ bước hiện tại theo strategy (Actions tab on mobile) */}
           <div

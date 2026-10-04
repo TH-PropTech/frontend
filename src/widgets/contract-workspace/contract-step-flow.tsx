@@ -6,6 +6,7 @@ import {
   resolveContractActiveStep,
   getContractFlowSteps,
   getContractStepState,
+  getContractStatusLabel,
   getNextContractStep,
   resolvePanelActivity,
   toContractStepHref,
@@ -26,7 +27,8 @@ function getGuardMessage(
   step: ContractRouteStep,
   activeStep: ReturnType<typeof resolveContractActiveStep>,
   strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST',
-  hasStep: boolean
+  hasStep: boolean,
+  activeLabel: string
 ): string | null {
   if (!hasStep && step === 'move-in') {
     return 'Hợp đồng này không có bước nhận nhà vì không có quyết toán nhận nhà.'
@@ -37,16 +39,16 @@ function getGuardMessage(
     strategy === 'DEPOSIT_FIRST' &&
     activeStep === 'deposit'
   ) {
-    return 'Chính sách DEPOSIT_FIRST yêu cầu xác nhận tiền cọc trước khi mở phiên ký số.'
+    return 'Hợp đồng này yêu cầu cọc trước, ký sau: hãy xác nhận tiền cọc để mở phiên ký số.'
   }
   if (
     step === 'deposit' &&
     strategy === 'SIGN_FIRST' &&
     activeStep === 'signing'
   ) {
-    return 'Chính sách SIGN_FIRST chỉ mở bước đặt cọc sau khi cả hai bên hoàn tất ký số.'
+    return 'Hợp đồng này ký trước, cọc sau: bước đặt cọc mở khi cả hai bên đã ký số.'
   }
-  return `Hợp đồng đang ở bước ${activeStep}; hãy hoàn tất bước hiện tại trước.`
+  return `Hợp đồng đang ở bước "${activeLabel}"; hãy hoàn tất bước này trước.`
 }
 
 function getNextDisabled(
@@ -154,14 +156,22 @@ export function ContractStepFlow({
     <ContractStepShell
       contractId={contractId}
       contractCode={data.contract.code}
-      contractStatus={data.contract.status}
+      contractStatus={getContractStatusLabel(data.contract.status)}
       step={step}
       activeStep={activeStep}
       steps={steps}
       activeStepHref={activeStepHref}
       activeStepLabel={steps.find(item => item.key === activeStep)?.label}
       guardMessage={
-        isGuarded ? getGuardMessage(step, activeStep, strategy, hasStep) : null
+        isGuarded
+          ? getGuardMessage(
+              step,
+              activeStep,
+              strategy,
+              hasStep,
+              steps.find(item => item.key === activeStep)?.label ?? activeStep
+            )
+          : null
       }
       nextStep={nextStep}
       nextStepHref={nextStepHref}
