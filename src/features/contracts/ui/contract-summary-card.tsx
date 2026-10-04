@@ -23,19 +23,19 @@ const STAGE_LABELS: Record<ContractActiveStep, string> = {
   document: 'Hợp đồng',
   deposit: 'Đặt cọc',
   signing: 'Ký số',
-  ledger: 'Ghi sổ cái',
+  ledger: 'Lưu vết',
   'move-in': 'Nhận nhà',
   completed: 'Hoàn tất',
 }
 
 const LEDGER_LABELS: Record<ContractLedgerSummary['status'], string> = {
-  'not-requested': 'Chưa ghi sổ cái',
-  pending: 'Đang chờ ghi sổ cái',
-  processing: 'Đang ghi sổ cái',
+  'not-requested': 'Chưa lưu vết',
+  pending: 'Đang chờ lưu vết',
+  processing: 'Đang lưu vết',
   'confirmed-simulation': 'Đã ghi nhận',
-  'confirmed-fabric': 'Đã xác nhận trên Fabric',
-  'failed-retryable': 'Ghi sổ cái lỗi, đang thử lại',
-  'failed-terminal': 'Ghi sổ cái thất bại, không tự thử lại',
+  'confirmed-fabric': 'Đã lưu vết chống sửa đổi',
+  'failed-retryable': 'Lưu vết lỗi, đang thử lại',
+  'failed-terminal': 'Lưu vết thất bại, không tự thử lại',
   'integrity-mismatch': 'Sai lệch toàn vẹn',
 }
 

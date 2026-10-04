@@ -316,7 +316,7 @@ export function BilateralSigningTimeline({
           <Fingerprint className="h-4 w-4 text-[var(--primary)] shrink-0" />
           <span>
             {isBothSigned
-              ? 'Hợp đồng đã hoàn tất ký số song phương pháp lý. Sẵn sàng hoặc đã kích hoạt trên sổ cái Hyperledger Fabric.'
+              ? 'Hợp đồng đã hoàn tất ký số song phương pháp lý. Sẵn sàng hoặc đã kích hoạt lưu vết chống sửa đổi.'
               : isOneSigned
                 ? 'Đã ghi nhận chữ ký số của một bên. Bên còn lại vui lòng hoàn tất ký số để hợp đồng chính thức có hiệu lực.'
                 : 'Hai bên cần hoàn tất xác thực sinh trắc học và chữ ký số an toàn VNPT SmartCA để kích hoạt hợp đồng.'}

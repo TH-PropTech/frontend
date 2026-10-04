@@ -27,8 +27,10 @@ describe('BlockchainVerifyBadge', () => {
       <BlockchainVerifyBadge ledger={mockSimulationLedger} contractId="c1" />
     )
     expect(screen.getByTestId('network-mode-simulation')).toBeInTheDocument()
-    expect(screen.getByText(/Mô phỏng blockchain/i)).toBeInTheDocument()
-    expect(screen.getByText('Không áp dụng (PoC)')).toBeInTheDocument()
+    expect(screen.getByTestId('network-mode-simulation')).toHaveTextContent(
+      'Chế độ thử nghiệm'
+    )
+    expect(screen.getByText('Không áp dụng (thử nghiệm)')).toBeInTheDocument()
   })
 
   it('renders fabric badge and block number when on fabric network', () => {
@@ -108,7 +110,7 @@ describe('BlockchainVerifyBadge', () => {
     expect(screen.getByTestId('integrity-result-box')).toBeInTheDocument()
     expect(
       screen.getByText(
-        'Cảnh báo sai lệch: Nội dung đã bị thay đổi so với bản gốc trên sổ cái!'
+        'Cảnh báo sai lệch: nội dung đã bị thay đổi so với bản gốc đã lưu vết!'
       )
     ).toBeInTheDocument()
   })
@@ -127,9 +129,7 @@ describe('BlockchainVerifyBadge', () => {
 
     expect(screen.getByTestId('integrity-result-box')).toBeInTheDocument()
     expect(
-      screen.getByText(
-        'Chưa ghi nhận trên sổ cái: Hợp đồng chưa có bản ghi xác nhận trên blockchain.'
-      )
+      screen.getByText('Chưa lưu vết: hợp đồng chưa có bản ghi xác nhận.')
     ).toBeInTheDocument()
   })
 
@@ -148,7 +148,7 @@ describe('BlockchainVerifyBadge', () => {
     expect(screen.getByTestId('integrity-result-box')).toBeInTheDocument()
     expect(
       screen.getByText(
-        'Hệ thống sổ cái tạm thời không khả dụng: Không thể kết nối tới nút mạng Hyperledger Fabric.'
+        'Hệ thống lưu vết tạm thời không khả dụng: không thể kết nối để đối soát.'
       )
     ).toBeInTheDocument()
   })

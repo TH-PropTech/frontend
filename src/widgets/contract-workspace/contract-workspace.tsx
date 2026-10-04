@@ -32,6 +32,7 @@ import {
   resolveContractActiveStep,
   resolvePanelActivity,
 } from '@/features/contracts'
+import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
 import { TransactionTimeline } from '@/features/rental-transactions'
 import { DepositPaymentPanel } from '@/features/payments'
 import { useContractWorkspace } from './use-contract-workspace'
@@ -210,7 +211,7 @@ export function ContractWorkspace({
                 variant="outline"
                 className="text-[10px] font-bold text-[var(--warning)] bg-[var(--surface-muted)]"
               >
-                Mô phỏng PoC
+                Chế độ thử nghiệm
               </Badge>
             ) : (
               <Badge
@@ -581,7 +582,7 @@ export function ContractWorkspace({
                 <div className="flex items-center gap-2">
                   <History className="w-4 h-4 text-[var(--primary)]" />
                   <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
-                    Nhật ký sự kiện sổ cái ({auditEvents.length})
+                    Nhật ký sự kiện lưu vết ({auditEvents.length})
                   </h4>
                 </div>
               </div>
@@ -594,7 +595,7 @@ export function ContractWorkspace({
                   >
                     <div className="flex items-center justify-between text-[10px]">
                       <span className="font-bold font-mono text-[var(--primary)]">
-                        {evt.eventType}
+                        {ledgerEventLabel(evt.eventType)}
                       </span>
                       <span className="text-[var(--muted)]">
                         {new Date(evt.occurredAt).toLocaleTimeString('vi-VN')}
@@ -605,7 +606,7 @@ export function ContractWorkspace({
                     </p>
                     {evt.txHash && (
                       <span className="font-mono text-[10px] text-[var(--muted)] truncate">
-                        tx: {evt.txHash}
+                        Mã giao dịch: {evt.txHash}
                       </span>
                     )}
                   </div>

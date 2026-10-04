@@ -95,8 +95,7 @@ function integrityBanner(state: VerificationLayerState): {
     case 'verified':
       return {
         title: 'Xác thực toàn vẹn thành công',
-        message:
-          'Mã băm văn bản hợp đồng khớp với dữ liệu đã cam kết trên Hyperledger Fabric.',
+        message: 'Mã xác thực nội dung hợp đồng khớp với bản đã lưu vết.',
         tone: 'success',
       }
     case 'mismatch':
@@ -177,7 +176,7 @@ export function FabricLedgerEvidenceCard({
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-[var(--primary)]" />
           <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fg)]">
-            Minh chứng sổ cái Blockchain Hyperledger Fabric
+            Minh chứng lưu vết chống sửa đổi
           </h4>
         </div>
 
@@ -187,7 +186,7 @@ export function FabricLedgerEvidenceCard({
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--surface-muted)] text-[var(--warning)] border border-[var(--border)]"
           >
             <Info className="w-3 h-3 text-[var(--warning)]" />
-            Mô phỏng blockchain
+            Chế độ thử nghiệm
           </span>
         ) : (
           <span
@@ -195,14 +194,14 @@ export function FabricLedgerEvidenceCard({
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--surface-muted)] text-[var(--success)] border border-[var(--border)]"
           >
             <ShieldCheck className="w-3 h-3 text-[var(--success)]" />
-            Hyperledger Fabric MSP
+            Lưu vết thật
           </span>
         )}
       </div>
 
       <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-xs">
         <span className="font-semibold text-[var(--muted)]">
-          Trạng thái kết nối Fabric
+          Trạng thái kết nối lưu vết
         </span>
         <span
           data-testid="fabric-connection-state"
@@ -235,8 +234,8 @@ export function FabricLedgerEvidenceCard({
       {/* Description */}
       <p className="text-[11px] text-[var(--muted)] leading-relaxed">
         {isSimulation
-          ? 'Giao dịch hợp đồng được mô phỏng theo chuẩn Hyperledger Fabric channel proptech-channel trong môi trường thử nghiệm.'
-          : 'Hợp đồng được băm SHA-256 và gắn chữ ký số song phương, lưu trữ bất biến trên kênh chuỗi khối Hyperledger Fabric.'}
+          ? 'Việc lưu vết hợp đồng đang chạy ở chế độ thử nghiệm, chưa ghi lên mạng thật.'
+          : 'Nội dung hợp đồng được tạo mã xác thực, gắn chữ ký số của hai bên và lưu vết chống sửa đổi.'}
       </p>
 
       {/* Grid of Ledger Metrics */}
@@ -287,14 +286,16 @@ export function FabricLedgerEvidenceCard({
             <Hash className="h-4 w-4 text-[var(--primary)] shrink-0" />
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-[10px] uppercase text-[var(--muted)] font-semibold">
-                Mã định danh giao dịch (TxID)
+                Mã giao dịch lưu vết
               </span>
               <span
                 data-testid="fabric-tx-hash"
                 className="font-mono text-[var(--fg)] text-xs truncate select-all"
-                title={txHash || 'Chưa có TxID'}
+                title={txHash || 'Chưa có mã giao dịch'}
               >
-                {txHash ? truncateString(txHash, 14, 12) : 'Chưa có TxID'}
+                {txHash
+                  ? truncateString(txHash, 14, 12)
+                  : 'Chưa có mã giao dịch'}
               </span>
             </div>
           </div>
@@ -304,8 +305,8 @@ export function FabricLedgerEvidenceCard({
               onClick={handleCopyTx}
               data-testid="copy-tx-btn"
               className="p-1.5 rounded bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-muted)] text-[var(--muted)] hover:text-[var(--fg)] shrink-0 transition-colors"
-              title="Sao chép TxID"
-              aria-label="Sao chép TxID"
+              title="Sao chép mã giao dịch"
+              aria-label="Sao chép mã giao dịch"
             >
               {copiedTx ? (
                 <Check className="w-3.5 h-3.5 text-[var(--success)]" />
@@ -322,16 +323,16 @@ export function FabricLedgerEvidenceCard({
             <FileCheck2 className="h-4 w-4 text-[var(--primary)] shrink-0" />
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-[10px] uppercase text-[var(--muted)] font-semibold">
-                Mã băm toàn văn hợp đồng (SHA-256 Digest)
+                Mã xác thực nội dung hợp đồng
               </span>
               <span
                 data-testid="fabric-contract-hash"
                 className="font-mono text-[var(--fg)] text-xs truncate select-all"
-                title={contractHash || 'Chưa băm hợp đồng'}
+                title={contractHash || 'Chưa có mã xác thực'}
               >
                 {contractHash
                   ? truncateString(contractHash, 14, 12)
-                  : 'Chưa băm hợp đồng'}
+                  : 'Chưa có mã xác thực'}
               </span>
             </div>
           </div>
@@ -391,9 +392,9 @@ export function FabricLedgerEvidenceCard({
           <div className="grid gap-2 sm:grid-cols-3">
             {(
               [
-                ['offChain', 'Off-chain'],
-                ['artifact', 'Artifact'],
-                ['onChain', 'On-chain'],
+                ['offChain', 'Dữ liệu hệ thống'],
+                ['artifact', 'Bản PDF'],
+                ['onChain', 'Bản lưu vết'],
               ] as const
             ).map(([key, label]) => {
               const layer = integrityResult.layers?.[key]

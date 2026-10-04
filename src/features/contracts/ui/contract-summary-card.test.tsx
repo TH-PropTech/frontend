@@ -96,7 +96,7 @@ describe('ContractSummaryCard', () => {
     ).toBeInTheDocument()
     expect(
       within(screen.getByTestId('summary-ledger-status')).getByText(
-        'Đang chờ ghi sổ cái (mô phỏng)'
+        'Đang chờ lưu vết (mô phỏng)'
       )
     ).toBeInTheDocument()
   })
@@ -125,7 +125,7 @@ describe('ContractSummaryCard', () => {
       'Chưa xác định'
     )
     expect(screen.getByTestId('summary-ledger-status')).toHaveTextContent(
-      'Đã xác nhận trên Fabric'
+      'Đã lưu vết chống sửa đổi'
     )
     expect(screen.getByTestId('summary-business-status')).toHaveTextContent(
       'Hoàn tất'

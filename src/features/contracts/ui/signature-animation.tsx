@@ -46,7 +46,7 @@ export function SignatureAnimation({
     >
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--primary)]">
         <Sparkles className="w-4 h-4 animate-spin text-[var(--primary)]" />
-        <span>Khắc ấn chữ ký số e-Consent</span>
+        <span>Ghi nhận chữ ký số</span>
       </div>
 
       {/* Signature & Seal Animation Container */}
@@ -102,8 +102,8 @@ export function SignatureAnimation({
             : 'Đang tạo bằng chứng xác thực và ký số vào bản hợp đồng...'}
         </p>
         <p className="text-[11px] text-[var(--muted)] max-w-xs">
-          Mã băm SHA-256 nội dung hợp đồng và biên bản đối soát khuôn mặt đã
-          được liên kết bất biến.
+          Mã xác thực nội dung hợp đồng và biên bản đối soát khuôn mặt đã được
+          liên kết bất biến.
         </p>
       </div>
     </div>

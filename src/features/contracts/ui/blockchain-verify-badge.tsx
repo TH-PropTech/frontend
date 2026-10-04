@@ -71,7 +71,7 @@ export function BlockchainVerifyBadge({
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--surface-muted)] text-[var(--warning)] border border-[var(--border)]"
           >
             <Info className="w-3 h-3 text-[var(--warning)]" />
-            Mô phỏng blockchain
+            Chế độ thử nghiệm
           </span>
         ) : (
           <span
@@ -79,7 +79,7 @@ export function BlockchainVerifyBadge({
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--surface-muted)] text-[var(--success)] border border-[var(--border)]"
           >
             <ShieldCheck className="w-3 h-3 text-[var(--success)]" />
-            Hyperledger Fabric
+            Lưu vết thật{' '}
           </span>
         )}
       </div>
@@ -87,9 +87,8 @@ export function BlockchainVerifyBadge({
       {/* Simulation explanation notice */}
       {isSimulation && (
         <p className="text-[11px] text-[var(--muted)] leading-relaxed">
-          Giao dịch hợp đồng và mã băm được mô phỏng trong môi trường PoC theo
-          quy chuẩn chuỗi khối Hyperledger Fabric. Không cấp số khối (block
-          number) như tài sản pháp lý chính thức.
+          Việc lưu vết hợp đồng đang chạy ở chế độ thử nghiệm; hệ thống không
+          cấp số khối như một bản lưu vết chính thức.
         </p>
       )}
 
@@ -99,7 +98,7 @@ export function BlockchainVerifyBadge({
         <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--surface-muted)] border border-[var(--border)]">
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] uppercase font-bold text-[var(--muted)]">
-              Mã giao dịch (txHash)
+              Mã giao dịch lưu vết
             </span>
             <span
               className="font-mono text-[11px] text-[var(--fg)] truncate"
@@ -138,7 +137,7 @@ export function BlockchainVerifyBadge({
             </span>
             <span className="font-mono font-medium text-[var(--fg)] text-[11px]">
               {isSimulation
-                ? 'Không áp dụng (PoC)'
+                ? 'Không áp dụng (thử nghiệm)'
                 : ledger?.blockNumber
                   ? `#${ledger.blockNumber}`
                   : 'Đang ghi nhận'}
@@ -178,12 +177,12 @@ export function BlockchainVerifyBadge({
           <span className="font-medium">
             {integrityResult.message ||
               (integrityResult.isValid === true
-                ? 'Tính toàn vẹn hợp đồng hợp lệ: Hash khớp 100% với bản ghi sổ cái.'
+                ? 'Nội dung hợp đồng toàn vẹn: mã xác thực khớp 100% với bản đã lưu vết.'
                 : integrityResult.isValid === false
-                  ? 'Cảnh báo sai lệch: Nội dung đã bị thay đổi so với bản gốc trên sổ cái!'
+                  ? 'Cảnh báo sai lệch: nội dung đã bị thay đổi so với bản gốc đã lưu vết!'
                   : integrityResult.verificationStatus === 'unavailable'
-                    ? 'Hệ thống sổ cái tạm thời không khả dụng: Không thể kết nối tới nút mạng Hyperledger Fabric.'
-                    : 'Chưa ghi nhận trên sổ cái: Hợp đồng chưa có bản ghi xác nhận trên blockchain.')}
+                    ? 'Hệ thống lưu vết tạm thời không khả dụng: không thể kết nối để đối soát.'
+                    : 'Chưa lưu vết: hợp đồng chưa có bản ghi xác nhận.')}
           </span>
         </div>
       )}

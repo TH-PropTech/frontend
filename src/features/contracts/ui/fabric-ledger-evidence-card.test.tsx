@@ -49,7 +49,9 @@ describe('FabricLedgerEvidenceCard', () => {
     )
 
     expect(screen.getByTestId('network-mode-simulation')).toBeDefined()
-    expect(screen.getByText(/Mô phỏng blockchain/i)).toBeDefined()
+    expect(screen.getByTestId('network-mode-simulation')).toHaveTextContent(
+      'Chế độ thử nghiệm'
+    )
   })
 
   it('copies transaction ID and contract hash to clipboard when clicking copy buttons', async () => {

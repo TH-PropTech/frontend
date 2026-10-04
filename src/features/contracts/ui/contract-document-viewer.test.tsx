@@ -87,7 +87,7 @@ describe('ContractDocumentViewer', () => {
 
     const artifactPanel = screen.getByTestId('canonical-artifact-panel')
     expect(artifactPanel).toHaveTextContent('artifact-2026-001')
-    expect(artifactPanel).toHaveTextContent('Revision 4')
+    expect(artifactPanel).toHaveTextContent('Bản sửa đổi 4')
     expect(artifactPanel).toHaveTextContent('a'.repeat(64))
 
     const decreeLink = screen.getByRole('link', {
@@ -190,7 +190,7 @@ describe('ContractDocumentViewer', () => {
     )
 
     expect(screen.getByTestId('contract-layout-profile')).toHaveTextContent(
-      'lease-v2'
+      'Lease v2'
     )
     expect(screen.getByTestId('contract-layout-blocks')).toHaveTextContent(
       'SignaturesArticlesPartiesPropertySupplementaryHeader'
@@ -401,5 +401,37 @@ describe('ContractDocumentViewer', () => {
     expect(screen.queryByText('Nguyễn Văn Chủ Nhà')).not.toBeInTheDocument()
     expect(screen.queryByText('Trần Thị Thuê Nhà')).not.toBeInTheDocument()
     expect(screen.getAllByText('Chưa cập nhật').length).toBeGreaterThan(0)
+  })
+
+  it('shows legal basis names and plain labels instead of internal codes', () => {
+    const { container } = render(
+      <ContractDocumentViewer
+        {...defaultProps}
+        document={{
+          ...mockDocument,
+          legalProfile: 'PRIVATE_CIVIL_APARTMENT_LEASE',
+          citationIds: [
+            'DECREE_96_2024_APPENDIX_II_RESIDENTIAL_LEASE',
+            'SOME_NEW_LEGAL_BASIS_CODE',
+          ],
+          sections: [
+            {
+              ...mockDocument.sections[0]!,
+              citationIds: ['HOUSING_LAW_2023_ART_163_164'],
+            },
+            ...mockDocument.sections.slice(1),
+          ],
+        }}
+      />
+    )
+
+    expect(
+      screen.getAllByRole('link', {
+        name: /Phụ lục II – Mẫu hợp đồng thuê nhà ở/,
+      }).length
+    ).toBeGreaterThan(0)
+    expect(screen.getByText('Thuê căn hộ giữa cá nhân')).toBeInTheDocument()
+    expect(screen.getByText('Some new legal basis code')).toBeInTheDocument()
+    expect(container.textContent).not.toMatch(/[A-Z]{3,}(_[A-Z0-9]+){2,}/)
   })
 })

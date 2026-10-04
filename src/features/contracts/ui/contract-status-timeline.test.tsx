@@ -68,7 +68,7 @@ describe('ContractStatusTimeline', () => {
       />
     )
     expect(
-      screen.getByText('Đã kích hoạt & neo hash sổ cái')
+      screen.getByText('Đã kích hoạt & lưu vết hợp đồng')
     ).toBeInTheDocument()
   })
 

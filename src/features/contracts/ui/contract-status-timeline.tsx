@@ -140,10 +140,10 @@ export function ContractStatusTimeline({
     description: isTerminated
       ? 'Hợp đồng đã chấm dứt'
       : isSignFirst && isFullySignedPendingDeposit
-        ? 'Chờ cọc để neo Fabric'
+        ? 'Chờ cọc để lưu vết'
         : isActive
           ? txHash
-            ? 'Đã kích hoạt & neo hash sổ cái'
+            ? 'Đã kích hoạt & lưu vết hợp đồng'
             : 'Đã kích hoạt (Đang chờ đồng bộ sổ cái)'
           : 'Kích hoạt sau khi hai bên ký',
     state: isTerminated ? 'failed' : isActive ? 'completed' : 'upcoming',

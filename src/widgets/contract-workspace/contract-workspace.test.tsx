@@ -195,7 +195,7 @@ describe('ContractWorkspace', () => {
       expect(
         screen.getByTestId('contract-execution-policy')
       ).toBeInTheDocument()
-      expect(screen.getByText('Mô phỏng PoC')).toBeInTheDocument()
+      expect(screen.getAllByText('Chế độ thử nghiệm').length).toBeGreaterThan(0)
       expect(
         within(screen.getByTestId('contract-status-timeline'))
           .getAllByTestId(/^step-/)

@@ -78,10 +78,10 @@ function getNextDisabled(
 
 function getNextLabel(step: ContractRouteStep, disabled: boolean): string {
   if (!disabled) return 'Tiếp tục'
-  if (step === 'document') return 'Khóa artifact để tiếp tục'
+  if (step === 'document') return 'Khóa bản PDF để tiếp tục'
   if (step === 'deposit') return 'Hoàn tất đặt cọc để tiếp tục'
   if (step === 'signing') return 'Chờ đủ hai chữ ký'
-  return 'Đang chờ ghi nhận Fabric'
+  return 'Đang chờ lưu vết hợp đồng'
 }
 
 export function ContractStepFlow({
