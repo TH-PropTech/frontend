@@ -37,7 +37,7 @@ export function PartyInfoCards({
     return (
       <div
         data-testid={`party-card-${party.role}`}
-        className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 shadow-sm flex flex-col justify-between gap-3.5"
+        className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 shadow-sm flex flex-col justify-between gap-3"
       >
         <div>
           {/* Header row: role + identity badge */}
@@ -82,9 +82,15 @@ export function PartyInfoCards({
                 <Shield className="w-3.5 h-3.5 shrink-0" />
                 <span className="whitespace-nowrap">CCCD/ĐDPL:</span>
               </span>
-              <span className="font-mono font-medium text-[var(--fg)] text-right">
-                {party.maskedCccd || 'Chưa cung cấp'}
-              </span>
+              {party.maskedCccd ? (
+                <span className="font-mono font-medium text-[var(--fg)] text-right">
+                  {party.maskedCccd}
+                </span>
+              ) : (
+                <span className="italic text-[var(--muted)] text-right">
+                  Chưa cung cấp
+                </span>
+              )}
             </div>
 
             {/* Address */}
@@ -94,8 +100,11 @@ export function PartyInfoCards({
                 <span className="whitespace-nowrap">Địa chỉ:</span>
               </span>
               <span
-                className="text-[var(--fg)] text-right truncate max-w-[200px]"
-                title={party.address || ''}
+                className={`min-w-0 break-words text-right ${
+                  party.address
+                    ? 'text-[var(--fg)]'
+                    : 'italic text-[var(--muted)]'
+                }`}
               >
                 {party.address || 'Chưa cập nhật'}
               </span>
@@ -150,8 +159,8 @@ export function PartyInfoCards({
     <div
       className={
         layout === 'grid'
-          ? 'grid grid-cols-1 md:grid-cols-2 gap-3.5 w-full'
-          : 'flex flex-col gap-3.5 w-full'
+          ? 'grid grid-cols-1 md:grid-cols-2 gap-4 w-full'
+          : 'flex flex-col gap-4 w-full'
       }
     >
       {renderPartyCard(

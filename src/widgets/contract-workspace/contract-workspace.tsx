@@ -381,8 +381,8 @@ export function ContractWorkspace({
         <div
           className={`${
             isDocumentExpanded ? 'lg:col-span-1' : 'lg:col-span-7 xl:col-span-8'
-          } flex flex-col gap-6 ${
-            activeMobileTab === 'document' ? 'block' : 'hidden lg:block'
+          } flex-col gap-6 ${
+            activeMobileTab === 'document' ? 'flex' : 'hidden lg:flex'
           }`}
         >
           <ContractDocumentViewer
@@ -408,8 +408,8 @@ export function ContractWorkspace({
         <div
           className={`${
             isDocumentExpanded ? 'lg:col-span-1' : 'lg:col-span-5 xl:col-span-4'
-          } flex flex-col gap-6 ${
-            activeMobileTab !== 'document' ? 'block' : 'hidden lg:block'
+          } flex-col gap-6 ${
+            activeMobileTab !== 'document' ? 'flex' : 'hidden lg:flex'
           }`}
         >
           <ContractAmendmentTimeline

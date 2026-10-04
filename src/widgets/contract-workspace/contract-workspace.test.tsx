@@ -204,6 +204,22 @@ describe('ContractWorkspace', () => {
     })
   })
 
+  it('keeps flex gap on both columns so desktop panels are not stacked flush', async () => {
+    render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
+
+    const timeline = await screen.findByTestId('contract-amendment-timeline')
+    const rightColumn = timeline.parentElement as HTMLElement
+    const leftColumn = screen.getByTestId('contract-document-paper')
+      .parentElement?.parentElement as HTMLElement
+
+    for (const column of [leftColumn, rightColumn]) {
+      expect(column).toHaveClass('flex-col', 'gap-6')
+      expect(column).not.toHaveClass('block', 'lg:block')
+    }
+    expect(leftColumn).toHaveClass('flex')
+    expect(rightColumn).toHaveClass('hidden', 'lg:flex')
+  })
+
   it('resolves the viewer from the stored login user when the route passes no currentUserId', async () => {
     window.localStorage.setItem(
       'user',
