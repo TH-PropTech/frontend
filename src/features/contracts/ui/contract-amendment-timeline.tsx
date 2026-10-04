@@ -174,20 +174,25 @@ export function ContractAmendmentTimeline({
 
   return (
     <section
-      className="space-y-4 rounded-2xl border border-border bg-surface p-5"
+      className="space-y-3 rounded-xl border border-border bg-surface p-4 shadow-sm"
       data-testid="contract-amendment-timeline"
     >
-      <header className="flex items-center justify-between gap-3">
+      <header className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-fg">
+          <h2 className="text-sm font-bold text-fg">
             Phụ lục và phiên bản thương mại
           </h2>
-          <p className="mt-1 text-xs text-muted">
-            Hợp đồng gốc không bị sửa; thay đổi chỉ có hiệu lực sau khi đủ chữ
-            ký và tới ngày áp dụng.
-          </p>
+          {canManage || items.length > 0 ? (
+            <p className="mt-1 text-xs leading-relaxed text-muted">
+              Hợp đồng gốc không bị sửa; thay đổi chỉ có hiệu lực sau khi đủ chữ
+              ký và tới ngày áp dụng.
+            </p>
+          ) : null}
         </div>
-        <FilePenLine className="h-5 w-5 text-primary" aria-hidden="true" />
+        <FilePenLine
+          className="mt-0.5 h-5 w-5 shrink-0 text-primary"
+          aria-hidden="true"
+        />
       </header>
       {error ? (
         <Alert variant="destructive">
@@ -221,9 +226,9 @@ export function ContractAmendmentTimeline({
         </div>
       ) : null}
 
-      {loading ? <p className="text-sm text-muted">Đang tải lịch sử…</p> : null}
+      {loading ? <p className="text-xs text-muted">Đang tải lịch sử…</p> : null}
       {!loading && items.length === 0 ? (
-        <p className="text-sm text-muted">Chưa có phụ lục nào.</p>
+        <p className="text-xs text-muted">Chưa có phụ lục nào.</p>
       ) : null}
       <div className="space-y-3">
         {items.map(item => {

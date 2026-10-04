@@ -182,7 +182,7 @@ export function ContractFlowGuide({
     >
       {/* Header */}
       <div className="mb-3 flex items-center gap-2">
-        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--primary)] text-white">
+        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-white">
           {isCompleted ? (
             <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
           ) : (
@@ -268,13 +268,11 @@ export function ContractFlowGuide({
       </div>
 
       {/* Strategy badge */}
-      <div className="mt-3 flex items-center justify-end">
-        <span className="text-[10px] text-[var(--muted)]">
-          {strategy === 'DEPOSIT_FIRST'
-            ? 'Cọc trước → Ký sau'
-            : 'Ký trước → Cọc sau'}
-        </span>
-      </div>
+      <p className="mt-2 text-right text-[11px] text-[var(--muted)]">
+        {strategy === 'DEPOSIT_FIRST'
+          ? 'Cọc trước → Ký sau'
+          : 'Ký trước → Cọc sau'}
+      </p>
 
       {contractId && activeStep !== 'completed' ? (
         <Link
