@@ -207,8 +207,9 @@ describe('ContractWorkspace', () => {
   it('keeps flex gap on both columns so desktop panels are not stacked flush', async () => {
     render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
 
-    const timeline = await screen.findByTestId('contract-amendment-timeline')
-    const rightColumn = timeline.parentElement?.parentElement as HTMLElement
+    const rightColumn = await screen.findByRole('complementary', {
+      hidden: true,
+    })
     const leftColumn = screen.getByTestId('contract-document-paper')
       .parentElement?.parentElement as HTMLElement
 
@@ -271,6 +272,42 @@ describe('ContractWorkspace', () => {
 
     expect(rail).not.toHaveClass('lg:sticky')
     expect(rail).not.toHaveClass('lg:overflow-y-auto')
+  })
+
+  it('groups rail panels into collapsible sections with sensible defaults', async () => {
+    render(<ContractWorkspace contractId="c-100" currentUserId="user-tenant" />)
+
+    const rail = await screen.findByRole('complementary', { hidden: true })
+    const toggles = within(rail).getAllByRole('button', {
+      hidden: true,
+    })
+    const byName = (name: string) =>
+      toggles.find(button => button.textContent === name) as HTMLElement
+
+    expect(byName('Tiến trình hợp đồng')).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    )
+    expect(byName('Các bên tham gia')).toHaveAttribute('aria-expanded', 'true')
+    expect(byName('Pháp lý và dịch vụ công')).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    )
+    expect(byName('Bằng chứng và nhật ký')).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    )
+
+    const legal = byName('Pháp lý và dịch vụ công')
+    const content = document.getElementById(
+      legal.getAttribute('aria-controls') as string
+    ) as HTMLElement
+    expect(content).toHaveClass('lg:hidden')
+
+    fireEvent.click(legal)
+
+    expect(legal).toHaveAttribute('aria-expanded', 'true')
+    expect(content).not.toHaveClass('lg:hidden')
   })
 
   it('resolves the viewer from the stored login user when the route passes no currentUserId', async () => {
