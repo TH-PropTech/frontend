@@ -11,6 +11,7 @@ import {
 import type { ApartmentFormValues, LandlordApartmentItem } from '../model/types'
 import {
   createApartment,
+  updateApartment,
   resubmitApartment,
 } from '../api/apartment-posting-api'
 import { LocationStep } from './location-step'
@@ -177,10 +178,17 @@ export function ApartmentPostingForm({
 
     try {
       if (mode === 'edit' && initialData) {
-        await resubmitApartment(initialData.id, values)
-        toast.success('Cập nhật và nộp duyệt lại tin đăng thành công!', {
-          id: toastId,
-        })
+        if (initialData.status === 'rejected') {
+          await resubmitApartment(initialData.id, values)
+          toast.success('Cập nhật và nộp duyệt lại tin đăng thành công!', {
+            id: toastId,
+          })
+        } else {
+          await updateApartment(initialData.id, values)
+          toast.success('Cập nhật tin đăng thành công!', {
+            id: toastId,
+          })
+        }
       } else {
         await createApartment(values)
         toast.success(

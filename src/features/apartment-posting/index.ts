@@ -15,6 +15,7 @@ export type { ApartmentPostingSchemaType } from './model/apartment-posting-schem
 export type { ApartmentFormValues, LandlordApartmentItem } from './model/types'
 export {
   createApartment,
+  updateApartment,
   uploadApartmentImages,
   searchProjects,
   searchBuildings,
