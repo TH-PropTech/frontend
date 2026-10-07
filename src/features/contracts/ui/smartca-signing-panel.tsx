@@ -92,14 +92,17 @@ export function SmartCaSigningPanel({
     selectedSerial,
     setSelectedSerial,
     session,
+    connectionState,
     loadingCertificates,
     submitting,
     cancelling,
+    checking,
     error,
     remainingMs,
     loadCertificates,
     submit,
     cancel,
+    checkStatus,
   } = useSmartCaSigning(contractId, onSigned)
 
   const notice = session ? sessionNotice(session.status) : null
@@ -195,15 +198,39 @@ export function SmartCaSigningPanel({
                 </p>
               ) : null}
               {isPending ? (
-                <button
-                  type="button"
-                  onClick={() => void cancel()}
-                  disabled={cancelling}
-                  className="mt-2 inline-flex items-center gap-1.5 font-semibold underline underline-offset-2 disabled:opacity-50"
-                >
-                  <XCircle className="h-3 w-3" aria-hidden="true" />
-                  {cancelling ? 'Đang hủy…' : 'Hủy giao dịch'}
-                </button>
+                <p className="mt-2 text-[var(--muted)]">
+                  {connectionState === 'disconnected' ||
+                  connectionState === 'exhausted'
+                    ? 'Mất kết nối – bấm Kiểm tra kết quả.'
+                    : 'Đang chờ xác nhận từ VNPT SmartCA…'}
+                </p>
+              ) : null}
+              {isPending ? (
+                <div className="mt-2 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void checkStatus()}
+                    disabled={checking}
+                    className="inline-flex items-center gap-1.5 font-semibold underline underline-offset-2 disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      className={`h-3 w-3 ${checking ? 'animate-spin' : ''}`}
+                      aria-hidden="true"
+                    />
+                    {checking
+                      ? 'Đang kiểm tra kết quả…'
+                      : 'Tôi đã ký – Kiểm tra kết quả'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void cancel()}
+                    disabled={cancelling}
+                    className="inline-flex items-center gap-1.5 font-semibold underline underline-offset-2 disabled:opacity-50"
+                  >
+                    <XCircle className="h-3 w-3" aria-hidden="true" />
+                    {cancelling ? 'Đang hủy…' : 'Hủy giao dịch'}
+                  </button>
+                </div>
               ) : null}
               {session.status === 'rejected' ||
               session.status === 'expired' ||

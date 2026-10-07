@@ -3,12 +3,17 @@ import {
   cancelSmartCaSigningSession,
   createSmartCaSigningSession,
   getSmartCaCertificates,
+  getSmartCaSigningSession,
   pollSmartCaSigningSession,
   type SmartCaCertificate,
   type SmartCaSigningSession,
 } from '../api/contracts-api'
+import {
+  createSmartCaEventsClient,
+  type SmartCaConnectionState,
+} from '../api/smartca-events-client'
 
-/** Sau các trạng thái này, lần thử kế tiếp phải là giao dịch mới. */
+const RECONCILIATION_COOLDOWN_MS = 5_000
 const RETRYABLE_TERMINAL_STATUSES: ReadonlySet<
   SmartCaSigningSession['status']
 > = new Set(['rejected', 'expired', 'cancelled'])
@@ -16,13 +21,10 @@ const TERMINAL_STATUSES: ReadonlySet<SmartCaSigningSession['status']> = new Set(
   ['signed', 'rejected', 'expired', 'cancelled']
 )
 
-const POLL_INTERVAL_MS = 3000
-
 function createIdempotencyKey(): string {
   if (typeof globalThis.crypto?.randomUUID === 'function') {
     return globalThis.crypto.randomUUID()
   }
-
   const random = new Uint32Array(4)
   globalThis.crypto.getRandomValues(random)
   return `smartca-${Array.from(random, value => value.toString(16)).join('-')}`
@@ -33,19 +35,22 @@ export type UseSmartCaSigningResult = {
   selectedSerial: string
   setSelectedSerial: (serial: string) => void
   session: SmartCaSigningSession | null
+  connectionState: SmartCaConnectionState
   loadingCertificates: boolean
   submitting: boolean
   cancelling: boolean
+  checking: boolean
   error: string | null
   remainingMs: number | null
   loadCertificates: () => Promise<void>
   submit: () => Promise<void>
   cancel: () => Promise<void>
+  checkStatus: () => Promise<void>
 }
 
 /**
- * Luồng ký VNPT SmartCA v1: tạo phiên `pending`, tự poll mỗi 3s cho tới khi
- * phiên kết thúc (signed/rejected/expired/cancelled), hết hạn hoặc unmount.
+ * Luồng ký SmartCA theo sự kiện: realtime trên web, visible/reconnect/expiry và
+ * nút kiểm tra thủ công chỉ đối soát một lần; không có network polling timer.
  */
 export function useSmartCaSigning(
   contractId: string,
@@ -56,24 +61,82 @@ export function useSmartCaSigning(
   )
   const [selectedSerial, setSelectedSerial] = useState('')
   const [session, setSession] = useState<SmartCaSigningSession | null>(null)
+  const [connectionState, setConnectionState] =
+    useState<SmartCaConnectionState>('idle')
   const [loadingCertificates, setLoadingCertificates] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  const [checking, setChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [idempotencyKey, setIdempotencyKey] = useState(createIdempotencyKey)
   const [now, setNow] = useState(() => Date.now())
+  const sessionRef = useRef<SmartCaSigningSession | null>(null)
   const onSignedRef = useRef(onSigned)
+  const inFlightRef = useRef<Promise<void> | null>(null)
+  const lastCheckAtRef = useRef(Number.NEGATIVE_INFINITY)
+  const expiryCheckedSessionRef = useRef<string | null>(null)
+  const signedNotifiedRef = useRef(new Set<string>())
+
   useEffect(() => {
     onSignedRef.current = onSigned
   }, [onSigned])
 
   const applySession = useCallback((next: SmartCaSigningSession): void => {
+    sessionRef.current = next
     setSession(next)
-    if (next.status === 'signed') onSignedRef.current?.()
+    if (next.status === 'signed' && !signedNotifiedRef.current.has(next.id)) {
+      signedNotifiedRef.current.add(next.id)
+      onSignedRef.current?.()
+    }
     if (RETRYABLE_TERMINAL_STATUSES.has(next.status)) {
       setIdempotencyKey(createIdempotencyKey())
     }
   }, [])
+
+  const runSessionRequest = useCallback(
+    (request: () => Promise<SmartCaSigningSession>): Promise<void> => {
+      if (inFlightRef.current) return inFlightRef.current
+      setChecking(true)
+      setError(null)
+      const task = request()
+        .then(applySession)
+        .catch((caught: unknown) => {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : 'Không thể kiểm tra kết quả ký VNPT SmartCA.'
+          )
+        })
+        .finally(() => {
+          setChecking(false)
+          inFlightRef.current = null
+        })
+      inFlightRef.current = task
+      return task
+    },
+    [applySession]
+  )
+
+  const checkStatus = useCallback((): Promise<void> => {
+    const current = sessionRef.current
+    if (!current || TERMINAL_STATUSES.has(current.status)) {
+      return Promise.resolve()
+    }
+    lastCheckAtRef.current = Date.now()
+    return runSessionRequest(() =>
+      pollSmartCaSigningSession(contractId, current.id)
+    )
+  }, [contractId, runSessionRequest])
+
+  const refreshSession = useCallback((): Promise<void> => {
+    const current = sessionRef.current
+    if (!current || TERMINAL_STATUSES.has(current.status)) {
+      return Promise.resolve()
+    }
+    return runSessionRequest(() =>
+      getSmartCaSigningSession(contractId, current.id)
+    )
+  }, [contractId, runSessionRequest])
 
   const isActive = session !== null && !TERMINAL_STATUSES.has(session.status)
   const remainingMs =
@@ -89,24 +152,42 @@ export function useSmartCaSigning(
 
   useEffect(() => {
     if (!session || TERMINAL_STATUSES.has(session.status)) return
-    if (new Date(session.expiresAt).getTime() <= Date.now()) return
-
-    let cancelled = false
-    const interval = setInterval(() => {
-      void pollSmartCaSigningSession(contractId, session.id)
-        .then(next => {
-          if (!cancelled) applySession(next)
-        })
-        .catch(() => {
-          // Lỗi mạng tạm thời: để lần poll kế tiếp thử lại.
-        })
-    }, POLL_INTERVAL_MS)
-
+    const client = createSmartCaEventsClient({
+      onConnectionStateChange: setConnectionState,
+      onReconnected: () => void checkStatus(),
+      onSessionUpdated: event => {
+        if (event.contractId === contractId && event.sessionId === session.id) {
+          void refreshSession()
+        }
+      },
+    })
+    client.subscribe(contractId, session.id)
     return () => {
-      cancelled = true
-      clearInterval(interval)
+      client.unsubscribe(contractId, session.id)
+      client.dispose()
     }
-  }, [contractId, session, applySession])
+  }, [checkStatus, contractId, refreshSession, session])
+
+  useEffect(() => {
+    if (!isActive) return
+    const handleVisibilityChange = (): void => {
+      if (document.visibilityState !== 'visible') return
+      if (Date.now() - lastCheckAtRef.current < RECONCILIATION_COOLDOWN_MS) {
+        return
+      }
+      void checkStatus()
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () =>
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [checkStatus, isActive])
+
+  useEffect(() => {
+    if (!session || !isActive || remainingMs !== 0) return
+    if (expiryCheckedSessionRef.current === session.id) return
+    expiryCheckedSessionRef.current = session.id
+    void checkStatus()
+  }, [checkStatus, isActive, remainingMs, session])
 
   const loadCertificates = useCallback(async (): Promise<void> => {
     setLoadingCertificates(true)
@@ -137,15 +218,15 @@ export function useSmartCaSigning(
 
   const submit = useCallback(async (): Promise<void> => {
     if (!selectedSerial) return
-
     setSubmitting(true)
     setError(null)
     try {
-      const result = await createSmartCaSigningSession(contractId, {
-        idempotencyKey,
-        certificateSerial: selectedSerial,
-      })
-      applySession(result)
+      applySession(
+        await createSmartCaSigningSession(contractId, {
+          idempotencyKey,
+          certificateSerial: selectedSerial,
+        })
+      )
     } catch (caught: unknown) {
       setError(
         caught instanceof Error
@@ -155,14 +236,15 @@ export function useSmartCaSigning(
     } finally {
       setSubmitting(false)
     }
-  }, [contractId, idempotencyKey, selectedSerial, applySession])
+  }, [applySession, contractId, idempotencyKey, selectedSerial])
 
   const cancel = useCallback(async (): Promise<void> => {
-    if (!session) return
+    const current = sessionRef.current
+    if (!current) return
     setCancelling(true)
     setError(null)
     try {
-      applySession(await cancelSmartCaSigningSession(contractId, session.id))
+      applySession(await cancelSmartCaSigningSession(contractId, current.id))
     } catch (caught: unknown) {
       setError(
         caught instanceof Error
@@ -172,20 +254,23 @@ export function useSmartCaSigning(
     } finally {
       setCancelling(false)
     }
-  }, [contractId, session, applySession])
+  }, [applySession, contractId])
 
   return {
     certificates,
     selectedSerial,
     setSelectedSerial,
     session,
+    connectionState,
     loadingCertificates,
     submitting,
     cancelling,
+    checking,
     error,
     remainingMs,
     loadCertificates,
     submit,
     cancel,
+    checkStatus,
   }
 }

@@ -18,6 +18,7 @@ import { TrendingUp, Download, FileText, Copy } from 'lucide-react'
 
 import { LandlordEscrow } from './landlord-escrow'
 import { LandlordProfit } from './landlord-profit'
+import { LandlordPayoutHistory } from './landlord-payout-history'
 import { TenantBillsChart } from './components/tenant-bills-chart'
 import { LandlordBillsChart } from './components/landlord-bills-chart'
 
@@ -32,10 +33,13 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
     <div className="space-y-6 mt-0 outline-none">
       {/* Landlord Financial Overviews */}
       {role === 'landlord' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <LandlordEscrow />
-          <LandlordProfit />
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <LandlordEscrow />
+            <LandlordProfit />
+          </div>
+          <LandlordPayoutHistory />
+        </>
       )}
 
       {/* Visual Financial Chart Card */}
