@@ -21,6 +21,9 @@ interface NotificationItem {
   data?: {
     bookingId?: string
     apartmentId?: string
+    link?: string
+    amount?: number
+    receivedAmount?: number
     status?: string
     rejectedReason?: string
   }
@@ -83,15 +86,12 @@ export function NotificationBell({
     }
   }, [])
 
-  // Poll for new notifications every 15 seconds
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      fetchNotifications()
+      void fetchNotifications()
     }, 0)
-    const interval = setInterval(fetchNotifications, 15000)
     return () => {
       clearTimeout(timer)
-      clearInterval(interval)
     }
   }, [fetchNotifications])
 
@@ -262,7 +262,7 @@ export function NotificationBell({
               className="mb-2 rounded-xl border border-warning/30 bg-warning/10 p-3 text-xs font-medium text-warning"
             >
               {notificationError === 'network'
-                ? 'Không thể kết nối máy chủ thông báo. Hệ thống sẽ thử lại tự động.'
+                ? 'Không thể kết nối máy chủ thông báo. Vui lòng thử lại khi mở lại danh sách.'
                 : notificationError === 'auth'
                   ? 'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.'
                   : 'Không thể tải thông báo lúc này. Vui lòng thử lại sau.'}
@@ -280,6 +280,8 @@ export function NotificationBell({
                   n.type === 'BOOKING' &&
                   n.title.includes('Yêu cầu đặt lịch') &&
                   n.data?.bookingId
+                const payoutLink =
+                  n.type === 'PAYOUT_PENDING' ? n.data?.link : undefined
                 return (
                   <div
                     key={n._id}
@@ -357,6 +359,19 @@ export function NotificationBell({
                         )}
                       </div>
                     )}
+
+                    {payoutLink ? (
+                      <a
+                        href={payoutLink}
+                        onClick={event => event.stopPropagation()}
+                        className="mt-2 inline-flex min-h-8 items-center rounded-lg bg-primary px-3 py-1.5 text-[10px] font-bold text-white transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      >
+                        Mở trang xác nhận chuyển tiền
+                        {typeof n.data?.amount === 'number'
+                          ? ` (${n.data.amount.toLocaleString('vi-VN')} VND)`
+                          : ''}
+                      </a>
+                    ) : null}
 
                     <div className="mt-2 flex items-center gap-1 text-[9px] text-muted font-semibold">
                       <Clock className="h-3 w-3" />

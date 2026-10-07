@@ -58,4 +58,52 @@ describe('NotificationBell API failure states', () => {
       await screen.findByText(/Phiên đăng nhập không còn hợp lệ/i)
     ).toBeInTheDocument()
   })
+
+  it('renders a clickable payout simulation link from a pending payout notification', async () => {
+    mocks.get.mockResolvedValue({
+      items: [
+        {
+          _id: 'notice-1',
+          title: 'Có khoản tiền đang chờ nhận',
+          body: 'Mở liên kết để xác nhận kết quả chuyển tiền.',
+          type: 'PAYOUT_PENDING',
+          data: { link: '/landlord/payouts/PAYOUT-1', amount: 5000000 },
+          isRead: false,
+          createdAt: '2026-10-04T00:00:00.000Z',
+        },
+      ],
+      total: 1,
+    })
+
+    render(<NotificationBell isLightHeader />)
+    fireEvent.click(screen.getByTitle('Thông báo'))
+
+    const payoutLink = await screen.findByRole('link', {
+      name: /Mở trang xác nhận chuyển tiền/,
+    })
+    expect(payoutLink).toHaveAttribute('href', '/landlord/payouts/PAYOUT-1')
+    expect(screen.getByText(/5\.000\.000 VND/)).toBeInTheDocument()
+  })
+
+  it('renders the received amount from a completed payout notification', async () => {
+    mocks.get.mockResolvedValue({
+      items: [
+        {
+          _id: 'notice-2',
+          title: 'Bạn đã nhận tiền',
+          body: 'Ví của bạn đã nhận 5.000.000 VND.',
+          type: 'PAYOUT_RECEIVED',
+          data: { receivedAmount: 5000000 },
+          isRead: false,
+          createdAt: '2026-10-04T00:00:00.000Z',
+        },
+      ],
+      total: 1,
+    })
+
+    render(<NotificationBell isLightHeader />)
+    fireEvent.click(screen.getByTitle('Thông báo'))
+
+    expect(await screen.findByText(/5\.000\.000 VND/)).toBeInTheDocument()
+  })
 })
