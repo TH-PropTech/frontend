@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SmartCaSigningPanel } from './smartca-signing-panel'
 
@@ -6,19 +6,39 @@ const {
   cancelSmartCaSigningSession,
   createSmartCaSigningSession,
   getSmartCaCertificates,
+  getSmartCaSigningSession,
   pollSmartCaSigningSession,
+  realtimeClient,
 } = vi.hoisted(() => ({
   cancelSmartCaSigningSession: vi.fn(),
   createSmartCaSigningSession: vi.fn(),
   getSmartCaCertificates: vi.fn(),
+  getSmartCaSigningSession: vi.fn(),
   pollSmartCaSigningSession: vi.fn(),
+  realtimeClient: {
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    dispose: vi.fn(),
+  },
 }))
+
+let realtimeOptions: {
+  onConnectionStateChange?: (state: string) => void
+} = {}
 
 vi.mock('../api/contracts-api', () => ({
   cancelSmartCaSigningSession,
   createSmartCaSigningSession,
   getSmartCaCertificates,
+  getSmartCaSigningSession,
   pollSmartCaSigningSession,
+}))
+
+vi.mock('../api/smartca-events-client', () => ({
+  createSmartCaEventsClient: (options: typeof realtimeOptions) => {
+    realtimeOptions = options
+    return realtimeClient
+  },
 }))
 
 const certificate = {
@@ -54,6 +74,7 @@ async function loadCertificateForm(): Promise<void> {
 describe('SmartCaSigningPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    realtimeOptions = {}
     getSmartCaCertificates.mockResolvedValue({ certificates: [certificate] })
   })
 
@@ -162,8 +183,8 @@ describe('SmartCaSigningPanel', () => {
     )
   })
 
-  describe('auto-poll and retry', () => {
-    it('automatically transitions to signed without a manual check button', async () => {
+  describe('event-driven status check and retry', () => {
+    it('checks once from the Tôi đã ký button and transitions to signed', async () => {
       createSmartCaSigningSession.mockResolvedValue(pendingSession())
       pollSmartCaSigningSession.mockResolvedValue(
         pendingSession({ status: 'signed' })
@@ -182,15 +203,30 @@ describe('SmartCaSigningPanel', () => {
       )
       await screen.findByTestId('smartca-session-status')
 
-      expect(
-        screen.queryByRole('button', { name: 'Kiểm tra lại' })
-      ).not.toBeInTheDocument()
-      await waitFor(() => expect(onSigned).toHaveBeenCalledTimes(1), {
-        timeout: 5000,
-      })
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: 'Tôi đã ký – Kiểm tra kết quả',
+        })
+      )
+      await waitFor(() => expect(onSigned).toHaveBeenCalledTimes(1))
+      expect(pollSmartCaSigningSession).toHaveBeenCalledTimes(1)
       expect(screen.getByRole('status')).toHaveTextContent(
         'bằng chứng giao dịch SmartCA đã được xác minh'
       )
+    })
+
+    it('shows the manual fallback when realtime is disconnected', async () => {
+      createSmartCaSigningSession.mockResolvedValue(pendingSession())
+      render(<SmartCaSigningPanel contractId="contract-1" disabled={false} />)
+      await loadCertificateForm()
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
+      )
+      await screen.findByTestId('smartca-session-status')
+
+      act(() => realtimeOptions.onConnectionStateChange?.('exhausted'))
+
+      expect(await screen.findByText(/Mất kết nối/)).toBeInTheDocument()
     })
 
     it('allows cancelling a pending session', async () => {
@@ -226,12 +262,18 @@ describe('SmartCaSigningPanel', () => {
       fireEvent.click(
         screen.getByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
       )
-      await waitFor(
-        () =>
-          expect(screen.getByRole('status')).toHaveTextContent(
-            'Phiên ký VNPT SmartCA đã hết hạn'
-          ),
-        { timeout: 5000 }
+      await waitFor(() =>
+        expect(screen.getByTestId('smartca-session-status')).toBeVisible()
+      )
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: 'Tôi đã ký – Kiểm tra kết quả',
+        })
+      )
+      await waitFor(() =>
+        expect(screen.getByRole('status')).toHaveTextContent(
+          'Phiên ký VNPT SmartCA đã hết hạn'
+        )
       )
 
       fireEvent.click(screen.getByRole('button', { name: 'Thử ký lại' }))
