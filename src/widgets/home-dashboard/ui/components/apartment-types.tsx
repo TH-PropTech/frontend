@@ -65,7 +65,7 @@ export function ApartmentTypes(): React.ReactElement {
               href={'/properties' as Route}
               className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-white p-6 text-center shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-primary group-hover:text-primary-hover transition-colors">
                 <svg
                   className="h-6 w-6"
                   fill="none"

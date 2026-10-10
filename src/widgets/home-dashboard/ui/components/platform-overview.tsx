@@ -25,7 +25,7 @@ export function PlatformOverview(): React.ReactElement {
         {/* Card 1: Properties Search */}
         <div className="group relative rounded-3xl border border-border bg-white p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between min-h-[260px]">
           <div className="space-y-4">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center text-primary">
               <svg
                 className="h-6 w-6"
                 fill="none"
@@ -75,7 +75,7 @@ export function PlatformOverview(): React.ReactElement {
         {/* Card 2: VR Tour */}
         <div className="group relative rounded-3xl border border-border bg-white p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between min-h-[260px]">
           <div className="space-y-4">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center text-primary">
               <svg
                 className="h-6 w-6"
                 fill="none"
@@ -125,7 +125,7 @@ export function PlatformOverview(): React.ReactElement {
         {/* Card 3: Blockchain Process */}
         <div className="group relative rounded-3xl border border-border bg-white p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between min-h-[260px]">
           <div className="space-y-4">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center text-primary">
               <svg
                 className="h-6 w-6"
                 fill="none"

@@ -193,7 +193,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
         {/* Keyword Field */}
         <div className="relative flex-[1.3] min-w-0">
           <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-left hover:bg-surface-muted/80 focus-within:bg-surface-muted/80 transition-colors">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary">
               <Search className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -237,7 +237,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 aria-label="Chọn khu vực tìm kiếm"
                 className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary">
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -292,7 +292,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             }
             className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary">
               <BadgeDollarSign className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">
@@ -355,7 +355,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             }
             className="w-full flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-left hover:bg-surface-muted/80 transition-colors cursor-pointer"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary">
               <BedDouble className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">

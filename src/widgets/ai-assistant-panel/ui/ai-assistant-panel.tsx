@@ -48,12 +48,18 @@ interface ChatMessage {
     apartmentId: string
     apartmentTitle: string
   }
+  legalCitations?: {
+    title: string
+    heading?: string
+    url?: string
+  }[]
 }
 
 const QUICK_PROMPTS = [
   'Tìm căn hộ Vinhomes 2PN',
   'Quy trình thuê phòng?',
   'Tôi muốn đặt lịch xem nhà',
+  'Luật thuê nhà quy định gì?',
 ]
 
 // Impure helper functions defined outside the React component to satisfy purity rules
@@ -67,18 +73,21 @@ const generateRandomDeviceId = (): string => {
   return 'web-device-' + Math.random().toString(36).substring(2, 15)
 }
 
-const getWebSocketUrl = (userId?: string, deviceId?: string): string => {
-  const base = env.apiUrl.replace('/api/v1', '')
-  const wsProtocol = base.startsWith('https') ? 'wss' : 'ws'
-  const wsBase = base.replace(/^https?/, wsProtocol) + '/ws/ai-chats'
+const GREETING =
+  'Xin chào! Tôi là Trợ lý ảo TH-PropTech. Tôi có thể giúp gì cho bạn hôm nay? Bạn có thể nhờ tôi tìm kiếm căn hộ hoặc lên lịch đặt lịch hẹn xem phòng.'
 
-  const params = []
-  if (userId) params.push(`userId=${encodeURIComponent(userId)}`)
-  if (deviceId) params.push(`deviceId=${encodeURIComponent(deviceId)}`)
-
-  const queryStr = params.length > 0 ? `?${params.join('&')}` : ''
-  return `${wsBase}${queryStr}`
+interface HistoryChat {
+  messages?: Array<{
+    role: string
+    content: string
+    metadata?: ChatMetadata
+  }>
 }
+
+type ChatMetadata = Pick<
+  ChatMessage,
+  'propertyCard' | 'propertyCards' | 'bookingRequest' | 'legalCitations'
+>
 
 export function AiAssistantPanel(): React.ReactElement {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -89,7 +98,6 @@ export function AiAssistantPanel(): React.ReactElement {
   const [showClearConfirm, setShowClearConfirm] = React.useState(false)
 
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
-  const wsRef = React.useRef<WebSocket | null>(null)
   const suggestionsRef = React.useRef<HTMLDivElement>(null)
 
   const scrollSuggestions = (direction: 'left' | 'right') => {
@@ -143,122 +151,82 @@ export function AiAssistantPanel(): React.ReactElement {
     return undefined
   }
 
-  // Connect to WebSocket when panel is opened
+  // Load chat history over HTTP when the panel is first opened
+  const historyLoadedRef = React.useRef(false)
   React.useEffect(() => {
-    if (!isOpen || !deviceId) return
+    if (!isOpen || !deviceId || historyLoadedRef.current) return
+    historyLoadedRef.current = true
 
+    const params = new URLSearchParams({ deviceId })
     const userId = getUserId()
-    const wsUrl = getWebSocketUrl(userId, deviceId)
-    const ws = new WebSocket(wsUrl)
-    wsRef.current = ws
+    if (userId) params.append('userId', userId)
 
-    ws.onopen = () => {
-      console.log('[AiAssistantPanel] WebSocket connected')
+    const greeting: ChatMessage = {
+      id: generateMessageId('greeting'),
+      sender: 'assistant',
+      text: GREETING,
     }
 
-    ws.onmessage = event => {
-      try {
-        const payload = JSON.parse(event.data)
-        if (payload.event === 'typing') {
-          setIsTyping(true)
-        } else if (payload.event === 'message_chunk') {
-          setIsTyping(false)
-          setMessages(prev => {
-            const copy = [...prev]
-            const lastMsg = copy[copy.length - 1]
-            if (
-              lastMsg &&
-              lastMsg.sender === 'assistant' &&
-              lastMsg.id.startsWith('stream-')
-            ) {
-              lastMsg.text = payload.data.text
-            } else {
-              copy.push({
-                id: generateMessageId('stream'),
-                sender: 'assistant',
-                text: payload.data.text,
-              })
-            }
-            return copy
-          })
-        } else if (payload.event === 'message_complete') {
-          setIsTyping(false)
-          setMessages(prev => {
-            const copy = [...prev]
-            const lastMsgIndex = copy.findIndex(m => m.id.startsWith('stream-'))
-            const finalMsg: ChatMessage = {
-              id: generateMessageId('msg'),
-              sender: 'assistant',
-              text: payload.data.text,
-              propertyCard: payload.data.metadata?.propertyCard,
-              propertyCards: payload.data.metadata?.propertyCards,
-              bookingRequest: payload.data.metadata?.bookingRequest,
-            }
-            if (lastMsgIndex !== -1) {
-              copy[lastMsgIndex] = finalMsg
-            } else {
-              copy.push(finalMsg)
-            }
-            return copy
-          })
-        } else if (payload.event === 'thinking_failed') {
-          setIsTyping(false)
-          setMessages(prev => [
-            ...prev,
-            {
-              id: generateMessageId('error'),
-              sender: 'assistant',
-              text: payload.data.error || 'Có lỗi xảy ra khi xử lý tin nhắn.',
-            },
-          ])
-        }
-      } catch (err) {
-        console.warn('Failed to parse WebSocket message:', err)
-      }
-    }
-
-    ws.onerror = e => {
-      console.warn('WebSocket error:', e)
-    }
-
-    ws.onclose = () => {
-      console.log('[AiAssistantPanel] WebSocket closed')
-    }
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close()
-      }
-    }
+    fetch(`${env.apiUrl}/ai-chats/history?${params.toString()}`)
+      .then(res => (res.ok ? res.json() : null))
+      .then(body => (body as { data?: HistoryChat } | null)?.data ?? null)
+      .then((chat: HistoryChat | null) => {
+        const restored: ChatMessage[] = (chat?.messages ?? [])
+          .filter(m => m.role === 'user' || m.role === 'assistant')
+          .map(m => ({
+            id: generateMessageId('hist'),
+            sender: m.role as 'user' | 'assistant',
+            text: m.content,
+            ...m.metadata,
+          }))
+        setMessages(prev =>
+          prev.length > 0 ? prev : restored.length > 0 ? restored : [greeting]
+        )
+      })
+      .catch(() => setMessages(prev => (prev.length > 0 ? prev : [greeting])))
   }, [isOpen, deviceId])
 
-  const handleSend = (text: string) => {
-    if (!text.trim()) return
+  const handleSend = async (text: string) => {
+    if (!text.trim() || isTyping) return
 
-    const userMsg: ChatMessage = {
-      id: generateMessageId('msg'),
-      sender: 'user',
-      text: text,
-    }
-
-    setMessages(prev => [...prev, userMsg])
+    setMessages(prev => [
+      ...prev,
+      { id: generateMessageId('msg'), sender: 'user', text },
+    ])
     setInputValue('')
+    setIsTyping(true)
 
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(
-        JSON.stringify({ event: 'send_message', data: { text } })
-      )
-    } else {
-      setTimeout(() => {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: generateMessageId('err'),
-            sender: 'assistant',
-            text: 'Không thể kết nối đến Trợ lý AI. Vui lòng kiểm tra lại kết nối mạng.',
-          },
-        ])
-      }, 500)
+    try {
+      const userId = getUserId()
+      const res = await fetch(`${env.apiUrl}/ai-chats/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, deviceId, ...(userId ? { userId } : {}) }),
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const { data } = (await res.json()) as {
+        data: { text: string; metadata?: ChatMetadata }
+      }
+      setMessages(prev => [
+        ...prev,
+        {
+          id: generateMessageId('msg'),
+          sender: 'assistant',
+          text: data.text,
+          ...data.metadata,
+        },
+      ])
+    } catch {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: generateMessageId('err'),
+          sender: 'assistant',
+          text: 'Không thể kết nối đến Trợ lý AI. Vui lòng kiểm tra lại kết nối mạng.',
+        },
+      ])
+    } finally {
+      setIsTyping(false)
     }
   }
 
@@ -272,7 +240,13 @@ export function AiAssistantPanel(): React.ReactElement {
       await fetch(`${env.apiUrl}/ai-chats/history?${queryParams.toString()}`, {
         method: 'DELETE',
       })
-      setMessages([])
+      setMessages([
+        {
+          id: generateMessageId('greeting'),
+          sender: 'assistant',
+          text: GREETING,
+        },
+      ])
     } catch (err) {
       console.error('Failed to clear chat history:', err)
     }
@@ -297,10 +271,11 @@ export function AiAssistantPanel(): React.ReactElement {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-[#C65A3A] via-[#E28766] to-[#F3A589] text-white shadow-xl shadow-orange-500/30 hover:scale-110 active:scale-95 transition-all duration-300 focus:outline-none ring-4 ring-white/20 dark:ring-zinc-900/30"
+          className="group flex items-end justify-center rounded-3xl bg-transparent transition-transform duration-200 hover:scale-110 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C65A3A]"
           title="Mở Trợ lý ảo TH-PropTech"
+          aria-label="Mở Trợ lý ảo TH-PropTech"
         >
-          <AiMascot size={56} isAnimated={false} />
+          <AiMascot size={92} isAnimated />
         </button>
       )}
 
@@ -310,9 +285,9 @@ export function AiAssistantPanel(): React.ReactElement {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-[#C65A3A] text-white">
             <div className="flex items-center gap-2.5">
-              <div className="relative h-9 w-9 bg-white/10 rounded-xl flex items-center justify-center p-0.5 shadow-sm border border-white/20">
-                <AiMascot size={32} isAnimated={false} />
-                <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-[#C65A3A] animate-pulse" />
+              <div className="relative h-9 w-9 bg-white/10 rounded-xl flex items-center justify-center shadow-sm border border-white/20">
+                <AiMascot size={28} headOnly />
+                <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-[#C65A3A]" />
               </div>
               <span className="font-semibold text-sm">
                 Trợ lý ảo TH-PropTech
@@ -347,7 +322,7 @@ export function AiAssistantPanel(): React.ReactElement {
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
             {messages.length === 0 && !isTyping && (
               <div className="flex flex-col items-center justify-center h-full text-center p-6 text-zinc-400 space-y-3">
-                <AiMascot size={72} isAnimated={false} />
+                <AiMascot size={110} isAnimated />
                 <p className="text-xs">
                   Chưa có cuộc hội thoại nào. Hãy nhập tin nhắn bên dưới hoặc
                   chọn gợi ý để bắt đầu!
@@ -372,6 +347,34 @@ export function AiAssistantPanel(): React.ReactElement {
                     <div className="whitespace-pre-line leading-relaxed">
                       {msg.text}
                     </div>
+
+                    {msg.legalCitations && msg.legalCitations.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {msg.legalCitations.map((citation, idx) => {
+                          const label = `Nguồn: ${citation.title}${citation.heading ? ` · ${citation.heading}` : ''}`
+                          const isHttpUrl =
+                            !!citation.url && /^https?:\/\//i.test(citation.url)
+                          return isHttpUrl ? (
+                            <a
+                              key={`${citation.title}-${idx}`}
+                              href={citation.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] bg-[#FDF3F0] hover:bg-[#F9E3DB] dark:bg-zinc-900 dark:hover:bg-zinc-700 text-[#C65A3A] font-medium px-2.5 py-1 rounded-full transition-colors underline-offset-2 hover:underline"
+                            >
+                              {label}
+                            </a>
+                          ) : (
+                            <span
+                              key={`${citation.title}-${idx}`}
+                              className="text-[10px] bg-[#FDF3F0] dark:bg-zinc-900 text-[#C65A3A] font-medium px-2.5 py-1 rounded-full"
+                            >
+                              {label}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
 
                     {msg.propertyCards && msg.propertyCards.length > 0 ? (
                       <div className="mt-3 flex gap-3 overflow-x-auto pb-2 snap-x scrollbar-none max-w-sm">
