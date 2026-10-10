@@ -227,12 +227,12 @@ export function LoginForm(): React.ReactElement {
           <>
             <Input
               label="Email hoặc Tên tài khoản"
-              type="email"
-              placeholder="email@example.com"
+              type="text"
+              placeholder="email@example.com hoặc admin"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              autoComplete="email"
+              autoComplete="username"
               icon={
                 <svg
                   width="18"

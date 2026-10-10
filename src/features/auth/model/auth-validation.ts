@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const loginSchema = z.object({
   emailOrPhone: z.string().min(1, 'Vui lòng nhập Email hoặc Số điện thoại'),
-  password: z.string().min(8, 'Mật khẩu phải từ 8 ký tự trở lên'),
+  password: z.string().min(1, 'Vui lòng nhập mật khẩu'),
 })
 
 export const registerSchema = z
