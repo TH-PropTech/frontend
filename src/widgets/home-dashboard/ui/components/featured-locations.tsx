@@ -35,7 +35,7 @@ export function FeaturedLocations(): React.ReactElement {
             }
             className="snap-start shrink-0 w-[140px] sm:w-auto group flex flex-col items-center gap-3 rounded-2xl border border-border bg-white p-4 sm:p-5 text-center shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl text-primary group-hover:text-primary-hover transition-colors">
               <svg
                 className="h-5 w-5"
                 fill="none"

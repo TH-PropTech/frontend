@@ -46,7 +46,7 @@ export function SecurityCommitmentsSection(): React.ReactElement {
               key={idx}
               className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-white p-6 text-center shadow-sm hover:shadow-md transition-shadow"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl text-primary">
                 <svg
                   className="h-6 w-6"
                   fill="none"

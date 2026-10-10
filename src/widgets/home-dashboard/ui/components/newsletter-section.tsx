@@ -8,7 +8,7 @@ export function NewsletterSection(): React.ReactElement {
     <section className="mx-auto max-w-6xl px-6 py-24 md:px-10">
       <div className="rounded-3xl border border-border bg-gradient-to-br from-primary-soft/40 via-white to-accent-soft/30 p-8 md:p-12">
         <div className="mx-auto max-w-2xl text-center space-y-6">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-soft">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl">
             <svg
               className="h-7 w-7 text-primary"
               fill="none"

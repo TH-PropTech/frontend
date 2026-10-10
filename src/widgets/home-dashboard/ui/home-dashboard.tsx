@@ -174,7 +174,7 @@ export function HomeDashboard(): React.ReactElement {
             <div className="max-w-6xl mx-auto px-6 md:px-10">
               <div className="bg-[#fffdf9] border border-[#e3d8d0] rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-[#f5e3dc] rounded-xl text-[#c65a3a] shrink-0">
+                  <div className="p-3 rounded-xl text-[#c65a3a] shrink-0">
                     <svg
                       className="h-6 w-6"
                       viewBox="0 0 24 24"

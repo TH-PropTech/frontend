@@ -71,7 +71,7 @@ export function RentalProcessTimeline(): React.ReactElement {
               >
                 <div className="rounded-2xl border border-border bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-md">
                   <div className="mb-3 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary md:hidden">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl text-primary md:hidden">
                       <span className="font-display text-xs font-bold">
                         {item.step}
                       </span>
