@@ -18,6 +18,8 @@ import { PoliciesView } from './views/policies-view'
 import { RentalFlowControlView } from './views/rental-flow-control-view'
 import { RecommendationEngineView } from './views/recommendation-engine-view'
 import { FabricAuditView } from './views/fabric-audit-view'
+import { GroqKeysView } from './views/groq-keys-view'
+import { LegalKnowledgeView } from './views/legal-knowledge-view'
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -39,6 +41,8 @@ type TabType =
   | 'fees'
   | 'rental-ops'
   | 'fabric-audit'
+  | 'groq-keys'
+  | 'legal-knowledge'
 
 const ADMIN_TABS: readonly TabType[] = [
   'overview',
@@ -53,6 +57,8 @@ const ADMIN_TABS: readonly TabType[] = [
   'fees',
   'rental-ops',
   'fabric-audit',
+  'groq-keys',
+  'legal-knowledge',
 ]
 
 export function resolveAdminTab(pathname: string): TabType {
@@ -234,6 +240,43 @@ export function AdminDashboard({
       label: 'Fabric Audit Center',
       icon: <Blocks className="h-[18px] w-[18px]" aria-hidden="true" />,
     },
+    {
+      type: 'groq-keys',
+      label: 'API Key AI',
+      icon: (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <circle cx="7.5" cy="15.5" r="5.5" />
+          <path d="M21 2l-9.6 9.6" />
+          <path d="M15.5 7.5l3 3L22 7l-3-3" />
+        </svg>
+      ),
+    },
+    {
+      type: 'legal-knowledge',
+      label: 'Kho tri thức luật',
+      icon: (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      ),
+    },
   ]
 
   const handleSidebarItemClick = (type: TabType): void => {
@@ -291,6 +334,10 @@ export function AdminDashboard({
         return <StuckTransactionsView />
       case 'fabric-audit':
         return <FabricAuditView />
+      case 'groq-keys':
+        return <GroqKeysView />
+      case 'legal-knowledge':
+        return <LegalKnowledgeView />
       default:
         return <OverviewView />
     }
