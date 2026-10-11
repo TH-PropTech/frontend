@@ -43,14 +43,8 @@ export function LocationFilterModal({
   selectedDistrictCode,
   setSelectedDistrictCode,
 }: LocationFilterModalProps): React.ReactElement {
-  const {
-    provinces,
-    districts,
-    wards,
-    isLoadingProvinces,
-    isLoadingDistricts,
-    isLoadingWards,
-  } = useVietnamLocations(selectedProvinceCode, selectedDistrictCode)
+  const { provinces, wards, isLoadingProvinces, isLoadingWards } =
+    useVietnamLocations(selectedProvinceCode)
 
   // 1. Auto-resolve missing city/province from selectedDistrict
   React.useEffect(() => {
@@ -105,45 +99,6 @@ export function LocationFilterModal({
     selectedProvinceCode,
     setSelectedCity,
     setSelectedProvinceCode,
-  ])
-
-  // 3. Auto-sync selectedDistrict with fetched districts from API
-  React.useEffect(() => {
-    if (selectedDistrict && districts.length > 0) {
-      const normSelected = removeVietnameseTones(selectedDistrict)
-        .replace(/^(quan|huyen|thanh pho|tp\.?)\s+/i, '')
-        .trim()
-      const matchedDistrict = districts.find(d => {
-        const normD = removeVietnameseTones(d.name)
-          .replace(/^(quan|huyen|thanh pho|tp\.?)\s+/i, '')
-          .trim()
-        return (
-          normD === normSelected ||
-          removeVietnameseTones(d.name).includes(normSelected) ||
-          normSelected.includes(normD)
-        )
-      })
-      if (matchedDistrict) {
-        if (selectedDistrictCode !== matchedDistrict.code) {
-          setSelectedDistrictCode(matchedDistrict.code)
-        }
-        if (
-          selectedDistrict !== matchedDistrict.name &&
-          normSelected ===
-            removeVietnameseTones(matchedDistrict.name)
-              .replace(/^(quan|huyen|thanh pho|tp\.?)\s+/i, '')
-              .trim()
-        ) {
-          setSelectedDistrict(matchedDistrict.name)
-        }
-      }
-    }
-  }, [
-    districts,
-    selectedDistrict,
-    selectedDistrictCode,
-    setSelectedDistrict,
-    setSelectedDistrictCode,
   ])
 
   return (
@@ -207,48 +162,6 @@ export function LocationFilterModal({
           </Select>
         </div>
 
-        {/* District */}
-        <div>
-          <label className="text-[10px] font-bold text-muted uppercase">
-            Quận / Huyện
-          </label>
-          <Select
-            value={selectedDistrict || 'all'}
-            disabled={!selectedCity && !selectedDistrict}
-            onValueChange={val => {
-              if (val === 'all') {
-                setSelectedDistrict('')
-                setSelectedDistrictCode(null)
-              } else {
-                const district = districts.find(d => d.name === val)
-                setSelectedDistrict(val)
-                setSelectedDistrictCode(district?.code ?? null)
-              }
-              setSelectedWard('')
-            }}
-          >
-            <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="max-h-60 overflow-y-auto">
-              <SelectItem value="all">
-                {isLoadingDistricts ? 'Đang tải...' : 'Chọn Quận/Huyện'}
-              </SelectItem>
-              {selectedDistrict &&
-                !districts.some(d => d.name === selectedDistrict) && (
-                  <SelectItem value={selectedDistrict}>
-                    {selectedDistrict}
-                  </SelectItem>
-                )}
-              {districts.map(district => (
-                <SelectItem key={district.code} value={district.name}>
-                  {district.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* Ward */}
         <div>
           <label className="text-[10px] font-bold text-muted uppercase">
@@ -256,7 +169,7 @@ export function LocationFilterModal({
           </label>
           <Select
             value={selectedWard || 'all'}
-            disabled={!selectedDistrict}
+            disabled={!selectedCity}
             onValueChange={val => {
               setSelectedWard(val === 'all' ? '' : val)
             }}

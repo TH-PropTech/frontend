@@ -74,14 +74,15 @@ export const QUICK_SEARCH_BEDROOMS: QuickSearchBedroomOption[] = [
 
 interface PopularSuggestion {
   label: string
-  district?: string
+  /** Phường/xã theo cơ cấu hành chính từ 1/7/2025 (không còn quận/huyện). */
+  ward?: string
   priceBracket?: string
   bedrooms?: string
 }
 
 export const POPULAR_SUGGESTIONS: PopularSuggestion[] = [
-  { label: 'Quận 1', district: 'Quận 1' },
-  { label: 'Bình Thạnh', district: 'Bình Thạnh' },
+  { label: 'Sài Gòn', ward: 'Phường Sài Gòn' },
+  { label: 'Bình Thạnh', ward: 'Phường Bình Thạnh' },
   { label: 'Dưới 10 triệu', priceBracket: 'under-10' },
   { label: '2 phòng ngủ', bedrooms: '2' },
   { label: '10 – 15 triệu', priceBracket: '10-15' },
@@ -429,12 +430,12 @@ export function HeroQuickSearchBar(): React.ReactElement {
             type="button"
             data-testid={`suggestion-chip-${sug.label}`}
             onClick={() => {
-              if (sug.district) {
+              if (sug.ward) {
                 setSelectedCity(HCM_CITY)
-                setSelectedDistrict(sug.district)
-                setSelectedWard('')
+                setSelectedDistrict('')
+                setSelectedWard(sug.ward)
                 executeSearch(
-                  { city: HCM_CITY, district: sug.district, ward: '' },
+                  { city: HCM_CITY, district: '', ward: sug.ward },
                   'all',
                   'all',
                   ''

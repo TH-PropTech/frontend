@@ -27,8 +27,7 @@ vi.mock(
           data-testid="stub-pick-location"
           onClick={() => {
             props.setSelectedCity('Thành phố Hồ Chí Minh')
-            props.setSelectedDistrict('Quận Bình Thạnh')
-            props.setSelectedWard('Phường 22')
+            props.setSelectedWard('Phường Bình Thạnh')
           }}
         >
           pick
@@ -76,7 +75,7 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
     fireEvent.click(screen.getByText('Xác nhận'))
     expect(
       screen.getByTestId('quick-search-district-trigger')
-    ).toHaveTextContent('Thành phố Hồ Chí Minh • Quận Bình Thạnh • Phường 22')
+    ).toHaveTextContent('Thành phố Hồ Chí Minh • Phường Bình Thạnh')
 
     // 3. Select Price "10 – 15 triệu"
     fireEvent.click(screen.getByTestId('quick-search-price-trigger'))
@@ -103,8 +102,8 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
     expect(pushedUrl).toContain('search=Vinhomes+Central+Park')
     const pushedParams = new URL(pushedUrl, 'http://x').searchParams
     expect(pushedParams.get('city')).toBe('Thành phố Hồ Chí Minh')
-    expect(pushedParams.get('district')).toBe('Quận Bình Thạnh')
-    expect(pushedParams.get('ward')).toBe('Phường 22')
+    expect(pushedParams.get('district')).toBeNull()
+    expect(pushedParams.get('ward')).toBe('Phường Bình Thạnh')
     expect(pushedUrl).toContain('minPrice=10')
     expect(pushedUrl).toContain('maxPrice=15')
     expect(pushedUrl).toContain('bedrooms=2')
@@ -131,7 +130,7 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
   it('triggers immediate search when clicking popular suggestion tags', () => {
     render(<HeroQuickSearchBar />)
 
-    const q1Tag = screen.getByTestId('suggestion-chip-Quận 1')
+    const q1Tag = screen.getByTestId('suggestion-chip-Sài Gòn')
     fireEvent.click(q1Tag)
 
     const chipParams = new URL(
@@ -139,7 +138,8 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
       'http://x'
     ).searchParams
     expect(chipParams.get('city')).toBe('Thành phố Hồ Chí Minh')
-    expect(chipParams.get('district')).toBe('Quận 1')
+    expect(chipParams.get('district')).toBeNull()
+    expect(chipParams.get('ward')).toBe('Phường Sài Gòn')
 
     const under10Tag = screen.getByTestId('suggestion-chip-Dưới 10 triệu')
     fireEvent.click(under10Tag)

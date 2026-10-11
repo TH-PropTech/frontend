@@ -744,6 +744,47 @@ export async function signContract(
   })
 }
 
+export type SigningMethodId =
+  | 'smartca_v1'
+  | 'smartca_v2'
+  | 'biometric_smart_otp'
+  | 'dev_sign'
+
+export interface SigningMethodOption {
+  id: SigningMethodId
+  label: string
+  description: string
+  available: boolean
+  reason?: string
+  inputs: string[]
+}
+
+/** Danh sách phương thức ký do backend cấu hình (nguồn sự thật cho UI). */
+export async function getSigningMethods(
+  contractId: string
+): Promise<SigningMethodOption[]> {
+  return apiClient.get<SigningMethodOption[]>(
+    `/contracts/${contractId}/signing-methods`
+  )
+}
+
+export interface SignSmartCaV2Input {
+  smartCaPassword: string
+  smartCaOtp: string
+  certificateSerial?: string
+}
+
+/** SmartCA v2 (tùy chọn): mật khẩu + OTP chỉ gửi một lần, không lưu ở client. */
+export async function signSmartCaV2(
+  contractId: string,
+  input: SignSmartCaV2Input
+): Promise<SmartCaSigningSession> {
+  return apiClient.post<SmartCaSigningSession>(
+    `/contracts/${contractId}/smartca/sign-v2`,
+    input
+  )
+}
+
 /** Dev/test: ký bỏ qua SmartCA (backend phải bật ENABLE_TEST_SIGN_BYPASS). */
 export async function testSignContract(
   contractId: string

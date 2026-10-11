@@ -2,9 +2,10 @@
 
 import * as React from 'react'
 
-// ── Public API: https://provinces.open-api.vn ──
+// ── Public API: https://provinces.open-api.vn (v2: cơ cấu hành chính từ 1/7/2025) ──
+// 34 tỉnh/thành, KHÔNG còn cấp Quận/Huyện: phường/xã nằm trực tiếp dưới tỉnh/thành.
 
-const PROVINCES_API_BASE = 'https://provinces.open-api.vn/api'
+const PROVINCES_API_BASE = 'https://provinces.open-api.vn/api/v2'
 
 export interface Province {
   name: string
@@ -14,7 +15,7 @@ export interface Province {
   phone_code: number
 }
 
-export interface District {
+export interface Ward {
   name: string
   code: number
   division_type: string
@@ -22,26 +23,16 @@ export interface District {
   province_code: number
 }
 
-export interface Ward {
-  name: string
-  code: number
-  division_type: string
-  codename: string
-  district_code: number
-}
-
 // Simple in-memory cache to avoid refetching the same data
 let provincesCache: Province[] | null = null
-const districtsCache = new Map<number, District[]>()
 const wardsCache = new Map<number, Ward[]>()
 
 export function clearLocationsCache(): void {
   provincesCache = null
-  districtsCache.clear()
   wardsCache.clear()
 }
 
-async function fetchProvinces(): Promise<Province[]> {
+export async function fetchProvinces(): Promise<Province[]> {
   if (provincesCache) return provincesCache
 
   const res = await fetch(`${PROVINCES_API_BASE}/p/`)
@@ -53,124 +44,69 @@ async function fetchProvinces(): Promise<Province[]> {
   return data
 }
 
-async function fetchDistricts(provinceCode: number): Promise<District[]> {
-  const cached = districtsCache.get(provinceCode)
+export async function fetchWards(provinceCode: number): Promise<Ward[]> {
+  const cached = wardsCache.get(provinceCode)
   if (cached) return cached
 
   const res = await fetch(`${PROVINCES_API_BASE}/p/${provinceCode}?depth=2`)
   if (!res.ok) {
-    throw new Error(`Failed to fetch districts: ${res.status}`)
-  }
-  const data = (await res.json()) as { districts: District[] }
-  const districts = data.districts ?? []
-  districtsCache.set(provinceCode, districts)
-  return districts
-}
-
-async function fetchWards(districtCode: number): Promise<Ward[]> {
-  const cached = wardsCache.get(districtCode)
-  if (cached) return cached
-
-  const res = await fetch(`${PROVINCES_API_BASE}/d/${districtCode}?depth=2`)
-  if (!res.ok) {
     throw new Error(`Failed to fetch wards: ${res.status}`)
   }
-  const data = (await res.json()) as { wards: Ward[] }
-  const wards = data.wards ?? []
-  wardsCache.set(districtCode, wards)
+  const data = (await res.json()) as { wards?: Ward[] }
+  const wards = [...(data.wards ?? [])].sort((a, b) =>
+    a.name.localeCompare(b.name, 'vi')
+  )
+  wardsCache.set(provinceCode, wards)
   return wards
 }
 
 /**
- * Hook lấy dữ liệu hành chính Việt Nam (Tỉnh/Thành phố → Quận/Huyện → Phường/Xã)
- * từ API công khai provinces.open-api.vn.
- *
- * Cascade: chọn Tỉnh → load Quận; chọn Quận → load Phường.
- * Có in-memory cache tránh gọi API lại khi chọn lại cùng tỉnh/quận.
+ * Hook lấy dữ liệu hành chính Việt Nam theo cơ cấu mới (Tỉnh/Thành phố → Phường/Xã).
+ * Có in-memory cache tránh gọi API lại khi chọn lại cùng tỉnh.
+ * `districts` luôn rỗng: giữ lại trong kết quả để các nơi dùng cũ không phải đổi hình dạng dữ liệu.
  */
-export function useVietnamLocations(
-  provinceCode: number | null,
-  districtCode: number | null
-): {
+export function useVietnamLocations(provinceCode: number | null): {
   provinces: Province[]
-  districts: District[]
+  districts: never[]
   wards: Ward[]
   isLoadingProvinces: boolean
   isLoadingDistricts: boolean
   isLoadingWards: boolean
 } {
   const [provinces, setProvinces] = React.useState<Province[]>([])
-  const [districts, setDistricts] = React.useState<District[]>([])
   const [wards, setWards] = React.useState<Ward[]>([])
-
   const [isLoadingProvinces, setIsLoadingProvinces] = React.useState(false)
-  const [isLoadingDistricts, setIsLoadingDistricts] = React.useState(false)
   const [isLoadingWards, setIsLoadingWards] = React.useState(false)
 
-  // 1. Load provinces (once on mount)
   React.useEffect(() => {
     let active = true
-
-    const loadProvinces = async (): Promise<void> => {
+    const load = async (): Promise<void> => {
       setIsLoadingProvinces(true)
       try {
         const data = await fetchProvinces()
         if (active) setProvinces(data)
       } catch {
-        // Fallback or ignore
+        // Bỏ qua: giao diện giữ danh sách rỗng.
       } finally {
         if (active) setIsLoadingProvinces(false)
       }
     }
-
-    void loadProvinces()
-
+    void load()
     return () => {
       active = false
     }
   }, [])
 
-  // 2. Load districts when province changes
   React.useEffect(() => {
     let active = true
-
-    const loadDistricts = async (): Promise<void> => {
+    const load = async (): Promise<void> => {
       if (provinceCode === null) {
-        setDistricts([])
-        return
-      }
-
-      setIsLoadingDistricts(true)
-      try {
-        const data = await fetchDistricts(provinceCode)
-        if (active) setDistricts(data)
-      } catch {
-        if (active) setDistricts([])
-      } finally {
-        if (active) setIsLoadingDistricts(false)
-      }
-    }
-
-    void loadDistricts()
-
-    return () => {
-      active = false
-    }
-  }, [provinceCode])
-
-  // 3. Load wards when district changes
-  React.useEffect(() => {
-    let active = true
-
-    const loadWards = async (): Promise<void> => {
-      if (districtCode === null) {
         setWards([])
         return
       }
-
       setIsLoadingWards(true)
       try {
-        const data = await fetchWards(districtCode)
+        const data = await fetchWards(provinceCode)
         if (active) setWards(data)
       } catch {
         if (active) setWards([])
@@ -178,20 +114,18 @@ export function useVietnamLocations(
         if (active) setIsLoadingWards(false)
       }
     }
-
-    void loadWards()
-
+    void load()
     return () => {
       active = false
     }
-  }, [districtCode])
+  }, [provinceCode])
 
   return {
     provinces,
-    districts,
+    districts: [],
     wards,
     isLoadingProvinces,
-    isLoadingDistricts,
+    isLoadingDistricts: false,
     isLoadingWards,
   }
 }
