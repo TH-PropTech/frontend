@@ -2,9 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { ContractPdfPreview } from './contract-pdf-preview'
 
-const mocks = vi.hoisted(() => ({ download: vi.fn() }))
+const mocks = vi.hoisted(() => ({ download: vi.fn(), downloadSigned: vi.fn() }))
 vi.mock('../api/contracts-api', () => ({
   downloadContractArtifact: mocks.download,
+  downloadSignedContractArtifact: mocks.downloadSigned,
 }))
 
 describe('ContractPdfPreview', () => {
@@ -47,5 +48,22 @@ describe('ContractPdfPreview', () => {
     await waitFor(() =>
       expect(screen.getByTitle('Bản PDF hợp đồng HD-1')).toBeTruthy()
     )
+  })
+
+  it('loads the signed PAdES copy when the signed variant is requested', async () => {
+    mocks.downloadSigned.mockResolvedValue(
+      new Blob(['%PDF-1.7'], { type: 'application/pdf' })
+    )
+    render(
+      <ContractPdfPreview
+        contractId="c-1"
+        contractCode="HD-1"
+        variant="signed"
+      />
+    )
+
+    expect(await screen.findByTitle('Bản PDF đã ký HD-1')).toBeInTheDocument()
+    expect(mocks.downloadSigned).toHaveBeenCalledWith('c-1')
+    expect(mocks.download).not.toHaveBeenCalled()
   })
 })

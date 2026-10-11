@@ -91,6 +91,9 @@ export function ContractWorkspace({
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('document')
   const [isDocumentExpanded, setIsDocumentExpanded] = useState(false)
   const [isPdfOpen, setIsPdfOpen] = useState(false)
+  const [pdfVariant, setPdfVariant] = useState<'canonical' | 'signed'>(
+    'canonical'
+  )
 
   if (isLoading) {
     return (
@@ -155,6 +158,8 @@ export function ContractWorkspace({
     signingEligibility.eligible &&
     (nextEnabledAction === 'SIGN_SMARTCA' ||
       nextEnabledAction === 'SIGN_ECONSENT')
+
+  const hasAnySignature = parties.tenant.hasSigned || parties.landlord.hasSigned
 
   // Compute active step once — used by ContractFlowGuide, DepositPaymentPanel, BilateralSigningTimeline
   const activeStep = resolveContractActiveStep({
@@ -412,10 +417,40 @@ export function ContractWorkspace({
                 Bản PDF chuẩn dùng để xem, tải xuống và ký số.
               </DialogDescription>
             </DialogHeader>
+            {hasAnySignature ? (
+              <div
+                role="tablist"
+                aria-label="Chọn bản PDF"
+                className="flex gap-2"
+              >
+                {(
+                  [
+                    ['canonical', 'Bản gốc'],
+                    ['signed', 'Bản đã ký'],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={pdfVariant === id}
+                    onClick={() => setPdfVariant(id)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${
+                      pdfVariant === id
+                        ? 'border-[var(--primary)] text-[var(--primary)]'
+                        : 'border-[var(--border)] text-[var(--muted)]'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             {isPdfOpen && actions.canDownloadArtifact ? (
               <ContractPdfPreview
                 contractId={contractId}
                 contractCode={contract.code}
+                variant={pdfVariant}
               />
             ) : null}
           </DialogContent>
