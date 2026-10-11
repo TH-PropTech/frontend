@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { Button } from '@/shared/ui/button'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { formatCount, formatDate, isHttpUrl, statusTone } from '../lib/format'
 import {
@@ -11,15 +12,14 @@ import {
 
 const KEYWORD_PREVIEW = 5
 
-const ACTION_BUTTON =
-  'rounded-lg px-2.5 py-1.5 text-xs font-semibold text-muted transition-colors hover:bg-surface-muted hover:text-fg disabled:opacity-50'
-
 export interface LegalDocListProps {
   docs: readonly LegalDocItem[] | null
   busy: boolean
   onEdit: (doc: LegalDocItem) => void
   onTogglePublish: (doc: LegalDocItem) => void
   onArchive: (doc: LegalDocItem) => void
+  /** Shown under "Chưa có tài liệu nào"; defaults to the add-document hint. */
+  emptyHint?: string
 }
 
 export function LegalDocList({
@@ -28,6 +28,7 @@ export function LegalDocList({
   onEdit,
   onTogglePublish,
   onArchive,
+  emptyHint = 'Bấm “Thêm tài liệu” và dán liên kết văn bản để bắt đầu.',
 }: LegalDocListProps): React.ReactElement {
   if (docs === null) {
     return (
@@ -44,9 +45,7 @@ export function LegalDocList({
     return (
       <div className="px-5 py-10 text-center">
         <p className="text-sm font-bold text-fg">Chưa có tài liệu nào</p>
-        <p className="mt-1 text-xs text-muted">
-          Bấm “Thêm tài liệu” và dán liên kết văn bản để bắt đầu.
-        </p>
+        <p className="mt-1 text-xs text-muted">{emptyHint}</p>
       </div>
     )
   }
@@ -120,35 +119,44 @@ export function LegalDocList({
                 )}
               </div>
               <div className="flex shrink-0 flex-wrap gap-1">
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   disabled={busy}
                   onClick={() => onEdit(doc)}
-                  className={ACTION_BUTTON}
                 >
                   Sửa
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   disabled={busy}
                   onClick={() => onTogglePublish(doc)}
-                  className={ACTION_BUTTON}
+                  title={
+                    isArchived
+                      ? 'Đưa về danh sách ở trạng thái nháp'
+                      : isPublished
+                        ? 'Chatbot ngừng dùng văn bản này, vẫn giữ ở dạng nháp để sửa lại'
+                        : 'Cho chatbot bắt đầu tra cứu văn bản này'
+                  }
                 >
                   {isArchived
                     ? 'Khôi phục'
                     : isPublished
                       ? 'Gỡ xuống'
                       : 'Xuất bản'}
-                </button>
+                </Button>
                 {!isArchived && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={busy}
+                    title="Cất sang tab Lưu trữ, có thể khôi phục sau"
                     onClick={() => onArchive(doc)}
-                    className={`${ACTION_BUTTON} hover:text-danger`}
+                    className="hover:text-danger"
                   >
                     Lưu trữ
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>

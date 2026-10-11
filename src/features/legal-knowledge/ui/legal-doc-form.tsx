@@ -1,7 +1,17 @@
 'use client'
 
 import * as React from 'react'
+import { CalendarDays, X } from 'lucide-react'
+import { format, isValid, parseISO } from 'date-fns'
+import { vi } from 'date-fns/locale'
 import { toast } from 'sonner'
+import { Button } from '@/shared/ui/button'
+import { Calendar } from '@/shared/ui/calendar'
+import { FilterDropdown } from '@/shared/ui/filter-dropdown'
+import { Input } from '@/shared/ui/input'
+import { Label } from '@/shared/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Textarea } from '@/shared/ui/textarea'
 import { fetchLegalLink } from '../api/legal-knowledge-api'
 import {
   CONTENT_MAX_CHARS,
@@ -42,9 +52,6 @@ interface FetchInfo {
   rawCharCount: number
 }
 
-const INPUT =
-  'w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30'
-
 const LABEL = 'flex flex-col gap-1 text-xs font-semibold text-muted'
 
 function FieldError({
@@ -71,6 +78,7 @@ export function LegalDocForm({
     initial?.contentSource ?? 'manual'
   )
   const [attempted, setAttempted] = React.useState(false)
+  const [calendarOpen, setCalendarOpen] = React.useState(false)
   const [values, setValues] = React.useState<LegalDocFormValues>(() => ({
     title: initial?.title ?? '',
     category: initial?.category ?? 'khac',
@@ -82,6 +90,12 @@ export function LegalDocForm({
     effectiveDate: initial?.effectiveDate?.slice(0, 10) ?? '',
     summary: initial?.summary ?? '',
   }))
+
+  const parsedDate = values.effectiveDate
+    ? parseISO(values.effectiveDate)
+    : undefined
+  const selectedDate =
+    parsedDate && isValid(parsedDate) ? parsedDate : undefined
 
   const errors = validateLegalDocForm(values)
   const hasErrors = Object.keys(errors).length > 0
@@ -142,14 +156,7 @@ export function LegalDocForm({
   }
 
   return (
-    <section
-      aria-labelledby="legal-doc-form-title"
-      className="space-y-5 rounded-xl border border-border bg-surface p-5"
-    >
-      <h2 id="legal-doc-form-title" className="text-sm font-bold text-fg">
-        {isEdit ? 'Sửa tài liệu' : 'Thêm tài liệu'}
-      </h2>
-
+    <div className="space-y-5">
       {!isEdit && (
         <div className="space-y-3 rounded-lg border border-dashed border-border p-4">
           <p className="text-xs font-semibold text-fg">
@@ -157,25 +164,25 @@ export function LegalDocForm({
             luật…)
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <label className={`${LABEL} flex-1`}>
-              Liên kết nguồn
-              <input
+            <div className="flex-1">
+              <Input
+                label="Liên kết nguồn"
+                id="legal-doc-fetch-url"
                 type="url"
                 inputMode="url"
                 value={url}
                 placeholder="https://..."
                 onChange={event => setUrl(event.target.value)}
-                className={INPUT}
               />
-            </label>
-            <button
-              type="button"
+            </div>
+            <Button
               disabled={!url.trim() || fetching}
+              loading={fetching}
               onClick={() => void handleFetch()}
-              className="shrink-0 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-on-control transition-colors hover:bg-primary-hover disabled:opacity-50"
+              className="shrink-0"
             >
               {fetching ? 'Đang đọc & chắt lọc...' : 'Đọc & chắt lọc'}
-            </button>
+            </Button>
           </div>
           <LegalSourcePicker
             onPick={source => {
@@ -202,68 +209,110 @@ export function LegalDocForm({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className={`${LABEL} sm:col-span-2`}>
-          Tên văn bản *
-          <input
+        <div className="sm:col-span-2">
+          <Input
+            label="Tên văn bản *"
+            id="legal-doc-title"
             value={values.title}
+            {...(shownErrors.title ? { error: shownErrors.title } : {})}
             onChange={event => update('title', event.target.value)}
-            className={INPUT}
           />
-          <FieldError message={shownErrors.title} />
-        </label>
-        <label className={LABEL}>
-          Phân loại *
-          <select
-            value={values.category}
-            onChange={event =>
-              update('category', event.target.value as LegalDocCategory)
-            }
-            className={INPUT}
+        </div>
+        <FilterDropdown
+          id="legal-doc-category"
+          label="Phân loại *"
+          value={values.category}
+          options={LEGAL_DOC_CATEGORIES.map(category => ({
+            value: category,
+            label: LEGAL_DOC_CATEGORY_LABELS[category],
+          }))}
+          onChange={next => update('category', next as LegalDocCategory)}
+        />
+        <Input
+          label="Số hiệu"
+          id="legal-doc-number"
+          value={values.docNumber}
+          placeholder="VD: 56/2024/QH15"
+          onChange={event => update('docNumber', event.target.value)}
+        />
+        <Input
+          label="Cơ quan ban hành / xác nhận"
+          id="legal-doc-issuer"
+          value={values.issuer}
+          onChange={event => update('issuer', event.target.value)}
+        />
+        <div className="flex flex-col gap-1">
+          <Label
+            htmlFor="legal-doc-effective-date"
+            className="text-xs font-medium text-fg sm:text-sm"
           >
-            {LEGAL_DOC_CATEGORIES.map(category => (
-              <option key={category} value={category}>
-                {LEGAL_DOC_CATEGORY_LABELS[category]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={LABEL}>
-          Số hiệu
-          <input
-            value={values.docNumber}
-            placeholder="VD: 56/2024/QH15"
-            onChange={event => update('docNumber', event.target.value)}
-            className={INPUT}
-          />
-        </label>
-        <label className={LABEL}>
-          Cơ quan ban hành
-          <input
-            value={values.issuer}
-            onChange={event => update('issuer', event.target.value)}
-            className={INPUT}
-          />
-        </label>
-        <label className={LABEL}>
-          Ngày có hiệu lực
-          <input
-            type="date"
-            value={values.effectiveDate}
-            onChange={event => update('effectiveDate', event.target.value)}
-            className={INPUT}
-          />
-        </label>
-        <label className={`${LABEL} sm:col-span-2`}>
-          Liên kết nguồn
-          <input
+            Ngày có hiệu lực
+          </Label>
+          <div className="flex gap-2">
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="legal-doc-effective-date"
+                  variant="outline"
+                  className="h-10 flex-1 justify-start px-3 text-sm font-normal"
+                >
+                  <CalendarDays
+                    aria-hidden="true"
+                    className="mr-2 h-3.5 w-3.5 text-primary"
+                  />
+                  <span className={selectedDate ? 'text-fg' : 'text-subtle'}>
+                    {selectedDate
+                      ? format(selectedDate, 'dd/MM/yyyy')
+                      : 'Chọn ngày'}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                className="w-auto rounded-2xl border border-border bg-surface p-0 shadow-xl"
+              >
+                <Calendar
+                  mode="single"
+                  locale={vi}
+                  captionLayout="dropdown"
+                  startMonth={new Date(1990, 0)}
+                  endMonth={new Date(2040, 11)}
+                  {...(selectedDate ? { defaultMonth: selectedDate } : {})}
+                  selected={selectedDate}
+                  onSelect={date => {
+                    update(
+                      'effectiveDate',
+                      date ? format(date, 'yyyy-MM-dd') : ''
+                    )
+                    setCalendarOpen(false)
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+            {selectedDate && (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Xoá ngày có hiệu lực"
+                className="h-10 w-10"
+                onClick={() => update('effectiveDate', '')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="sm:col-span-2">
+          <Input
+            label="Liên kết nguồn"
+            id="legal-doc-source-url"
             type="url"
             value={values.sourceUrl}
             placeholder="https://..."
+            {...(shownErrors.sourceUrl ? { error: shownErrors.sourceUrl } : {})}
             onChange={event => update('sourceUrl', event.target.value)}
-            className={INPUT}
           />
-          <FieldError message={shownErrors.sourceUrl} />
-        </label>
+        </div>
         <div className={`${LABEL} sm:col-span-2`}>
           <label htmlFor="legal-doc-keywords">
             Từ khoá (Enter hoặc dấu phẩy để thêm)
@@ -275,15 +324,21 @@ export function LegalDocForm({
           />
           <FieldError message={shownErrors.keywords} />
         </div>
-        <label className={`${LABEL} sm:col-span-2`}>
-          Tóm tắt
-          <textarea
+        <div className="flex flex-col gap-1 sm:col-span-2">
+          <Label
+            htmlFor="legal-doc-summary"
+            className="text-xs font-medium text-fg sm:text-sm"
+          >
+            Tóm tắt
+          </Label>
+          <Textarea
+            id="legal-doc-summary"
             rows={2}
             value={values.summary}
             onChange={event => update('summary', event.target.value)}
-            className={INPUT}
+            className="border-border bg-surface text-fg"
           />
-        </label>
+        </div>
         <label className={`${LABEL} sm:col-span-2`}>
           <span className="flex justify-between">
             <span>Nội dung tri thức *</span>
@@ -298,42 +353,32 @@ export function LegalDocForm({
               {formatCount(CONTENT_MAX_CHARS)}
             </span>
           </span>
-          <textarea
+          <Textarea
             rows={14}
             value={values.content}
             placeholder="Nội dung sau khi chắt lọc sẽ hiện ở đây. Có thể dán thủ công nếu không đọc được liên kết."
             onChange={event => update('content', event.target.value)}
-            className={`${INPUT} font-mono text-[13px] leading-relaxed`}
+            className="border-border bg-surface font-mono text-[13px] leading-relaxed text-fg"
           />
           <FieldError message={shownErrors.content} />
         </label>
       </div>
 
       <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-lg px-4 py-2 text-xs font-semibold text-muted transition-colors hover:bg-surface-muted hover:text-fg"
-        >
+        <Button variant="ghost" onClick={onCancel}>
           Huỷ
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="secondary"
           disabled={busy}
           onClick={() => submit(false)}
-          className="rounded-lg border border-border px-4 py-2 text-xs font-semibold text-fg transition-colors hover:bg-surface-muted disabled:opacity-50"
         >
           Lưu nháp
-        </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => submit(true)}
-          className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-on-control transition-colors hover:bg-primary-hover disabled:opacity-50"
-        >
+        </Button>
+        <Button disabled={busy} onClick={() => submit(true)}>
           {busy ? 'Đang lưu...' : 'Lưu & xuất bản'}
-        </button>
+        </Button>
       </div>
-    </section>
+    </div>
   )
 }

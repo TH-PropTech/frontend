@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { LegalDocFormValues } from '../model/legal-knowledge.types'
 import {
   buildDocPayload,
+  formatDateTime,
   formatScore,
   isHttpUrl,
   normalizeKeywords,
@@ -87,5 +88,16 @@ describe('validateLegalDocForm', () => {
     expect(errors.sourceUrl).toBeDefined()
     expect(errors.keywords).toBeDefined()
     expect(errors.content).toBeDefined()
+  })
+})
+
+describe('formatDateTime', () => {
+  it('returns a dash for missing or invalid input', () => {
+    expect(formatDateTime(undefined)).toBe('—')
+    expect(formatDateTime('khong-phai-ngay')).toBe('—')
+  })
+
+  it('includes the time of day', () => {
+    expect(formatDateTime('2026-10-11T03:15:00.000Z')).toMatch(/\d{2}:\d{2}/)
   })
 })

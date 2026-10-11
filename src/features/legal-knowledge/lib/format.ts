@@ -96,3 +96,17 @@ export function buildDocPayload(
   if (effectiveDate) payload.effectiveDate = effectiveDate
   return payload
 }
+
+/** dd/mm/yyyy hh:mm in the Vietnamese locale, or an em dash when missing/invalid. */
+export function formatDateTime(iso?: string): string {
+  if (!iso) return '—'
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
