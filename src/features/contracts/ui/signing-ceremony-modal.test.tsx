@@ -90,6 +90,9 @@ describe('SigningCeremonyModal', () => {
 
     expect(screen.getByTestId('signing-ceremony-modal')).toBeInTheDocument()
     expect(screen.getByText('Xác nhận ký số VNPT SmartCA')).toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('radio', { name: /Sinh trắc học [+] Smart OTP/ })
+    )
     const startButton = screen.getByLabelText('Bắt đầu ký kết')
     expect(startButton).toBeDisabled()
 
@@ -97,6 +100,35 @@ describe('SigningCeremonyModal', () => {
     fireEvent.click(startButton)
 
     expect(screen.getByTestId('face-verify-camera')).toBeInTheDocument()
+  })
+
+  it('offers the signing methods as options and shows only the selected one', () => {
+    renderModal()
+
+    const smartca = screen.getByRole('radio', {
+      name: /VNPT SmartCA [(]duyệt trong app[)]/,
+    })
+    const biometric = screen.getByRole('radio', {
+      name: /Sinh trắc học [+] Smart OTP/,
+    })
+    expect(smartca).toHaveAttribute('aria-checked', 'true')
+    expect(screen.queryByLabelText('Bắt đầu ký kết')).not.toBeInTheDocument()
+
+    fireEvent.click(biometric)
+    expect(biometric).toHaveAttribute('aria-checked', 'true')
+    expect(smartca).toHaveAttribute('aria-checked', 'false')
+    expect(screen.getByLabelText('Bắt đầu ký kết')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Chuẩn bị ký VNPT SmartCA' })
+    ).not.toBeInTheDocument()
+  })
+
+  it('hides the dev sign option unless the test flag is enabled', () => {
+    renderModal()
+
+    expect(
+      screen.queryByRole('radio', { name: /Ký thử [(]dev sign[)]/ })
+    ).not.toBeInTheDocument()
   })
 
   it('never shows a SmartCA password or OTP field', async () => {
