@@ -54,10 +54,13 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
   const mockStreets: string[] = []
 
   // Auto-fill address field
+  // Địa chỉ hiển thị chỉ là giá trị suy ra: không validate mỗi lần gõ phím (gây render lại cả form).
   React.useEffect(() => {
-    const parts = [street, ward, city].filter(Boolean)
-    setValue('address', parts.join(', '), { shouldValidate: true })
-  }, [city, ward, street, setValue])
+    const next = [street, ward, city].filter(Boolean).join(', ')
+    if (next !== form.getValues('address')) {
+      setValue('address', next, { shouldDirty: true })
+    }
+  }, [city, ward, street, setValue, form])
 
   // Search projects on input change
   React.useEffect(() => {
@@ -126,10 +129,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
               setValue('street', '')
             }}
           >
-            <SelectTrigger
-              id="city"
-              className="bg-background/50 backdrop-blur-sm border-border"
-            >
+            <SelectTrigger id="city" className="bg-background border-border">
               <SelectValue placeholder="Chọn Tỉnh / Thành phố" />
             </SelectTrigger>
             <SelectContent>
@@ -152,10 +152,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
               setValue('ward', val, { shouldValidate: true })
             }
           >
-            <SelectTrigger
-              id="ward"
-              className="bg-background/50 backdrop-blur-sm border-border"
-            >
+            <SelectTrigger id="ward" className="bg-background border-border">
               <SelectValue
                 placeholder={
                   city ? 'Chọn Phường / Xã' : 'Vui lòng chọn Tỉnh/Thành trước'
@@ -180,7 +177,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
           <Input
             id="street"
             placeholder="Nhập tên đường, số nhà..."
-            className="bg-background/50 backdrop-blur-sm border-border"
+            className="bg-background border-border"
             list="streets-list"
             {...register('street', { required: true })}
           />
@@ -216,7 +213,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
           <Input
             id="projectName"
             placeholder="Nhập để tìm kiếm hoặc tạo mới dự án..."
-            className="bg-background/50 backdrop-blur-sm border-border"
+            className="bg-background border-border"
             autoComplete="off"
             {...register('projectName')}
             onFocus={() => setShowProjList(true)}
@@ -270,7 +267,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
           <Input
             id="buildingName"
             placeholder="Nhập để tìm kiếm hoặc tạo mới tòa nhà..."
-            className="bg-background/50 backdrop-blur-sm border-border"
+            className="bg-background border-border"
             autoComplete="off"
             {...register('buildingName')}
             onFocus={() => setShowBuildList(true)}

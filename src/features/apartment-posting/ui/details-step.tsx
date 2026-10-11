@@ -90,7 +90,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           <Input
             id="title"
             placeholder="Ví dụ: Căn hộ cao cấp Vinhomes Central Park 2PN đầy đủ nội thất..."
-            className="bg-background/50 backdrop-blur-sm border-border"
+            className="bg-background border-border"
             {...register('title', { required: true, minLength: 10 })}
           />
           {errors.title && (
@@ -110,7 +110,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           >
             <SelectTrigger
               id="category"
-              className="bg-background/50 backdrop-blur-sm border-border"
+              className="bg-background border-border"
             >
               <SelectValue placeholder="Chọn loại hình" />
             </SelectTrigger>
@@ -137,7 +137,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
             type="number"
             step="0.1"
             placeholder="Ví dụ: 12.5"
-            className="bg-background/50 backdrop-blur-sm border-border"
+            className="bg-background border-border"
             {...register('priceMonthly', {
               required: true,
               valueAsNumber: true,
@@ -159,7 +159,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
             id="area"
             type="number"
             placeholder="Ví dụ: 75"
-            className="bg-background/50 backdrop-blur-sm border-border"
+            className="bg-background border-border"
             {...register('area', { required: true, valueAsNumber: true })}
           />
           {errors.area && (
@@ -183,7 +183,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           <Input
             id="bedrooms"
             type="number"
-            className="bg-background/50 backdrop-blur-sm border-border"
+            className="bg-background border-border"
             {...register('bedrooms', { required: true, valueAsNumber: true })}
           />
         </div>
@@ -196,7 +196,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           <Input
             id="bathrooms"
             type="number"
-            className="bg-background/50 backdrop-blur-sm border-border"
+            className="bg-background border-border"
             {...register('bathrooms', { required: true, valueAsNumber: true })}
           />
         </div>
@@ -214,7 +214,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           >
             <SelectTrigger
               id="direction"
-              className="bg-background/50 backdrop-blur-sm border-border"
+              className="bg-background border-border"
             >
               <SelectValue placeholder="Chọn hướng" />
             </SelectTrigger>
@@ -241,7 +241,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           >
             <SelectTrigger
               id="balconyDirection"
-              className="bg-background/50 backdrop-blur-sm border-border"
+              className="bg-background border-border"
             >
               <SelectValue placeholder="Chọn hướng" />
             </SelectTrigger>
@@ -271,7 +271,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           >
             <SelectTrigger
               id="furniture"
-              className="bg-background/50 backdrop-blur-sm border-border"
+              className="bg-background border-border"
             >
               <SelectValue placeholder="Chọn nội thất" />
             </SelectTrigger>
@@ -295,7 +295,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           >
             <SelectTrigger
               id="electricity"
-              className="bg-background/50 backdrop-blur-sm border-border"
+              className="bg-background border-border"
             >
               <SelectValue placeholder="Chọn giá điện" />
             </SelectTrigger>
@@ -317,10 +317,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
               setValue('water', val, { shouldValidate: true })
             }
           >
-            <SelectTrigger
-              id="water"
-              className="bg-background/50 backdrop-blur-sm border-border"
-            >
+            <SelectTrigger id="water" className="bg-background border-border">
               <SelectValue placeholder="Chọn giá nước" />
             </SelectTrigger>
             <SelectContent>
@@ -343,7 +340,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           >
             <SelectTrigger
               id="internet"
-              className="bg-background/50 backdrop-blur-sm border-border"
+              className="bg-background border-border"
             >
               <SelectValue placeholder="Chọn giá internet" />
             </SelectTrigger>
@@ -403,7 +400,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
           id="description"
           placeholder="Mô tả chi tiết về đặc điểm căn hộ, vị trí, các khoản chi phí phát sinh, điều kiện thuê nhà, thời gian thuê tối thiểu, số tiền cọc..."
           rows={6}
-          className="bg-background/50 backdrop-blur-sm border-border resize-none"
+          className="bg-background border-border resize-none"
           {...register('description', { required: true, minLength: 50 })}
         />
         {errors.description && (
