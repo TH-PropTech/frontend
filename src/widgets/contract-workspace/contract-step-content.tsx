@@ -8,6 +8,7 @@ import {
   FabricLedgerEvidenceCard,
   getLedgerStatusLabel,
   lockContractContent,
+  renderAndLockContractArtifact,
   SigningCeremonyModal,
   type ContractRouteStep,
   type ContractViewDto,
@@ -67,7 +68,8 @@ function ContractArtifactStep({
 }: ContractArtifactStepProps): ReactElement {
   const [isLocking, setIsLocking] = useState(false)
   const [lockError, setLockError] = useState<string | null>(null)
-  const canLock = data.actions.canLockContent === true
+  const canLockContent = data.actions.canLockContent === true
+  const canLock = canLockContent || data.actions.canLockArtifact === true
   const downloadHandlers = data.actions.canDownloadArtifact
     ? { onDownloadPdf: handleDownloadPdf, onDownloadDocx: handleDownloadDocx }
     : {}
@@ -76,7 +78,11 @@ function ContractArtifactStep({
     setIsLocking(true)
     setLockError(null)
     try {
-      await lockContractContent(contractId, data.document.revision)
+      if (canLockContent) {
+        await lockContractContent(contractId, data.document.revision)
+      }
+      // Khóa nội dung xong phải có ngay bản PDF chuẩn thì SmartCA mới mở phiên ký.
+      await renderAndLockContractArtifact(contractId)
       await loadData(true)
     } catch (error: unknown) {
       setLockError(
@@ -125,12 +131,14 @@ function ContractArtifactStep({
                 className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
               >
                 <LockKeyhole className="h-4 w-4" aria-hidden="true" />
-                {isLocking ? 'Đang khóa nội dung...' : 'Khóa bản PDF hợp đồng'}
+                {isLocking
+                  ? 'Đang khóa và tạo PDF...'
+                  : 'Khóa nội dung & tạo bản PDF'}
               </button>
             ) : (
               <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--success)]">
                 <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                {data.document.lockedHash
+                {data.document.canonicalArtifact
                   ? 'Bản PDF hợp đồng đã được khóa và sẵn sàng ký kết'
                   : 'Đang chờ Chủ nhà kiểm tra và khóa nội dung hợp đồng'}
               </p>

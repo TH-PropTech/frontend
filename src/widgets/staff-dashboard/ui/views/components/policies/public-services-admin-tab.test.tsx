@@ -6,6 +6,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiClientError } from '@/shared/api'
 import * as legalApi from '@/features/contracts/api/legal-sources-api'
@@ -190,9 +191,10 @@ describe('PublicServicesAdminTab (API-backed)', () => {
         ),
         { target: { value: 'Cư dân phải đăng ký thú cưng.' } }
       )
-      fireEvent.change(screen.getByTestId('select-linked-source'), {
-        target: { value: 'housing-law-2023' },
-      })
+      await userEvent.click(screen.getByTestId('select-linked-source'))
+      fireEvent.click(
+        await screen.findByRole('option', { name: /Luật Nhà ở 2023/ })
+      )
       fireEvent.click(screen.getByTestId('btn-save-regulation'))
 
       expect(

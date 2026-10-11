@@ -305,6 +305,7 @@ export interface ContractActionsView {
   artifactReasonCode: string | null
   canEditContent?: boolean
   canLockContent?: boolean
+  canLockArtifact?: boolean
 }
 
 export interface ContractAccessView {
@@ -743,6 +744,13 @@ export async function signContract(
   })
 }
 
+/** Dev/test: ký bỏ qua SmartCA (backend phải bật ENABLE_TEST_SIGN_BYPASS). */
+export async function testSignContract(
+  contractId: string
+): Promise<ContractItem> {
+  return apiClient.post<ContractItem>(`/contracts/${contractId}/test-sign`, {})
+}
+
 export async function saveContractContent(
   contractId: string,
   content: Record<string, unknown>,
@@ -761,6 +769,16 @@ export async function lockContractContent(
   return apiClient.post<ContractItem>(`/contracts/${contractId}/lock-content`, {
     expectedRevision,
   })
+}
+
+/** Hệ thống tự dựng bản PDF chuẩn từ mẫu hợp đồng đã khóa và khóa artifact (idempotent). */
+export async function renderAndLockContractArtifact(
+  contractId: string
+): Promise<unknown> {
+  return apiClient.post<unknown>(
+    `/contracts/${contractId}/artifacts/render-lock`,
+    {}
+  )
 }
 
 export async function downloadContractArtifact(

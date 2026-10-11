@@ -1,5 +1,6 @@
 'use client'
 
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
@@ -343,19 +344,17 @@ export function ApartmentEditDialog({
                   className="w-full resize-none rounded-lg border border-[color:var(--border)] bg-[color:var(--bg)] p-2.5 text-xs focus:border-[color:var(--primary)] focus:outline-none"
                 />
               ) : field.kind === 'category' ? (
-                <select
+                <OptionSelect
                   id={`edit-${field.key}`}
                   value={values[field.key]}
-                  onChange={e => handleChange(field.key, e.target.value)}
-                  className="w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--bg)] p-2.5 text-xs focus:border-[color:var(--primary)] focus:outline-none"
-                >
-                  <option value="">Chọn loại hình</option>
-                  {APARTMENT_CATEGORIES.map(category => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
+                  onChange={value => handleChange(field.key, value)}
+                  placeholder="Chọn loại hình"
+                  className="text-xs"
+                  options={APARTMENT_CATEGORIES.map(category => ({
+                    value: category,
+                    label: category,
+                  }))}
+                />
               ) : (
                 <input
                   id={`edit-${field.key}`}

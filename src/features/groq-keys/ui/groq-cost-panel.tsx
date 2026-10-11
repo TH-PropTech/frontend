@@ -10,6 +10,7 @@ import {
   formatVnd,
   GROQ_PRICES,
 } from '../lib/format'
+import { OptionSelect } from '@/shared/ui/option-select'
 import { GroqKeyMeter } from './groq-key-meter'
 
 const CUSTOM_MODEL = 'custom'
@@ -255,21 +256,20 @@ export function GroqCostPanel({
           >
             Model
           </label>
-          <select
+          <OptionSelect
             id="groq-cost-model"
             value={model}
-            onChange={event => pickModel(event.target.value)}
-            className="h-9 rounded-lg border border-border bg-surface px-3 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            {!GROQ_PRICES[model] && (
-              <option value={CUSTOM_MODEL}>Tuỳ chỉnh</option>
-            )}
-            {Object.keys(GROQ_PRICES).map(name => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
+            onChange={pickModel}
+            options={[
+              ...(GROQ_PRICES[model]
+                ? []
+                : [{ value: CUSTOM_MODEL, label: 'Tuỳ chỉnh' }]),
+              ...Object.keys(GROQ_PRICES).map(name => ({
+                value: name,
+                label: name,
+              })),
+            ]}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <NumberField

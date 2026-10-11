@@ -313,9 +313,9 @@ export function StaffOperationsDashboard({
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex flex-col">
+        <div className="flex min-h-0 flex-1 flex-col">
           {/* Sidebar Header Logo */}
-          <div className="h-16 px-6 border-b border-line flex items-center justify-between">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-line px-6">
             <Logo size="md" variant="default" />
             <button
               onClick={toggleSidebar}
@@ -336,7 +336,7 @@ export function StaffOperationsDashboard({
           </div>
 
           {/* Navigation Links */}
-          <nav className="p-4 space-y-1">
+          <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-4">
             {sidebarItems.map(item => (
               <button
                 key={item.type}
@@ -355,7 +355,7 @@ export function StaffOperationsDashboard({
         </div>
 
         {/* Sidebar Footer info */}
-        <div className="p-4 border-t border-line bg-surface-muted/20 relative">
+        <div className="relative shrink-0 border-t border-line bg-surface-muted/20 p-4">
           {isProfileMenuOpen && (
             <>
               {/* Click outside overlay to close */}

@@ -242,7 +242,7 @@ export function AdminDashboard({
     },
     {
       type: 'groq-keys',
-      label: 'API Key AI',
+      label: 'Cấu hình API Key',
       icon: (
         <svg
           width="18"
@@ -373,9 +373,9 @@ export function AdminDashboard({
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex flex-col">
+        <div className="flex min-h-0 flex-1 flex-col">
           {/* Sidebar Header Logo */}
-          <div className="h-16 px-6 border-b border-line flex items-center justify-between">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-line px-6">
             <Logo size="md" variant="default" />
             <button
               onClick={toggleSidebar}
@@ -396,7 +396,7 @@ export function AdminDashboard({
           </div>
 
           {/* Navigation Links */}
-          <nav className="p-4 space-y-1">
+          <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-4">
             {sidebarItems.map(item => (
               <button
                 key={item.type}
@@ -415,7 +415,7 @@ export function AdminDashboard({
         </div>
 
         {/* Sidebar Footer info */}
-        <div className="p-4 border-t border-line bg-surface-muted/20 relative">
+        <div className="relative shrink-0 border-t border-line bg-surface-muted/20 p-4">
           {isProfileMenuOpen && (
             <>
               {/* Click outside overlay to close */}
@@ -529,6 +529,25 @@ export function AdminDashboard({
                 <polyline points="12 5 19 12 12 19" />
               </svg>
             </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="text-xs font-semibold text-danger hover:bg-danger/10 transition-colors flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Đăng xuất
+            </button>
           </div>
         </header>
 

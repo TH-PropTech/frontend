@@ -1,5 +1,6 @@
 'use client'
 
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import { Archive, CheckCircle2, Loader2, Plus, Save } from 'lucide-react'
 import {
@@ -244,20 +245,21 @@ export function ExecutionPoliciesAdminTab(): React.ReactElement {
           </label>
           <label className="space-y-1 text-xs text-muted">
             Strategy
-            <select
+            <OptionSelect
               data-testid="execution-policy-strategy"
               value={draft.strategy}
-              onChange={event =>
+              onChange={value =>
                 setDraft(previous => ({
                   ...previous,
-                  strategy: event.target.value as RentalExecutionPolicyStrategy,
+                  strategy: value as RentalExecutionPolicyStrategy,
                 }))
               }
-              className="h-9 w-full rounded-lg border border-border bg-bg px-3 text-xs text-fg"
-            >
-              <option value="DEPOSIT_FIRST">DEPOSIT_FIRST</option>
-              <option value="SIGN_FIRST">SIGN_FIRST</option>
-            </select>
+              className="text-xs"
+              options={[
+                { value: 'DEPOSIT_FIRST', label: 'DEPOSIT_FIRST' },
+                { value: 'SIGN_FIRST', label: 'SIGN_FIRST' },
+              ]}
+            />
           </label>
           <label className="space-y-1 text-xs text-muted sm:col-span-2">
             Tên policy

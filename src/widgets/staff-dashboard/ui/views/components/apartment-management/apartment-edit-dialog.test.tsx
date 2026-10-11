@@ -5,6 +5,7 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { toast } from 'sonner'
 
@@ -100,19 +101,18 @@ describe('ApartmentEditDialog', () => {
       (screen.getByLabelText('Giá thuê (triệu/tháng)') as HTMLInputElement)
         .value
     ).toBe('15')
-    expect(
-      (screen.getByLabelText('Loại hình') as HTMLSelectElement).value
-    ).toBe('Căn hộ chung cư')
+    expect(screen.getByLabelText('Loại hình').textContent).toContain(
+      'Căn hộ chung cư'
+    )
   })
 
-  it('only offers the two apartment categories', () => {
+  it('only offers the two apartment categories', async () => {
     renderDialog()
 
-    const options = Array.from(
-      (screen.getByLabelText('Loại hình') as HTMLSelectElement).options
+    await userEvent.click(screen.getByLabelText('Loại hình'))
+    const options = (await screen.findAllByRole('option')).map(
+      option => option.textContent
     )
-      .map(option => option.value)
-      .filter(Boolean)
 
     expect(options).toEqual([
       'Căn hộ chung cư',

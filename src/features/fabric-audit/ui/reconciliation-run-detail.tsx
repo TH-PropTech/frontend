@@ -19,49 +19,13 @@ import {
   type FindingStatus,
   type ReconciliationFinding,
 } from '../model/schemas'
+import { OptionSelect } from '@/shared/ui/option-select'
 import { PageNav } from './page-nav'
 import { PanelEmpty, PanelError, PanelLoading } from './panel-states'
 import { ReconciliationFindingsTable } from './reconciliation-findings-table'
 import { StateBadge } from './state-badge'
 
 const FINDINGS_PAGE_SIZE = 20
-const SELECT_CLASS =
-  'rounded-md border border-border bg-surface px-3 py-2 text-sm text-fg outline-none hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary-soft'
-
-function FilterSelect({
-  id,
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  id: string
-  label: string
-  value: string
-  onChange: (value: string) => void
-  options: readonly { value: string; label: string }[]
-}): React.ReactElement {
-  return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-fg">
-        {label}
-      </label>
-      <select
-        id={id}
-        value={value}
-        onChange={event => onChange(event.target.value)}
-        className={SELECT_CLASS}
-      >
-        <option value="">Tất cả</option>
-        {options.map(option => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  )
-}
 
 export interface ReconciliationRunDetailProps {
   runId: string
@@ -169,7 +133,7 @@ export function ReconciliationRunDetail({
       )}
 
       <div className="flex flex-wrap gap-3">
-        <FilterSelect
+        <OptionSelect
           id="finding-category"
           label="Nhóm phát hiện"
           value={category}
@@ -181,8 +145,9 @@ export function ReconciliationRunDetail({
             value,
             label: findingCategoryLabel(value),
           }))}
+          allLabel="Tất cả"
         />
-        <FilterSelect
+        <OptionSelect
           id="finding-status"
           label="Trạng thái phát hiện"
           value={status}
@@ -194,6 +159,7 @@ export function ReconciliationRunDetail({
             value,
             label: findingStatusView(value).label,
           }))}
+          allLabel="Tất cả"
         />
       </div>
       {findingsBody}

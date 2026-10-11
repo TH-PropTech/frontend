@@ -1,5 +1,6 @@
 'use client'
 
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import { apiClient } from '@/shared/api/api-client'
 import { toast } from 'sonner'
@@ -29,6 +30,10 @@ export function ConsultationInviteForm({
 
   const handleInvite = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
+    if (!useCustom && !selectedUserId) {
+      toast.error('Vui lòng chọn khách hàng cần mời.')
+      return
+    }
     setInviting(true)
     try {
       const targetUserId = selectedUserId
@@ -95,19 +100,16 @@ export function ConsultationInviteForm({
               <label className="text-[10px] uppercase font-bold text-muted">
                 Chọn tài khoản
               </label>
-              <select
+              <OptionSelect
                 value={selectedUserId}
-                onChange={e => setSelectedUserId(e.target.value)}
-                className="w-full text-xs p-2.5 border border-line rounded-lg bg-bg/25 focus:outline-none focus:border-accent"
-                required
-              >
-                <option value="">-- Chọn khách hàng --</option>
-                {users.map(u => (
-                  <option key={u._id} value={u._id}>
-                    {u.fullName} ({u.email})
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedUserId}
+                placeholder="-- Chọn khách hàng --"
+                className="text-xs"
+                options={users.map(u => ({
+                  value: u._id,
+                  label: `${u.fullName} (${u.email})`,
+                }))}
+              />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
