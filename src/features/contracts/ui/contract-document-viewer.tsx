@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import {
   FileText,
   Download,
+  Eye,
   Printer,
   Search,
   ShieldCheck,
@@ -53,6 +54,10 @@ export interface ContractDocumentViewerProps {
   startDate?: string | null
   endDate?: string | null
   createdAt?: string | null
+  /** Mở bản PDF chuẩn ngay trên trang (nút con mắt). */
+  onViewPdf?: () => void
+  /** false khi chưa có bản PDF đã khóa: nút xem PDF bị vô hiệu. */
+  pdfAvailable?: boolean
   onDownloadPdf?: () => void
   onDownloadDocx?: () => void
   isDownloading?: boolean
@@ -152,6 +157,8 @@ export function ContractDocumentViewer({
   property,
   startDate,
   createdAt,
+  onViewPdf,
+  pdfAvailable = true,
   onDownloadPdf,
   onDownloadDocx,
   isDownloading = false,
@@ -376,6 +383,26 @@ export function ContractDocumentViewer({
 
           {/* Action buttons */}
           <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+            {onViewPdf && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={onViewPdf}
+                disabled={!pdfAvailable}
+                aria-label="Xem bản PDF"
+                title={
+                  pdfAvailable
+                    ? 'Xem bản PDF hợp đồng'
+                    : 'Chưa có bản PDF: cần khóa nội dung hợp đồng trước'
+                }
+                className="h-10 px-3 text-xs sm:h-8 sm:px-2.5"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Xem PDF</span>
+              </Button>
+            )}
+
             {onDownloadPdf && (
               <Button
                 type="button"

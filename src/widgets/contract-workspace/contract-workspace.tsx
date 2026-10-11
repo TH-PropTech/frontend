@@ -17,7 +17,15 @@ import {
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import {
   ContractDocumentViewer,
+  ContractPdfPreview,
   ContractFlowGuide,
   PartyInfoCards,
   ContractStatusTimeline,
@@ -82,6 +90,7 @@ export function ContractWorkspace({
 
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>('document')
   const [isDocumentExpanded, setIsDocumentExpanded] = useState(false)
+  const [isPdfOpen, setIsPdfOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -385,6 +394,8 @@ export function ContractWorkspace({
             startDate={contract.startDate}
             endDate={contract.endDate}
             createdAt={document.lockedAt || contract.startDate}
+            onViewPdf={() => setIsPdfOpen(true)}
+            pdfAvailable={actions.canDownloadArtifact}
             onDownloadPdf={handleDownloadPdf}
             onDownloadDocx={handleDownloadDocx}
             isDownloading={isDownloadingPdf || isDownloadingDocx}
@@ -392,6 +403,23 @@ export function ContractWorkspace({
             onToggleExpand={() => setIsDocumentExpanded(!isDocumentExpanded)}
           />
         </div>
+
+        <Dialog open={isPdfOpen} onOpenChange={setIsPdfOpen}>
+          <DialogContent className="max-w-5xl">
+            <DialogHeader>
+              <DialogTitle>Bản PDF hợp đồng {contract.code}</DialogTitle>
+              <DialogDescription>
+                Bản PDF chuẩn dùng để xem, tải xuống và ký số.
+              </DialogDescription>
+            </DialogHeader>
+            {isPdfOpen && actions.canDownloadArtifact ? (
+              <ContractPdfPreview
+                contractId={contractId}
+                contractCode={contract.code}
+              />
+            ) : null}
+          </DialogContent>
+        </Dialog>
 
         {/* Right Column: Interactive Panes & Ledgers */}
         <aside
