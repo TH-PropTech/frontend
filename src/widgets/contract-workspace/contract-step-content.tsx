@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2, Clock3, LockKeyhole } from 'lucide-react'
 import {
   BilateralSigningTimeline,
   ContractDocumentViewer,
+  ContractPdfPreview,
   FabricLedgerEvidenceCard,
   getLedgerStatusLabel,
   lockContractContent,
@@ -110,6 +111,12 @@ function ContractArtifactStep({
         {...downloadHandlers}
         isDownloading={isDownloadingPdf || isDownloadingDocx}
       />
+      {data.actions.canDownloadArtifact ? (
+        <ContractPdfPreview
+          contractId={contractId}
+          contractCode={data.contract.code}
+        />
+      ) : null}
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
         <div className="flex items-start gap-3">
           <LockKeyhole
