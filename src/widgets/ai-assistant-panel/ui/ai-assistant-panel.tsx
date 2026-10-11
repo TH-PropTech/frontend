@@ -52,7 +52,19 @@ interface ChatMessage {
     title: string
     heading?: string
     url?: string
+    issuer?: string
+    /** ISO time the cited text was last taken from the source. */
+    fetchedAt?: string
   }[]
+}
+
+/** dd/mm/yyyy of a citation's source time, or undefined when missing/invalid. */
+function formatCitationDate(iso?: string): string | undefined {
+  if (!iso) return undefined
+  const date = new Date(iso)
+  return Number.isNaN(date.getTime())
+    ? undefined
+    : date.toLocaleDateString('vi-VN')
 }
 
 const QUICK_PROMPTS = [
@@ -349,28 +361,46 @@ export function AiAssistantPanel(): React.ReactElement {
                     </div>
 
                     {msg.legalCitations && msg.legalCitations.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
+                      <div className="mt-2 space-y-1.5 border-t border-zinc-200/70 pt-2 dark:border-zinc-700">
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                          Căn cứ trích dẫn
+                        </p>
                         {msg.legalCitations.map((citation, idx) => {
-                          const label = `Nguồn: ${citation.title}${citation.heading ? ` · ${citation.heading}` : ''}`
-                          const isHttpUrl =
-                            !!citation.url && /^https?:\/\//i.test(citation.url)
-                          return isHttpUrl ? (
-                            <a
+                          const label = `${citation.title}${citation.heading ? ` · ${citation.heading}` : ''}`
+                          const isHttpUrl = !!citation.url && /^https?:/ //i.test(citation.url)
+                          const updated = formatCitationDate(citation.fetchedAt)
+                          const detail = [
+                            citation.issuer,
+                            updated ? `cập nhật ${updated}` : undefined,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')
+                          return (
+                            <div
                               key={`${citation.title}-${idx}`}
-                              href={citation.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] bg-[#FDF3F0] hover:bg-[#F9E3DB] dark:bg-zinc-900 dark:hover:bg-zinc-700 text-[#C65A3A] font-medium px-2.5 py-1 rounded-full transition-colors underline-offset-2 hover:underline"
+                              className="rounded-lg bg-[#FDF3F0] px-2.5 py-1.5 dark:bg-zinc-900"
                             >
-                              {label}
-                            </a>
-                          ) : (
-                            <span
-                              key={`${citation.title}-${idx}`}
-                              className="text-[10px] bg-[#FDF3F0] dark:bg-zinc-900 text-[#C65A3A] font-medium px-2.5 py-1 rounded-full"
-                            >
-                              {label}
-                            </span>
+                              {isHttpUrl ? (
+                                <a
+                                  href={citation.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title={citation.url}
+                                  className="text-[11px] font-medium text-[#C65A3A] underline-offset-2 hover:underline"
+                                >
+                                  {label}
+                                </a>
+                              ) : (
+                                <span className="text-[11px] font-medium text-[#C65A3A]">
+                                  {label}
+                                </span>
+                              )}
+                              {detail && (
+                                <p className="mt-0.5 text-[10px] text-zinc-500">
+                                  {detail}
+                                </p>
+                              )}
+                            </div>
                           )
                         })}
                       </div>

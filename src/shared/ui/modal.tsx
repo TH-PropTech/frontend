@@ -8,6 +8,8 @@ interface ModalProps {
   title: string
   children: React.ReactNode
   hideFooter?: boolean
+  /** 'xl' is for wide forms; default keeps the narrow reading width. */
+  size?: 'md' | 'xl'
 }
 
 export function Modal({
@@ -16,6 +18,7 @@ export function Modal({
   title,
   children,
   hideFooter = false,
+  size = 'md',
 }: ModalProps): React.ReactElement | null {
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -48,7 +51,7 @@ export function Modal({
 
       {/* Modal Container */}
       <div
-        className="relative z-10 flex flex-col w-full max-w-2xl max-h-[85vh] bg-surface rounded-xl border border-border shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className={`relative z-10 flex flex-col w-full ${size === 'xl' ? 'max-w-4xl' : 'max-w-2xl'} max-h-[90vh] bg-surface rounded-xl border border-border shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200`}
         role="dialog"
         aria-modal="true"
       >
