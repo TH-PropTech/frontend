@@ -22,6 +22,40 @@ describe('apartmentPostingSchema & rentalPackagePostingSchema', () => {
     bathrooms: 2,
   }
 
+  describe('description (không bắt buộc, nhập thì tối thiểu 10 ký tự)', () => {
+    it('accepts a missing description', () => {
+      const { description: _description, ...withoutDescription } = baseValidData
+      void _description
+      expect(apartmentPostingSchema.safeParse(withoutDescription).success).toBe(
+        true
+      )
+    })
+
+    it('accepts an empty or whitespace-only description', () => {
+      for (const description of ['', '    ']) {
+        expect(
+          apartmentPostingSchema.safeParse({ ...baseValidData, description })
+            .success
+        ).toBe(true)
+      }
+    })
+
+    it('accepts exactly 10 characters and rejects 1 to 9 characters', () => {
+      expect(
+        apartmentPostingSchema.safeParse({
+          ...baseValidData,
+          description: 'a'.repeat(10),
+        }).success
+      ).toBe(true)
+      expect(
+        apartmentPostingSchema.safeParse({
+          ...baseValidData,
+          description: 'a'.repeat(9),
+        }).success
+      ).toBe(false)
+    })
+  })
+
   it('validates base apartment without explicit rentalPackages, defaulting to empty array', () => {
     const result = apartmentPostingSchema.safeParse(baseValidData)
     expect(result.success).toBe(true)

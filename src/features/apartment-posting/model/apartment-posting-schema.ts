@@ -73,10 +73,15 @@ export const apartmentPostingSchema = z.object({
       value => (APARTMENT_CATEGORIES as readonly string[]).includes(value),
       'Loại hình phải là căn hộ chung cư hoặc chung cư mini, căn hộ dịch vụ'
     ),
+  // Không bắt buộc; nếu nhập thì tối thiểu 10 ký tự.
   description: z
     .string()
-    .min(50, 'Mô tả phải dài tối thiểu 50 ký tự')
-    .max(5000, 'Mô tả không được vượt quá 5000 ký tự'),
+    .max(5000, 'Mô tả không được vượt quá 5000 ký tự')
+    .default('')
+    .refine(
+      value => value.trim() === '' || value.trim().length >= 10,
+      'Mô tả (nếu nhập) phải dài tối thiểu 10 ký tự'
+    ),
   location: z.string().optional().default(''),
   city: z.string().min(1, 'Vui lòng chọn Tỉnh/Thành phố'),
   district: z.string().min(1, 'Vui lòng chọn Quận/Huyện'),
