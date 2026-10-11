@@ -127,7 +127,7 @@ export function ApartmentPostingForm({
     // Validate fields inside each step before advancing
     let fieldsToValidate: Array<keyof ApartmentFormValues> = []
     if (currentStep === 1) {
-      fieldsToValidate = ['city', 'district', 'ward', 'street']
+      fieldsToValidate = ['city', 'ward', 'street']
     } else if (currentStep === 2) {
       fieldsToValidate = [
         'title',

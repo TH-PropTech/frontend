@@ -79,7 +79,8 @@ export const apartmentPostingSchema = z.object({
     .max(5000, 'Mô tả không được vượt quá 5000 ký tự'),
   location: z.string().optional().default(''),
   city: z.string().min(1, 'Vui lòng chọn Tỉnh/Thành phố'),
-  district: z.string().min(1, 'Vui lòng chọn Quận/Huyện'),
+  // Cơ cấu hành chính từ 1/7/2025 không còn cấp Quận/Huyện: giữ chuỗi rỗng cho tin mới.
+  district: z.string().default(''),
   ward: z.string().min(1, 'Vui lòng chọn Phường/Xã'),
   street: z.string().min(1, 'Vui lòng nhập Tên đường/phố'),
   address: z.string().min(1, 'Vui lòng nhập địa chỉ hiển thị'),
