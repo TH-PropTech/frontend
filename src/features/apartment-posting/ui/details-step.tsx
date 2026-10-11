@@ -415,18 +415,19 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
       {/* Mô tả chi tiết */}
       <div className="space-y-2">
         <Label htmlFor="description">
-          Mô tả chi tiết căn hộ * (Tối thiểu 50 ký tự)
+          Mô tả chi tiết căn hộ (Không bắt buộc, nếu nhập tối thiểu 10 ký tự)
         </Label>
         <Textarea
           id="description"
           placeholder="Mô tả chi tiết về đặc điểm căn hộ, vị trí, các khoản chi phí phát sinh, điều kiện thuê nhà, thời gian thuê tối thiểu, số tiền cọc..."
           rows={6}
           className="bg-background/50 backdrop-blur-sm border-border resize-none"
-          {...register('description', { required: true, minLength: 50 })}
+          {...register('description')}
         />
         {errors.description && (
           <p className="text-xs text-destructive">
-            {errors.description.message || 'Mô tả bắt buộc và dài hơn 50 ký tự'}
+            {errors.description.message ||
+              'Mô tả (nếu nhập) tối thiểu 10 ký tự'}
           </p>
         )}
       </div>

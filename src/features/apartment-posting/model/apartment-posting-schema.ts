@@ -75,10 +75,15 @@ export const apartmentPostingSchema = z.object({
     ),
   // Số giấy chứng nhận quyền sở hữu/sử dụng căn hộ: không bắt buộc, ghi vào hợp đồng khi lập.
   ownershipCertificate: z.string().max(200, 'Tối đa 200 ký tự').optional(),
+  // Không bắt buộc; nếu nhập thì tối thiểu 10 ký tự.
   description: z
     .string()
-    .min(50, 'Mô tả phải dài tối thiểu 50 ký tự')
-    .max(5000, 'Mô tả không được vượt quá 5000 ký tự'),
+    .max(5000, 'Mô tả không được vượt quá 5000 ký tự')
+    .default('')
+    .refine(
+      value => value.trim() === '' || value.trim().length >= 10,
+      'Mô tả (nếu nhập) phải dài tối thiểu 10 ký tự'
+    ),
   location: z.string().optional().default(''),
   city: z.string().min(1, 'Vui lòng chọn Tỉnh/Thành phố'),
   // Cơ cấu hành chính từ 1/7/2025 không còn cấp Quận/Huyện: giữ chuỗi rỗng cho tin mới.
