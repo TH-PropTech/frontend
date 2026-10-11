@@ -6,11 +6,17 @@ const {
   cancelSmartCaSigningSession,
   createSmartCaSigningSession,
   getSmartCaCertificates,
+  getSigningMethods,
+  signSmartCaV2,
+  testSignContract,
   pollSmartCaSigningSession,
 } = vi.hoisted(() => ({
   cancelSmartCaSigningSession: vi.fn(),
   createSmartCaSigningSession: vi.fn(),
   getSmartCaCertificates: vi.fn(),
+  getSigningMethods: vi.fn(),
+  signSmartCaV2: vi.fn(),
+  testSignContract: vi.fn(),
   pollSmartCaSigningSession: vi.fn(),
 }))
 
@@ -23,8 +29,42 @@ vi.mock('../api/contracts-api', () => ({
   cancelSmartCaSigningSession,
   createSmartCaSigningSession,
   getSmartCaCertificates,
+  getSigningMethods,
+  signSmartCaV2,
+  testSignContract,
   pollSmartCaSigningSession,
 }))
+
+const METHODS = [
+  {
+    id: 'smartca_v1',
+    label: 'VNPT SmartCA (xác nhận trên app)',
+    description: '',
+    available: true,
+    inputs: [],
+  },
+  {
+    id: 'smartca_v2',
+    label: 'VNPT SmartCA (mật khẩu + OTP)',
+    description: '',
+    available: true,
+    inputs: ['smartCaPassword', 'smartCaOtp'],
+  },
+  {
+    id: 'biometric_smart_otp',
+    label: 'Sinh trắc học + Smart OTP',
+    description: '',
+    available: true,
+    inputs: [],
+  },
+  {
+    id: 'dev_sign',
+    label: 'Ký thử nghiệm (dev)',
+    description: '',
+    available: true,
+    inputs: [],
+  },
+]
 
 const props = {
   isOpen: true,
@@ -40,6 +80,7 @@ function renderModal() {
 }
 
 async function openSmartCaForm(): Promise<void> {
+  await screen.findByRole('radio', { name: /xác nhận trên app/ })
   fireEvent.click(screen.getByLabelText('Xác nhận đồng thuận'))
   fireEvent.click(
     screen.getByRole('button', { name: 'Chuẩn bị ký VNPT SmartCA' })
@@ -65,6 +106,7 @@ function pendingSession(overrides: Record<string, unknown> = {}) {
 describe('SigningCeremonyModal', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getSigningMethods.mockResolvedValue(METHODS)
     getSmartCaCertificates.mockResolvedValue({
       certificates: [
         {
@@ -85,8 +127,9 @@ describe('SigningCeremonyModal', () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it('preserves the face verification and internal Smart OTP ceremony', () => {
+  it('preserves the face verification and internal Smart OTP ceremony', async () => {
     renderModal()
+    fireEvent.click(await screen.findByRole('radio', { name: /Sinh trắc học/ }))
 
     expect(screen.getByTestId('signing-ceremony-modal')).toBeInTheDocument()
     expect(screen.getByText('Xác nhận ký số VNPT SmartCA')).toBeInTheDocument()
@@ -103,8 +146,8 @@ describe('SigningCeremonyModal', () => {
     renderModal()
     await openSmartCaForm()
 
-    expect(screen.queryByLabelText(/mật khẩu/i)).not.toBeInTheDocument()
-    expect(screen.queryByLabelText(/otp vnpt/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Mật khẩu SmartCA')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('OTP SmartCA')).not.toBeInTheDocument()
   })
 
   it('loads one certificate and submits a signing request without credentials', async () => {
@@ -150,6 +193,7 @@ describe('SigningCeremonyModal', () => {
   it('renders empty and provider-error certificate states with retry action', async () => {
     getSmartCaCertificates.mockResolvedValueOnce({ certificates: [] })
     renderModal()
+    await screen.findByRole('radio', { name: /xác nhận trên app/ })
     fireEvent.click(screen.getByLabelText('Xác nhận đồng thuận'))
     fireEvent.click(
       screen.getByRole('button', { name: 'Chuẩn bị ký VNPT SmartCA' })
@@ -194,6 +238,70 @@ describe('SigningCeremonyModal', () => {
     const secondKey = createSmartCaSigningSession.mock.calls[1]?.[1]
       ?.idempotencyKey as string
     expect(secondKey).toBe(firstKey)
+  })
+
+  it('renders the signing options from the backend and defaults to the first available', async () => {
+    renderModal()
+
+    const group = await screen.findByRole('radiogroup', {
+      name: 'Chọn phương thức ký',
+    })
+    expect(group).toBeInTheDocument()
+    expect(screen.getAllByRole('radio')).toHaveLength(4)
+    expect(
+      screen.getByRole('radio', { name: /xác nhận trên app/ })
+    ).toBeChecked()
+    expect(screen.queryByLabelText('Mật khẩu SmartCA')).not.toBeInTheDocument()
+  })
+
+  it('signs with SmartCA v2 and clears the credentials after submitting', async () => {
+    signSmartCaV2.mockResolvedValue({ id: 's', status: 'signed' })
+    const onSigningSuccess = vi.fn()
+    render(
+      <SigningCeremonyModal {...props} onSigningSuccess={onSigningSuccess} />
+    )
+    fireEvent.click(
+      await screen.findByRole('radio', { name: /mật khẩu \+ OTP/ })
+    )
+    fireEvent.click(screen.getByLabelText('Xác nhận đồng thuận'))
+    fireEvent.change(screen.getByLabelText('Mật khẩu SmartCA'), {
+      target: { value: 'pw-secret' },
+    })
+    fireEvent.change(screen.getByLabelText('OTP SmartCA'), {
+      target: { value: '123456' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /Ký bằng SmartCA \(mật khẩu \+ OTP\)/,
+      })
+    )
+
+    await waitFor(() =>
+      expect(signSmartCaV2).toHaveBeenCalledWith('c1', {
+        smartCaPassword: 'pw-secret',
+        smartCaOtp: '123456',
+      })
+    )
+    await waitFor(() => expect(onSigningSuccess).toHaveBeenCalled())
+    expect(screen.getByLabelText('Mật khẩu SmartCA')).toHaveValue('')
+    expect(screen.getByLabelText('OTP SmartCA')).toHaveValue('')
+  })
+
+  it('does not show the dev sign option unless the backend returns it', async () => {
+    getSigningMethods.mockResolvedValue(METHODS.slice(0, 1))
+    renderModal()
+
+    await screen.findByRole('radiogroup', { name: 'Chọn phương thức ký' })
+    expect(screen.queryByRole('radio', { name: /dev/ })).not.toBeInTheDocument()
+  })
+
+  it('shows a retryable error when the options cannot be loaded', async () => {
+    getSigningMethods.mockRejectedValueOnce(new Error('boom'))
+    renderModal()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('boom')
+    fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }))
+    await waitFor(() => expect(getSigningMethods).toHaveBeenCalledTimes(2))
   })
 
   it('resets the SmartCA signing UI when the modal is closed and reopened', async () => {
