@@ -7,6 +7,7 @@ export interface LandlordApartmentItem {
   title: string
   category: string
   description: string
+  ownershipCertificate?: string | null
   location: string
   city: string
   district: string

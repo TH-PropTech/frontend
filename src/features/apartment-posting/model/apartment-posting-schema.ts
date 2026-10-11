@@ -73,6 +73,8 @@ export const apartmentPostingSchema = z.object({
       value => (APARTMENT_CATEGORIES as readonly string[]).includes(value),
       'Loại hình phải là căn hộ chung cư hoặc chung cư mini, căn hộ dịch vụ'
     ),
+  // Số giấy chứng nhận quyền sở hữu/sử dụng căn hộ: không bắt buộc, ghi vào hợp đồng khi lập.
+  ownershipCertificate: z.string().max(200, 'Tối đa 200 ký tự').optional(),
   description: z
     .string()
     .min(50, 'Mô tả phải dài tối thiểu 50 ký tự')
