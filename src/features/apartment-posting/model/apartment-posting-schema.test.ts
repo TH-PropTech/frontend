@@ -22,6 +22,27 @@ describe('apartmentPostingSchema & rentalPackagePostingSchema', () => {
     bathrooms: 2,
   }
 
+  describe('ownershipCertificate (không bắt buộc)', () => {
+    it('accepts a missing or filled certificate number', () => {
+      expect(apartmentPostingSchema.safeParse(baseValidData).success).toBe(true)
+      expect(
+        apartmentPostingSchema.safeParse({
+          ...baseValidData,
+          ownershipCertificate: 'CS 12345',
+        }).success
+      ).toBe(true)
+    })
+
+    it('rejects a certificate longer than 200 characters', () => {
+      expect(
+        apartmentPostingSchema.safeParse({
+          ...baseValidData,
+          ownershipCertificate: 'a'.repeat(201),
+        }).success
+      ).toBe(false)
+    })
+  })
+
   describe('description (không bắt buộc, nhập thì tối thiểu 10 ký tự)', () => {
     it('accepts a missing description', () => {
       const { description: _description, ...withoutDescription } = baseValidData

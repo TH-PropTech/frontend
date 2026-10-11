@@ -258,6 +258,30 @@ describe('ContractDocumentViewer', () => {
     expect(onDownloadDocx).toHaveBeenCalledTimes(1)
   })
 
+  it('opens the PDF view from the eye button when the PDF is available', () => {
+    const onViewPdf = vi.fn()
+    render(<ContractDocumentViewer {...defaultProps} onViewPdf={onViewPdf} />)
+
+    fireEvent.click(screen.getByLabelText('Xem bản PDF'))
+    expect(onViewPdf).toHaveBeenCalledTimes(1)
+  })
+
+  it('disables the eye button until the PDF has been locked', () => {
+    const onViewPdf = vi.fn()
+    render(
+      <ContractDocumentViewer
+        {...defaultProps}
+        onViewPdf={onViewPdf}
+        pdfAvailable={false}
+      />
+    )
+
+    const eye = screen.getByLabelText('Xem bản PDF') as HTMLButtonElement
+    expect(eye.disabled).toBe(true)
+    fireEvent.click(eye)
+    expect(onViewPdf).not.toHaveBeenCalled()
+  })
+
   it('triggers window.print when print button clicked', () => {
     const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {})
     render(<ContractDocumentViewer {...defaultProps} />)

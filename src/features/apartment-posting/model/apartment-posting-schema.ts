@@ -73,6 +73,8 @@ export const apartmentPostingSchema = z.object({
       value => (APARTMENT_CATEGORIES as readonly string[]).includes(value),
       'Loại hình phải là căn hộ chung cư hoặc chung cư mini, căn hộ dịch vụ'
     ),
+  // Số giấy chứng nhận quyền sở hữu/sử dụng căn hộ: không bắt buộc, ghi vào hợp đồng khi lập.
+  ownershipCertificate: z.string().max(200, 'Tối đa 200 ký tự').optional(),
   // Không bắt buộc; nếu nhập thì tối thiểu 10 ký tự.
   description: z
     .string()
@@ -84,7 +86,8 @@ export const apartmentPostingSchema = z.object({
     ),
   location: z.string().optional().default(''),
   city: z.string().min(1, 'Vui lòng chọn Tỉnh/Thành phố'),
-  district: z.string().min(1, 'Vui lòng chọn Quận/Huyện'),
+  // Cơ cấu hành chính từ 1/7/2025 không còn cấp Quận/Huyện: giữ chuỗi rỗng cho tin mới.
+  district: z.string().default(''),
   ward: z.string().min(1, 'Vui lòng chọn Phường/Xã'),
   street: z.string().min(1, 'Vui lòng nhập Tên đường/phố'),
   address: z.string().min(1, 'Vui lòng nhập địa chỉ hiển thị'),

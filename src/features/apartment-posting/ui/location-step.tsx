@@ -26,7 +26,6 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
   const { register, watch, setValue } = form
 
   const city = watch('city')
-  const district = watch('district')
   const ward = watch('ward')
   const street = watch('street')
   const address = watch('address')
@@ -47,9 +46,8 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
   const [isLoadingBuild, setIsLoadingBuild] = React.useState(false)
 
   // Use custom hook to load Vietnamese administrative divisions & handle cascading auto-fill
-  const { cities, districts, wards, autoFillAddress } = useLocationCascade({
+  const { cities, wards, autoFillAddress } = useLocationCascade({
     city,
-    district,
     setValue,
   })
 
@@ -57,9 +55,9 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
 
   // Auto-fill address field
   React.useEffect(() => {
-    const parts = [street, ward, district, city].filter(Boolean)
+    const parts = [street, ward, city].filter(Boolean)
     setValue('address', parts.join(', '), { shouldValidate: true })
-  }, [city, district, ward, street, setValue])
+  }, [city, ward, street, setValue])
 
   // Search projects on input change
   React.useEffect(() => {
@@ -115,7 +113,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
         <h3 className="text-lg font-semibold text-fg">Địa chỉ & Vị trí</h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Tỉnh/Thành phố */}
         <div className="space-y-2">
           <Label htmlFor="city">Tỉnh / Thành phố *</Label>
@@ -144,44 +142,12 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
           </Select>
         </div>
 
-        {/* Quận/Huyện */}
-        <div className="space-y-2">
-          <Label htmlFor="district">Quận / Huyện *</Label>
-          <Select
-            value={district}
-            disabled={!city}
-            onValueChange={val => {
-              setValue('district', val, { shouldValidate: true })
-              setValue('ward', '')
-              setValue('street', '')
-            }}
-          >
-            <SelectTrigger
-              id="district"
-              className="bg-background/50 backdrop-blur-sm border-border"
-            >
-              <SelectValue
-                placeholder={
-                  city ? 'Chọn Quận / Huyện' : 'Vui lòng chọn Tỉnh/Thành trước'
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {districts.map(d => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* Phường/Xã */}
         <div className="space-y-2">
           <Label htmlFor="ward">Phường / Xã *</Label>
           <Select
             value={ward}
-            disabled={!district}
+            disabled={!city}
             onValueChange={val =>
               setValue('ward', val, { shouldValidate: true })
             }
@@ -192,9 +158,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
             >
               <SelectValue
                 placeholder={
-                  district
-                    ? 'Chọn Phường / Xã'
-                    : 'Vui lòng chọn Quận/Huyện trước'
+                  city ? 'Chọn Phường / Xã' : 'Vui lòng chọn Tỉnh/Thành trước'
                 }
               />
             </SelectTrigger>
@@ -234,7 +198,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
           </Label>
           <Input
             id="address"
-            placeholder="Số nhà, Tên đường, Phường, Quận, Thành phố"
+            placeholder="Số nhà, Tên đường, Phường/Xã, Tỉnh/Thành phố"
             disabled
             className="bg-muted border-border cursor-not-allowed"
             value={address}
@@ -286,7 +250,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
                     onClick={() => {
                       setValue('projectName', proj.name)
                       setValue('projectId', proj.id)
-                      autoFillAddress(proj.location, proj.city, proj.district)
+                      autoFillAddress(proj.location, proj.city)
                       setShowProjList(false)
                     }}
                   >
@@ -350,7 +314,7 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
                         }
                       }
 
-                      autoFillAddress(b.location, b.city, b.district)
+                      autoFillAddress(b.location, b.city)
                       setShowBuildList(false)
                     }}
                   >

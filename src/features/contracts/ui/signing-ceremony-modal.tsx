@@ -10,10 +10,12 @@ import {
 } from 'lucide-react'
 import { testSignContract } from '../api/contracts-api'
 import { useSigningCeremony } from '../model/use-signing-ceremony'
+import { useSigningMethods } from '../model/use-signing-methods'
 import { FaceVerifyCamera } from './face-verify-camera'
 import { SmartOtpStep } from './smart-otp-step'
 import { SignatureAnimation } from './signature-animation'
 import { SmartCaSigningPanel } from './smartca-signing-panel'
+import { SmartCaV2SignForm } from './smartca-v2-sign-form'
 
 export interface SigningCeremonyModalProps {
   isOpen: boolean
@@ -24,8 +26,6 @@ export interface SigningCeremonyModalProps {
   signerRole: 'tenant' | 'landlord'
   onSigningSuccess?: () => void
 }
-
-const TEST_SIGN_ENABLED = process.env.NEXT_PUBLIC_ENABLE_TEST_SIGN === 'true'
 
 export function SigningCeremonyModal({
   isOpen,
@@ -55,6 +55,8 @@ export function SigningCeremonyModal({
       setTestSigning(false)
     }
   }
+
+  const methodsState = useSigningMethods(contractId, isOpen)
 
   const ceremony = useSigningCeremony({
     contractId,
@@ -199,18 +201,102 @@ export function SigningCeremonyModal({
                 </span>
               </label>
 
-              <button
-                type="button"
-                onClick={ceremony.startCeremony}
-                disabled={!consentChecked}
-                aria-label="Bắt đầu ký kết"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm mt-2"
-              >
-                <span>Bắt đầu xác thực ký hợp đồng</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              <fieldset className="space-y-2">
+                <legend className="text-[11px] font-bold uppercase text-[var(--muted)]">
+                  Chọn phương thức ký
+                </legend>
+                {methodsState.loading ? (
+                  <p className="text-[11px] text-[var(--muted)]">
+                    Đang tải phương thức ký...
+                  </p>
+                ) : null}
+                {methodsState.error ? (
+                  <div role="alert" className="space-y-1">
+                    <p className="text-[11px] text-[var(--danger)]">
+                      {methodsState.error}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={methodsState.reload}
+                      className="text-[11px] font-bold text-[var(--primary)] underline"
+                    >
+                      Thử lại
+                    </button>
+                  </div>
+                ) : null}
+                <div
+                  role="radiogroup"
+                  aria-label="Chọn phương thức ký"
+                  className="space-y-1.5"
+                >
+                  {methodsState.methods.map(method => (
+                    <label
+                      key={method.id}
+                      className={`flex items-start gap-2 rounded-lg border p-2.5 text-xs cursor-pointer ${
+                        methodsState.selected === method.id
+                          ? 'border-[var(--primary)] bg-[var(--surface-muted)]'
+                          : 'border-[var(--border)]'
+                      } ${method.available ? '' : 'opacity-50 cursor-not-allowed'}`}
+                    >
+                      <input
+                        type="radio"
+                        name="signing-method"
+                        value={method.id}
+                        checked={methodsState.selected === method.id}
+                        disabled={!method.available}
+                        onChange={() => methodsState.select(method.id)}
+                        className="mt-0.5"
+                      />
+                      <span>
+                        <span className="block font-bold text-[var(--fg)]">
+                          {method.label}
+                        </span>
+                        <span className="block text-[11px] text-[var(--muted)]">
+                          {method.description}
+                        </span>
+                        {!method.available && method.reason ? (
+                          <span className="block text-[11px] text-[var(--warning)]">
+                            Chưa dùng được: {method.reason}
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
 
-              {TEST_SIGN_ENABLED ? (
+              {methodsState.selected === 'biometric_smart_otp' ? (
+                <button
+                  type="button"
+                  onClick={ceremony.startCeremony}
+                  disabled={!consentChecked}
+                  aria-label="Bắt đầu ký kết"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm"
+                >
+                  <span>Bắt đầu xác thực ký hợp đồng</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : null}
+
+              {methodsState.selected === 'smartca_v1' ? (
+                <SmartCaSigningPanel
+                  key={smartCaPanelKey}
+                  contractId={contractId}
+                  disabled={!consentChecked}
+                  {...(onSigningSuccess ? { onSigned: onSigningSuccess } : {})}
+                />
+              ) : null}
+
+              {methodsState.selected === 'smartca_v2' ? (
+                <SmartCaV2SignForm
+                  key={smartCaPanelKey}
+                  contractId={contractId}
+                  disabled={!consentChecked}
+                  {...(onSigningSuccess ? { onSigned: onSigningSuccess } : {})}
+                />
+              ) : null}
+
+              {methodsState.selected === 'dev_sign' ? (
                 <div className="rounded-xl border border-dashed border-[var(--warning)] p-3 space-y-2">
                   <p className="text-[11px] text-[var(--muted)] leading-relaxed">
                     Chế độ test: bỏ qua sinh trắc, Smart OTP và VNPT SmartCA,
@@ -237,13 +323,6 @@ export function SigningCeremonyModal({
                   ) : null}
                 </div>
               ) : null}
-
-              <SmartCaSigningPanel
-                key={smartCaPanelKey}
-                contractId={contractId}
-                disabled={!consentChecked}
-                {...(onSigningSuccess ? { onSigned: onSigningSuccess } : {})}
-              />
             </div>
           )}
 
