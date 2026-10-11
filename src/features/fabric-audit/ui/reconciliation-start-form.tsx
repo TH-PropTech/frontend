@@ -1,11 +1,11 @@
 'use client'
 
+import { DatePicker } from '@/shared/ui/date-picker'
 import * as React from 'react'
 import { PlayCircle } from 'lucide-react'
 import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
-import { Input } from '@/shared/ui/input'
 import { useStartReconciliationRun } from '../api/fabric-audit-hooks'
 import { describeFabricAuditError } from '../model/error-messages'
 import {
@@ -75,21 +75,15 @@ export function ReconciliationStartForm(): React.ReactElement {
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Input
+        <DatePicker
           label="Từ ngày"
-          type="date"
           value={draft.from}
-          onChange={event =>
-            setDraft(current => ({ ...current, from: event.target.value }))
-          }
+          onChange={from => setDraft(current => ({ ...current, from }))}
         />
-        <Input
+        <DatePicker
           label="Đến ngày"
-          type="date"
           value={draft.to}
-          onChange={event =>
-            setDraft(current => ({ ...current, to: event.target.value }))
-          }
+          onChange={to => setDraft(current => ({ ...current, to }))}
         />
       </div>
       <div className="flex flex-col gap-1">

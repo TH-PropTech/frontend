@@ -1,5 +1,6 @@
 'use client'
 
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import Link from 'next/link'
 
@@ -200,22 +201,25 @@ export function ContractMonitorView(): React.ReactElement {
               <label className="block text-[10px] font-bold text-muted uppercase tracking-wider font-body">
                 Địa chỉ hợp đồng
               </label>
-              <select
-                onChange={e => {
-                  const addr = e.target.value
+              <OptionSelect
+                value={inspectAddress ?? ''}
+                placeholder="-- Chọn hợp đồng cần truy vấn --"
+                onChange={addr => {
                   setInspectAddress(addr)
                   if (addr) handleQueryState(addr)
                 }}
-                className="w-full mt-1.5 p-2.5 bg-bg/30 border border-line rounded-lg text-xs font-mono font-semibold text-fg focus:outline-none focus:border-accent"
-              >
-                <option value="">-- Chọn hợp đồng cần truy vấn --</option>
-                <option value="0x1A2b...E5F6">
-                  0x1A2b...E5F6 (Nguyễn Văn A)
-                </option>
-                <option value="0x8f9c...92a1">
-                  0x8f9c...92a1 (Trần Thị B)
-                </option>
-              </select>
+                className="mt-1.5 font-mono text-xs font-semibold"
+                options={[
+                  {
+                    value: '0x1A2b...E5F6',
+                    label: '0x1A2b...E5F6 (Nguyễn Văn A)',
+                  },
+                  {
+                    value: '0x8f9c...92a1',
+                    label: '0x8f9c...92a1 (Trần Thị B)',
+                  },
+                ]}
+              />
             </div>
 
             {inspectAddress && (

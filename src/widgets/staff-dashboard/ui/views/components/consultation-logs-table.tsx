@@ -1,5 +1,6 @@
 'use client'
 
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import { env } from '@/shared/config/env'
 
@@ -83,28 +84,30 @@ export function ConsultationLogsTable({
             className="text-xs px-3 py-1.5 border border-line rounded-lg bg-bg/25 focus:outline-none focus:border-accent w-48 font-body text-fg"
           />
           {/* Status Filter */}
-          <select
+          <OptionSelect
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="text-xs px-3 py-1.5 border border-line rounded-lg bg-bg/25 focus:outline-none focus:border-accent font-body text-fg"
-          >
-            <option value="">-- Trạng thái --</option>
-            <option value="completed">Hoàn thành</option>
-            <option value="in_progress">Đang đàm thoại</option>
-            <option value="email_sent">Đã gửi thư mời</option>
-            <option value="transferred">Đã chuyển nhân viên</option>
-            <option value="failed">Thất bại</option>
-          </select>
+            onChange={setStatusFilter}
+            allLabel="-- Trạng thái --"
+            className="h-8 w-auto min-w-[150px] text-xs"
+            options={[
+              { value: 'completed', label: 'Hoàn thành' },
+              { value: 'in_progress', label: 'Đang đàm thoại' },
+              { value: 'email_sent', label: 'Đã gửi thư mời' },
+              { value: 'transferred', label: 'Đã chuyển nhân viên' },
+              { value: 'failed', label: 'Thất bại' },
+            ]}
+          />
           {/* Result Filter */}
-          <select
+          <OptionSelect
             value={resultFilter}
-            onChange={e => setResultFilter(e.target.value)}
-            className="text-xs px-3 py-1.5 border border-line rounded-lg bg-bg/25 focus:outline-none focus:border-accent font-body text-fg"
-          >
-            <option value="">-- Kết quả AI --</option>
-            <option value="interested">Quan tâm</option>
-            <option value="not_interested">Chưa có nhu cầu</option>
-          </select>
+            onChange={setResultFilter}
+            allLabel="-- Kết quả AI --"
+            className="h-8 w-auto min-w-[140px] text-xs"
+            options={[
+              { value: 'interested', label: 'Quan tâm' },
+              { value: 'not_interested', label: 'Chưa có nhu cầu' },
+            ]}
+          />
         </div>
       </div>
       <div className="overflow-x-auto">

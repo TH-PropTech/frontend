@@ -1,5 +1,6 @@
 'use client'
 
+import { DatePicker } from '@/shared/ui/date-picker'
 import * as React from 'react'
 import {
   CheckCircle2,
@@ -211,11 +212,10 @@ export function ContractAmendmentTimeline({
             value={monthlyRent}
             onChange={event => setMonthlyRent(event.target.value)}
           />
-          <Input
+          <DatePicker
             label="Ngày bắt đầu áp dụng"
-            type="date"
             value={effectiveFrom}
-            onChange={event => setEffectiveFrom(event.target.value)}
+            onChange={setEffectiveFrom}
           />
           <Button
             type="button"

@@ -1,5 +1,6 @@
 'use client'
 
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import {
   Layers,
@@ -216,23 +217,19 @@ export function AssignmentManager({
               <label className="block text-xs font-semibold text-fg mb-1">
                 Phạm vi áp dụng (Scope)
               </label>
-              <select
+              <OptionSelect
                 value={scope}
-                onChange={e => {
-                  const val = e.target.value as
-                    | 'GLOBAL'
-                    | 'DURATION'
-                    | 'PACKAGE'
-                  setScope(val)
+                onChange={val => {
+                  setScope(val as 'GLOBAL' | 'DURATION' | 'PACKAGE')
                   if (val === 'DURATION') setScopeValue('12')
                   else setScopeValue('')
                 }}
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg"
-              >
-                <option value="GLOBAL">GLOBAL (Toàn sàn)</option>
-                <option value="DURATION">DURATION (Thời hạn gói)</option>
-                <option value="PACKAGE">PACKAGE (Gói thuê cụ thể)</option>
-              </select>
+                options={[
+                  { value: 'GLOBAL', label: 'GLOBAL (Toàn sàn)' },
+                  { value: 'DURATION', label: 'DURATION (Thời hạn gói)' },
+                  { value: 'PACKAGE', label: 'PACKAGE (Gói thuê cụ thể)' },
+                ]}
+              />
             </div>
 
             {scope === 'DURATION' && (
@@ -240,19 +237,17 @@ export function AssignmentManager({
                 <label className="block text-xs font-semibold text-fg mb-1">
                   Thời hạn áp dụng (Tháng)
                 </label>
-                <select
+                <OptionSelect
                   value={scopeValue}
-                  onChange={e => setScopeValue(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg"
-                >
-                  <option value="1" disabled>
-                    1 tháng (legacy)
-                  </option>
-                  <option value="3">3 tháng</option>
-                  <option value="6">6 tháng</option>
-                  <option value="12">12 tháng</option>
-                  <option value="24">24 tháng</option>
-                </select>
+                  onChange={setScopeValue}
+                  options={[
+                    { value: '1', label: '1 tháng (legacy)', disabled: true },
+                    { value: '3', label: '3 tháng' },
+                    { value: '6', label: '6 tháng' },
+                    { value: '12', label: '12 tháng' },
+                    { value: '24', label: '24 tháng' },
+                  ]}
+                />
               </div>
             )}
 
@@ -275,17 +270,14 @@ export function AssignmentManager({
               <label className="block text-xs font-semibold text-fg mb-1">
                 Hồ sơ luồng đích (Published Profile)
               </label>
-              <select
+              <OptionSelect
                 value={effectiveProfileId}
-                onChange={e => setSelectedProfileId(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg"
-              >
-                {publishedProfiles.map(p => (
-                  <option key={p.profileId} value={p.profileId}>
-                    {p.name} (v{p.version})
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedProfileId}
+                options={publishedProfiles.map(p => ({
+                  value: p.profileId,
+                  label: `${p.name} (v${p.version})`,
+                }))}
+              />
             </div>
           </div>
 
@@ -428,19 +420,17 @@ export function AssignmentManager({
             <label className="block text-[11px] font-semibold text-muted mb-1">
               Thời hạn gói (Duration Months)
             </label>
-            <select
-              value={previewDuration}
-              onChange={e => setPreviewDuration(Number(e.target.value))}
-              className="w-full px-3 py-2 text-xs rounded-lg bg-surface-muted border border-border text-fg"
-            >
-              <option value={1} disabled>
-                1 tháng (legacy)
-              </option>
-              <option value={3}>3 tháng</option>
-              <option value={6}>6 tháng</option>
-              <option value={12}>12 tháng</option>
-              <option value={24}>24 tháng</option>
-            </select>
+            <OptionSelect
+              value={String(previewDuration)}
+              onChange={value => setPreviewDuration(Number(value))}
+              options={[
+                { value: '1', label: '1 tháng (legacy)', disabled: true },
+                { value: '3', label: '3 tháng' },
+                { value: '6', label: '6 tháng' },
+                { value: '12', label: '12 tháng' },
+                { value: '24', label: '24 tháng' },
+              ]}
+            />
           </div>
 
           <div>

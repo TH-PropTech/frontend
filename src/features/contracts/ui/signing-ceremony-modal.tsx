@@ -8,6 +8,7 @@ import {
   FileCheck,
   ArrowRight,
 } from 'lucide-react'
+import { testSignContract } from '../api/contracts-api'
 import { useSigningCeremony } from '../model/use-signing-ceremony'
 import { FaceVerifyCamera } from './face-verify-camera'
 import { SmartOtpStep } from './smart-otp-step'
@@ -24,6 +25,8 @@ export interface SigningCeremonyModalProps {
   onSigningSuccess?: () => void
 }
 
+const TEST_SIGN_ENABLED = process.env.NEXT_PUBLIC_ENABLE_TEST_SIGN === 'true'
+
 export function SigningCeremonyModal({
   isOpen,
   onClose,
@@ -35,6 +38,23 @@ export function SigningCeremonyModal({
 }: SigningCeremonyModalProps) {
   const [consentChecked, setConsentChecked] = useState(false)
   const [smartCaPanelKey, setSmartCaPanelKey] = useState(0)
+  const [testSigning, setTestSigning] = useState(false)
+  const [testSignError, setTestSignError] = useState<string | null>(null)
+
+  const handleTestSign = async (): Promise<void> => {
+    setTestSigning(true)
+    setTestSignError(null)
+    try {
+      await testSignContract(contractId)
+      onSigningSuccess?.()
+    } catch (error: unknown) {
+      setTestSignError(
+        error instanceof Error ? error.message : 'Không thể ký ở chế độ test.'
+      )
+    } finally {
+      setTestSigning(false)
+    }
+  }
 
   const ceremony = useSigningCeremony({
     contractId,
@@ -189,6 +209,34 @@ export function SigningCeremonyModal({
                 <span>Bắt đầu xác thực ký hợp đồng</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
+
+              {TEST_SIGN_ENABLED ? (
+                <div className="rounded-xl border border-dashed border-[var(--warning)] p-3 space-y-2">
+                  <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                    Chế độ test: bỏ qua sinh trắc, Smart OTP và VNPT SmartCA,
+                    chỉ ghi nhận bạn đã ký để đi tiếp các bước sau. Không phải
+                    chữ ký số có chứng thư.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void handleTestSign()}
+                    disabled={!consentChecked || testSigning}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg border border-[var(--warning)] text-[var(--fg)] hover:bg-[var(--surface-muted)] disabled:opacity-50 transition-colors"
+                  >
+                    {testSigning
+                      ? 'Đang xác nhận...'
+                      : 'Xác nhận ký (chế độ test)'}
+                  </button>
+                  {testSignError ? (
+                    <p
+                      role="alert"
+                      className="text-[11px] text-[var(--danger)]"
+                    >
+                      {testSignError}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
               <SmartCaSigningPanel
                 key={smartCaPanelKey}

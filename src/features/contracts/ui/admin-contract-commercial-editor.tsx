@@ -1,5 +1,6 @@
 'use client'
 
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import { AlertCircle, CheckCircle2, LockKeyhole, Save } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
@@ -320,21 +321,19 @@ export function AdminContractCommercialEditor({
               className="flex items-center justify-between gap-3 text-xs text-fg"
             >
               <span>{label}</span>
-              <select
+              <OptionSelect
                 value={draft.utilities?.[field] ?? 'tenant'}
                 disabled={locked || busy}
-                onChange={event =>
-                  setUtility(
-                    field,
-                    event.target.value as 'tenant' | 'landlord' | 'shared'
-                  )
+                onChange={value =>
+                  setUtility(field, value as 'tenant' | 'landlord' | 'shared')
                 }
-                className="rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-fg"
-              >
-                <option value="tenant">Bên thuê</option>
-                <option value="landlord">Bên cho thuê</option>
-                <option value="shared">Phân bổ chung</option>
-              </select>
+                className="w-40 text-xs"
+                options={[
+                  { value: 'tenant', label: 'Bên thuê' },
+                  { value: 'landlord', label: 'Bên cho thuê' },
+                  { value: 'shared', label: 'Phân bổ chung' },
+                ]}
+              />
             </label>
           ))}
         </div>

@@ -12,6 +12,8 @@ import {
   buildRun,
   buildRunsPage,
 } from '../test-fixtures/fabric-audit.fixtures'
+import { chooseOption, pickDate } from '@/shared/lib/test/ui-pickers'
+import { findingCategoryLabel } from '../model/labels'
 import { renderWithQuery } from '../test-fixtures/render-with-query'
 import { ReconciliationPanel } from './reconciliation-panel'
 
@@ -139,8 +141,8 @@ describe('ReconciliationPanel start run (admin)', () => {
     const user = userEvent.setup()
     renderPanel(ADMIN)
     await screen.findByRole('table', { name: 'Các lần đối soát' })
-    await user.type(screen.getByLabelText('Từ ngày'), '2026-01-01')
-    await user.type(screen.getByLabelText('Đến ngày'), '2026-06-01')
+    await pickDate(user, screen.getByLabelText('Từ ngày'), '2026-01-01')
+    await pickDate(user, screen.getByLabelText('Đến ngày'), '2026-06-01')
     await user.click(screen.getByRole('button', { name: 'Bắt đầu đối soát' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('tối đa 92 ngày')
     expect(api.startReconciliationRun).not.toHaveBeenCalled()
@@ -153,8 +155,8 @@ describe('ReconciliationPanel start run (admin)', () => {
     await screen.findByRole('table', { name: 'Các lần đối soát' })
     expect(api.listReconciliationRuns).toHaveBeenCalledTimes(1)
 
-    await user.type(screen.getByLabelText('Từ ngày'), '2026-09-01')
-    await user.type(screen.getByLabelText('Đến ngày'), '2026-09-30')
+    await pickDate(user, screen.getByLabelText('Từ ngày'), '2026-09-01')
+    await pickDate(user, screen.getByLabelText('Đến ngày'), '2026-09-30')
     await user.click(
       screen.getByRole('checkbox', { name: 'Bàn giao nhận nhà' })
     )
@@ -199,8 +201,8 @@ describe('ReconciliationPanel start run (admin)', () => {
     )
     renderPanel(ADMIN)
     await screen.findByRole('table', { name: 'Các lần đối soát' })
-    await user.type(screen.getByLabelText('Từ ngày'), '2026-09-01')
-    await user.type(screen.getByLabelText('Đến ngày'), '2026-09-30')
+    await pickDate(user, screen.getByLabelText('Từ ngày'), '2026-09-01')
+    await pickDate(user, screen.getByLabelText('Đến ngày'), '2026-09-30')
     await user.click(screen.getByRole('button', { name: 'Bắt đầu đối soát' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Đã có một lần đối soát đang chạy'
@@ -217,8 +219,8 @@ describe('ReconciliationPanel start run (admin)', () => {
     )
     renderPanel(ADMIN)
     await screen.findByRole('table', { name: 'Các lần đối soát' })
-    await user.type(screen.getByLabelText('Từ ngày'), '2026-09-01')
-    await user.type(screen.getByLabelText('Đến ngày'), '2026-09-30')
+    await pickDate(user, screen.getByLabelText('Từ ngày'), '2026-09-01')
+    await pickDate(user, screen.getByLabelText('Đến ngày'), '2026-09-30')
     await user.click(screen.getByRole('button', { name: 'Bắt đầu đối soát' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('không có quyền')
   })
@@ -335,9 +337,10 @@ describe('ReconciliationPanel run detail and findings', () => {
     const user = userEvent.setup()
     renderPanel(STAFF)
     await openDetail()
-    await user.selectOptions(
+    await chooseOption(
+      user,
       screen.getByLabelText('Nhóm phát hiện'),
-      'hash_schema_mismatch'
+      findingCategoryLabel('hash_schema_mismatch')
     )
     await waitFor(() =>
       expect(api.listReconciliationFindings).toHaveBeenLastCalledWith(

@@ -61,7 +61,9 @@ describe('ExecutionPoliciesAdminTab', () => {
     expect(
       await screen.findByTestId('execution-policies-admin-tab')
     ).toBeDefined()
-    expect(screen.getByDisplayValue('SIGN_FIRST')).toBeDefined()
+    expect(
+      screen.getByTestId('execution-policy-strategy').textContent
+    ).toContain('SIGN_FIRST')
     expect(screen.getByText('sign-first · SIGN_FIRST · vdraft')).toBeDefined()
     expect(screen.getByText('sign-first · SIGN_FIRST · v1')).toBeDefined()
   })

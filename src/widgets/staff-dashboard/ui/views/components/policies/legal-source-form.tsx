@@ -1,5 +1,6 @@
 'use client'
 
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import { AlertCircle, Plus, Trash2 } from 'lucide-react'
 import {
@@ -262,27 +263,26 @@ export function LegalSourceForm({
           />
         </Field>
         <Field label="Loại nguồn">
-          <select
+          <OptionSelect
             value={values.kind}
-            onChange={e => set('kind', e.target.value as LegalSourceKind)}
-            className={INPUT_CLASS}
-          >
-            <option value="procedure">Thủ tục DVC</option>
-            <option value="legal_text">Văn bản pháp lý</option>
-          </select>
+            onChange={value => set('kind', value as LegalSourceKind)}
+            className="text-xs"
+            options={[
+              { value: 'procedure', label: 'Thủ tục DVC' },
+              { value: 'legal_text', label: 'Văn bản pháp lý' },
+            ]}
+          />
         </Field>
         <Field label="Biểu tượng">
-          <select
+          <OptionSelect
             value={values.icon}
-            onChange={e => set('icon', e.target.value as LegalSourceIcon)}
-            className={INPUT_CLASS}
-          >
-            {LEGAL_SOURCE_ICONS.map(icon => (
-              <option key={icon} value={icon}>
-                {ICON_LABELS[icon]}
-              </option>
-            ))}
-          </select>
+            onChange={value => set('icon', value as LegalSourceIcon)}
+            className="text-xs"
+            options={LEGAL_SOURCE_ICONS.map(icon => ({
+              value: icon,
+              label: ICON_LABELS[icon],
+            }))}
+          />
         </Field>
       </div>
 

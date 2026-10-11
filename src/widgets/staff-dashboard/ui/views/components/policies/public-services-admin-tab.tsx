@@ -1,5 +1,6 @@
 'use client'
 
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import {
   AlertCircle,
@@ -657,36 +658,34 @@ export function PublicServicesAdminTab(): React.ReactElement {
           </div>
 
           <div className="flex items-center gap-2">
-            <select
+            <OptionSelect
               value={selectedSeverity}
-              onChange={e =>
-                setSelectedSeverity(
-                  e.target.value as 'all' | RegulationSeverity
-                )
+              onChange={value =>
+                setSelectedSeverity(value as 'all' | RegulationSeverity)
               }
-              className="w-full py-2 px-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
-            >
-              <option value="all">Tất cả mức độ tuân thủ</option>
-              <option value="mandatory">Bắt buộc tuân thủ</option>
-              <option value="recommended">Khuyến nghị tiêu chuẩn</option>
-              <option value="optional">Thỏa thuận tự chọn</option>
-            </select>
+              className="text-xs"
+              options={[
+                { value: 'all', label: 'Tất cả mức độ tuân thủ' },
+                { value: 'mandatory', label: 'Bắt buộc tuân thủ' },
+                { value: 'recommended', label: 'Khuyến nghị tiêu chuẩn' },
+                { value: 'optional', label: 'Thỏa thuận tự chọn' },
+              ]}
+            />
           </div>
 
           <div className="flex items-center gap-2">
-            <select
+            <OptionSelect
               value={selectedStatus}
-              onChange={e =>
-                setSelectedStatus(
-                  e.target.value as 'all' | 'active' | 'inactive'
-                )
+              onChange={value =>
+                setSelectedStatus(value as 'all' | 'active' | 'inactive')
               }
-              className="w-full py-2 px-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--fg)] focus:outline-none focus:border-[var(--primary)]"
-            >
-              <option value="all">Tất cả trạng thái</option>
-              <option value="active">Chỉ quy định Đang Áp Dụng</option>
-              <option value="inactive">Chỉ quy định Tạm Dừng</option>
-            </select>
+              className="text-xs"
+              options={[
+                { value: 'all', label: 'Tất cả trạng thái' },
+                { value: 'active', label: 'Chỉ quy định Đang Áp Dụng' },
+                { value: 'inactive', label: 'Chỉ quy định Tạm Dừng' },
+              ]}
+            />
           </div>
         </div>
       </div>
@@ -999,39 +998,36 @@ export function PublicServicesAdminTab(): React.ReactElement {
                   <label className="font-semibold text-[var(--fg)] block mb-1">
                     Phân loại Danh mục:
                   </label>
-                  <select
+                  <OptionSelect
                     value={formCategory}
-                    onChange={e =>
-                      setFormCategory(e.target.value as RegulationCategory)
+                    onChange={value =>
+                      setFormCategory(value as RegulationCategory)
                     }
-                    className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--fg)]"
-                  >
-                    {(Object.keys(CATEGORY_LABELS) as RegulationCategory[]).map(
-                      k => (
-                        <option key={k} value={k}>
-                          {CATEGORY_LABELS[k].label}
-                        </option>
-                      )
-                    )}
-                  </select>
+                    className="text-xs"
+                    options={(
+                      Object.keys(CATEGORY_LABELS) as RegulationCategory[]
+                    ).map(k => ({ value: k, label: CATEGORY_LABELS[k].label }))}
+                  />
                 </div>
                 <div>
                   <label className="font-semibold text-[var(--fg)] block mb-1">
                     Mức độ Tuân thủ:
                   </label>
-                  <select
+                  <OptionSelect
                     value={formSeverity}
-                    onChange={e =>
-                      setFormSeverity(e.target.value as RegulationSeverity)
+                    onChange={value =>
+                      setFormSeverity(value as RegulationSeverity)
                     }
-                    className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--fg)]"
-                  >
-                    <option value="mandatory">
-                      Bắt buộc tuân thủ (Chặn ký nếu thiếu)
-                    </option>
-                    <option value="recommended">Khuyến nghị tiêu chuẩn</option>
-                    <option value="optional">Thỏa thuận tự chọn</option>
-                  </select>
+                    className="text-xs"
+                    options={[
+                      {
+                        value: 'mandatory',
+                        label: 'Bắt buộc tuân thủ (Chặn ký nếu thiếu)',
+                      },
+                      { value: 'recommended', label: 'Khuyến nghị tiêu chuẩn' },
+                      { value: 'optional', label: 'Thỏa thuận tự chọn' },
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -1040,20 +1036,17 @@ export function PublicServicesAdminTab(): React.ReactElement {
                 <label className="font-semibold text-[var(--fg)] block mb-1">
                   Căn cứ Pháp luật / Thủ tục DVC Liên kết (Chuẩn Quốc Gia):
                 </label>
-                <select
+                <OptionSelect
                   value={formLinkedSourceKey}
-                  onChange={e => setFormLinkedSourceKey(e.target.value)}
+                  onChange={setFormLinkedSourceKey}
                   data-testid="select-linked-source"
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--fg)]"
-                >
-                  <option value="">-- Không liên kết trực tiếp --</option>
-                  {sources.map(item => (
-                    <option key={item.key} value={item.key}>
-                      {item.code} - {item.title}
-                      {item.isActive ? '' : ' (đang tắt)'}
-                    </option>
-                  ))}
-                </select>
+                  allLabel="-- Không liên kết trực tiếp --"
+                  className="text-xs"
+                  options={sources.map(item => ({
+                    value: item.key,
+                    label: `${item.code} - ${item.title}${item.isActive ? '' : ' (đang tắt)'}`,
+                  }))}
+                />
               </div>
 
               {/* Summary description */}

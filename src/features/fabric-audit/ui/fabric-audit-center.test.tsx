@@ -8,6 +8,8 @@ import {
   buildOverview,
   buildRunsPage,
 } from '../test-fixtures/fabric-audit.fixtures'
+import { chooseOption } from '@/shared/lib/test/ui-pickers'
+import { deliveryStateView } from '../model/labels'
 import { renderWithQuery } from '../test-fixtures/render-with-query'
 import { FabricAuditCenter } from './fabric-audit-center'
 
@@ -126,9 +128,10 @@ describe('FabricAuditCenter URL synchronization', () => {
     signIn(['staff'])
     navigation.search = 'tab=events&page=3'
     renderWithQuery(<FabricAuditCenter />)
-    await user.selectOptions(
+    await chooseOption(
+      user,
       await screen.findByLabelText('Trạng thái chuyển'),
-      'failed'
+      deliveryStateView('failed').label
     )
     await user.click(screen.getByRole('button', { name: 'Áp dụng bộ lọc' }))
     expect(navigation.replace).toHaveBeenLastCalledWith(

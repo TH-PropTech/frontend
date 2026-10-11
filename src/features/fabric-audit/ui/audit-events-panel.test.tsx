@@ -11,6 +11,9 @@ import {
   buildEventSummary,
   buildEventsPage,
 } from '../test-fixtures/fabric-audit.fixtures'
+import { chooseOption, pickDate } from '@/shared/lib/test/ui-pickers'
+import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
+import { deliveryStateView, verificationStateView } from '../model/labels'
 import { renderWithQuery } from '../test-fixtures/render-with-query'
 import { AuditEventsPanel } from './audit-events-panel'
 
@@ -226,17 +229,23 @@ describe('AuditEventsPanel filters', () => {
     await screen.findByRole('table')
 
     await user.type(screen.getByLabelText('Mã hợp đồng'), ' contract-9 ')
-    await user.selectOptions(
+    await chooseOption(
+      user,
       screen.getByLabelText('Loại sự kiện'),
-      'handover.completed'
+      ledgerEventLabel('handover.completed')
     )
-    await user.selectOptions(
+    await chooseOption(
+      user,
       screen.getByLabelText('Trạng thái chuyển'),
-      'failed'
+      deliveryStateView('failed').label
     )
-    await user.selectOptions(screen.getByLabelText('Xác minh'), 'mismatch')
-    await user.type(screen.getByLabelText('Từ ngày'), '2026-09-01')
-    await user.type(screen.getByLabelText('Đến ngày'), '2026-09-30')
+    await chooseOption(
+      user,
+      screen.getByLabelText('Xác minh'),
+      verificationStateView('mismatch').label
+    )
+    await pickDate(user, screen.getByLabelText('Từ ngày'), '2026-09-01')
+    await pickDate(user, screen.getByLabelText('Đến ngày'), '2026-09-30')
     await user.type(screen.getByLabelText('Mã giao dịch (TxID)'), 'tx-9')
     await user.click(screen.getByRole('button', { name: 'Áp dụng bộ lọc' }))
 
@@ -258,8 +267,8 @@ describe('AuditEventsPanel filters', () => {
     api.listAuditEvents.mockResolvedValue(buildEventsPage())
     const { onFiltersChange } = renderPanel()
     await screen.findByRole('table')
-    await user.type(screen.getByLabelText('Từ ngày'), '2026-09-30')
-    await user.type(screen.getByLabelText('Đến ngày'), '2026-09-01')
+    await pickDate(user, screen.getByLabelText('Từ ngày'), '2026-09-30')
+    await pickDate(user, screen.getByLabelText('Đến ngày'), '2026-09-01')
     await user.click(screen.getByRole('button', { name: 'Áp dụng bộ lọc' }))
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Ngày bắt đầu phải trước'
@@ -274,7 +283,9 @@ describe('AuditEventsPanel filters', () => {
       filters: { ...DEFAULT_AUDIT_FILTERS, state: 'failed', contractId: 'c-1' },
     })
     await screen.findByRole('table')
-    expect(screen.getByLabelText('Trạng thái chuyển')).toHaveValue('failed')
+    expect(screen.getByLabelText('Trạng thái chuyển')).toHaveTextContent(
+      deliveryStateView('failed').label
+    )
     expect(screen.getByLabelText('Mã hợp đồng')).toHaveValue('c-1')
 
     await user.click(screen.getByRole('button', { name: 'Xóa bộ lọc' }))

@@ -1,5 +1,7 @@
 'use client'
 
+import { DatePicker } from '@/shared/ui/date-picker'
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
 import { Button } from '@/shared/ui/button'
@@ -16,40 +18,6 @@ import {
   AUDIT_VERIFICATION_STATES,
 } from '../model/schemas'
 import { InlineError } from './panel-states'
-
-const SELECT_CLASS =
-  'w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-fg outline-none transition-all hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary-soft'
-
-function SelectField({
-  id,
-  label,
-  value,
-  onChange,
-  children,
-}: {
-  id: string
-  label: string
-  value: string
-  onChange: (value: string) => void
-  children: React.ReactNode
-}): React.ReactElement {
-  return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-fg sm:text-sm">
-        {label}
-      </label>
-      <select
-        id={id}
-        value={value}
-        onChange={event => onChange(event.target.value)}
-        className={SELECT_CLASS}
-      >
-        <option value="">Tất cả</option>
-        {children}
-      </select>
-    </div>
-  )
-}
 
 export interface AuditFilterFormProps {
   filters: AuditFilters
@@ -102,31 +70,29 @@ export function AuditFilterForm({
           maxLength={64}
           onChange={event => patch({ contractId: event.target.value })}
         />
-        <SelectField
+        <OptionSelect
           id="audit-filter-event-type"
           label="Loại sự kiện"
           value={draft.eventType}
           onChange={eventType => patch({ eventType })}
-        >
-          {AUDIT_EVENT_TYPES.map(type => (
-            <option key={type} value={type}>
-              {ledgerEventLabel(type)}
-            </option>
-          ))}
-        </SelectField>
-        <SelectField
+          allLabel="Tất cả"
+          options={AUDIT_EVENT_TYPES.map(type => ({
+            value: type,
+            label: ledgerEventLabel(type),
+          }))}
+        />
+        <OptionSelect
           id="audit-filter-state"
           label="Trạng thái chuyển"
           value={draft.state}
           onChange={state => patch({ state: state as AuditFilters['state'] })}
-        >
-          {AUDIT_DELIVERY_STATES.map(state => (
-            <option key={state} value={state}>
-              {deliveryStateView(state).label}
-            </option>
-          ))}
-        </SelectField>
-        <SelectField
+          allLabel="Tất cả"
+          options={AUDIT_DELIVERY_STATES.map(state => ({
+            value: state,
+            label: deliveryStateView(state).label,
+          }))}
+        />
+        <OptionSelect
           id="audit-filter-verification"
           label="Xác minh"
           value={draft.verificationState}
@@ -136,24 +102,21 @@ export function AuditFilterForm({
                 verificationState as AuditFilters['verificationState'],
             })
           }
-        >
-          {AUDIT_VERIFICATION_STATES.map(state => (
-            <option key={state} value={state}>
-              {verificationStateView(state).label}
-            </option>
-          ))}
-        </SelectField>
-        <Input
-          label="Từ ngày"
-          type="date"
-          value={draft.from}
-          onChange={event => patch({ from: event.target.value })}
+          allLabel="Tất cả"
+          options={AUDIT_VERIFICATION_STATES.map(state => ({
+            value: state,
+            label: verificationStateView(state).label,
+          }))}
         />
-        <Input
+        <DatePicker
+          label="Từ ngày"
+          value={draft.from}
+          onChange={from => patch({ from })}
+        />
+        <DatePicker
           label="Đến ngày"
-          type="date"
           value={draft.to}
-          onChange={event => patch({ to: event.target.value })}
+          onChange={to => patch({ to })}
         />
         <Input
           label="Mã giao dịch (TxID)"

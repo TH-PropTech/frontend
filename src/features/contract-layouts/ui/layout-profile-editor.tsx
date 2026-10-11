@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { ArrowDown, ArrowUp, Eye, Save } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { ApiClientError } from '@/shared/api'
 import { Switch } from '@/shared/ui/switch'
 import {
   previewContractLayout,
@@ -19,6 +20,41 @@ const REQUIRED_BLOCKS = new Set([
   'SIGNATURES',
 ])
 
+const DEFAULT_BLOCK_TITLES: ReadonlyArray<readonly [string, string]> = [
+  ['HEADER', 'Tiêu đề hợp đồng'],
+  ['PARTIES', 'Các bên tham gia'],
+  ['PROPERTY', 'Thông tin tài sản'],
+  ['COMMERCIAL_TERMS', 'Điều khoản thương mại'],
+  ['PAYMENT_SCHEDULE', 'Lịch thanh toán'],
+  ['DEPOSIT_TERMS', 'Điều khoản đặt cọc'],
+  ['FEES', 'Phí và chi phí'],
+  ['SETTLEMENT', 'Quyết toán'],
+  ['LEGAL_ARTICLES', 'Điều khoản pháp lý'],
+  ['SUPPLEMENTARY_CLAUSES', 'Điều khoản bổ sung'],
+  ['ANNEXES', 'Phụ lục'],
+  ['DISCLOSURES', 'Công bố thông tin'],
+  ['SIGNATURES', 'Chữ ký'],
+  ['LEDGER_EVIDENCE', 'Bằng chứng sổ cái'],
+]
+
+/** Bản nháp khởi tạo khi profile chưa có draft nào trên máy chủ. */
+function buildDefaultDraft(profileKey: string): ContractLayoutProfile {
+  return {
+    profileKey,
+    version: 0,
+    status: 'draft',
+    legalProfile: 'PRIVATE_CIVIL_APARTMENT_LEASE',
+    templateKey: null,
+    blocks: DEFAULT_BLOCK_TITLES.map(([blockId, title], index) => ({
+      blockId,
+      title,
+      order: index + 1,
+      visible: true,
+    })),
+    supplementaryClauses: [],
+  }
+}
+
 export interface LayoutProfileEditorProps {
   profileKey?: string
   initialProfile?: ContractLayoutProfile | null
@@ -33,6 +69,7 @@ export function LayoutProfileEditor({
   )
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [notice, setNotice] = React.useState<string | null>(null)
 
   const move = (index: number, direction: -1 | 1): void => {
     setProfile(current => {
@@ -69,9 +106,21 @@ export function LayoutProfileEditor({
   const handlePreview = async (): Promise<void> => {
     setLoading(true)
     setError(null)
+    setNotice(null)
     try {
       setProfile(await previewContractLayout(profileKey))
     } catch (cause: unknown) {
+      if (
+        cause instanceof ApiClientError &&
+        cause.status === 404 &&
+        cause.message.includes('CONTRACT_LAYOUT_DRAFT_NOT_FOUND')
+      ) {
+        setProfile(buildDefaultDraft(profileKey))
+        setNotice(
+          'Chưa có bản nháp cho profile này. Đã tạo bố cục mặc định — chỉnh sửa rồi bấm "Lưu nháp" để tạo bản nháp.'
+        )
+        return
+      }
       setError(
         cause instanceof Error ? cause.message : 'Không tải được layout.'
       )
@@ -141,6 +190,7 @@ export function LayoutProfileEditor({
           {error}
         </p>
       ) : null}
+      {notice ? <p className="text-sm text-muted">{notice}</p> : null}
       {!profile ? (
         <p className="rounded-lg border border-line p-4 text-sm text-muted">
           Chưa tải layout draft.

@@ -1,5 +1,7 @@
 'use client'
 
+import { DateTimePicker } from '@/shared/ui/date-picker'
+import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
@@ -81,19 +83,15 @@ function FeeTierEditor({
           update('maxDurationMonths', Number(event.target.value))
         }
       />
-      <label className="flex flex-col gap-1 text-xs font-medium text-fg">
-        Cách tính
-        <select
-          className="h-10 rounded-md border border-border bg-surface px-3 text-sm text-fg"
-          value={tier.basis}
-          onChange={event =>
-            update('basis', event.target.value as PlatformFeeTier['basis'])
-          }
-        >
-          <option value="MONTHS_OF_RENT">Số tháng tiền thuê</option>
-          <option value="PERCENT_OF_TOTAL_RENT">% tổng tiền thuê</option>
-        </select>
-      </label>
+      <OptionSelect
+        label="Cách tính"
+        value={tier.basis}
+        onChange={value => update('basis', value as PlatformFeeTier['basis'])}
+        options={[
+          { value: 'MONTHS_OF_RENT', label: 'Số tháng tiền thuê' },
+          { value: 'PERCENT_OF_TOTAL_RENT', label: '% tổng tiền thuê' },
+        ]}
+      />
       <Input
         label="Giá trị"
         type="number"
@@ -288,11 +286,10 @@ export function FeeScheduleEditor({
           value={version}
           onChange={event => setVersion(Number(event.target.value))}
         />
-        <Input
+        <DateTimePicker
           label="Áp dụng từ"
-          type="datetime-local"
           value={effectiveFrom}
-          onChange={event => setEffectiveFrom(event.target.value)}
+          onChange={setEffectiveFrom}
         />
       </div>
 
@@ -332,34 +329,25 @@ export function FeeScheduleEditor({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <label className="flex flex-col gap-1 text-xs font-medium text-fg">
-          Phí dịch vụ người thuê
-          <select
-            className="h-10 rounded-md border border-border bg-surface px-3 text-sm text-fg"
-            value={rules.tenantServiceFee?.basis ?? 'FIXED'}
-            onChange={event =>
-              setRules(current => ({
+        <OptionSelect
+          label="Phí dịch vụ người thuê"
+          value={rules.tenantServiceFee?.basis ?? 'FIXED'}
+          onChange={value =>
+            setRules(current => {
+              const basis = value as 'FIXED' | 'PERCENT_OF_MONTHLY_RENT'
+              return {
                 ...current,
                 tenantServiceFee: current.tenantServiceFee
-                  ? {
-                      ...current.tenantServiceFee,
-                      basis: event.target.value as
-                        | 'FIXED'
-                        | 'PERCENT_OF_MONTHLY_RENT',
-                    }
-                  : {
-                      basis: event.target.value as
-                        | 'FIXED'
-                        | 'PERCENT_OF_MONTHLY_RENT',
-                      value: 0,
-                    },
-              }))
-            }
-          >
-            <option value="FIXED">Mức cố định</option>
-            <option value="PERCENT_OF_MONTHLY_RENT">% tiền thuê tháng</option>
-          </select>
-        </label>
+                  ? { ...current.tenantServiceFee, basis }
+                  : { basis, value: 0 },
+              }
+            })
+          }
+          options={[
+            { value: 'FIXED', label: 'Mức cố định' },
+            { value: 'PERCENT_OF_MONTHLY_RENT', label: '% tiền thuê tháng' },
+          ]}
+        />
         <Input
           label="Giá trị phí thuê"
           type="number"
@@ -407,19 +395,17 @@ export function FeeScheduleEditor({
       </label>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-xs font-medium text-fg">
-          Trạng thái rà soát pháp lý
-          <select
-            className="h-10 rounded-md border border-border bg-surface px-3 text-sm text-fg"
-            value={legalReviewStatus}
-            onChange={event =>
-              setLegalReviewStatus(event.target.value as 'draft' | 'reviewed')
-            }
-          >
-            <option value="draft">Chưa rà soát</option>
-            <option value="reviewed">Đã rà soát</option>
-          </select>
-        </label>
+        <OptionSelect
+          label="Trạng thái rà soát pháp lý"
+          value={legalReviewStatus}
+          onChange={value =>
+            setLegalReviewStatus(value as 'draft' | 'reviewed')
+          }
+          options={[
+            { value: 'draft', label: 'Chưa rà soát' },
+            { value: 'reviewed', label: 'Đã rà soát' },
+          ]}
+        />
         <Input
           label="Mã tham chiếu rà soát"
           value={reviewReference}
