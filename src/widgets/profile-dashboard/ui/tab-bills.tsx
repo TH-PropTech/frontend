@@ -19,6 +19,7 @@ import { TrendingUp, Download, FileText, Copy } from 'lucide-react'
 import { LandlordEscrow } from './landlord-escrow'
 import { LandlordProfit } from './landlord-profit'
 import { LandlordPayoutHistory } from './landlord-payout-history'
+import { LandlordWallet } from './landlord-wallet'
 import { TenantBillsChart } from './components/tenant-bills-chart'
 import { LandlordBillsChart } from './components/landlord-bills-chart'
 
@@ -38,6 +39,7 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
             <LandlordEscrow />
             <LandlordProfit />
           </div>
+          <LandlordWallet />
           <LandlordPayoutHistory />
         </>
       )}

@@ -4,7 +4,6 @@ import { PaymentSchedulePanel } from './payment-schedule-panel'
 
 const mocks = vi.hoisted(() => ({
   schedule: vi.fn(),
-  wallet: vi.fn(),
   initRentPayment: vi.fn(),
   initInvoicePayment: vi.fn(),
   providers: vi.fn(),
@@ -14,10 +13,8 @@ vi.mock('../api/payments-api', async importOriginal => {
   const actual = await importOriginal<typeof import('../api/payments-api')>()
   return {
     getPaymentsByContract: mocks.schedule,
-    getLinkedWallet: mocks.wallet,
     initRentPayment: mocks.initRentPayment,
     initInvoicePayment: mocks.initInvoicePayment,
-    linkWallet: vi.fn(),
     getPaymentProviders: mocks.providers,
     isExternalGateway: actual.isExternalGateway,
   }
@@ -33,14 +30,6 @@ describe('PaymentSchedulePanel', () => {
 
   it('renders an empty state after loading an unconfigured schedule', async () => {
     mocks.schedule.mockResolvedValue([])
-    mocks.wallet.mockResolvedValue({
-      userId: 'user-1',
-      provider: 'mock-bank',
-      externalAccountRef: 'sandbox:user-1',
-      status: 'linked',
-      simulation: true,
-      balance: null,
-    })
 
     render(<PaymentSchedulePanel contractId="contract-1" />)
 
@@ -52,7 +41,6 @@ describe('PaymentSchedulePanel', () => {
 
   it('refreshes the schedule when returning to the tab', async () => {
     mocks.schedule.mockResolvedValue([])
-    mocks.wallet.mockResolvedValue({ status: 'linked', balance: null })
     render(<PaymentSchedulePanel contractId="contract-1" />)
     await waitFor(() => expect(mocks.schedule).toHaveBeenCalledTimes(1))
     fireEvent.focus(window)
@@ -75,7 +63,6 @@ describe('PaymentSchedulePanel', () => {
         ledgerStatus: 'pending',
       },
     ])
-    mocks.wallet.mockResolvedValue({ status: 'linked', balance: null })
     mocks.initInvoicePayment.mockResolvedValue({
       txRef: 'invoice-ref',
       deepLink: 'https://bank.example/invoice-ref',
@@ -117,7 +104,6 @@ describe('PaymentSchedulePanel', () => {
         ledgerStatus: 'pending',
       },
     ])
-    mocks.wallet.mockResolvedValue({ status: 'linked', balance: null })
     mocks.initRentPayment.mockResolvedValue({
       provider: 'zalopay',
       txRef: '300101_x',

@@ -8,7 +8,7 @@ export function GroqKeysView(): React.ReactElement {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold font-marketing text-fg">
-          Quản lý API Key AI
+          Cấu hình API Key Chatbot
         </h1>
         <p className="text-xs text-muted mt-1">
           Các key Groq này được dùng cho chatbot, tư vấn AI và phân tích hình

@@ -2,18 +2,24 @@
 
 import * as React from 'react'
 import { getAdminLegalSources } from '@/features/contracts'
+import { FilterAutocomplete } from '@/shared/ui/filter-autocomplete'
 
 export interface LegalSourcePickerProps {
   onPick: (source: { url: string; title: string }) => void
+}
+
+interface PickerSource {
+  key: string
+  title: string
+  url: string
 }
 
 /** Lists the existing legal sources (contracts module) so the admin can reuse their link. Renders nothing on failure or when empty. */
 export function LegalSourcePicker({
   onPick,
 }: LegalSourcePickerProps): React.ReactElement | null {
-  const [sources, setSources] = React.useState<
-    { key: string; title: string; url: string }[]
-  >([])
+  const [sources, setSources] = React.useState<PickerSource[]>([])
+  const [picked, setPicked] = React.useState('')
 
   React.useEffect(() => {
     let active = true
@@ -41,23 +47,22 @@ export function LegalSourcePicker({
   if (sources.length === 0) return null
 
   return (
-    <label className="flex flex-col gap-1 text-xs font-semibold text-muted sm:max-w-xs">
-      Chọn từ nguồn có sẵn
-      <select
-        defaultValue=""
-        onChange={event => {
-          const picked = sources.find(item => item.key === event.target.value)
-          if (picked) onPick({ url: picked.url, title: picked.title })
-        }}
-        className="rounded-lg border border-border bg-surface px-3 py-2 text-sm font-normal text-fg focus:outline-none focus:ring-2 focus:ring-primary/30"
-      >
-        <option value="">— Chọn nguồn —</option>
-        {sources.map(item => (
-          <option key={item.key} value={item.key}>
-            {item.title}
-          </option>
-        ))}
-      </select>
-    </label>
+    <FilterAutocomplete
+      id="legal-source-picker"
+      label="Chọn từ nguồn có sẵn"
+      placeholder="Gõ để tìm nguồn..."
+      className="sm:max-w-sm"
+      value={picked}
+      options={sources.map(item => ({
+        value: item.key,
+        label: item.title,
+        sublabel: item.url,
+      }))}
+      onChange={key => {
+        setPicked(key)
+        const source = sources.find(item => item.key === key)
+        if (source) onPick({ url: source.url, title: source.title })
+      }}
+    />
   )
 }

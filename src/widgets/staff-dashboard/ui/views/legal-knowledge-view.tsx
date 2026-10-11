@@ -11,9 +11,10 @@ export function LegalKnowledgeView(): React.ReactElement {
           Kho tri thức luật & quy định
         </h1>
         <p className="text-xs text-muted mt-1">
-          Chatbot chỉ trả lời các câu hỏi pháp lý dựa trên những văn bản đang áp
-          dụng bên dưới. Dán liên kết văn bản, rà soát nội dung đã chắt lọc rồi
-          xuất bản.
+          Dán liên kết văn bản: hệ thống tải trang một lần, chắt lọc nội dung
+          chính rồi lưu vào cơ sở dữ liệu. Chatbot chỉ trả lời dựa trên bản đã
+          lưu và đang áp dụng, không đọc lại trang gốc. Xem tab “Kho tri thức”
+          để biết nội dung nào lấy từ liên kết nào.
         </p>
       </div>
       <LegalKnowledgeManager />

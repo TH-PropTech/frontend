@@ -121,4 +121,62 @@ describe('LegalKnowledgeManager', () => {
     ).toBeInTheDocument()
     expect(api.createLegalDoc).not.toHaveBeenCalled()
   })
+
+  it('confirms in a dialog before archiving and shows archived docs in their own tab', async () => {
+    const user = userEvent.setup()
+    api.archiveLegalDoc.mockResolvedValueOnce({ ok: true })
+    const archivedDoc: LegalDocItem = {
+      ...savedDoc,
+      _id: '64f0a1b2c3d4e5f6a7b8c9d1',
+      title: 'Quy chế cũ',
+      status: 'archived',
+    }
+    api.listLegalDocs.mockResolvedValue([savedDoc, archivedDoc])
+    render(<LegalKnowledgeManager />)
+    await screen.findByText('Luật Nhà ở 2023')
+
+    // The archived doc is not in the main list.
+    expect(screen.queryByText('Quy chế cũ')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Lưu trữ' }))
+    const dialog = await screen.findByRole('alertdialog')
+    expect(within(dialog).getByText(/Luật Nhà ở 2023/)).toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'Lưu trữ' }))
+
+    await waitFor(() => {
+      expect(api.archiveLegalDoc).toHaveBeenCalledWith(savedDoc._id)
+    })
+
+    await user.click(screen.getByRole('tab', { name: 'Lưu trữ (1)' }))
+    expect(await screen.findByText('Quy chế cũ')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Khôi phục' })
+    ).toBeInTheDocument()
+  })
+
+  it('narrows the list to the document picked in the autocomplete', async () => {
+    const user = userEvent.setup()
+    const other: LegalDocItem = {
+      ...savedDoc,
+      _id: '64f0a1b2c3d4e5f6a7b8c9d2',
+      title: 'Nghị định 95/2024',
+      keywords: ['hướng dẫn'],
+    }
+    api.listLegalDocs.mockResolvedValue([savedDoc, other])
+    render(<LegalKnowledgeManager />)
+    await screen.findByText('Luật Nhà ở 2023')
+    expect(screen.getByText('Nghị định 95/2024')).toBeInTheDocument()
+
+    const search = screen.getByPlaceholderText(/Tên, số hiệu/)
+    await user.click(search)
+    await user.type(search, '95/2024')
+    await user.click(
+      await screen.findByRole('button', {
+        name: new RegExp('Nghị định 95/2024'),
+      })
+    )
+
+    expect(screen.queryByText('Luật Nhà ở 2023')).not.toBeInTheDocument()
+    expect(screen.getByText('Nghị định 95/2024')).toBeInTheDocument()
+  })
 })

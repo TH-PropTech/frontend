@@ -5,6 +5,7 @@ export const LEGAL_DOC_CATEGORIES = [
   'quyet-dinh',
   'noi-quy',
   'hop-dong-mau',
+  'thu-tuc',
   'faq',
   'khac',
 ] as const
@@ -20,6 +21,7 @@ export const LEGAL_DOC_CATEGORY_LABELS: Readonly<
   'quyet-dinh': 'Quyết định',
   'noi-quy': 'Nội quy',
   'hop-dong-mau': 'Hợp đồng mẫu',
+  'thu-tuc': 'Thủ tục dịch vụ công',
   faq: 'FAQ',
   khac: 'Khác',
 }

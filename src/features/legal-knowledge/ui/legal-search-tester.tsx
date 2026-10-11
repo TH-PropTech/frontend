@@ -2,6 +2,8 @@
 
 import * as React from 'react'
 import { toast } from 'sonner'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
 import { searchLegalKnowledge } from '../api/legal-knowledge-api'
 import { describeError, formatScore, isHttpUrl } from '../lib/format'
 import type { LegalSearchHit } from '../model/legal-knowledge.types'
@@ -47,23 +49,23 @@ export function LegalSearchTester(): React.ReactElement {
           void runSearch()
         }}
       >
-        <label htmlFor="legal-search-query" className="sr-only">
-          Câu hỏi thử nghiệm
-        </label>
-        <input
-          id="legal-search-query"
-          value={query}
-          placeholder="VD: Đặt cọc thuê nhà tối đa bao nhiêu tháng?"
-          onChange={event => setQuery(event.target.value)}
-          className="w-full flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/30"
-        />
-        <button
+        <div className="flex-1">
+          <Input
+            id="legal-search-query"
+            aria-label="Câu hỏi thử nghiệm"
+            value={query}
+            placeholder="VD: Đặt cọc thuê nhà tối đa bao nhiêu tháng?"
+            onChange={event => setQuery(event.target.value)}
+          />
+        </div>
+        <Button
           type="submit"
-          disabled={!query.trim() || searching}
-          className="shrink-0 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-on-control transition-colors hover:bg-primary-hover disabled:opacity-50"
+          disabled={!query.trim()}
+          loading={searching}
+          className="shrink-0"
         >
           {searching ? 'Đang tìm...' : 'Tìm'}
-        </button>
+        </Button>
       </form>
 
       {hits !== null && hits.length === 0 && (
