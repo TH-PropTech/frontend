@@ -32,5 +32,8 @@ export function settlePayout(
   txRef: string,
   outcome: 'success' | 'failed'
 ): Promise<{ payout: PayoutItem; replayed: boolean }> {
-  return apiClient.get(`/bank/payout/${encodeURIComponent(txRef)}/${outcome}`)
+  return apiClient.post(
+    `/bank/payout/${encodeURIComponent(txRef)}/${outcome}`,
+    {}
+  )
 }

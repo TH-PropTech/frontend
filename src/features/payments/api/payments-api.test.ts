@@ -3,14 +3,12 @@ import { apiClient } from '@/shared/api'
 import {
   readPaymentReturnParam,
   stripPaymentReturnParam,
-  getLinkedWallet,
   getPaymentProviders,
   getGatewayPaymentResult,
   getPaymentsByContract,
   initDepositPayment,
   initInvoicePayment,
   initRentPayment,
-  linkWallet,
 } from './payments-api'
 
 vi.mock('@/shared/api', () => ({
@@ -30,8 +28,6 @@ describe('payments API', () => {
     await getPaymentsByContract('contract-1')
     await initRentPayment('payment-1')
     await initInvoicePayment('invoice-1')
-    await getLinkedWallet()
-    await linkWallet()
 
     expect(apiClient.get).toHaveBeenCalledWith(
       '/payments?contractId=contract-1'
@@ -44,7 +40,6 @@ describe('payments API', () => {
       paymentId: 'invoice-1',
       clientChannel: 'web',
     })
-    expect(apiClient.post).toHaveBeenCalledWith('/bank/wallet/link', {})
   })
 
   it('sends the chosen gateway with the web channel on every init', async () => {

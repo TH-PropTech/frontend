@@ -115,15 +115,6 @@ export async function getPaymentProviders(): Promise<PaymentProviderOption[]> {
   return apiClient.get<PaymentProviderOption[]>('/bank/providers')
 }
 
-export interface LinkedWallet {
-  userId: string
-  provider: PaymentProviderName
-  externalAccountRef: string
-  status: 'linked' | 'unlinked'
-  simulation: boolean
-  balance: null
-}
-
 export async function getPaymentsByContract(
   contractId: string
 ): Promise<PaymentItem[]> {
@@ -208,14 +199,6 @@ export function stripPaymentReturnParam(): void {
   url.searchParams.delete('payment')
   url.searchParams.delete('provider')
   window.history.replaceState(window.history.state, '', url.toString())
-}
-
-export async function getLinkedWallet(): Promise<LinkedWallet> {
-  return apiClient.get<LinkedWallet>('/bank/wallet')
-}
-
-export async function linkWallet(): Promise<LinkedWallet> {
-  return apiClient.post<LinkedWallet>('/bank/wallet/link', {})
 }
 
 export async function getOverduePayments(): Promise<PaymentItem[]> {
