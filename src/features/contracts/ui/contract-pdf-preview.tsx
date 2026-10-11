@@ -2,17 +2,23 @@
 
 import * as React from 'react'
 import { FileText, RefreshCw } from 'lucide-react'
-import { downloadContractArtifact } from '../api/contracts-api'
+import {
+  downloadContractArtifact,
+  downloadSignedContractArtifact,
+} from '../api/contracts-api'
 
 export interface ContractPdfPreviewProps {
   contractId: string
   contractCode: string
+  /** `signed`: bản PDF đã ký PAdES (artifact riêng); mặc định bản canonical. */
+  variant?: 'canonical' | 'signed'
 }
 
 /** Xem bản PDF chuẩn ngay trên trang (không phải tải về); chỉ dùng khi PDF đã được khóa. */
 export function ContractPdfPreview({
   contractId,
   contractCode,
+  variant = 'canonical',
 }: ContractPdfPreviewProps): React.ReactElement {
   const [url, setUrl] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -22,7 +28,11 @@ export function ContractPdfPreview({
   React.useEffect(() => {
     let cancelled = false
     let objectUrl: string | null = null
-    downloadContractArtifact(contractId, 'pdf')
+    const request =
+      variant === 'signed'
+        ? downloadSignedContractArtifact(contractId)
+        : downloadContractArtifact(contractId, 'pdf')
+    request
       .then(blob => {
         if (cancelled) return
         objectUrl = URL.createObjectURL(
@@ -45,7 +55,7 @@ export function ContractPdfPreview({
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [contractId, attempt])
+  }, [contractId, variant, attempt])
 
   return (
     <section
@@ -57,7 +67,9 @@ export function ContractPdfPreview({
           className="h-5 w-5 text-[var(--primary)]"
           aria-hidden="true"
         />
-        <h2 className="text-sm font-bold">Xem bản PDF hợp đồng</h2>
+        <h2 className="text-sm font-bold">
+          {variant === 'signed' ? 'Xem bản PDF đã ký' : 'Xem bản PDF hợp đồng'}
+        </h2>
       </div>
       {loading ? (
         <p className="text-xs text-[var(--muted)]" role="status">
@@ -85,7 +97,11 @@ export function ContractPdfPreview({
       ) : null}
       {url ? (
         <iframe
-          title={`Bản PDF hợp đồng ${contractCode}`}
+          title={
+            variant === 'signed'
+              ? `Bản PDF đã ký ${contractCode}`
+              : `Bản PDF hợp đồng ${contractCode}`
+          }
           src={`${url}#view=FitH`}
           className="h-[80vh] w-full rounded-lg border border-[var(--border)] bg-white"
         />

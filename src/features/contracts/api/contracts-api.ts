@@ -829,6 +829,13 @@ export async function downloadContractArtifact(
   return apiClient.getBlob(`/contracts/${contractId}/pdf?format=${format}`)
 }
 
+/** Bản PDF đã ký (PAdES) gần nhất; 404 khi chưa có hoặc backend chưa bật PAdES. */
+export async function downloadSignedContractArtifact(
+  contractId: string
+): Promise<Blob> {
+  return apiClient.getBlob(`/contracts/${contractId}/pdf/signed`)
+}
+
 export async function downloadContractEvidencePackage(
   contractId: string
 ): Promise<ApiFile> {
