@@ -133,6 +133,9 @@ describe('SigningCeremonyModal', () => {
 
     expect(screen.getByTestId('signing-ceremony-modal')).toBeInTheDocument()
     expect(screen.getByText('Xác nhận ký số VNPT SmartCA')).toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('radio', { name: /Sinh trắc học [+] Smart OTP/ })
+    )
     const startButton = screen.getByLabelText('Bắt đầu ký kết')
     expect(startButton).toBeDisabled()
 
