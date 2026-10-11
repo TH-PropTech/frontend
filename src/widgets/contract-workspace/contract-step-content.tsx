@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2, Clock3, LockKeyhole } from 'lucide-react'
 import {
   BilateralSigningTimeline,
   ContractDocumentViewer,
+  ContractViewSwitcher,
   FabricLedgerEvidenceCard,
   getLedgerStatusLabel,
   lockContractContent,
@@ -97,18 +98,25 @@ function ContractArtifactStep({
 
   return (
     <div className="space-y-4">
-      <ContractDocumentViewer
-        document={data.document}
+      <ContractViewSwitcher
+        contractId={contractId}
         contractCode={data.contract.code}
-        status={data.contract.status}
-        networkMode={data.ledger.networkMode}
-        parties={data.parties}
-        property={data.contract.property}
-        commercial={data.contract.commercial}
-        startDate={data.contract.startDate}
-        endDate={data.contract.endDate}
-        {...downloadHandlers}
-        isDownloading={isDownloadingPdf || isDownloadingDocx}
+        pdfAvailable={data.actions.canDownloadArtifact === true}
+        page={
+          <ContractDocumentViewer
+            document={data.document}
+            contractCode={data.contract.code}
+            status={data.contract.status}
+            networkMode={data.ledger.networkMode}
+            parties={data.parties}
+            property={data.contract.property}
+            commercial={data.contract.commercial}
+            startDate={data.contract.startDate}
+            endDate={data.contract.endDate}
+            {...downloadHandlers}
+            isDownloading={isDownloadingPdf || isDownloadingDocx}
+          />
+        }
       />
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
         <div className="flex items-start gap-3">
