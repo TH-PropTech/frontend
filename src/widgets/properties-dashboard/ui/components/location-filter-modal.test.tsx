@@ -4,32 +4,24 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { LocationFilterModal } from './location-filter-modal'
 
 vi.mock('@/shared/lib/use-vietnam-locations', () => ({
-  useVietnamLocations: vi.fn(
-    (provinceCode: number | null, districtCode: number | null) => ({
-      provinces: [
-        { name: 'Thành phố Hồ Chí Minh', code: 79 },
-        { name: 'Thành phố Hà Nội', code: 1 },
-        { name: 'Thành phố Đà Nẵng', code: 48 },
-      ],
-      districts:
-        provinceCode === 79
-          ? [
-              { name: 'Quận 1', code: 760, province_code: 79 },
-              { name: 'Quận Bình Thạnh', code: 765, province_code: 79 },
-            ]
-          : [],
-      wards:
-        districtCode === 760
-          ? [
-              { name: 'Phường Bến Nghé', code: 26740, district_code: 760 },
-              { name: 'Phường Bến Thành', code: 26743, district_code: 760 },
-            ]
-          : [],
-      isLoadingProvinces: false,
-      isLoadingDistricts: false,
-      isLoadingWards: false,
-    })
-  ),
+  useVietnamLocations: vi.fn((provinceCode: number | null) => ({
+    provinces: [
+      { name: 'Thành phố Hồ Chí Minh', code: 79 },
+      { name: 'Thành phố Hà Nội', code: 1 },
+      { name: 'Thành phố Đà Nẵng', code: 48 },
+    ],
+    districts: [],
+    wards:
+      provinceCode === 79
+        ? [
+            { name: 'Phường Vườn Lài', code: 27190, province_code: 79 },
+            { name: 'Phường An Hội Đông', code: 26911, province_code: 79 },
+          ]
+        : [],
+    isLoadingProvinces: false,
+    isLoadingDistricts: false,
+    isLoadingWards: false,
+  })),
 }))
 
 describe('LocationFilterModal Component (5 Dimensions)', () => {
@@ -53,17 +45,16 @@ describe('LocationFilterModal Component (5 Dimensions)', () => {
   })
 
   // Dimension 1: Happy Path
-  it('renders modal with selected city and district and enables district selector', () => {
+  it('renders province and ward selectors without a district level', () => {
     render(<LocationFilterModal {...defaultProps} />)
 
     expect(screen.getByText('Chọn khu vực')).toBeInTheDocument()
     expect(screen.getByText('Tỉnh / Thành phố')).toBeInTheDocument()
-    expect(screen.getByText('Quận / Huyện')).toBeInTheDocument()
+    expect(screen.queryByText('Quận / Huyện')).not.toBeInTheDocument()
     expect(screen.getByText('Phường / Xã')).toBeInTheDocument()
 
     // Trigger should display the selected values
     expect(screen.getByText('Thành phố Hồ Chí Minh')).toBeInTheDocument()
-    expect(screen.getByText('Quận 1')).toBeInTheDocument()
   })
 
   it('gives the reset button a themed focus ring instead of the default outline', () => {
@@ -150,11 +141,9 @@ describe('LocationFilterModal Component (5 Dimensions)', () => {
   })
 
   // Dimension 5: Fallback Item Rendering
-  it('renders fallback item if selectedDistrict is not yet in the fetched districts list', () => {
-    render(
-      <LocationFilterModal {...defaultProps} selectedDistrict="Quận Tân Phú" />
-    )
+  it('renders a fallback item when the selected ward is not in the fetched list', () => {
+    render(<LocationFilterModal {...defaultProps} selectedWard="Phường Cũ" />)
 
-    expect(screen.getByText('Quận Tân Phú')).toBeInTheDocument()
+    expect(screen.getByText('Phường Cũ')).toBeInTheDocument()
   })
 })
