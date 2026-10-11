@@ -394,6 +394,24 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
         </div>
       </div>
 
+      {/* Giấy chứng nhận quyền sở hữu */}
+      <div className="space-y-2">
+        <Label htmlFor="ownershipCertificate">
+          Số giấy chứng nhận quyền sở hữu/sử dụng căn hộ (Không bắt buộc)
+        </Label>
+        <Input
+          id="ownershipCertificate"
+          placeholder="VD: Số vào sổ CS 12345, cấp ngày ..."
+          maxLength={200}
+          className="bg-background border-border"
+          {...register('ownershipCertificate')}
+        />
+        <p className="text-xs text-muted-foreground">
+          Thông tin này được ghi vào hợp đồng thuê để chứng minh quyền cho thuê
+          của chủ nhà.
+        </p>
+      </div>
+
       {/* Mô tả chi tiết */}
       <div className="space-y-2">
         <Label htmlFor="description">
