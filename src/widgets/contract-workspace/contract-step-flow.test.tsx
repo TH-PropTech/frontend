@@ -154,6 +154,35 @@ function configureHook(overrides: Record<string, unknown> = {}) {
 }
 
 describe('ContractStepFlow', () => {
+  it('shows the contract summary and a PDF button on every step', () => {
+    configureHook()
+
+    render(<ContractStepFlow contractId="contract-1" step="deposit" />)
+
+    expect(screen.getByTestId('contract-summary-card')).toHaveTextContent(
+      'HD-001'
+    )
+    expect(
+      screen.getByRole('button', { name: /xem bản pdf hợp đồng/i })
+    ).toBeInTheDocument()
+  })
+
+  it('shows the real deposit status and amount in words instead of a blanket completed label', () => {
+    configureHook()
+
+    render(<ContractStepFlow contractId="contract-1" step="deposit" />)
+
+    expect(screen.getByTestId('contract-stepper')).toHaveTextContent(
+      'Chờ thanh toán'
+    )
+    expect(screen.getByTestId('deposit-amount-words')).toHaveTextContent(
+      'mười triệu đồng'
+    )
+    expect(screen.getByTestId('step-guide')).toHaveTextContent(
+      'Quy trình đặt cọc'
+    )
+  })
+
   it('renders the current step with route navigation links', () => {
     configureHook()
 

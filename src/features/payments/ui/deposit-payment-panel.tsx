@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Info,
 } from 'lucide-react'
+import { vndInWords } from '@/shared/lib/vnd-in-words'
 import type { ContractDepositView } from '@/features/contracts/api/contracts-api'
 import {
   consentDepositAgreement,
@@ -196,6 +197,14 @@ export function DepositPaymentPanel({
           <span className="text-xl font-extrabold text-[var(--fg)] tracking-tight">
             {formattedAmount}
           </span>
+          {vndInWords(deposit.amount) ? (
+            <span
+              data-testid="deposit-amount-words"
+              className="text-[11px] italic text-[var(--muted)]"
+            >
+              (Bằng chữ: {vndInWords(deposit.amount)})
+            </span>
+          ) : null}
         </div>
 
         {/* PoC Mock Bank Simulation Note */}

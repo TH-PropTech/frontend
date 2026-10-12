@@ -21,6 +21,38 @@ import type { ContractAuditEventDto } from '@/features/contracts'
 import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
 import type { UseContractWorkspaceOptions } from './use-contract-workspace'
 
+function StepGuide({
+  title,
+  steps,
+}: {
+  title: string
+  steps: readonly string[]
+}): ReactElement {
+  return (
+    <section
+      data-testid="step-guide"
+      className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"
+    >
+      <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
+        {title}
+      </h3>
+      <ol className="mt-3 grid gap-3 sm:grid-cols-3">
+        {steps.map((text, index) => (
+          <li key={text} className="flex items-start gap-3 text-xs">
+            <span
+              aria-hidden="true"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[11px] font-bold text-[var(--primary)]"
+            >
+              {index + 1}
+            </span>
+            <span className="leading-relaxed text-[var(--fg)]">{text}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
 export interface ContractStepContentProps {
   contractId: string
   currentUserId?: UseContractWorkspaceOptions['currentUserId']
@@ -192,6 +224,8 @@ export function ContractStepContent({
   handleVerifyIntegrity,
 }: ContractStepContentProps): ReactElement {
   const signingEligibility = data.actions.signingEligibility
+  const bothSigned =
+    data.parties.tenant.hasSigned && data.parties.landlord.hasSigned
 
   if (step === 'document') {
     return (
@@ -217,6 +251,14 @@ export function ContractStepContent({
               'Hoàn tất khoản đặt cọc theo chính sách hợp đồng.'}
           </p>
         </section>
+        <StepGuide
+          title="Quy trình đặt cọc"
+          steps={[
+            'Kiểm tra số tiền cọc và điều khoản hoàn trả trong hợp đồng.',
+            'Chọn cổng thanh toán rồi xác nhận thanh toán.',
+            'Hệ thống tự ghi nhận tiền cọc và mở bước tiếp theo.',
+          ]}
+        />
         <DepositPaymentPanel
           deposit={data.deposit}
           isTenant={isTenant}
@@ -235,12 +277,24 @@ export function ContractStepContent({
         <section className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-5">
           <h2 className="text-sm font-bold">Ký số trên cùng một bản PDF</h2>
           <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
-            {signingEligibility.eligible
-              ? 'Bạn có thể bắt đầu xác thực eKYC, Smart OTP và phiên ký VNPT SmartCA.'
-              : (signingEligibility.message ??
-                'Hệ thống chưa mở điều kiện ký cho hợp đồng này.')}
+            {bothSigned
+              ? 'Cả hai bên đã ký. Hợp đồng đã đủ chữ ký trên cùng một bản PDF; bước tiếp theo là lưu vết chống sửa đổi.'
+              : signingEligibility.eligible
+                ? 'Bạn có thể bắt đầu ký. Hãy đọc lại bản PDF trước, sau đó chọn phương thức ký phù hợp.'
+                : (signingEligibility.message ??
+                  'Hệ thống chưa mở điều kiện ký cho hợp đồng này.')}
           </p>
         </section>
+        {!bothSigned && signingEligibility.eligible ? (
+          <StepGuide
+            title="Cách ký hợp đồng"
+            steps={[
+              'Đọc kỹ bản PDF hợp đồng (nút "Xem bản PDF hợp đồng" phía trên).',
+              'Bấm ký và chọn phương thức: SmartCA hoặc sinh trắc + Smart OTP.',
+              'Xác nhận; hệ thống ghi nhận chữ ký và chờ bên còn lại.',
+            ]}
+          />
+        ) : null}
         <BilateralSigningTimeline
           tenant={data.parties.tenant}
           landlord={data.parties.landlord}

@@ -10,12 +10,14 @@ import {
   getNextContractStep,
   resolvePanelActivity,
   toContractStepHref,
+  ContractPdfDialog,
+  ContractSummaryCard,
   type ContractFlowView,
   type ContractRouteStep,
 } from '@/features/contracts'
 import { useContractWorkspace } from './use-contract-workspace'
 import { ContractStepContent } from './contract-step-content'
-import { ContractStepShell } from './contract-step-shell'
+import { ContractStepShell, type ContractStepNote } from './contract-step-shell'
 
 export interface ContractStepFlowProps {
   contractId: string
@@ -74,6 +76,28 @@ function getNextDisabled(
     return !(data.parties.tenant.hasSigned && data.parties.landlord.hasSigned)
   }
   return true
+}
+
+/** Nhãn trạng thái trung thực cho thanh bước: không hiện "Đã hoàn tất" khi cọc hoặc chữ ký còn thiếu. */
+export function getStepNotes(
+  data: NonNullable<ReturnType<typeof useContractWorkspace>['data']>
+): Partial<Record<ContractRouteStep, ContractStepNote>> {
+  const notes: Partial<Record<ContractRouteStep, ContractStepNote>> = {}
+  const deposit = data.deposit
+  if (
+    deposit &&
+    deposit.amount > 0 &&
+    !['paid', 'transferred'].includes(deposit.status)
+  ) {
+    notes.deposit = { text: 'Chờ thanh toán', tone: 'warning' }
+  }
+  const signed =
+    Number(data.parties.tenant.hasSigned) +
+    Number(data.parties.landlord.hasSigned)
+  if (signed === 1) {
+    notes.signing = { text: 'Đã ký 1/2 bên', tone: 'warning' }
+  }
+  return notes
 }
 
 function getNextLabel(step: ContractRouteStep, disabled: boolean): string {
@@ -177,7 +201,31 @@ export function ContractStepFlow({
       nextStepHref={nextStepHref}
       nextDisabled={nextDisabled}
       nextLabel={getNextLabel(step, nextDisabled)}
+      stepNotes={getStepNotes(data)}
     >
+      <div className="flex flex-col gap-3">
+        <ContractSummaryCard
+          contract={data.contract}
+          parties={data.parties}
+          ledger={data.ledger}
+          activeStage={activeStep}
+          {...(data.financialSummary
+            ? { financialSummary: data.financialSummary }
+            : {})}
+          viewerRole={workspace.signerRole}
+        />
+        {data.actions.canDownloadArtifact ? (
+          <div className="flex justify-end">
+            <ContractPdfDialog
+              contractId={contractId}
+              contractCode={data.contract.code}
+              hasSignature={
+                data.parties.tenant.hasSigned || data.parties.landlord.hasSigned
+              }
+            />
+          </div>
+        ) : null}
+      </div>
       <ContractStepContent
         contractId={contractId}
         currentUserId={workspace.currentUserId}

@@ -12,7 +12,11 @@ import type {
 } from '@/features/contracts'
 import { getContractStepState, toContractStepHref } from '@/features/contracts'
 
+/** Ghi chú trạng thái thật của một bước (ví dụ cọc chưa thanh toán) thay cho nhãn mặc định. */
+export type ContractStepNote = { text: string; tone: 'warning' | 'info' }
+
 export interface ContractStepShellProps {
+  stepNotes?: Partial<Record<ContractRouteStep, ContractStepNote>>
   contractId: string
   contractCode: string
   contractStatus: string
@@ -50,6 +54,7 @@ export function ContractStepShell({
   nextStepHref,
   nextDisabled = false,
   nextLabel = 'Tiếp tục',
+  stepNotes = {},
 }: ContractStepShellProps): ReactElement {
   const currentStep = steps.find(item => item.key === step)
   const isGuarded = Boolean(guardMessage)
@@ -86,6 +91,12 @@ export function ContractStepShell({
             const state = getContractStepState(item.key, activeStep, steps)
             const href = toContractStepHref(contractId, item.key)
             const isCurrent = item.key === step
+            const note = stepNotes[item.key]
+            const stateText = note?.text ?? stateLabel(state)
+            const stateTone =
+              note?.tone === 'warning'
+                ? 'font-semibold text-[var(--warning)]'
+                : 'text-[var(--muted)]'
 
             return (
               <li
@@ -101,8 +112,8 @@ export function ContractStepShell({
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">
                       {item.label}
                     </span>
-                    <span className="text-[11px] text-[var(--muted)]">
-                      {stateLabel(state)}
+                    <span className={`text-[11px] ${stateTone}`}>
+                      {stateText}
                     </span>
                   </span>
                 ) : (
@@ -119,8 +130,8 @@ export function ContractStepShell({
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--fg)]">
                       {item.label}
                     </span>
-                    <span className="text-[11px] text-[var(--muted)]">
-                      {stateLabel(state)}
+                    <span className={`text-[11px] ${stateTone}`}>
+                      {stateText}
                     </span>
                   </Link>
                 )}
