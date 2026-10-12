@@ -410,7 +410,7 @@ export function ContractWorkspace({
         </div>
 
         <Dialog open={isPdfOpen} onOpenChange={setIsPdfOpen}>
-          <DialogContent className="max-w-5xl">
+          <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-5xl gap-3 overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle>Bản PDF hợp đồng {contract.code}</DialogTitle>
               <DialogDescription>
@@ -451,6 +451,7 @@ export function ContractWorkspace({
                 contractId={contractId}
                 contractCode={contract.code}
                 variant={pdfVariant}
+                compact
               />
             ) : null}
           </DialogContent>

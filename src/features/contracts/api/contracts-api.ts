@@ -20,7 +20,7 @@ export interface ContractSignature {
   biometricGrantId: string
   otpSessionId: string
   deviceId?: string | null
-  provider?: 'smartca' | 'platform-consent' | null
+  provider?: 'smartca' | 'platform-consent' | 'dev-test' | null
   providerTransactionId?: string | null
   certificateSerial?: string | null
   signatureAlgorithm?: string | null
@@ -227,7 +227,7 @@ export interface ContractPartyView {
   hasSigned: boolean
   signedAt?: string | null
   signatureHash?: string | null
-  provider?: 'smartca' | 'platform-consent' | null
+  provider?: 'smartca' | 'platform-consent' | 'dev-test' | null
   providerTransactionId?: string | null
   certificateSerial?: string | null
   signatureAlgorithm?: string | null

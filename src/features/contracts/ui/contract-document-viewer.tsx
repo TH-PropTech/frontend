@@ -313,7 +313,7 @@ export function ContractDocumentViewer({
             </span>
           )}
         </div>
-        <div className="text-xs sm:text-[13px] leading-relaxed text-[var(--fg)] whitespace-pre-line text-justify pl-1 sm:pl-2">
+        <div className="text-xs sm:text-[13px] leading-relaxed text-[var(--fg)] whitespace-pre-wrap text-justify pl-1 sm:pl-2">
           {section.content}
         </div>
         {section.citationIds?.length ? (

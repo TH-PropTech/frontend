@@ -220,4 +220,49 @@ describe('BilateralSigningTimeline', () => {
       'border-[var(--border)]'
     )
   })
+
+  it('labels a dev-test signature and never shows blank dashes for it', () => {
+    render(
+      <BilateralSigningTimeline
+        tenant={{
+          ...tenantBase,
+          hasSigned: true,
+          signedAt: '2026-10-11T04:00:00.000Z',
+          provider: 'dev-test',
+        }}
+        landlord={landlordBase}
+      />
+    )
+
+    expect(screen.getByTestId('signing-method-label')).toHaveTextContent(
+      'Ký thử nghiệm (dev)'
+    )
+    expect(
+      screen.getByText('Không áp dụng (ký thử nghiệm)')
+    ).toBeInTheDocument()
+    expect(screen.queryByText('—')).not.toBeInTheDocument()
+  })
+
+  it('shows serial and transaction for a SmartCA signature and a fallback when the time is missing', () => {
+    render(
+      <BilateralSigningTimeline
+        tenant={{
+          ...tenantBase,
+          hasSigned: true,
+          signedAt: null,
+          signatureHash: 'a'.repeat(64),
+          provider: 'smartca',
+          certificateSerial: 'SERIAL-001',
+          providerTransactionId: 'contract-123-tenant-abcdef0123456789',
+        }}
+        landlord={landlordBase}
+      />
+    )
+
+    expect(screen.getByTestId('signing-method-label')).toHaveTextContent(
+      'VNPT SmartCA'
+    )
+    expect(screen.getByText('SERIAL-001')).toBeInTheDocument()
+    expect(screen.getByText('Đã ghi nhận')).toBeInTheDocument()
+  })
 })
