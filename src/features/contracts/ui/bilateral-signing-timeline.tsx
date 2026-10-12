@@ -18,6 +18,9 @@ export interface BilateralSignerParty {
   signedAt?: string | null
   signatureHash?: string | null
   maskedCccd?: string | null
+  provider?: 'smartca' | 'platform-consent' | 'dev-test' | null
+  providerTransactionId?: string | null
+  certificateSerial?: string | null
 }
 
 export interface BilateralSigningTimelineProps {
@@ -52,6 +55,97 @@ function truncateHash(hash?: string | null): string {
   if (!hash) return '—'
   if (hash.length <= 16) return hash
   return `${hash.slice(0, 8)}...${hash.slice(-8)}`
+}
+
+const PROVIDER_LABELS: Record<string, { label: string; dev?: boolean }> = {
+  smartca: { label: 'VNPT SmartCA' },
+  'platform-consent': { label: 'Xác nhận trên nền tảng' },
+  'dev-test': { label: 'Ký thử nghiệm (dev)', dev: true },
+}
+
+function DetailRow({
+  label,
+  children,
+  hint,
+}: {
+  label: string
+  children: React.ReactNode
+  hint?: React.ReactNode
+}): React.ReactElement {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <span className="inline-flex shrink-0 items-center gap-1">
+        {label}
+        {hint}
+      </span>
+      <span className="min-w-0 break-all text-right text-[var(--fg)]">
+        {children}
+      </span>
+    </div>
+  )
+}
+
+/** Chi tiết chữ ký của một bên: luôn có giá trị đọc được, kể cả khi ký thử nghiệm hoặc thiếu mã. */
+function SignedDetails({
+  party,
+}: {
+  party: BilateralSignerParty
+}): React.ReactElement {
+  const provider = party.provider ? PROVIDER_LABELS[party.provider] : null
+  return (
+    <>
+      {provider ? (
+        <DetailRow label="Phương thức:">
+          <span
+            data-testid="signing-method-label"
+            className={
+              provider.dev
+                ? 'rounded-full border border-[var(--warning)] px-2 py-0.5 text-[10px] font-bold text-[var(--warning)]'
+                : 'font-semibold'
+            }
+          >
+            {provider.label}
+          </span>
+        </DetailRow>
+      ) : null}
+      <DetailRow label="Thời điểm ký:">
+        {party.signedAt ? formatDate(party.signedAt) : 'Đã ghi nhận'}
+      </DetailRow>
+      <DetailRow
+        label="Mã xác thực chữ ký:"
+        hint={<HelpTip term="signatureHash" />}
+      >
+        {party.signatureHash ? (
+          <span
+            className="font-mono text-[10px] text-[var(--primary)]"
+            title={party.signatureHash}
+          >
+            {truncateHash(party.signatureHash)}
+          </span>
+        ) : party.provider === 'dev-test' ? (
+          <span className="italic text-[var(--muted)]">
+            Không áp dụng (ký thử nghiệm)
+          </span>
+        ) : (
+          <span className="italic text-[var(--muted)]">Đang đối soát</span>
+        )}
+      </DetailRow>
+      {party.certificateSerial ? (
+        <DetailRow label="Serial chứng thư:">
+          <span className="font-mono text-[10px]">
+            {party.certificateSerial}
+          </span>
+        </DetailRow>
+      ) : null}
+      {party.providerTransactionId ? (
+        <DetailRow label="Mã giao dịch:">
+          <span className="font-mono text-[10px]">
+            {truncateHash(party.providerTransactionId)}
+          </span>
+        </DetailRow>
+      ) : null}
+    </>
+  )
 }
 
 export function BilateralSigningTimeline({
@@ -183,26 +277,7 @@ export function BilateralSigningTimeline({
                 </div>
               )}
               {tenant.hasSigned ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span>Thời điểm ký:</span>
-                    <span className="text-[var(--fg)]">
-                      {formatDate(tenant.signedAt)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1">
-                      Mã xác thực chữ ký:
-                      <HelpTip term="signatureHash" />
-                    </span>
-                    <span
-                      className="font-mono text-[var(--primary)] text-[10px]"
-                      title={tenant.signatureHash || ''}
-                    >
-                      {truncateHash(tenant.signatureHash)}
-                    </span>
-                  </div>
-                </>
+                <SignedDetails party={tenant} />
               ) : (
                 <p className="text-[11px] italic text-[var(--muted)]">
                   Chờ xác thực sinh trắc học và SmartCA
@@ -279,26 +354,7 @@ export function BilateralSigningTimeline({
                 </div>
               )}
               {landlord.hasSigned ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span>Thời điểm ký:</span>
-                    <span className="text-[var(--fg)]">
-                      {formatDate(landlord.signedAt)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1">
-                      Mã xác thực chữ ký:
-                      <HelpTip term="signatureHash" />
-                    </span>
-                    <span
-                      className="font-mono text-[var(--primary)] text-[10px]"
-                      title={landlord.signatureHash || ''}
-                    >
-                      {truncateHash(landlord.signatureHash)}
-                    </span>
-                  </div>
-                </>
+                <SignedDetails party={landlord} />
               ) : (
                 <p className="text-[11px] italic text-[var(--muted)]">
                   Chờ xác thực định danh và SmartCA chủ nhà

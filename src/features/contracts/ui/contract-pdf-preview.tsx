@@ -1,7 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { FileText, RefreshCw } from 'lucide-react'
+import { FileText, FileX2, RefreshCw } from 'lucide-react'
+import { ApiClientError } from '@/shared/api/api-client'
 import {
   downloadContractArtifact,
   downloadSignedContractArtifact,
@@ -23,11 +24,19 @@ export function ContractPdfPreview({
   const [url, setUrl] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [missing, setMissing] = React.useState(false)
   const [attempt, setAttempt] = React.useState(0)
 
   React.useEffect(() => {
     let cancelled = false
     let objectUrl: string | null = null
+    // Đổi tab/phiên bản: bỏ trạng thái của lần tải trước để không hiện lỗi cũ trên bản mới.
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setUrl(null)
+    setError(null)
+    setMissing(false)
+    setLoading(true)
+    /* eslint-enable react-hooks/set-state-in-effect */
     const request =
       variant === 'signed'
         ? downloadSignedContractArtifact(contractId)
@@ -42,6 +51,14 @@ export function ContractPdfPreview({
       })
       .catch((cause: unknown) => {
         if (cancelled) return
+        if (
+          variant === 'signed' &&
+          cause instanceof ApiClientError &&
+          cause.status === 404
+        ) {
+          setMissing(true)
+          return
+        }
         setError(
           cause instanceof Error
             ? cause.message
@@ -75,6 +92,26 @@ export function ContractPdfPreview({
         <p className="text-xs text-[var(--muted)]" role="status">
           Đang tải bản PDF...
         </p>
+      ) : null}
+      {missing ? (
+        <div
+          role="status"
+          data-testid="signed-pdf-missing"
+          className="flex items-start gap-3 rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-4 text-xs text-[var(--muted)]"
+        >
+          <FileX2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <div className="space-y-1">
+            <p className="font-semibold text-[var(--fg)]">
+              Chưa có bản PDF đã ký
+            </p>
+            <p>
+              Bản này chỉ được tạo khi hợp đồng được ký bằng chứng thư số VNPT
+              SmartCA có bật chế độ PAdES. Ký thử nghiệm hoặc ký xác nhận trên
+              nền tảng không tạo bản đã ký; bạn vẫn xem được bản gốc ở tab bên
+              cạnh.
+            </p>
+          </div>
+        </div>
       ) : null}
       {error ? (
         <div
