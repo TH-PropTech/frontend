@@ -1,5 +1,6 @@
 export * from './api/contracts-api'
 export * from './api/legal-sources-api'
+export * from './api/contract-templates-api'
 export * from './model/legal-governance-data'
 export * from './model/use-signing-ceremony'
 export * from './lib'
