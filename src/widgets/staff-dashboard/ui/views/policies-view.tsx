@@ -1,14 +1,28 @@
 'use client'
 
 import * as React from 'react'
-import { BookOpen, FileText, GitBranch, Scale, Sliders } from 'lucide-react'
+import {
+  BookOpen,
+  FileSignature,
+  FileText,
+  GitBranch,
+  Scale,
+  Sliders,
+} from 'lucide-react'
 import { LegalTermsAdminTab } from './components/policies/legal-terms-admin-tab'
 import { OperationalPoliciesAdminTab } from './components/policies/operational-policies-admin-tab'
 import { PublicServicesAdminTab } from './components/policies/public-services-admin-tab'
 import { LegalSourcesAdminTab } from './components/policies/legal-sources-admin-tab'
 import { ExecutionPoliciesAdminTab } from './components/policies/execution-policies-admin-tab'
+import { ContractTemplatesAdminTab } from './components/policies/contract-templates-admin-tab'
 
-type SubTab = 'terms' | 'policies' | 'governance' | 'sources' | 'execution'
+type SubTab =
+  | 'terms'
+  | 'policies'
+  | 'governance'
+  | 'sources'
+  | 'execution'
+  | 'templates'
 
 export function PoliciesView(): React.ReactElement {
   const [activeTab, setActiveTab] = React.useState<SubTab>('terms')
@@ -94,6 +108,19 @@ export function PoliciesView(): React.ReactElement {
             <GitBranch className="h-4 w-4" />
             Execution policy
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('templates')}
+            data-testid="tab-contract-templates"
+            className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+              activeTab === 'templates'
+                ? 'bg-primary text-white shadow-xs'
+                : 'text-muted hover:text-fg hover:bg-surface-muted'
+            }`}
+          >
+            <FileSignature className="h-4 w-4" />
+            Mẫu hợp đồng
+          </button>
         </div>
       </div>
 
@@ -103,6 +130,7 @@ export function PoliciesView(): React.ReactElement {
       {activeTab === 'governance' && <PublicServicesAdminTab />}
       {activeTab === 'sources' && <LegalSourcesAdminTab />}
       {activeTab === 'execution' && <ExecutionPoliciesAdminTab />}
+      {activeTab === 'templates' && <ContractTemplatesAdminTab />}
     </div>
   )
 }
