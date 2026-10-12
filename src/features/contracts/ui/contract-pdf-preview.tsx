@@ -12,6 +12,8 @@ export interface ContractPdfPreviewProps {
   contractCode: string
   /** `signed`: bản PDF đã ký PAdES (artifact riêng); mặc định bản canonical. */
   variant?: 'canonical' | 'signed'
+  /** Dùng bên trong hộp thoại: bỏ khung/đệm ngoài và hạ chiều cao để vừa màn hình nhỏ. */
+  compact?: boolean
 }
 
 /** Xem bản PDF chuẩn ngay trên trang (không phải tải về); chỉ dùng khi PDF đã được khóa. */
@@ -19,6 +21,7 @@ export function ContractPdfPreview({
   contractId,
   contractCode,
   variant = 'canonical',
+  compact = false,
 }: ContractPdfPreviewProps): React.ReactElement {
   const [url, setUrl] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(true)
@@ -60,7 +63,11 @@ export function ContractPdfPreview({
   return (
     <section
       data-testid="contract-pdf-preview"
-      className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"
+      className={
+        compact
+          ? 'min-w-0'
+          : 'rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm'
+      }
     >
       <div className="mb-3 flex items-center gap-2">
         <FileText
@@ -103,7 +110,9 @@ export function ContractPdfPreview({
               : `Bản PDF hợp đồng ${contractCode}`
           }
           src={`${url}#view=FitH`}
-          className="h-[80vh] w-full rounded-lg border border-[var(--border)] bg-white"
+          className={`w-full rounded-lg border border-[var(--border)] bg-white ${
+            compact ? 'h-[60vh] sm:h-[68vh]' : 'h-[80vh]'
+          }`}
         />
       ) : null}
     </section>
