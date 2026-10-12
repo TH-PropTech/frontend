@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { ApiClientError } from '@/shared/api/api-client'
 import { ContractPdfPreview } from './contract-pdf-preview'
 
 const mocks = vi.hoisted(() => ({ download: vi.fn(), downloadSigned: vi.fn() }))
@@ -65,5 +66,51 @@ describe('ContractPdfPreview', () => {
     expect(await screen.findByTitle('Bản PDF đã ký HD-1')).toBeInTheDocument()
     expect(mocks.downloadSigned).toHaveBeenCalledWith('c-1')
     expect(mocks.download).not.toHaveBeenCalled()
+  })
+
+  it('explains a missing signed copy instead of showing a generic error', async () => {
+    mocks.downloadSigned.mockRejectedValue(
+      new ApiClientError('Không thể tải nội dung được bảo vệ', 404, null)
+    )
+    render(
+      <ContractPdfPreview
+        contractId="c-1"
+        contractCode="HD-1"
+        variant="signed"
+      />
+    )
+
+    expect(await screen.findByTestId('signed-pdf-missing')).toHaveTextContent(
+      'Chưa có bản PDF đã ký'
+    )
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('clears the previous error when switching variants', async () => {
+    mocks.downloadSigned.mockRejectedValue(new Error('boom'))
+    mocks.download.mockResolvedValue(
+      new Blob(['%PDF-1.7'], { type: 'application/pdf' })
+    )
+    const { rerender } = render(
+      <ContractPdfPreview
+        contractId="c-1"
+        contractCode="HD-1"
+        variant="signed"
+      />
+    )
+    expect(await screen.findByRole('alert')).toHaveTextContent('boom')
+
+    rerender(
+      <ContractPdfPreview
+        contractId="c-1"
+        contractCode="HD-1"
+        variant="canonical"
+      />
+    )
+
+    expect(
+      await screen.findByTitle('Bản PDF hợp đồng HD-1')
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })
