@@ -3,14 +3,12 @@ export type {
   PayableInvoice,
   Wallet,
   WalletBank,
-  WalletTransaction,
+  WalletStatementItem,
   WalletTransactionPage,
-  WalletTransactionType,
 } from './api/wallet-api'
 export {
   useLinkWallet,
   usePayableInvoices,
-  usePayInvoiceFromWallet,
   useWallet,
   useWalletBanks,
   useWalletTransactions,

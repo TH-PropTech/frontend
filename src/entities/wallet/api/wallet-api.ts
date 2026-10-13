@@ -12,29 +12,22 @@ export interface Wallet {
   bank: WalletBank | null
   accountHolder: string | null
   accountNumberMasked: string | null
-  balance: number
-  totalReceived: number
-  totalFeesPaid: number
   linkedAt: string | null
 }
 
-export type WalletTransactionType =
-  | 'payout-credit'
-  | 'platform-fee-debit'
-  | 'platform-fee-refund'
-
-export interface WalletTransaction {
-  _id: string
-  type: WalletTransactionType
+/** Một dòng sao kê dựng từ Payout/Payment (D5); không có balanceAfter, không phải sổ cái. */
+export interface WalletStatementItem {
+  type: 'payout' | 'platform-fee'
   amount: number
-  balanceAfter: number
-  description: string
+  refType: string
+  refId: string
   contractId: string | null
+  description: string
   createdAt: string
 }
 
 export interface WalletTransactionPage {
-  items: WalletTransaction[]
+  items: WalletStatementItem[]
   total: number
   page: number
   limit: number
@@ -74,8 +67,4 @@ export function getWalletTransactions(): Promise<WalletTransactionPage> {
 
 export function getPayableInvoices(): Promise<PayableInvoice[]> {
   return apiClient.get<PayableInvoice[]>('/wallet/invoices')
-}
-
-export function payInvoiceFromWallet(paymentId: string): Promise<unknown> {
-  return apiClient.post('/bank/wallet/pay-invoice', { paymentId })
 }
