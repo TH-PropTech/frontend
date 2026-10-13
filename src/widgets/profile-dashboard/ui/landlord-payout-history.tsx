@@ -16,7 +16,7 @@ const STATUS_CONFIG: Record<
   { label: string; className: string }
 > = {
   'awaiting-wallet': {
-    label: 'Chờ liên kết ví',
+    label: 'Chờ liên kết tài khoản ngân hàng',
     className: 'border-warning/30 bg-warning/10 text-warning',
   },
   pending: {
@@ -24,7 +24,7 @@ const STATUS_CONFIG: Record<
     className: 'border-info/30 bg-info/10 text-info',
   },
   'paid-out': {
-    label: 'Đã nhận',
+    label: 'Đã chuyển về tài khoản ngân hàng liên kết',
     className: 'border-success/30 bg-success-soft text-success',
   },
   failed: {
@@ -54,7 +54,8 @@ export function LandlordPayoutHistory(): React.ReactElement {
             Lịch sử nhận tiền
           </h2>
           <p className="text-sm text-muted">
-            Các khoản nền tảng đã chuyển về ví liên kết của bạn.
+            Các khoản nền tảng đã chuyển về tài khoản ngân hàng liên kết của
+            bạn.
           </p>
         </div>
       </header>

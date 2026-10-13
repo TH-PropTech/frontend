@@ -3,7 +3,6 @@
 import { CreditCard } from 'lucide-react'
 import { useWallet } from '@/entities/wallet'
 import { Button } from '@/shared/ui/button'
-import { formatVnd } from './wallet-error'
 
 /** Ô ví ở đầu trang profile của chủ nhà: số liệu thật từ ví, không dùng dữ liệu mẫu. */
 export function LandlordHeaderWallet({
@@ -26,8 +25,7 @@ export function LandlordHeaderWallet({
             </span>
           </div>
           <p className="text-[10px] text-muted">
-            Số dư ví:{' '}
-            <strong className="text-fg">{formatVnd(data.balance)}</strong>
+            <strong className="text-fg">Đã liên kết nhận tiền</strong>
           </p>
         </div>
       ) : (

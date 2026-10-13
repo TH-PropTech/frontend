@@ -4,8 +4,6 @@ const WALLET_ERROR_MESSAGES: Record<string, string> = {
   WALLET_HOLDER_NAME_MISMATCH:
     'Tên chủ tài khoản phải trùng với họ tên trên hồ sơ của bạn.',
   WALLET_BANK_NOT_SUPPORTED: 'Ngân hàng này chưa được hỗ trợ.',
-  WALLET_INSUFFICIENT_BALANCE: 'Số dư ví không đủ để thanh toán hóa đơn này.',
-  WALLET_NOT_LINKED: 'Bạn cần liên kết ngân hàng cho ví trước.',
   PAYMENT_ALREADY_PAID: 'Hóa đơn này đã được thanh toán.',
   PAYMENT_ACCESS_DENIED: 'Bạn không có quyền thanh toán hóa đơn này.',
 }
