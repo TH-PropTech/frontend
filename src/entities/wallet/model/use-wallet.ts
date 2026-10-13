@@ -13,7 +13,6 @@ import {
   getWalletBanks,
   getWalletTransactions,
   linkWallet,
-  payInvoiceFromWallet,
   type LinkWalletInput,
   type PayableInvoice,
   type Wallet,
@@ -63,20 +62,6 @@ export function useLinkWallet(): UseMutationResult<
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: WALLET_KEY })
       await queryClient.invalidateQueries({ queryKey: ['payouts'] })
-    },
-  })
-}
-
-export function usePayInvoiceFromWallet(): UseMutationResult<
-  unknown,
-  Error,
-  string
-> {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: payInvoiceFromWallet,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: WALLET_KEY })
     },
   })
 }

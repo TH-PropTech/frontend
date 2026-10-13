@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LandlordWallet } from './landlord-wallet'
 
@@ -8,9 +8,9 @@ const mocks = vi.hoisted(() => ({
   useLinkWallet: vi.fn(),
   useWalletTransactions: vi.fn(),
   usePayableInvoices: vi.fn(),
-  usePayInvoiceFromWallet: vi.fn(),
   link: vi.fn(),
-  pay: vi.fn(),
+  getPaymentProviders: vi.fn(),
+  initInvoicePayment: vi.fn(),
 }))
 
 vi.mock('@/entities/wallet', () => ({
@@ -19,8 +19,19 @@ vi.mock('@/entities/wallet', () => ({
   useLinkWallet: mocks.useLinkWallet,
   useWalletTransactions: mocks.useWalletTransactions,
   usePayableInvoices: mocks.usePayableInvoices,
-  usePayInvoiceFromWallet: mocks.usePayInvoiceFromWallet,
 }))
+
+vi.mock('@/features/payments/api/payments-api', async importOriginal => {
+  const actual =
+    await importOriginal<
+      typeof import('@/features/payments/api/payments-api')
+    >()
+  return {
+    ...actual,
+    getPaymentProviders: mocks.getPaymentProviders,
+    initInvoicePayment: mocks.initInvoicePayment,
+  }
+})
 
 const unlinked = {
   status: 'unlinked',
@@ -28,9 +39,7 @@ const unlinked = {
   bank: null,
   accountHolder: null,
   accountNumberMasked: null,
-  balance: 0,
-  totalReceived: 0,
-  totalFeesPaid: 0,
+  linkedAt: null,
 }
 
 const linked = {
@@ -39,9 +48,7 @@ const linked = {
   bank: { code: 'VCB', name: 'Vietcombank' },
   accountHolder: 'NGUYEN VAN A',
   accountNumberMasked: '****6789',
-  balance: 5_000_000,
-  totalReceived: 6_000_000,
-  totalFeesPaid: 1_000_000,
+  linkedAt: '2026-01-01T00:00:00.000Z',
 }
 
 describe('LandlordWallet', () => {
@@ -63,11 +70,9 @@ describe('LandlordWallet', () => {
       data: { items: [] },
     })
     mocks.usePayableInvoices.mockReturnValue({ data: [] })
-    mocks.usePayInvoiceFromWallet.mockReturnValue({
-      mutate: mocks.pay,
-      isPending: false,
-      isError: false,
-    })
+    mocks.getPaymentProviders.mockResolvedValue([
+      { provider: 'mock-bank', label: 'Mock Bank (sandbox)', simulation: true },
+    ])
   })
 
   it('asks an unlinked landlord for bank details and validates before submit', () => {
@@ -107,20 +112,20 @@ describe('LandlordWallet', () => {
     )
   })
 
-  it('shows balance, totals and the masked bank account once linked', () => {
+  it('shows the masked bank account once linked, without any balance figure', () => {
     mocks.useWallet.mockReturnValue({ isLoading: false, data: linked })
     render(<LandlordWallet />)
 
-    expect(screen.getByText('5.000.000 VND')).toBeInTheDocument()
-    expect(screen.getByText('6.000.000 VND')).toBeInTheDocument()
-    expect(screen.getByText('1.000.000 VND')).toBeInTheDocument()
     expect(screen.getByText(/Vietcombank · \*\*\*\*6789/)).toBeInTheDocument()
+    expect(screen.queryByText('Số dư khả dụng')).not.toBeInTheDocument()
+    expect(screen.queryByText('Tổng đã nhận')).not.toBeInTheDocument()
+    expect(screen.queryByText('Phí sàn đã trả')).not.toBeInTheDocument()
     expect(
       screen.queryByRole('form', { name: 'Liên kết ngân hàng' })
     ).not.toBeInTheDocument()
   })
 
-  it('pays an invoice from the balance only when the balance covers it', () => {
+  it('pays an invoice through the payment gateway instead of a wallet balance', async () => {
     mocks.useWallet.mockReturnValue({ isLoading: false, data: linked })
     mocks.usePayableInvoices.mockReturnValue({
       data: [
@@ -133,29 +138,27 @@ describe('LandlordWallet', () => {
           dueDate: '2026-12-01T00:00:00.000Z',
           status: 'unpaid',
         },
-        {
-          paymentId: 'inv-big',
-          contractId: 'c2',
-          amount: 9_000_000,
-          vatAmount: 0,
-          description: 'Landlord platform commission',
-          dueDate: '2026-12-01T00:00:00.000Z',
-          status: 'unpaid',
-        },
       ],
+    })
+    mocks.initInvoicePayment.mockResolvedValue({
+      txRef: 'invoice-ref',
+      deepLink: 'https://bank.example/invoice-ref',
     })
     render(<LandlordWallet />)
 
-    const buttons = screen.getAllByRole('button', {
-      name: 'Trả bằng số dư ví',
-    })
-    expect(buttons[0]).toBeEnabled()
-    expect(buttons[1]).toBeDisabled()
-    expect(screen.getByText('Số dư chưa đủ.')).toBeInTheDocument()
+    expect(screen.queryByText('Trả bằng số dư ví')).not.toBeInTheDocument()
+    expect(screen.queryByText('Số dư chưa đủ.')).not.toBeInTheDocument()
 
-    const [okButton] = buttons
-    if (!okButton) throw new Error('missing pay button')
-    fireEvent.click(okButton)
-    expect(mocks.pay).toHaveBeenCalledWith('inv-ok')
+    const payButton = screen.getByRole('button', { name: /Trả hóa đơn/ })
+    fireEvent.click(payButton)
+
+    await waitFor(() =>
+      expect(mocks.initInvoicePayment).toHaveBeenCalledWith('inv-ok', {
+        provider: 'mock-bank',
+      })
+    )
+    expect(
+      screen.getByRole('link', { name: 'Mở cổng thanh toán' })
+    ).toHaveAttribute('href', 'https://bank.example/invoice-ref')
   })
 })

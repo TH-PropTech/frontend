@@ -41,7 +41,9 @@ describe('LandlordPayoutHistory', () => {
     })
     rerender(<LandlordPayoutHistory />)
     expect(screen.getAllByText(/5\.000\.000 VND/)).toHaveLength(2)
-    expect(screen.getByText('Đã nhận')).toBeInTheDocument()
+    expect(
+      screen.getByText('Đã chuyển về tài khoản ngân hàng liên kết')
+    ).toBeInTheDocument()
   })
 
   it('renders a recoverable error state', () => {
