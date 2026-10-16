@@ -118,6 +118,26 @@ describe('DepositPaymentPanel', () => {
     expect(screen.getByText('Mô phỏng')).toBeInTheDocument()
   })
 
+  it('uses a clear amount-to-action hierarchy with an accessible primary action', () => {
+    render(
+      <DepositPaymentPanel
+        deposit={mockPendingDeposit}
+        isTenant={true}
+        contractId="c1"
+      />
+    )
+
+    expect(screen.getByTestId('deposit-payment-panel')).toHaveClass('gap-5')
+    expect(screen.getByTestId('deposit-amount-card')).toHaveClass(
+      'bg-[var(--primary-soft)]'
+    )
+    expect(screen.queryByText(/e-Consent/i)).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Thanh toán cọc ngay')).toHaveClass(
+      'min-h-11',
+      'text-[var(--on-control)]'
+    )
+  })
+
   it('redirects the current tab to a returned VNPay URL', async () => {
     vi.mocked(paymentsApi.initDepositPayment).mockResolvedValue({
       provider: 'vnpay',
@@ -356,7 +376,7 @@ describe('DepositPaymentPanel', () => {
           contractId="c1"
         />
       )
-      const momo = await screen.findByLabelText('MoMo')
+      const momo = await screen.findByRole('radio', { name: 'MoMo' })
       fireEvent.click(momo)
       fireEvent.click(screen.getByLabelText('Thanh toán cọc ngay'))
 
@@ -385,7 +405,8 @@ describe('DepositPaymentPanel', () => {
           contractId="c1"
         />
       )
-      await screen.findByLabelText('VNPAY')
+      // getByRole dùng accessible-name, bỏ qua huy hiệu chữ aria-hidden cạnh tên cổng.
+      await screen.findByRole('radio', { name: 'VNPAY' })
       fireEvent.click(screen.getByLabelText('Thanh toán cọc ngay'))
 
       expect(

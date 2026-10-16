@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { notFound } from 'next/navigation'
 import { isContractRouteStep } from '@/features/contracts'
-import { ContractStepFlow } from '@/widgets/contract-workspace'
+import { SharedContractStepFlow } from '@/widgets/contract-workspace'
 
 interface ContractStepPageProps {
   params: Promise<{ id: string; step: string }>
@@ -16,5 +16,5 @@ export default async function ContractStepPage({
     notFound()
   }
 
-  return <ContractStepFlow contractId={id} step={step} />
+  return <SharedContractStepFlow contractId={id} step={step} />
 }

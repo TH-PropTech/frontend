@@ -62,7 +62,7 @@ export function ContractStepShell({
   return (
     <main
       data-testid="contract-step-flow"
-      className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-4 py-6 text-[var(--fg)] sm:px-6 lg:px-8"
+      className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-4 py-6 text-[var(--fg)] sm:px-6 lg:px-8"
     >
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
         <div>
@@ -85,91 +85,105 @@ export function ContractStepShell({
         </span>
       </header>
 
-      <nav aria-label="Tiến trình hợp đồng" data-testid="contract-stepper">
-        <ol className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0">
-          {steps.map(item => {
-            const state = getContractStepState(item.key, activeStep, steps)
-            const href = toContractStepHref(contractId, item.key)
-            const isCurrent = item.key === step
-            const note = stepNotes[item.key]
-            const stateText = note?.text ?? stateLabel(state)
-            const stateTone =
-              note?.tone === 'warning'
-                ? 'font-semibold text-[var(--warning)]'
-                : 'text-[var(--muted)]'
-
-            return (
-              <li
-                key={item.key}
-                className="min-w-[8.5rem] shrink-0 snap-start sm:min-w-0"
-              >
-                {state === 'upcoming' ? (
-                  <span
-                    aria-disabled="true"
-                    data-state={state}
-                    className="flex min-h-12 cursor-not-allowed flex-col justify-center rounded-lg border border-dashed border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-left"
-                  >
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">
-                      {item.label}
-                    </span>
-                    <span className={`text-[11px] ${stateTone}`}>
-                      {stateText}
-                    </span>
-                  </span>
-                ) : (
-                  <Link
-                    href={href as Route}
-                    aria-current={isCurrent ? 'step' : undefined}
-                    data-state={state}
-                    className={`flex min-h-12 flex-col justify-center rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] ${
-                      isCurrent
-                        ? 'border-[var(--primary)] bg-[var(--primary-soft)]'
-                        : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--primary)]'
-                    }`}
-                  >
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--fg)]">
-                      {item.label}
-                    </span>
-                    <span className={`text-[11px] ${stateTone}`}>
-                      {stateText}
-                    </span>
-                  </Link>
-                )}
-              </li>
-            )
-          })}
-        </ol>
-      </nav>
-
-      {isGuarded ? (
-        <section
-          data-testid="contract-step-guard"
-          aria-live="polite"
-          className="flex flex-col gap-3 rounded-xl border border-[var(--warning)] bg-[var(--surface-muted)] p-5"
+      {/* Lưới 2 cột từ lg: cột trái là nội dung bước (giới hạn chiều rộng đọc), cột phải là tiến trình sticky — tránh 1 cột hẹp bị bo giữa trên màn rộng. 1 bộ markup duy nhất, đổi hướng/vị trí bằng class responsive, không nhân đôi DOM. */}
+      <div className="grid flex-1 grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_17rem]">
+        <nav
+          aria-label="Tiến trình hợp đồng"
+          data-testid="contract-stepper"
+          className="order-1 lg:order-2 lg:sticky lg:top-6 lg:flex lg:flex-col lg:gap-2 lg:self-start"
         >
-          <div className="flex items-start gap-3">
-            <LockKeyhole
-              className="mt-0.5 h-5 w-5 shrink-0 text-[var(--warning)]"
-              aria-hidden="true"
-            />
-            <div>
-              <h2 className="text-sm font-bold">Bước này chưa đủ điều kiện</h2>
-              <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
-                {guardMessage}
-              </p>
-            </div>
-          </div>
-          <Link
-            href={activeStepHref as Route}
-            className="inline-flex min-h-10 w-fit items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
-          >
-            Về bước {activeStepLabel}
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
-        </section>
-      ) : (
-        <section className="flex flex-1 flex-col gap-6">{children}</section>
-      )}
+          <h2 className="hidden px-1 text-[11px] font-bold uppercase tracking-wider text-[var(--muted)] lg:block">
+            Tiến trình
+          </h2>
+          <ol className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 lg:flex lg:flex-col lg:overflow-visible lg:px-0">
+            {steps.map(item => {
+              const state = getContractStepState(item.key, activeStep, steps)
+              const href = toContractStepHref(contractId, item.key)
+              const isCurrent = item.key === step
+              const note = stepNotes[item.key]
+              const stateText = note?.text ?? stateLabel(state)
+              const stateTone =
+                note?.tone === 'warning'
+                  ? 'font-semibold text-[var(--warning)]'
+                  : 'text-[var(--muted)]'
+
+              return (
+                <li
+                  key={item.key}
+                  className="min-w-[8.5rem] shrink-0 snap-start sm:min-w-0"
+                >
+                  {state === 'upcoming' ? (
+                    <span
+                      aria-disabled="true"
+                      data-state={state}
+                      className="flex min-h-12 cursor-not-allowed flex-col justify-center rounded-sm border border-dashed border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2 text-left"
+                    >
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                        {item.label}
+                      </span>
+                      <span className={`text-[11px] ${stateTone}`}>
+                        {stateText}
+                      </span>
+                    </span>
+                  ) : (
+                    <Link
+                      href={href as Route}
+                      aria-current={isCurrent ? 'step' : undefined}
+                      data-state={state}
+                      className={`flex min-h-12 flex-col justify-center rounded-sm border px-3 py-2 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] ${
+                        isCurrent
+                          ? 'border-[var(--primary)] bg-[var(--primary-soft)]'
+                          : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--primary)]'
+                      }`}
+                    >
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--fg)]">
+                        {item.label}
+                      </span>
+                      <span className={`text-[11px] ${stateTone}`}>
+                        {stateText}
+                      </span>
+                    </Link>
+                  )}
+                </li>
+              )
+            })}
+          </ol>
+        </nav>
+
+        <div className="order-2 flex min-w-0 flex-col gap-6 lg:order-1">
+          {isGuarded ? (
+            <section
+              data-testid="contract-step-guard"
+              aria-live="polite"
+              className="flex flex-col gap-3 rounded-md border border-[var(--warning)] bg-[var(--surface-muted)] p-5"
+            >
+              <div className="flex items-start gap-3">
+                <LockKeyhole
+                  className="mt-0.5 h-5 w-5 shrink-0 text-[var(--warning)]"
+                  aria-hidden="true"
+                />
+                <div>
+                  <h2 className="text-sm font-bold">
+                    Bước này chưa đủ điều kiện
+                  </h2>
+                  <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+                    {guardMessage}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={activeStepHref as Route}
+                className="inline-flex min-h-10 w-fit items-center gap-2 rounded-sm bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+              >
+                Về bước {activeStepLabel}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </section>
+          ) : (
+            <section className="flex flex-1 flex-col gap-6">{children}</section>
+          )}
+        </div>
+      </div>
 
       {!isGuarded ? (
         <footer className="sticky bottom-0 z-10 -mx-4 flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--bg)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:px-0 sm:pb-0 sm:pt-4">
@@ -183,7 +197,7 @@ export function ContractStepShell({
                   ]?.key ?? 'document'
                 ) as Route
               }
-              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-semibold text-[var(--fg)] hover:border-[var(--primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+              className="inline-flex min-h-10 items-center gap-2 rounded-sm border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-xs font-semibold text-[var(--fg)] hover:border-[var(--primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               Quay lại
@@ -193,14 +207,14 @@ export function ContractStepShell({
           )}
           {nextStep && nextStepHref ? (
             nextDisabled ? (
-              <span className="inline-flex min-h-10 cursor-not-allowed items-center gap-2 rounded-lg bg-[var(--surface-muted)] px-4 py-2 text-xs font-bold text-[var(--muted)]">
+              <span className="inline-flex min-h-10 cursor-not-allowed items-center gap-2 rounded-sm bg-[var(--surface-muted)] px-4 py-2 text-xs font-bold text-[var(--muted)]">
                 {nextLabel}
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </span>
             ) : (
               <Link
                 href={nextStepHref as Route}
-                className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                className="inline-flex min-h-10 items-center gap-2 rounded-sm bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
               >
                 {nextLabel}
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />

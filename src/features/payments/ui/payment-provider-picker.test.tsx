@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import {
   PaymentProviderPicker,
   choiceLimitNote,
@@ -31,6 +33,18 @@ const gateways: PaymentProviderOption[] = [
   { provider: 'mock-bank', label: 'Mock Bank (sandbox)', simulation: true },
 ]
 
+function PaymentProviderPickerHarness() {
+  const [value, setValue] = useState<PaymentProviderOption['provider']>('vnpay')
+
+  return (
+    <PaymentProviderPicker
+      providers={gateways}
+      value={value}
+      onChange={setValue}
+    />
+  )
+}
+
 describe('PaymentProviderPicker', () => {
   it('renders accessible options and reports the selection', () => {
     const onChange = vi.fn()
@@ -45,13 +59,72 @@ describe('PaymentProviderPicker', () => {
     expect(
       screen.getByRole('radiogroup', { name: 'Cổng thanh toán' })
     ).toBeTruthy()
-    expect(screen.getByLabelText('VNPAY')).toBeTruthy()
-    expect(screen.getByLabelText('MoMo')).toBeTruthy()
+    // getByRole dùng accessible-name computation, bỏ qua phần aria-hidden
+    // (huy hiệu chữ VN/M/Z cạnh tên cổng), khác getByLabelText vốn so khớp
+    // nguyên textContent của <label>.
+    expect(screen.getByRole('radio', { name: 'VNPAY' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'MoMo' })).toBeTruthy()
     expect(screen.getByText('Mô phỏng')).toBeTruthy()
 
-    fireEvent.click(screen.getByLabelText('ZaloPay'))
+    fireEvent.click(screen.getByRole('radio', { name: 'ZaloPay' }))
 
     expect(onChange).toHaveBeenCalledWith('zalopay')
+  })
+
+  it('renders token-based provider visuals without changing accessible names', () => {
+    render(
+      <PaymentProviderPicker
+        providers={gateways}
+        value="vnpay"
+        onChange={vi.fn()}
+      />
+    )
+
+    const mockBankVisual = screen.getByTestId(
+      'payment-provider-visual-mock-bank'
+    )
+    expect(mockBankVisual).toHaveAttribute('aria-hidden', 'true')
+    expect(mockBankVisual).toHaveClass('bg-[var(--primary-soft)]')
+    expect(
+      screen.getByRole('radio', { name: 'Mock Bank (sandbox)' })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('radio', { name: /MB Mock Bank/i })
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText(/^mock-bank$/i)).not.toBeInTheDocument()
+  })
+
+  it('shows a non-color selected indicator and keeps responsive touch targets', () => {
+    render(
+      <PaymentProviderPicker
+        providers={gateways}
+        value="vnpay"
+        onChange={vi.fn()}
+      />
+    )
+
+    const selectedCard = screen.getByTestId('payment-provider-card-vnpay')
+    expect(selectedCard).toHaveClass('min-h-16')
+    expect(selectedCard).toHaveClass('bg-[var(--primary-soft)]')
+    expect(selectedCard).toHaveClass('focus-within:ring-2')
+    expect(screen.getByTestId('payment-provider-selected-vnpay')).toBeVisible()
+    expect(
+      screen.getByRole('radiogroup', { name: 'Cổng thanh toán' })
+    ).toHaveClass('grid-cols-[repeat(auto-fit,minmax(20rem,1fr))]')
+  })
+
+  it('supports arrow-key selection through the semantic radio group', async () => {
+    const user = userEvent.setup()
+    render(<PaymentProviderPickerHarness />)
+
+    const vnpay = screen.getByRole('radio', { name: 'VNPAY' })
+    const momo = screen.getByRole('radio', { name: 'MoMo' })
+    await user.click(vnpay)
+    await user.keyboard('{ArrowRight}')
+    await user.keyboard(' ')
+
+    expect(momo).toBeChecked()
+    expect(screen.getByTestId('payment-provider-selected-momo')).toBeVisible()
   })
 
   it('is hidden when only the Mock Bank simulation is enabled', () => {

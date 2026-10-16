@@ -62,7 +62,7 @@ export function DepositPaymentPanel({
     return (
       <div
         data-testid="deposit-empty"
-        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 text-sm text-[var(--muted)]"
+        className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-5 text-sm text-[var(--muted)]"
       >
         Hợp đồng không áp dụng khoản đặt cọc.
       </div>
@@ -148,7 +148,7 @@ export function DepositPaymentPanel({
 
   const wrapperClass =
     isActiveStep === true
-      ? 'ring-2 ring-[var(--primary)] rounded-xl'
+      ? 'ring-2 ring-[var(--primary)] rounded-md'
       : isActiveStep === false
         ? 'opacity-50 pointer-events-none'
         : ''
@@ -158,7 +158,7 @@ export function DepositPaymentPanel({
       <div
         data-testid="deposit-payment-panel"
         data-contract-id={contractId}
-        className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm flex flex-col gap-4"
+        className="flex flex-col gap-5 rounded-md border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm sm:p-5"
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-2">
@@ -190,11 +190,14 @@ export function DepositPaymentPanel({
         </div>
 
         {/* Amount Display Card */}
-        <div className="p-4 rounded-lg bg-[var(--surface-muted)] border border-[var(--border)] flex flex-col gap-1">
+        <div
+          data-testid="deposit-amount-card"
+          className="flex flex-col gap-1 rounded-md border border-[var(--border)] bg-[var(--primary-soft)] p-4"
+        >
           <span className="text-[11px] text-[var(--muted)]">
             Số tiền đặt cọc
           </span>
-          <span className="text-xl font-extrabold text-[var(--fg)] tracking-tight">
+          <span className="font-display text-2xl font-extrabold tracking-tight text-[var(--fg)]">
             {formattedAmount}
           </span>
           {vndInWords(deposit.amount) ? (
@@ -209,11 +212,11 @@ export function DepositPaymentPanel({
 
         {/* PoC Mock Bank Simulation Note */}
         {selected === 'mock-bank' ? (
-          <div className="flex items-start gap-2 p-3 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] text-xs text-[var(--fg)]">
+          <div className="flex items-start gap-2 rounded-md border border-[var(--border)] bg-[var(--info-soft)] p-3 text-xs text-[var(--fg)]">
             <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
             <p className="text-[11px] leading-relaxed">
               {deposit.mockSimulationNotice ||
-                'Chế độ thử nghiệm: Thanh toán cọc qua ngân hàng mô phỏng để bảo đảm an toàn giao dịch trước khi kích hoạt quy trình ký e-Consent.'}
+                'Chế độ thử nghiệm: Thanh toán cọc qua ngân hàng mô phỏng để bảo đảm an toàn giao dịch trước khi kích hoạt quy trình ký xác nhận.'}
             </p>
           </div>
         ) : null}
@@ -282,7 +285,7 @@ export function DepositPaymentPanel({
                   onClick={handleInitPayment}
                   disabled={loading || consenting || limitNote !== null}
                   aria-label="Thanh toán cọc ngay"
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2.5 text-xs font-bold text-[var(--on-control)] shadow-sm transition-colors hover:bg-[var(--primary-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] disabled:opacity-50"
                 >
                   <CreditCard className="w-4 h-4" />
                   <span>
@@ -293,7 +296,7 @@ export function DepositPaymentPanel({
                 </button>
 
                 {paymentUrl && (
-                  <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-xs">
+                  <div className="space-y-2 rounded-sm border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-xs">
                     <div className="flex items-center justify-between gap-2">
                       <strong className="text-[var(--fg)]">
                         Yêu cầu chuyển khoản
@@ -324,7 +327,7 @@ export function DepositPaymentPanel({
                             paymentRequest?.txRef ?? ''
                           )
                         }
-                        className="rounded-lg border border-[var(--border)] px-3 py-2 font-semibold text-[var(--fg)]"
+                        className="rounded-sm border border-[var(--border)] px-3 py-2 font-semibold text-[var(--fg)]"
                       >
                         Sao chép nội dung
                       </button>
@@ -332,7 +335,7 @@ export function DepositPaymentPanel({
                         href={paymentUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 font-semibold text-[var(--fg)]"
+                        className="inline-flex items-center gap-1.5 rounded-sm border border-[var(--border)] px-3 py-2 font-semibold text-[var(--fg)]"
                       >
                         Mở cổng thanh toán
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -347,7 +350,7 @@ export function DepositPaymentPanel({
                 onClick={handleConsent}
                 disabled={consenting}
                 aria-label="Đồng ý thỏa thuận cọc"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-[var(--primary)] px-4 py-2.5 text-xs font-bold text-[var(--on-control)] shadow-sm transition-colors hover:bg-[var(--primary-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] disabled:opacity-50"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>
@@ -357,12 +360,12 @@ export function DepositPaymentPanel({
                 </span>
               </button>
             ) : isTenant ? (
-              <div className="p-3 rounded-lg bg-[var(--surface-muted)] text-center text-xs text-[var(--muted)]">
+              <div className="p-3 rounded-sm bg-[var(--surface-muted)] text-center text-xs text-[var(--muted)]">
                 Thỏa thuận cọc chưa có đủ thông tin để xác nhận. Vui lòng tải
                 lại hợp đồng.
               </div>
             ) : (
-              <div className="p-3 rounded-lg bg-[var(--surface-muted)] text-center text-xs text-[var(--muted)]">
+              <div className="p-3 rounded-sm bg-[var(--surface-muted)] text-center text-xs text-[var(--muted)]">
                 Đang chờ Bên thuê hoàn tất nộp tiền đặt cọc để mở khóa điều kiện
                 ký kết hợp đồng.
               </div>

@@ -117,7 +117,7 @@ describe('PaymentSchedulePanel', () => {
     })
 
     render(<PaymentSchedulePanel contractId="contract-1" />)
-    await screen.findByLabelText('ZaloPay')
+    await screen.findByRole('radio', { name: 'ZaloPay' })
     fireEvent.click(screen.getByRole('button', { name: 'Thanh toán' }))
 
     await waitFor(() =>
