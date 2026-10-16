@@ -613,6 +613,20 @@ export async function getContractView(
   return apiClient.get<ContractViewDto>(`/contracts/${contractId}/view`)
 }
 
+/**
+ * Ảnh bìa căn hộ dùng để minh họa thẻ tóm tắt hợp đồng. Endpoint apartment
+ * là public (`@Public()` trong apartments.controller.ts), gọi thẳng bằng
+ * `property.id` của hợp đồng, không cần đổi DTO hợp đồng ở backend.
+ */
+export async function getApartmentCoverImage(
+  apartmentId: string
+): Promise<string | null> {
+  const res = await apiClient.get<{ image?: string }>(
+    `/apartments/${apartmentId}?format=web`
+  )
+  return res.image || null
+}
+
 export async function getContractAuditEvents(
   contractId: string
 ): Promise<ContractAuditEventDto[]> {

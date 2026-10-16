@@ -16,6 +16,7 @@ import {
   type ContractRouteStep,
 } from '@/features/contracts'
 import { useContractWorkspace } from './use-contract-workspace'
+import { useSharedContractWorkspace } from './contract-workspace-provider'
 import { ContractStepContent } from './contract-step-content'
 import { ContractStepShell, type ContractStepNote } from './contract-step-shell'
 
@@ -108,6 +109,7 @@ function getNextLabel(step: ContractRouteStep, disabled: boolean): string {
   return 'Đang chờ lưu vết hợp đồng'
 }
 
+/** Bản độc lập: tự tải dữ liệu hợp đồng (dùng ngoài nhóm route có provider, và trong test). */
 export function ContractStepFlow({
   contractId,
   step,
@@ -118,7 +120,39 @@ export function ContractStepFlow({
     currentUserId,
     enablePolling: false,
   })
+  return (
+    <ContractStepFlowView
+      contractId={contractId}
+      step={step}
+      workspace={workspace}
+    />
+  )
+}
 
+/** Bản dùng dữ liệu chung từ ContractWorkspaceProvider: đổi bước không tải lại. */
+export function SharedContractStepFlow({
+  contractId,
+  step,
+}: Pick<ContractStepFlowProps, 'contractId' | 'step'>): ReactElement {
+  const workspace = useSharedContractWorkspace()
+  return (
+    <ContractStepFlowView
+      contractId={contractId}
+      step={step}
+      workspace={workspace}
+    />
+  )
+}
+
+function ContractStepFlowView({
+  contractId,
+  step,
+  workspace,
+}: {
+  contractId: string
+  step: ContractRouteStep
+  workspace: ReturnType<typeof useContractWorkspace>
+}): ReactElement {
   if (workspace.isLoading) {
     return (
       <main

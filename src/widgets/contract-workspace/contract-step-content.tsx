@@ -31,7 +31,7 @@ function StepGuide({
   return (
     <section
       data-testid="step-guide"
-      className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"
+      className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm"
     >
       <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
         {title}
@@ -150,7 +150,7 @@ function ContractArtifactStep({
           />
         }
       />
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+      <section className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
         <div className="flex items-start gap-3">
           <LockKeyhole
             className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)]"
@@ -168,7 +168,7 @@ function ContractArtifactStep({
                 type="button"
                 onClick={() => void handleLock()}
                 disabled={isLocking}
-                className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
+                className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-sm bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)]"
               >
                 <LockKeyhole className="h-4 w-4" aria-hidden="true" />
                 {isLocking
@@ -244,7 +244,7 @@ export function ContractStepContent({
   if (step === 'deposit') {
     return (
       <div className="space-y-4">
-        <section className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-5">
+        <section className="rounded-md border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-5">
           <h2 className="text-sm font-bold">Điều kiện đặt cọc</h2>
           <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
             {data.contract.executionPolicy?.nextAction ??
@@ -274,7 +274,7 @@ export function ContractStepContent({
   if (step === 'signing') {
     return (
       <div className="space-y-4">
-        <section className="rounded-xl border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-5">
+        <section className="rounded-md border border-[var(--primary)]/30 bg-[var(--primary-soft)]/20 p-5">
           <h2 className="text-sm font-bold">Ký số trên cùng một bản PDF</h2>
           <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
             {bothSigned
@@ -341,7 +341,7 @@ export function ContractStepContent({
 
   return (
     <div className="space-y-4">
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+      <section className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
         <div className="flex items-start gap-3">
           <Clock3
             className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)]"
@@ -372,7 +372,7 @@ export function ContractStepContent({
         isVerifying={isVerifyingIntegrity}
         integrityResult={integrityResult}
       />
-      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+      <section className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
         <h2 className="text-sm font-bold">Nhật ký bằng chứng</h2>
         {auditEvents.length === 0 ? (
           <p className="mt-2 text-xs text-[var(--muted)]">
@@ -383,7 +383,7 @@ export function ContractStepContent({
             {auditEvents.map(event => (
               <li
                 key={event.id}
-                className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-xs"
+                className="rounded-sm border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-xs"
               >
                 <div className="flex flex-wrap justify-between gap-2 font-semibold">
                   <span>{ledgerEventLabel(event.eventType)}</span>
