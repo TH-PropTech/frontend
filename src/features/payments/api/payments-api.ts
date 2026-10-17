@@ -5,6 +5,7 @@ export type PaymentProviderName =
   | 'vnpay'
   | 'momo'
   | 'zalopay'
+  | 'mocbank'
   | 'sepay'
   | 'techcombank'
 
@@ -170,6 +171,7 @@ const EXTERNAL_GATEWAYS: readonly PaymentProviderName[] = [
   'vnpay',
   'momo',
   'zalopay',
+  'mocbank',
 ]
 
 export function isExternalGateway(
