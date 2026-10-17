@@ -262,8 +262,8 @@ export function DesignEditorForm({
         <div className="rounded-xl border border-border p-3 text-xs text-muted">
           <p>
             Bấm <b className="text-fg">Chỉnh bố cục</b> trong khung xem trước,
-            kéo đồ để dời, xoay, ẩn/hiện hoặc thêm đồ từ danh mục. Bố cục lưu
-            riêng cho thiết kế này.
+            kéo đồ để dời, xoay, ẩn/hiện, thêm đồ, đổi sàn, thêm/dời cửa hoặc tự
+            vẽ mặt bằng nhiều tầng. Bố cục lưu riêng cho thiết kế này.
           </p>
           <p className="mt-2 flex items-center justify-between gap-2">
             <span data-testid="layout-summary">
@@ -271,7 +271,18 @@ export function DesignEditorForm({
                 ? 'Đang dùng bố cục mẫu'
                 : (() => {
                     const s = summarizeLayout(draft.layout)
-                    return `${s.adjusted} đồ đã chỉnh · ${s.hidden} đang ẩn · ${s.added} đồ thêm`
+                    const parts = [
+                      `${s.adjusted} đồ đã chỉnh · ${s.hidden} đang ẩn · ${s.added} đồ thêm`,
+                    ]
+                    if (s.roomsEdited > 0)
+                      parts.push(`${s.roomsEdited} phòng đổi sàn/tên`)
+                    if (s.openingsEdited > 0)
+                      parts.push(`${s.openingsEdited} cửa đã sửa`)
+                    if (s.floors > 0)
+                      parts.push(
+                        `mặt bằng tự vẽ: ${s.floors} tầng · ${s.customRooms} phòng · ${s.customArea} m²`
+                      )
+                    return parts.join(' · ')
                   })()}
             </span>
             {isLayoutEmpty(draft.layout) ? null : (

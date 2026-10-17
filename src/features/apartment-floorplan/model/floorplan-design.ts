@@ -79,132 +79,56 @@ export const THEME_META: Record<
 }
 
 /** Loại đồ có thể thêm vào thiết kế (khớp ADDABLE của viewer và APARTMENT_FURNITURE_KINDS của backend). */
-export const FURNITURE_KINDS = [
-  'sofa',
-  'armchair',
-  'ottoman',
-  'coffeeTable',
-  'sideTable',
-  'tvUnit',
-  'bookshelf',
-  'dresser',
-  'wardrobe',
-  'bed',
-  'nightstand',
-  'desk',
-  'chair',
-  'diningTable',
-  'barStool',
-  'console',
-  'plant',
-  'floorLamp',
-  'standingMirror',
-] as const
-export type FurnitureKind = (typeof FURNITURE_KINDS)[number]
+export const FURNITURE_KINDS = LAYOUT_FURNITURE_KINDS
+export type FurnitureKind = LayoutFurnitureKind
+export {
+  LAYOUT_FLOOR_MATERIALS,
+  LAYOUT_LIMITS,
+  LAYOUT_OPENING_TYPES,
+  type LayoutCustomFloor,
+  type LayoutCustomRoom,
+  type LayoutExtra,
+  type LayoutFloorMaterial,
+  type LayoutItemOverride,
+  type LayoutOpening,
+  type LayoutOpeningType,
+} from './apartment-layout'
+import {
+  LAYOUT_FURNITURE_KINDS,
+  LAYOUT_LIMITS,
+  isApartmentLayoutEmpty,
+  normalizeApartmentLayout,
+  type ApartmentLayout,
+  type LayoutFurnitureKind,
+} from './apartment-layout'
 
-export const MAX_LAYOUT_ITEMS = 120
-export const MAX_LAYOUT_EXTRAS = 60
-const COORD_MIN = -2
-const COORD_MAX = 40
-const LAYOUT_ID = /^[A-Za-z0-9_-]{1,48}$/
+export const MAX_LAYOUT_ITEMS = LAYOUT_LIMITS.overrides
+export const MAX_LAYOUT_EXTRAS = LAYOUT_LIMITS.extras
 
-/** Ghi đè của một món đồ có sẵn trong mẫu: dời / xoay / ẩn. Toạ độ theo MẪU (chưa co dãn theo diện tích). */
-export interface LayoutItemOverride {
-  x?: number
-  z?: number
-  rot?: number
-  hidden?: boolean
-}
-
-/** Món đồ admin thêm vào từ danh mục. */
-export interface LayoutExtra {
-  id: string
-  kind: FurnitureKind
-  x: number
-  z: number
-  rot: number
-  hidden?: boolean
-}
-
-export interface FloorplanLayout {
-  items: Record<string, LayoutItemOverride>
-  extras: LayoutExtra[]
-}
+/** Bố cục tuỳ chỉnh của một thiết kế (đồ, sàn/tên phòng, cửa hoặc mặt bằng tự vẽ nhiều tầng). */
+export type FloorplanLayout = ApartmentLayout
 
 export const emptyLayout = (): FloorplanLayout => ({ items: {}, extras: [] })
 
-const coord = (value: unknown): number | undefined =>
-  typeof value === 'number' &&
-  Number.isFinite(value) &&
-  value >= COORD_MIN &&
-  value <= COORD_MAX
-    ? Math.round(value * 1000) / 1000
-    : undefined
+export const normalizeFloorplanLayout = normalizeApartmentLayout
 
-const angle = (value: unknown): number | undefined =>
-  typeof value === 'number' && Number.isFinite(value)
-    ? Math.round((value % (Math.PI * 2)) * 10000) / 10000
-    : undefined
+export const isLayoutEmpty = isApartmentLayoutEmpty
 
-/** Chuẩn hoá bố cục (cùng luật với viewer và backend): bỏ giá trị lạ, chặn số lượng, không tin kiểu chuỗi. */
-export function normalizeFloorplanLayout(input: unknown): FloorplanLayout {
-  const out = emptyLayout()
-  if (!input || typeof input !== 'object') return out
-  const raw = input as { items?: unknown; extras?: unknown }
-  if (raw.items && typeof raw.items === 'object' && !Array.isArray(raw.items)) {
-    for (const [id, value] of Object.entries(raw.items).slice(
-      0,
-      MAX_LAYOUT_ITEMS
-    )) {
-      if (!LAYOUT_ID.test(id) || !value || typeof value !== 'object') continue
-      const o = value as Record<string, unknown>
-      const entry: LayoutItemOverride = {}
-      const x = coord(o.x)
-      const z = coord(o.z)
-      const rot = angle(o.rot)
-      if (x !== undefined) entry.x = x
-      if (z !== undefined) entry.z = z
-      if (rot !== undefined) entry.rot = rot
-      if (o.hidden === true) entry.hidden = true
-      if (Object.keys(entry).length > 0) out.items[id] = entry
-    }
-  }
-  if (Array.isArray(raw.extras)) {
-    const seen = new Set<string>()
-    for (const value of raw.extras.slice(0, MAX_LAYOUT_EXTRAS)) {
-      if (!value || typeof value !== 'object') continue
-      const e = value as Record<string, unknown>
-      const id = typeof e.id === 'string' ? e.id : ''
-      if (!LAYOUT_ID.test(id) || seen.has(id)) continue
-      if (!(FURNITURE_KINDS as readonly unknown[]).includes(e.kind)) continue
-      const x = coord(e.x)
-      const z = coord(e.z)
-      if (x === undefined || z === undefined) continue
-      seen.add(id)
-      const extra: LayoutExtra = {
-        id,
-        kind: e.kind as FurnitureKind,
-        x,
-        z,
-        rot: angle(e.rot) ?? 0,
-      }
-      if (e.hidden === true) extra.hidden = true
-      out.extras.push(extra)
-    }
-  }
-  return out
-}
-
-export const isLayoutEmpty = (layout: FloorplanLayout): boolean =>
-  Object.keys(layout.items).length === 0 && layout.extras.length === 0
-
-/** Tóm tắt số thay đổi để hiện cho admin: đồ đã chỉnh, đồ đang ẩn, đồ thêm. */
+/** Tóm tắt thay đổi để hiện cho admin: đồ đã chỉnh / ẩn / thêm, phòng + cửa đã sửa, mặt bằng tự vẽ. */
 export function summarizeLayout(layout: FloorplanLayout): {
   adjusted: number
   hidden: number
   added: number
+  roomsEdited: number
+  openingsEdited: number
+  floors: number
+  customRooms: number
+  customArea: number
 } {
   const entries = Object.values(layout.items)
+  const floors = layout.custom?.floors ?? []
+  const rooms = floors.flatMap(f => f.rooms)
+  const openings = layout.openings
   return {
     adjusted: entries.filter(
       e => e.x !== undefined || e.z !== undefined || e.rot !== undefined
@@ -213,6 +137,18 @@ export function summarizeLayout(layout: FloorplanLayout): {
       entries.filter(e => e.hidden).length +
       layout.extras.filter(e => e.hidden).length,
     added: layout.extras.length,
+    roomsEdited: Object.keys(layout.rooms ?? {}).length,
+    openingsEdited: openings
+      ? openings.removed.length +
+        Object.keys(openings.moved).length +
+        openings.added.length
+      : 0,
+    floors: floors.length,
+    customRooms: rooms.length,
+    customArea:
+      Math.round(
+        rooms.reduce((sum, r) => sum + (r.x1 - r.x0) * (r.z1 - r.z0), 0) * 10
+      ) / 10,
   }
 }
 

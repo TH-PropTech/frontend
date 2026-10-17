@@ -91,7 +91,7 @@ describe('floorplan layout', () => {
         'tv-1': 'nope',
       },
       extras: [
-        { id: 'extra-1', kind: 'rug', x: 1, z: 1, rot: 0 },
+        { id: 'extra-1', kind: 'hoverboard', x: 1, z: 1, rot: 0 },
         { id: 'extra-2', kind: 'chair', x: '1', z: 1, rot: 0 },
         { id: 'extra-3', kind: 'chair', x: 1, z: null, rot: 0 },
         { id: 'extra-4', kind: 'chair', x: 1, z: 1, rot: 0 },
@@ -140,6 +140,36 @@ describe('floorplan layout', () => {
       adjusted: 1,
       hidden: 2,
       added: 2,
+      roomsEdited: 0,
+      openingsEdited: 0,
+      floors: 0,
+      customRooms: 0,
+      customArea: 0,
+    })
+  })
+
+  it('summarizes a hand-drawn plan: floors, rooms and area', () => {
+    const layout = normalizeFloorplanLayout({
+      custom: {
+        floors: [
+          {
+            id: 'f1',
+            name: 'Tầng 1',
+            rooms: [
+              { id: 'a', name: 'A', x0: 0, x1: 4, z0: 0, z1: 5, floor: 'tile' },
+              { id: 'b', name: 'B', x0: 4, x1: 7, z0: 0, z1: 5 },
+            ],
+            openings: [],
+          },
+        ],
+      },
+      rooms: { living: { floor: 'marble' } },
+    })
+    expect(summarizeLayout(layout)).toMatchObject({
+      floors: 1,
+      customRooms: 2,
+      customArea: 35,
+      roomsEdited: 1,
     })
   })
 
