@@ -41,7 +41,8 @@ export interface KycSubmission {
   placeOfIssue: string
   frontCard: Blob
   backCard: Blob
-  selfie: Blob
+  /** Vắng mặt khi bỏ bước selfie (env.kycSkipSelfie). */
+  selfie?: Blob
 }
 
 export interface MyKycRecord {
@@ -106,6 +107,6 @@ export function submitKyc(
   Object.entries(fields).forEach(([key, value]) => formData.append(key, value))
   formData.append('frontCard', frontCard, 'front.jpg')
   formData.append('backCard', backCard, 'back.jpg')
-  formData.append('selfie', selfie, 'selfie.jpg')
+  if (selfie) formData.append('selfie', selfie, 'selfie.jpg')
   return apiClient.post('/kyc/submit', formData)
 }

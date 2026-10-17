@@ -40,6 +40,7 @@ export function ModalKyc({
     videoRefSelfie,
     canvasRefSelfie,
     verifyResults,
+    skipSelfie,
     showResults,
     preferredDistrict,
     setPreferredDistrict,
@@ -103,7 +104,8 @@ export function ModalKyc({
             </Badge>
           ) : (
             <Badge className="bg-slate-100 text-slate-800 border-slate-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-              BƯỚC {currentStep} / 3
+              BƯỚC {skipSelfie && currentStep === 3 ? 2 : currentStep} /{' '}
+              {skipSelfie ? 2 : 3}
             </Badge>
           )}
         </div>
@@ -118,8 +120,15 @@ export function ModalKyc({
             <div
               className="absolute left-0 top-1/2 h-[2px] bg-[#9F3F2A] -translate-y-1/2 transition-all duration-300 z-0"
               style={{
-                width:
-                  currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%',
+                width: skipSelfie
+                  ? currentStep === 1
+                    ? '0%'
+                    : '100%'
+                  : currentStep === 1
+                    ? '0%'
+                    : currentStep === 2
+                      ? '50%'
+                      : '100%',
               }}
             />
 
@@ -142,22 +151,24 @@ export function ModalKyc({
             </div>
 
             {/* Step 2 */}
-            <div className="flex flex-col items-center relative z-10">
-              <div
-                className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all duration-300 ${
-                  currentStep >= 2
-                    ? 'bg-[#9F3F2A] border-[#9F3F2A] text-white shadow-md'
-                    : 'bg-white border-slate-300 text-slate-500'
-                }`}
-              >
-                2
+            {!skipSelfie && (
+              <div className="flex flex-col items-center relative z-10">
+                <div
+                  className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all duration-300 ${
+                    currentStep >= 2
+                      ? 'bg-[#9F3F2A] border-[#9F3F2A] text-white shadow-md'
+                      : 'bg-white border-slate-300 text-slate-500'
+                  }`}
+                >
+                  2
+                </div>
+                <span
+                  className={`text-[10px] mt-1.5 font-bold transition-colors ${currentStep >= 2 ? 'text-[#9F3F2A]' : 'text-slate-500'}`}
+                >
+                  Chụp Selfie
+                </span>
               </div>
-              <span
-                className={`text-[10px] mt-1.5 font-bold transition-colors ${currentStep >= 2 ? 'text-[#9F3F2A]' : 'text-slate-500'}`}
-              >
-                Chụp Selfie
-              </span>
-            </div>
+            )}
 
             {/* Step 3 */}
             <div className="flex flex-col items-center relative z-10">
@@ -168,7 +179,7 @@ export function ModalKyc({
                     : 'bg-white border-slate-300 text-slate-500'
                 }`}
               >
-                3
+                {skipSelfie ? 2 : 3}
               </div>
               <span
                 className={`text-[10px] mt-1.5 font-bold transition-colors ${currentStep >= 3 ? 'text-[#9F3F2A]' : 'text-slate-500'}`}
@@ -228,6 +239,7 @@ export function ModalKyc({
 
             {currentStep === 3 && (
               <KycStep3
+                skipSelfie={skipSelfie}
                 kycForm={kycForm}
                 setKycForm={setKycForm}
                 verifyResults={verifyResults}

@@ -16,6 +16,7 @@ import { SmartOtpStep } from './smart-otp-step'
 import { SignatureAnimation } from './signature-animation'
 import { SmartCaSigningPanel } from './smartca-signing-panel'
 import { SmartCaV2SignForm } from './smartca-v2-sign-form'
+import { describeSigningMethodReason } from '../lib/signing-method-reason'
 
 export interface SigningCeremonyModalProps {
   isOpen: boolean
@@ -80,7 +81,9 @@ export function SigningCeremonyModal({
       data-testid="signing-ceremony-modal"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl overflow-hidden flex flex-col gap-5">
+      <div
+        className={`relative w-full ${ceremony.step === 'INTRO' ? 'max-w-4xl' : 'max-w-lg'} rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain flex flex-col gap-5`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
           <div className="flex items-center gap-2">
@@ -151,178 +154,187 @@ export function SigningCeremonyModal({
         {/* Dynamic Step Content */}
         <div className="py-2">
           {ceremony.step === 'INTRO' && (
-            <div className="flex flex-col gap-4 text-left">
-              <div className="p-4 rounded-xl bg-[var(--surface-muted)] border border-[var(--border)] space-y-2.5 text-xs text-[var(--fg)]">
-                <div className="flex items-center gap-2 font-bold text-[var(--fg)]">
-                  <FileCheck className="w-4 h-4 text-[var(--primary)] shrink-0" />
-                  <span>Điều kiện xác nhận ký kết điện tử (thử nghiệm)</span>
+            <div className="grid gap-4 text-left lg:grid-cols-2 lg:items-start lg:gap-6">
+              <div className="flex flex-col gap-4">
+                <div className="p-4 rounded-xl bg-[var(--surface-muted)] border border-[var(--border)] space-y-2.5 text-xs text-[var(--fg)]">
+                  <div className="flex items-center gap-2 font-bold text-[var(--fg)]">
+                    <FileCheck className="w-4 h-4 text-[var(--primary)] shrink-0" />
+                    <span>Điều kiện xác nhận ký kết điện tử (thử nghiệm)</span>
+                  </div>
+                  <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                    Quy trình ký kết tuân thủ nghị định về giao dịch điện tử
+                    trong môi trường thử nghiệm công nghệ bất động sản (PropTech
+                    Sandbox).
+                  </p>
+                  <ul className="space-y-1.5 pl-1 text-[11px]">
+                    <li className="flex items-start gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[var(--success)] shrink-0 mt-0.5" />
+                      <span>
+                        Nội dung hợp đồng 12 điều khoản và 4 phụ lục đã được
+                        chốt khóa.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[var(--success)] shrink-0 mt-0.5" />
+                      <span>
+                        Khoản tiền đặt cọc đã được thanh toán an toàn qua ngân
+                        hàng mô phỏng.
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[var(--success)] shrink-0 mt-0.5" />
+                      <span>
+                        Hồ sơ định danh KYC của bạn đã được kiểm duyệt hợp lệ.
+                      </span>
+                    </li>
+                  </ul>
                 </div>
-                <p className="text-[11px] text-[var(--muted)] leading-relaxed">
-                  Quy trình ký kết tuân thủ nghị định về giao dịch điện tử trong
-                  môi trường thử nghiệm công nghệ bất động sản (PropTech
-                  Sandbox).
-                </p>
-                <ul className="space-y-1.5 pl-1 text-[11px]">
-                  <li className="flex items-start gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[var(--success)] shrink-0 mt-0.5" />
-                    <span>
-                      Nội dung hợp đồng 12 điều khoản và 4 phụ lục đã được chốt
-                      khóa.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[var(--success)] shrink-0 mt-0.5" />
-                    <span>
-                      Khoản tiền đặt cọc đã được thanh toán an toàn qua ngân
-                      hàng mô phỏng.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[var(--success)] shrink-0 mt-0.5" />
-                    <span>
-                      Hồ sơ định danh KYC của bạn đã được kiểm duyệt hợp lệ.
-                    </span>
-                  </li>
-                </ul>
+
+                <label className="flex items-start gap-2 text-xs text-[var(--fg)] cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={consentChecked}
+                    onChange={e => setConsentChecked(e.target.checked)}
+                    aria-label="Xác nhận đồng thuận"
+                    className="mt-0.5 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]"
+                  />
+                  <span>
+                    Tôi xác nhận đã đọc, hiểu rõ toàn bộ nội dung hợp đồng và
+                    đồng ý tiến hành ký xác nhận điện tử bằng sinh trắc học và
+                    Smart OTP.
+                  </span>
+                </label>
               </div>
 
-              <label className="flex items-start gap-2 text-xs text-[var(--fg)] cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={consentChecked}
-                  onChange={e => setConsentChecked(e.target.checked)}
-                  aria-label="Xác nhận đồng thuận"
-                  className="mt-0.5 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]"
-                />
-                <span>
-                  Tôi xác nhận đã đọc, hiểu rõ toàn bộ nội dung hợp đồng và đồng
-                  ý tiến hành ký xác nhận điện tử bằng sinh trắc học và Smart
-                  OTP.
-                </span>
-              </label>
+              <div className="flex flex-col gap-4">
+                <fieldset className="space-y-2">
+                  <legend className="text-[11px] font-bold uppercase text-[var(--muted)]">
+                    Chọn phương thức ký
+                  </legend>
+                  {methodsState.loading ? (
+                    <p className="text-[11px] text-[var(--muted)]">
+                      Đang tải phương thức ký...
+                    </p>
+                  ) : null}
+                  {methodsState.error ? (
+                    <div role="alert" className="space-y-1">
+                      <p className="text-[11px] text-[var(--danger)]">
+                        {methodsState.error}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={methodsState.reload}
+                        className="text-[11px] font-bold text-[var(--primary)] underline"
+                      >
+                        Thử lại
+                      </button>
+                    </div>
+                  ) : null}
+                  <div
+                    role="radiogroup"
+                    aria-label="Chọn phương thức ký"
+                    className="space-y-1.5"
+                  >
+                    {methodsState.methods.map(method => (
+                      <label
+                        key={method.id}
+                        className={`flex items-start gap-2 rounded-lg border p-2.5 text-xs cursor-pointer ${
+                          methodsState.selected === method.id
+                            ? 'border-[var(--primary)] bg-[var(--surface-muted)]'
+                            : 'border-[var(--border)]'
+                        } ${method.available ? '' : 'opacity-50 cursor-not-allowed'}`}
+                      >
+                        <input
+                          type="radio"
+                          name="signing-method"
+                          value={method.id}
+                          checked={methodsState.selected === method.id}
+                          disabled={!method.available}
+                          onChange={() => methodsState.select(method.id)}
+                          className="mt-0.5"
+                        />
+                        <span>
+                          <span className="block font-bold text-[var(--fg)]">
+                            {method.label}
+                          </span>
+                          <span className="block text-[11px] text-[var(--muted)]">
+                            {method.description}
+                          </span>
+                          {!method.available && method.reason ? (
+                            <span className="block text-[11px] text-[var(--warning)]">
+                              Chưa dùng được:{' '}
+                              {describeSigningMethodReason(method.reason)}
+                            </span>
+                          ) : null}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
 
-              <fieldset className="space-y-2">
-                <legend className="text-[11px] font-bold uppercase text-[var(--muted)]">
-                  Chọn phương thức ký
-                </legend>
-                {methodsState.loading ? (
-                  <p className="text-[11px] text-[var(--muted)]">
-                    Đang tải phương thức ký...
-                  </p>
+                {methodsState.selected === 'biometric_smart_otp' ? (
+                  <button
+                    type="button"
+                    onClick={ceremony.startCeremony}
+                    disabled={!consentChecked}
+                    aria-label="Bắt đầu ký kết"
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm"
+                  >
+                    <span>Bắt đầu xác thực ký hợp đồng</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 ) : null}
-                {methodsState.error ? (
-                  <div role="alert" className="space-y-1">
-                    <p className="text-[11px] text-[var(--danger)]">
-                      {methodsState.error}
+
+                {methodsState.selected === 'smartca_v1' ? (
+                  <SmartCaSigningPanel
+                    key={smartCaPanelKey}
+                    contractId={contractId}
+                    disabled={!consentChecked}
+                    {...(onSigningSuccess
+                      ? { onSigned: onSigningSuccess }
+                      : {})}
+                  />
+                ) : null}
+
+                {methodsState.selected === 'smartca_v2' ? (
+                  <SmartCaV2SignForm
+                    key={smartCaPanelKey}
+                    contractId={contractId}
+                    disabled={!consentChecked}
+                    {...(onSigningSuccess
+                      ? { onSigned: onSigningSuccess }
+                      : {})}
+                  />
+                ) : null}
+
+                {methodsState.selected === 'dev_sign' ? (
+                  <div className="rounded-xl border border-dashed border-[var(--warning)] p-3 space-y-2">
+                    <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                      Chế độ test: bỏ qua sinh trắc, Smart OTP và VNPT SmartCA,
+                      chỉ ghi nhận bạn đã ký để đi tiếp các bước sau. Không phải
+                      chữ ký số có chứng thư.
                     </p>
                     <button
                       type="button"
-                      onClick={methodsState.reload}
-                      className="text-[11px] font-bold text-[var(--primary)] underline"
+                      onClick={() => void handleTestSign()}
+                      disabled={!consentChecked || testSigning}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg border border-[var(--warning)] text-[var(--fg)] hover:bg-[var(--surface-muted)] disabled:opacity-50 transition-colors"
                     >
-                      Thử lại
+                      {testSigning
+                        ? 'Đang xác nhận...'
+                        : 'Xác nhận ký (chế độ test)'}
                     </button>
+                    {testSignError ? (
+                      <p
+                        role="alert"
+                        className="text-[11px] text-[var(--danger)]"
+                      >
+                        {testSignError}
+                      </p>
+                    ) : null}
                   </div>
                 ) : null}
-                <div
-                  role="radiogroup"
-                  aria-label="Chọn phương thức ký"
-                  className="space-y-1.5"
-                >
-                  {methodsState.methods.map(method => (
-                    <label
-                      key={method.id}
-                      className={`flex items-start gap-2 rounded-lg border p-2.5 text-xs cursor-pointer ${
-                        methodsState.selected === method.id
-                          ? 'border-[var(--primary)] bg-[var(--surface-muted)]'
-                          : 'border-[var(--border)]'
-                      } ${method.available ? '' : 'opacity-50 cursor-not-allowed'}`}
-                    >
-                      <input
-                        type="radio"
-                        name="signing-method"
-                        value={method.id}
-                        checked={methodsState.selected === method.id}
-                        disabled={!method.available}
-                        onChange={() => methodsState.select(method.id)}
-                        className="mt-0.5"
-                      />
-                      <span>
-                        <span className="block font-bold text-[var(--fg)]">
-                          {method.label}
-                        </span>
-                        <span className="block text-[11px] text-[var(--muted)]">
-                          {method.description}
-                        </span>
-                        {!method.available && method.reason ? (
-                          <span className="block text-[11px] text-[var(--warning)]">
-                            Chưa dùng được: {method.reason}
-                          </span>
-                        ) : null}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-
-              {methodsState.selected === 'biometric_smart_otp' ? (
-                <button
-                  type="button"
-                  onClick={ceremony.startCeremony}
-                  disabled={!consentChecked}
-                  aria-label="Bắt đầu ký kết"
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-[var(--primary)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity shadow-sm"
-                >
-                  <span>Bắt đầu xác thực ký hợp đồng</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : null}
-
-              {methodsState.selected === 'smartca_v1' ? (
-                <SmartCaSigningPanel
-                  key={smartCaPanelKey}
-                  contractId={contractId}
-                  disabled={!consentChecked}
-                  {...(onSigningSuccess ? { onSigned: onSigningSuccess } : {})}
-                />
-              ) : null}
-
-              {methodsState.selected === 'smartca_v2' ? (
-                <SmartCaV2SignForm
-                  key={smartCaPanelKey}
-                  contractId={contractId}
-                  disabled={!consentChecked}
-                  {...(onSigningSuccess ? { onSigned: onSigningSuccess } : {})}
-                />
-              ) : null}
-
-              {methodsState.selected === 'dev_sign' ? (
-                <div className="rounded-xl border border-dashed border-[var(--warning)] p-3 space-y-2">
-                  <p className="text-[11px] text-[var(--muted)] leading-relaxed">
-                    Chế độ test: bỏ qua sinh trắc, Smart OTP và VNPT SmartCA,
-                    chỉ ghi nhận bạn đã ký để đi tiếp các bước sau. Không phải
-                    chữ ký số có chứng thư.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void handleTestSign()}
-                    disabled={!consentChecked || testSigning}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg border border-[var(--warning)] text-[var(--fg)] hover:bg-[var(--surface-muted)] disabled:opacity-50 transition-colors"
-                  >
-                    {testSigning
-                      ? 'Đang xác nhận...'
-                      : 'Xác nhận ký (chế độ test)'}
-                  </button>
-                  {testSignError ? (
-                    <p
-                      role="alert"
-                      className="text-[11px] text-[var(--danger)]"
-                    >
-                      {testSignError}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
+              </div>
             </div>
           )}
 

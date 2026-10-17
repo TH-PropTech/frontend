@@ -45,6 +45,8 @@ interface KycStep3Props {
   isProcessing: boolean
   setCurrentStep: (step: 1 | 2 | 3) => void
   handleConfirmAndSubmitKyc: () => void
+  /** Bỏ bước selfie: ẩn kết quả sinh trắc và quay lại thẳng bước 1. */
+  skipSelfie?: boolean
 }
 
 export function KycStep3({
@@ -61,6 +63,7 @@ export function KycStep3({
   isProcessing,
   setCurrentStep,
   handleConfirmAndSubmitKyc,
+  skipSelfie = false,
 }: KycStep3Props): React.ReactElement {
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch flex-1 overflow-y-auto pr-1">
@@ -210,34 +213,41 @@ export function KycStep3({
           </h4>
 
           {/* Result chips */}
-          <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 space-y-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-emerald-800 font-medium">
-                Đối khớp khuôn mặt:
-              </span>
-              <span className="font-bold text-emerald-700">
-                {verifyResults.faceMatch ? 'TRÙNG KHỚP' : 'KHÔNG KHỚP'}
-              </span>
+          {skipSelfie ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+              Bước selfie và liveness đang tắt (môi trường thử nghiệm). Hồ sơ
+              chỉ dùng ảnh CCCD và chờ nhân viên duyệt.
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-emerald-800 font-medium">
-                Thực thể sống (Liveness):
-              </span>
-              <span className="font-bold text-emerald-700">
-                {verifyResults.liveness ? 'CHÍNH CHỦ' : 'GIẢ MẠO'}
-              </span>
+          ) : (
+            <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-emerald-800 font-medium">
+                  Đối khớp khuôn mặt:
+                </span>
+                <span className="font-bold text-emerald-700">
+                  {verifyResults.faceMatch ? 'TRÙNG KHỚP' : 'KHÔNG KHỚP'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-emerald-800 font-medium">
+                  Thực thể sống (Liveness):
+                </span>
+                <span className="font-bold text-emerald-700">
+                  {verifyResults.liveness ? 'CHÍNH CHỦ' : 'GIẢ MẠO'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs border-t border-emerald-200/50 pt-1.5">
+                <span className="text-emerald-800 font-medium">
+                  Chỉ số Spoof Score:
+                </span>
+                <span className="font-bold text-emerald-700">
+                  {verifyResults.realConfidence === null
+                    ? 'Không có dữ liệu'
+                    : `${(verifyResults.realConfidence * 100).toFixed(0)}%`}
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between items-center text-xs border-t border-emerald-200/50 pt-1.5">
-              <span className="text-emerald-800 font-medium">
-                Chỉ số Spoof Score:
-              </span>
-              <span className="font-bold text-emerald-700">
-                {verifyResults.realConfidence === null
-                  ? 'Không có dữ liệu'
-                  : `${(verifyResults.realConfidence * 100).toFixed(0)}%`}
-              </span>
-            </div>
-          </div>
+          )}
 
           <div className="border-t border-slate-100 pt-3 space-y-3">
             <h4 className="text-[11px] font-bold text-[#9F3F2A] uppercase flex items-center gap-1">
@@ -305,7 +315,7 @@ export function KycStep3({
           ) : (
             <div className="flex gap-2">
               <Button
-                onClick={() => setCurrentStep(2)}
+                onClick={() => setCurrentStep(skipSelfie ? 1 : 2)}
                 variant="outline"
                 className="flex-1 h-10 text-xs border-slate-200 text-slate-600 rounded-full font-bold"
               >

@@ -158,7 +158,10 @@ describe('SigningCeremonyModal', () => {
     renderModal()
 
     await openSmartCaForm()
-    expect(screen.getByDisplayValue('SERIAL-001')).toBeInTheDocument()
+    // Giá trị gửi backend vẫn là serial đầy đủ; người dùng chỉ thấy nhãn rút gọn.
+    expect(screen.getByLabelText('Chứng thư VNPT SmartCA')).toHaveValue(
+      'SERIAL-001'
+    )
     fireEvent.click(
       screen.getByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
     )
