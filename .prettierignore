@@ -6,3 +6,6 @@ playwright-report
 test-results
 pnpm-lock.yaml
 next-env.d.ts
+
+# Viewer 3D sinh tự động từ apartment-3d-renderer (đã minify)
+public/apartment-floorplan/assets
