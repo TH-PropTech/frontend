@@ -3,7 +3,9 @@
 import * as React from 'react'
 import { Box } from 'lucide-react'
 import type { ApartmentItem } from '@/entities/properties'
+import { listApartmentDesigns } from '../api/floorplan-designs-api'
 import { toFloorplanConfig } from '../model/floorplan-config'
+import type { FloorplanDesign } from '../model/floorplan-design'
 import { ApartmentFloorplanFrame } from './apartment-floorplan-frame'
 
 interface ApartmentFloorplanSectionProps {
@@ -13,11 +15,44 @@ interface ApartmentFloorplanSectionProps {
   >
 }
 
+/**
+ * Thiết kế đang bật của căn hộ, tải khi người dùng mở viewer. null = đang tải.
+ * Lỗi mạng không chặn viewer: rơi về danh sách rỗng (viewer dùng phong cách mặc định).
+ */
+function useApartmentDesigns(
+  apartmentId: string,
+  enabled: boolean
+): FloorplanDesign[] | null {
+  const [loaded, setLoaded] = React.useState<{
+    id: string
+    designs: FloorplanDesign[]
+  } | null>(null)
+
+  React.useEffect(() => {
+    if (!enabled) return
+    let active = true
+    void listApartmentDesigns(apartmentId)
+      .catch((): FloorplanDesign[] => [])
+      .then(designs => {
+        if (active) setLoaded({ id: apartmentId, designs })
+      })
+    return () => {
+      active = false
+    }
+  }, [apartmentId, enabled])
+
+  return loaded?.id === apartmentId ? loaded.designs : null
+}
+
 export function ApartmentFloorplanSection({
   property,
 }: ApartmentFloorplanSectionProps): React.ReactElement {
   const [isOpen, setIsOpen] = React.useState(false)
-  const config = React.useMemo(() => toFloorplanConfig(property), [property])
+  const designs = useApartmentDesigns(property.id, isOpen)
+  const config = React.useMemo(
+    () => toFloorplanConfig(property, designs ?? []),
+    [property, designs]
+  )
   const handleOpen = (): void => setIsOpen(true)
   const handleClose = (): void => setIsOpen(false)
 
@@ -34,7 +69,13 @@ export function ApartmentFloorplanSection({
   if (isOpen) {
     return (
       <section className="mx-auto max-w-6xl px-6 pb-2 pt-3 md:px-10">
-        <ApartmentFloorplanFrame config={config} onClose={handleClose} />
+        {designs === null ? (
+          <div className="flex h-[560px] items-center justify-center rounded-3xl border border-border bg-surface text-sm font-semibold text-muted">
+            Đang chuẩn bị sơ đồ 3D...
+          </div>
+        ) : (
+          <ApartmentFloorplanFrame config={config} onClose={handleClose} />
+        )}
       </section>
     )
   }

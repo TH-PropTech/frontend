@@ -18,6 +18,8 @@ describe('floorplan config', () => {
       bathrooms: 2,
       areaM2: 75,
       furnishing: 'full',
+      designs: [],
+      designId: null,
     })
   })
 

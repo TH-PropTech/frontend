@@ -12,6 +12,11 @@ export type FloorplanFrameMessage =
   | { version: 1; type: 'FLOORPLAN_READY' }
   | { version: 1; type: 'FLOORPLAN_ROOM_SELECTED'; payload: { roomId: string } }
   | { version: 1; type: 'FLOORPLAN_ERROR'; payload: { code: string } }
+  | {
+      version: 1
+      type: 'FLOORPLAN_DESIGN_SELECTED'
+      payload: { designId: string }
+    }
 
 export type FloorplanMessage = FloorplanHostMessage | FloorplanFrameMessage
 
@@ -41,6 +46,15 @@ export function parseFloorplanMessage(value: unknown): FloorplanMessage | null {
       version: 1,
       type: value.type,
       payload: { roomId: value.payload.roomId },
+    }
+  }
+  if (value.type === 'FLOORPLAN_DESIGN_SELECTED' && isRecord(value.payload)) {
+    if (typeof value.payload.designId !== 'string' || !value.payload.designId)
+      return null
+    return {
+      version: 1,
+      type: value.type,
+      payload: { designId: value.payload.designId },
     }
   }
   if (value.type === 'FLOORPLAN_ERROR' && isRecord(value.payload)) {

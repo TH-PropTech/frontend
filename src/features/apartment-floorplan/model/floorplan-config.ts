@@ -1,4 +1,8 @@
 import type { ApartmentItem } from '@/entities/properties'
+import {
+  normalizeFloorplanDesigns,
+  type FloorplanDesign,
+} from './floorplan-design'
 
 export type FurnishingLevel = 'bare' | 'partial' | 'full'
 
@@ -9,6 +13,10 @@ export interface FloorplanConfig {
   bathrooms: number
   areaM2: number
   furnishing: FurnishingLevel
+  /** Các thiết kế đang bật của căn hộ; rỗng = viewer tự chọn phong cách mặc định. */
+  designs?: FloorplanDesign[]
+  /** Thiết kế mở đầu tiên (mặc định: thiết kế đầu danh sách). */
+  designId?: string | null
 }
 
 type FloorplanInput = Omit<FloorplanConfig, 'version'> & {
@@ -54,6 +62,11 @@ export function normalizeFloorplanConfig(
     bathrooms: Math.floor(candidate.bathrooms),
     areaM2: candidate.areaM2,
     furnishing: candidate.furnishing,
+    designs: normalizeFloorplanDesigns(candidate.designs),
+    designId:
+      typeof candidate.designId === 'string' && candidate.designId
+        ? candidate.designId
+        : null,
   }
 }
 
@@ -69,7 +82,8 @@ export function toFloorplanConfig(
   property: Pick<
     ApartmentItem,
     'id' | 'bedrooms' | 'bathrooms' | 'areaNum' | 'furniture'
-  >
+  >,
+  designs: FloorplanDesign[] = []
 ): FloorplanConfig | null {
   return normalizeFloorplanConfig({
     apartmentId: property.id,
@@ -77,5 +91,6 @@ export function toFloorplanConfig(
     bathrooms: property.bathrooms,
     areaM2: property.areaNum,
     furnishing: mapFurnishingLabel(property.furniture),
+    designs,
   })
 }

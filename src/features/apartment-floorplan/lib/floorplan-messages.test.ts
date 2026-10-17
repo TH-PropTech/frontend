@@ -33,6 +33,27 @@ describe('floorplan messages', () => {
     expect(parseFloorplanMessage({ version: 1, type: 'RUN_SCRIPT' })).toBeNull()
   })
 
+  it('accepts a design selection from the viewer and rejects a blank id', () => {
+    expect(
+      parseFloorplanMessage({
+        version: 1,
+        type: 'FLOORPLAN_DESIGN_SELECTED',
+        payload: { designId: 'd1' },
+      })
+    ).toEqual({
+      version: 1,
+      type: 'FLOORPLAN_DESIGN_SELECTED',
+      payload: { designId: 'd1' },
+    })
+    expect(
+      parseFloorplanMessage({
+        version: 1,
+        type: 'FLOORPLAN_DESIGN_SELECTED',
+        payload: { designId: '' },
+      })
+    ).toBeNull()
+  })
+
   it('requires the expected origin and iframe source', () => {
     const source = window
     const event = {

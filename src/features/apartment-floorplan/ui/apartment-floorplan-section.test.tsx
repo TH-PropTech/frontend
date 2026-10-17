@@ -1,6 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { listApartmentDesigns } from '../api/floorplan-designs-api'
 import { ApartmentFloorplanSection } from './apartment-floorplan-section'
+
+vi.mock('../api/floorplan-designs-api', () => ({
+  listApartmentDesigns: vi.fn(),
+}))
 
 const property = {
   id: 'apt-1',
@@ -11,6 +16,11 @@ const property = {
 }
 
 describe('ApartmentFloorplanSection', () => {
+  beforeEach(() => {
+    vi.mocked(listApartmentDesigns).mockReset()
+    vi.mocked(listApartmentDesigns).mockResolvedValue([])
+  })
+
   it('does not mount the iframe until the viewer is activated', () => {
     render(<ApartmentFloorplanSection property={property} />)
 
@@ -18,6 +28,12 @@ describe('ApartmentFloorplanSection', () => {
     expect(
       screen.getByRole('button', { name: 'Xem sơ đồ 3D minh hoạ' })
     ).toBeInTheDocument()
+  })
+
+  it('does not request designs before the viewer is activated', () => {
+    render(<ApartmentFloorplanSection property={property} />)
+
+    expect(listApartmentDesigns).not.toHaveBeenCalled()
   })
 
   it('exposes the illustration disclaimer and listing summary', () => {
@@ -30,20 +46,32 @@ describe('ApartmentFloorplanSection', () => {
     expect(screen.getByText(/2 phòng ngủ/)).toBeInTheDocument()
   })
 
-  it('mounts the isolated viewer only after activation', () => {
+  it('mounts the isolated viewer only after activation', async () => {
     render(<ApartmentFloorplanSection property={property} />)
 
     fireEvent.click(
       screen.getByRole('button', { name: 'Xem sơ đồ 3D minh hoạ' })
     )
 
-    expect(screen.getByTitle('Sơ đồ 3D minh hoạ')).toHaveAttribute(
+    expect(await screen.findByTitle('Sơ đồ 3D minh hoạ')).toHaveAttribute(
       'src',
       '/apartment-floorplan/index.html'
     )
+    expect(listApartmentDesigns).toHaveBeenCalledWith('apt-1')
     expect(
       screen.getByRole('button', { name: 'Đóng sơ đồ 3D' })
     ).toBeInTheDocument()
+  })
+
+  it('still opens the viewer with the default style when the designs request fails', async () => {
+    vi.mocked(listApartmentDesigns).mockRejectedValue(new Error('offline'))
+    render(<ApartmentFloorplanSection property={property} />)
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Xem sơ đồ 3D minh hoạ' })
+    )
+
+    expect(await screen.findByTitle('Sơ đồ 3D minh hoạ')).toBeInTheDocument()
   })
 
   it('shows a non-blocking fallback when listing data is incomplete', () => {
