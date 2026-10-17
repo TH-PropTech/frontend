@@ -52,6 +52,10 @@ const PROVIDER_VISUALS: Readonly<
     icon: QrCode,
     className: 'bg-[var(--primary-soft)] text-[var(--primary-hover)]',
   },
+  mocbank: {
+    icon: Landmark,
+    className: 'bg-[var(--info-soft)] text-[var(--info)]',
+  },
   sepay: {
     icon: Banknote,
     className: 'bg-[var(--success-soft)] text-[var(--success)]',

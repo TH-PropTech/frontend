@@ -349,6 +349,11 @@ describe('DepositPaymentPanel', () => {
       { provider: 'vnpay' as const, label: 'VNPAY', simulation: false },
       { provider: 'momo' as const, label: 'MoMo', simulation: false },
       { provider: 'zalopay' as const, label: 'ZaloPay', simulation: false },
+      {
+        provider: 'mocbank' as const,
+        label: 'Mộc Bank (sandbox)',
+        simulation: false,
+      },
     ]
 
     it('sends the chosen gateway and redirects to its payment page', async () => {
@@ -390,6 +395,44 @@ describe('DepositPaymentPanel', () => {
         )
       })
       expect(screen.queryByText(/ngân hàng mô phỏng/)).toBeNull()
+    })
+
+    it('redirects to the Mộc Bank page returned as deepLink', async () => {
+      vi.mocked(paymentsApi.getPaymentProviders).mockResolvedValueOnce(gateways)
+      vi.mocked(paymentsApi.initDepositPayment).mockResolvedValue({
+        provider: 'mocbank',
+        txRef: 'MOCBANK-1',
+        amount: 15000000,
+        description: 'Deposit',
+        qrCode: 'qr',
+        deepLink: 'https://bank.example/pay/1',
+        expiresAt: '2026-03-14T03:00:00Z',
+        status: 'pending',
+      })
+      const assign = vi.fn()
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: { assign },
+      })
+
+      render(
+        <DepositPaymentPanel
+          deposit={mockPendingDeposit}
+          isTenant={true}
+          contractId="c1"
+        />
+      )
+      fireEvent.click(
+        await screen.findByRole('radio', { name: 'Mộc Bank (sandbox)' })
+      )
+      fireEvent.click(screen.getByLabelText('Thanh toán cọc ngay'))
+
+      await waitFor(() => {
+        expect(paymentsApi.initDepositPayment).toHaveBeenCalledWith('dpa-123', {
+          provider: 'mocbank',
+        })
+        expect(assign).toHaveBeenCalledWith('https://bank.example/pay/1')
+      })
     })
 
     it('shows the server error when the gateway is not enabled or unavailable', async () => {

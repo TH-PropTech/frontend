@@ -30,6 +30,7 @@ const gateways: PaymentProviderOption[] = [
     ],
   },
   { provider: 'zalopay', label: 'ZaloPay', simulation: false },
+  { provider: 'mocbank', label: 'Mộc Bank (sandbox)', simulation: false },
   { provider: 'mock-bank', label: 'Mock Bank (sandbox)', simulation: true },
 ]
 
@@ -69,6 +70,10 @@ describe('PaymentProviderPicker', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'ZaloPay' }))
 
     expect(onChange).toHaveBeenCalledWith('zalopay')
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Mộc Bank (sandbox)' }))
+
+    expect(onChange).toHaveBeenCalledWith('mocbank')
   })
 
   it('renders token-based provider visuals without changing accessible names', () => {
@@ -130,7 +135,7 @@ describe('PaymentProviderPicker', () => {
   it('is hidden when only the Mock Bank simulation is enabled', () => {
     const { container } = render(
       <PaymentProviderPicker
-        providers={[gateways[3] as PaymentProviderOption]}
+        providers={[gateways[4] as PaymentProviderOption]}
         value="mock-bank"
         onChange={vi.fn()}
       />

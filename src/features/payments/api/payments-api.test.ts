@@ -9,6 +9,7 @@ import {
   initDepositPayment,
   initInvoicePayment,
   initRentPayment,
+  isExternalGateway,
 } from './payments-api'
 
 vi.mock('@/shared/api', () => ({
@@ -102,6 +103,12 @@ describe('payments API', () => {
     await getGatewayPaymentResult('MOMO-1')
 
     expect(apiClient.get).toHaveBeenCalledWith('/bank/attempts/MOMO-1/result')
+  })
+
+  it('treats mocbank as an external gateway but not mock-bank', () => {
+    expect(isExternalGateway({ provider: 'mocbank' })).toBe(true)
+    expect(isExternalGateway({ provider: 'mock-bank' })).toBe(false)
+    expect(isExternalGateway({})).toBe(false)
   })
 
   it('reads the payment return hint and strips it from the URL', () => {
