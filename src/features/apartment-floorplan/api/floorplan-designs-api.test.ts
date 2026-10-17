@@ -36,6 +36,7 @@ describe('floorplan designs API', () => {
       palette: {},
       furnishing: null,
       defaultHour: 10,
+      layout: { items: {}, extras: [] },
       visible: true,
     })
     await updateAdminDesign('a1', 'd1', { visible: false })
@@ -51,5 +52,26 @@ describe('floorplan designs API', () => {
     })
     expect(del).toHaveBeenCalledWith('/apartments/a1/designs/admin/d1')
     for (const spy of [get, post, patch, del]) spy.mockRestore()
+  })
+
+  it('sends the whole layout with an update and keeps it when listing public designs', async () => {
+    const layout = {
+      items: { 'sofa-1': { x: 1, z: 2 } },
+      extras: [{ id: 'extra-1', kind: 'chair' as const, x: 3, z: 4, rot: 0 }],
+    }
+    const patch = vi.spyOn(apiClient, 'patch').mockResolvedValue({})
+    const get = vi
+      .spyOn(apiClient, 'get')
+      .mockResolvedValueOnce([{ id: 'a', name: 'A', theme: 'warm', layout }])
+
+    await updateAdminDesign('a1', 'd1', { layout })
+    const [design] = await listApartmentDesigns('a1')
+
+    expect(patch).toHaveBeenCalledWith('/apartments/a1/designs/admin/d1', {
+      layout,
+    })
+    expect(design?.layout).toEqual(layout)
+    patch.mockRestore()
+    get.mockRestore()
   })
 })

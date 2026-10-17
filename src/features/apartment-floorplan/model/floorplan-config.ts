@@ -17,6 +17,8 @@ export interface FloorplanConfig {
   designs?: FloorplanDesign[]
   /** Thiết kế mở đầu tiên (mặc định: thiết kế đầu danh sách). */
   designId?: string | null
+  /** Chỉ trang quản trị bật: cho phép chỉnh bố cục trong khung xem trước. Người xem công khai luôn chỉ đọc. */
+  editable?: boolean
 }
 
 type FloorplanInput = Omit<FloorplanConfig, 'version'> & {

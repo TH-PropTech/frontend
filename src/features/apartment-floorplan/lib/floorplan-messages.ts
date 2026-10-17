@@ -1,4 +1,8 @@
 import type { FloorplanConfig } from '../model/floorplan-config'
+import {
+  normalizeFloorplanLayout,
+  type FloorplanLayout,
+} from '../model/floorplan-design'
 
 export const FLOORPLAN_MESSAGE_VERSION = 1 as const
 
@@ -16,6 +20,11 @@ export type FloorplanHostMessage =
 export type FloorplanFrameMessage =
   | { version: 1; type: 'FLOORPLAN_READY' }
   | { version: 1; type: 'FLOORPLAN_EXPAND_TOGGLE' }
+  | {
+      version: 1
+      type: 'FLOORPLAN_LAYOUT_CHANGED'
+      payload: { designId: string; layout: FloorplanLayout }
+    }
   | { version: 1; type: 'FLOORPLAN_ROOM_SELECTED'; payload: { roomId: string } }
   | { version: 1; type: 'FLOORPLAN_ERROR'; payload: { code: string } }
   | {
@@ -45,6 +54,18 @@ export function parseFloorplanMessage(value: unknown): FloorplanMessage | null {
     return null
   if (value.type === 'FLOORPLAN_READY')
     return { version: 1, type: 'FLOORPLAN_READY' }
+  if (value.type === 'FLOORPLAN_LAYOUT_CHANGED' && isRecord(value.payload)) {
+    if (typeof value.payload.designId !== 'string' || !value.payload.designId)
+      return null
+    return {
+      version: 1,
+      type: value.type,
+      payload: {
+        designId: value.payload.designId,
+        layout: normalizeFloorplanLayout(value.payload.layout),
+      },
+    }
+  }
   if (value.type === 'FLOORPLAN_EXPAND_TOGGLE')
     return { version: 1, type: 'FLOORPLAN_EXPAND_TOGGLE' }
   if (value.type === 'FLOORPLAN_ROOM_SELECTED' && isRecord(value.payload)) {

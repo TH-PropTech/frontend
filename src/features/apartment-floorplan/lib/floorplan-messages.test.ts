@@ -60,6 +60,35 @@ describe('floorplan messages', () => {
     ).toEqual({ version: 1, type: 'FLOORPLAN_EXPAND_TOGGLE' })
   })
 
+  it('normalizes the layout draft coming from the viewer', () => {
+    const parsed = parseFloorplanMessage({
+      version: 1,
+      type: 'FLOORPLAN_LAYOUT_CHANGED',
+      payload: {
+        designId: 'd1',
+        layout: {
+          items: { 'sofa-1': { x: 1, z: 2 }, 'bad id': { x: 1 } },
+          extras: [{ id: 'e1', kind: 'hacker', x: 1, z: 1, rot: 0 }],
+        },
+      },
+    })
+    expect(parsed).toEqual({
+      version: 1,
+      type: 'FLOORPLAN_LAYOUT_CHANGED',
+      payload: {
+        designId: 'd1',
+        layout: { items: { 'sofa-1': { x: 1, z: 2 } }, extras: [] },
+      },
+    })
+    expect(
+      parseFloorplanMessage({
+        version: 1,
+        type: 'FLOORPLAN_LAYOUT_CHANGED',
+        payload: { layout: {} },
+      })
+    ).toBeNull()
+  })
+
   it('requires the expected origin and iframe source', () => {
     const source = window
     const event = {
