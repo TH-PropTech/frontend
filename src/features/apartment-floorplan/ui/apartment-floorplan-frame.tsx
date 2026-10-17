@@ -29,6 +29,8 @@ export function ApartmentFloorplanFrame({
   )
   const [errorCode, setErrorCode] = React.useState<string | null>(null)
   const [attempt, setAttempt] = React.useState(0)
+  // Phóng to khung ra toàn màn hình khi trình duyệt không cho iframe dùng Fullscreen API (ví dụ iOS Safari).
+  const [expanded, setExpanded] = React.useState(false)
 
   const postToFrame = React.useCallback(
     (
@@ -37,6 +39,11 @@ export function ApartmentFloorplanFrame({
         | {
             version: 1
             type: 'FLOORPLAN_PAUSE' | 'FLOORPLAN_RESUME' | 'FLOORPLAN_RESET'
+          }
+        | {
+            version: 1
+            type: 'FLOORPLAN_EXPANDED'
+            payload: { expanded: boolean }
           }
     ) => {
       frameRef.current?.contentWindow?.postMessage(
@@ -61,6 +68,10 @@ export function ApartmentFloorplanFrame({
       if (message.type === 'FLOORPLAN_READY') {
         setStatus('ready')
         postToFrame(createFloorplanInitMessage(config))
+        return
+      }
+      if (message.type === 'FLOORPLAN_EXPAND_TOGGLE') {
+        setExpanded(current => !current)
         return
       }
       if (message.type === 'FLOORPLAN_ERROR') {
@@ -106,6 +117,30 @@ export function ApartmentFloorplanFrame({
     return () => observer.disconnect()
   }, [postToFrame])
 
+  React.useEffect(() => {
+    if (status === 'ready') {
+      postToFrame({
+        version: 1,
+        type: 'FLOORPLAN_EXPANDED',
+        payload: { expanded },
+      })
+    }
+  }, [expanded, status, postToFrame])
+
+  React.useEffect(() => {
+    if (!expanded) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const handleKey = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') setExpanded(false)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => {
+      document.body.style.overflow = previous
+      window.removeEventListener('keydown', handleKey)
+    }
+  }, [expanded])
+
   const handleRetry = (): void => {
     setErrorCode(null)
     setStatus('loading')
@@ -125,9 +160,11 @@ export function ApartmentFloorplanFrame({
     <div
       ref={containerRef}
       className={
-        bare
-          ? 'overflow-hidden rounded-2xl border border-border bg-surface'
-          : 'overflow-hidden rounded-3xl border border-border bg-surface'
+        expanded
+          ? 'fixed inset-0 z-[70] flex flex-col overflow-hidden bg-surface'
+          : bare
+            ? 'overflow-hidden rounded-2xl border border-border bg-surface'
+            : 'overflow-hidden rounded-3xl border border-border bg-surface'
       }
     >
       {bare ? null : (
@@ -163,7 +200,11 @@ export function ApartmentFloorplanFrame({
           </div>
         </div>
       )}
-      <div className={`relative ${heightClass} bg-surface-muted`}>
+      <div
+        className={`relative bg-surface-muted ${
+          expanded ? 'min-h-0 flex-1' : heightClass
+        }`}
+      >
         <iframe
           key={attempt}
           ref={frameRef}
@@ -171,6 +212,8 @@ export function ApartmentFloorplanFrame({
           title="Sơ đồ 3D minh hoạ"
           className="h-full w-full border-0"
           loading="eager"
+          allow="fullscreen"
+          allowFullScreen
           onError={handleFrameError}
         />
         {status === 'loading' ? (
