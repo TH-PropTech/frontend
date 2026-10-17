@@ -233,4 +233,18 @@ describe('ApartmentDesignsManager', () => {
     )
     confirm.mockRestore()
   })
+
+  it('renders the dialog straight under <body> so a transformed ancestor cannot offset it', async () => {
+    vi.mocked(listAdminDesigns).mockResolvedValue([])
+    const { container } = render(
+      <div style={{ transform: 'translateX(0)' }}>
+        <ApartmentDesignsManager apartment={apartment} onClose={() => {}} />
+      </div>
+    )
+
+    const dialog = await screen.findByRole('dialog')
+
+    expect(dialog.parentElement).toBe(document.body)
+    expect(container.contains(dialog)).toBe(false)
+  })
 })

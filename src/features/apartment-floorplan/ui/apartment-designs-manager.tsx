@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { Eye, EyeOff, Pencil, Plus, Trash2, X } from 'lucide-react'
 import {
@@ -216,7 +217,8 @@ export function ApartmentDesignsManager({
     }
   }
 
-  return (
+  // Gắn thẳng vào <body>: modal nằm trong khối cha có transform/hiệu ứng thì `fixed` bị tính theo khối đó (hở một dải trắng ở trên).
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -379,6 +381,7 @@ export function ApartmentDesignsManager({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
