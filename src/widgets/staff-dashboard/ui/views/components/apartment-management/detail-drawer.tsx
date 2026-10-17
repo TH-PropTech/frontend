@@ -17,7 +17,9 @@ import {
   ImageIcon,
   ScanLine,
   Pencil,
+  Box,
 } from 'lucide-react'
+import { ApartmentDesignsManager } from '@/features/apartment-floorplan'
 import { ApartmentEditDialog } from './apartment-edit-dialog'
 import { ImageGallery } from './image-gallery'
 import { StatusBadge } from './status-badge'
@@ -49,6 +51,7 @@ export function DetailDrawer({
   const [showRejectInput, setShowRejectInput] = React.useState(false)
   const [rejectReason, setRejectReason] = React.useState('')
   const [showEdit, setShowEdit] = React.useState(false)
+  const [showDesigns, setShowDesigns] = React.useState(false)
   const [vrUrl, setVrUrl] = React.useState(apartment.vrUrl ?? '')
   const [isSavingVr, setIsSavingVr] = React.useState(false)
 
@@ -358,6 +361,14 @@ export function DetailDrawer({
               <Pencil className="w-3.5 h-3.5" />
               Chỉnh sửa thông tin
             </button>
+            <button
+              type="button"
+              onClick={() => setShowDesigns(true)}
+              className="w-full py-2.5 text-xs font-semibold rounded-xl border border-[color:var(--border)] text-[color:var(--fg)] hover:bg-[color:var(--surface-muted)] transition-colors flex items-center justify-center gap-1.5"
+            >
+              <Box className="w-3.5 h-3.5" />
+              Thiết kế 3D
+            </button>
             {apartment.status === 'pending' && !showRejectInput && (
               <div className="flex gap-2">
                 <button
@@ -435,6 +446,20 @@ export function DetailDrawer({
           </div>
         </div>
       </div>
+
+      {showDesigns && (
+        <ApartmentDesignsManager
+          apartment={{
+            id: apartment.id,
+            title: apartment.title,
+            bedrooms: apartment.bedrooms,
+            bathrooms: apartment.bathrooms,
+            area: apartment.area,
+            furniture: apartment.furniture,
+          }}
+          onClose={() => setShowDesigns(false)}
+        />
+      )}
 
       {showEdit && (
         <ApartmentEditDialog

@@ -59,6 +59,7 @@ export function useKycFlow(profile: UseProfileReturn) {
   const [currentStep, setCurrentStep] = React.useState<1 | 2 | 3>(1)
   const [isProcessing, setIsProcessing] = React.useState(false)
   const kycDemoMaintenanceMode = env.kycDemoMaintenanceMode
+  const skipSelfie = env.kycSkipSelfie
 
   // Step 1 Refs & Previews
   const fileInputRef1 = React.useRef<HTMLInputElement>(null)
@@ -288,7 +289,8 @@ export function useKycFlow(profile: UseProfileReturn) {
 
       detectDistrict(extractedAddress)
       toast.success('Trích xuất thông tin OCR thành công!')
-      setCurrentStep(2)
+      // Bỏ selfie thì nhảy thẳng sang bước xác nhận và nộp hồ sơ.
+      setCurrentStep(skipSelfie ? 3 : 2)
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Không thể trích xuất CCCD'
@@ -347,13 +349,14 @@ export function useKycFlow(profile: UseProfileReturn) {
       return
     }
 
-    if (
-      !verifyResults.verified ||
-      !frontPreview ||
-      !backPreview ||
-      !selfiePreview
-    ) {
-      toast.error('Hồ sơ chưa đủ ảnh hoặc chưa qua xác thực sinh trắc học')
+    const missingBiometric =
+      !skipSelfie && (!verifyResults.verified || !selfiePreview)
+    if (missingBiometric || !frontPreview || !backPreview) {
+      toast.error(
+        skipSelfie
+          ? 'Hồ sơ chưa đủ ảnh CCCD'
+          : 'Hồ sơ chưa đủ ảnh hoặc chưa qua xác thực sinh trắc học'
+      )
       return
     }
     setIsProcessing(true)
@@ -370,7 +373,7 @@ export function useKycFlow(profile: UseProfileReturn) {
         placeOfIssue: kycForm.placeOfIssue,
         frontCard: base64ToBlob(frontPreview),
         backCard: base64ToBlob(backPreview),
-        selfie: base64ToBlob(selfiePreview),
+        ...(skipSelfie ? {} : { selfie: base64ToBlob(selfiePreview) }),
       })
 
       await refreshKycStatus()
@@ -498,6 +501,7 @@ export function useKycFlow(profile: UseProfileReturn) {
     backPreview,
     isWebcamActive1,
     isWebcamActive2,
+    skipSelfie,
     selfiePreview,
     isWebcamActiveSelfie,
     fileInputRefSelfie,

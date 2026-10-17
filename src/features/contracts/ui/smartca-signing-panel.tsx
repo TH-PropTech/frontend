@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useSmartCaSigning } from '../model/use-smartca-signing'
 import type { SmartCaSigningSession } from '../api/contracts-api'
+import { formatSmartCaCertificateLabel } from '../lib/smartca-certificate-label'
 
 interface SmartCaSigningPanelProps {
   contractId: string
@@ -148,7 +149,7 @@ export function SmartCaSigningPanel({
                 key={certificate.serialNumber}
                 value={certificate.serialNumber}
               >
-                {certificate.serialNumber}
+                {formatSmartCaCertificateLabel(certificate)}
               </option>
             ))}
           </select>

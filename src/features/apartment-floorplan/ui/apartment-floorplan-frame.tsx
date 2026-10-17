@@ -10,12 +10,17 @@ import type { FloorplanConfig } from '../model/floorplan-config'
 
 interface ApartmentFloorplanFrameProps {
   config: FloorplanConfig
-  onClose: () => void
+  onClose?: () => void
+  /** 'bare': chỉ vùng xem 3D (dùng cho xem trước trong trang quản trị). */
+  variant?: 'card' | 'bare'
+  heightClass?: string
 }
 
 export function ApartmentFloorplanFrame({
   config,
   onClose,
+  variant = 'card',
+  heightClass = 'h-[560px]',
 }: ApartmentFloorplanFrameProps): React.ReactElement {
   const frameRef = React.useRef<HTMLIFrameElement>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -70,6 +75,11 @@ export function ApartmentFloorplanFrame({
     }
   }, [attempt, config, postToFrame])
 
+  // Admin sửa thiết kế khi đang xem trước: gửi lại cấu hình, viewer tự dựng lại cảnh (bỏ qua nếu y hệt).
+  React.useEffect(() => {
+    if (status === 'ready') postToFrame(createFloorplanInitMessage(config))
+  }, [config, status, postToFrame])
+
   React.useEffect(() => {
     const handleVisibility = (): void => {
       postToFrame({
@@ -110,41 +120,50 @@ export function ApartmentFloorplanFrame({
   const handleReset = (): void =>
     postToFrame({ version: 1, type: 'FLOORPLAN_RESET' })
 
+  const bare = variant === 'bare'
   return (
     <div
       ref={containerRef}
-      className="overflow-hidden rounded-3xl border border-border bg-surface"
+      className={
+        bare
+          ? 'overflow-hidden rounded-2xl border border-border bg-surface'
+          : 'overflow-hidden rounded-3xl border border-border bg-surface'
+      }
     >
-      <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
-        <div>
-          <h3 className="font-marketing text-lg font-bold text-fg">
-            Sơ đồ 3D minh hoạ
-          </h3>
-          <p className="mt-1 text-xs text-muted">
-            Bố cục mô phỏng từ thông tin tin đăng, có thể khác hiện trạng thực
-            tế.
-          </p>
+      {bare ? null : (
+        <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
+          <div>
+            <h3 className="font-marketing text-lg font-bold text-fg">
+              Sơ đồ 3D minh hoạ
+            </h3>
+            <p className="mt-1 text-xs text-muted">
+              Bố cục mô phỏng từ thông tin tin đăng, có thể khác hiện trạng thực
+              tế.
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="rounded-xl border border-border px-3 py-2 text-xs font-semibold text-muted hover:bg-surface-muted"
+              aria-label="Đặt lại góc nhìn sơ đồ 3D"
+            >
+              Đặt lại
+            </button>
+            {onClose ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-xl border border-border px-3 py-2 text-xs font-semibold text-muted hover:bg-surface-muted"
+                aria-label="Đóng sơ đồ 3D"
+              >
+                Đóng
+              </button>
+            ) : null}
+          </div>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            onClick={handleReset}
-            className="rounded-xl border border-border px-3 py-2 text-xs font-semibold text-muted hover:bg-surface-muted"
-            aria-label="Đặt lại góc nhìn sơ đồ 3D"
-          >
-            Đặt lại
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-border px-3 py-2 text-xs font-semibold text-muted hover:bg-surface-muted"
-            aria-label="Đóng sơ đồ 3D"
-          >
-            Đóng
-          </button>
-        </div>
-      </div>
-      <div className="relative h-[560px] bg-surface-muted">
+      )}
+      <div className={`relative ${heightClass} bg-surface-muted`}>
         <iframe
           key={attempt}
           ref={frameRef}

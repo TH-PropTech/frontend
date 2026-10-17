@@ -7,6 +7,7 @@ import {
   ArrowRightLeft,
   Blocks,
   Cpu,
+  Box,
   DollarSign,
   LayoutTemplate,
 } from 'lucide-react'
@@ -19,6 +20,7 @@ import { RentalFlowControlView } from './views/rental-flow-control-view'
 import { RecommendationEngineView } from './views/recommendation-engine-view'
 import { FabricAuditView } from './views/fabric-audit-view'
 import { GroqKeysView } from './views/groq-keys-view'
+import { ApartmentDesignsView } from './views/apartment-designs-view'
 import { LegalKnowledgeView } from './views/legal-knowledge-view'
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
@@ -42,6 +44,7 @@ type TabType =
   | 'rental-ops'
   | 'fabric-audit'
   | 'groq-keys'
+  | 'apartment-designs'
   | 'legal-knowledge'
 
 const ADMIN_TABS: readonly TabType[] = [
@@ -58,6 +61,7 @@ const ADMIN_TABS: readonly TabType[] = [
   'rental-ops',
   'fabric-audit',
   'groq-keys',
+  'apartment-designs',
   'legal-knowledge',
 ]
 
@@ -241,6 +245,11 @@ export function AdminDashboard({
       icon: <Blocks className="h-[18px] w-[18px]" aria-hidden="true" />,
     },
     {
+      type: 'apartment-designs',
+      label: 'Thiết kế 3D căn hộ',
+      icon: <Box className="h-[18px] w-[18px]" aria-hidden="true" />,
+    },
+    {
       type: 'groq-keys',
       label: 'Cấu hình API Key',
       icon: (
@@ -336,6 +345,8 @@ export function AdminDashboard({
         return <FabricAuditView />
       case 'groq-keys':
         return <GroqKeysView />
+      case 'apartment-designs':
+        return <ApartmentDesignsView />
       case 'legal-knowledge':
         return <LegalKnowledgeView />
       default:
