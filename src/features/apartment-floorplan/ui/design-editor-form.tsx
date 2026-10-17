@@ -9,6 +9,10 @@ import {
   PALETTE_LABELS,
   THEME_META,
   resolveDesignPalette,
+  emptyLayout,
+  isLayoutEmpty,
+  summarizeLayout,
+  type FloorplanLayout,
   type FloorplanPalette,
   type FloorplanTheme,
   type PaletteKey,
@@ -21,6 +25,8 @@ export interface DesignDraft {
   description: string
   theme: FloorplanTheme
   palette: FloorplanPalette
+  /** Bố cục đồ nội thất tuỳ chỉnh (kéo thả trong khung xem trước), toạ độ theo mẫu. */
+  layout: FloorplanLayout
   furnishing: FurnishingLevel | 'inherit'
   defaultHour: number
   visible: boolean
@@ -33,6 +39,7 @@ export const EMPTY_DRAFT: DesignDraft = {
   description: '',
   theme: 'modern',
   palette: {},
+  layout: emptyLayout(),
   furnishing: 'inherit',
   defaultHour: 10,
   visible: true,
@@ -247,6 +254,38 @@ export function DesignEditorForm({
           />
         </div>
       </div>
+
+      <fieldset>
+        <legend className="mb-1 text-xs font-semibold text-fg">
+          Bố cục đồ nội thất
+        </legend>
+        <div className="rounded-xl border border-border p-3 text-xs text-muted">
+          <p>
+            Bấm <b className="text-fg">Chỉnh bố cục</b> trong khung xem trước,
+            kéo đồ để dời, xoay, ẩn/hiện hoặc thêm đồ từ danh mục. Bố cục lưu
+            riêng cho thiết kế này.
+          </p>
+          <p className="mt-2 flex items-center justify-between gap-2">
+            <span data-testid="layout-summary">
+              {isLayoutEmpty(draft.layout)
+                ? 'Đang dùng bố cục mẫu'
+                : (() => {
+                    const s = summarizeLayout(draft.layout)
+                    return `${s.adjusted} đồ đã chỉnh · ${s.hidden} đang ẩn · ${s.added} đồ thêm`
+                  })()}
+            </span>
+            {isLayoutEmpty(draft.layout) ? null : (
+              <button
+                type="button"
+                onClick={() => set('layout', emptyLayout())}
+                className="shrink-0 rounded-lg border border-border px-2 py-1 font-semibold text-fg hover:bg-surface-muted"
+              >
+                Đặt lại bố cục
+              </button>
+            )}
+          </p>
+        </div>
+      </fieldset>
 
       <label className="flex items-center gap-2 text-xs font-semibold text-fg">
         <input

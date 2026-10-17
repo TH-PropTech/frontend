@@ -20,9 +20,28 @@ vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
 vi.mock('./apartment-floorplan-frame', () => ({
   ApartmentFloorplanFrame: ({
     config,
+    editable,
+    onLayoutChange,
   }: {
-    config: { designs?: unknown[] }
-  }) => <div data-testid="preview">{config.designs?.length ?? 0} designs</div>,
+    config: { designs?: { id: string }[] }
+    editable?: boolean
+    onLayoutChange?: (designId: string, layout: unknown) => void
+  }) => (
+    <div data-testid="preview" data-editable={String(Boolean(editable))}>
+      {config.designs?.length ?? 0} designs
+      <button
+        type="button"
+        onClick={() =>
+          onLayoutChange?.(config.designs?.[0]?.id ?? '', {
+            items: { 'sofa-1': { x: 2, z: 3 } },
+            extras: [{ id: 'extra-1', kind: 'chair', x: 1, z: 1, rot: 0 }],
+          })
+        }
+      >
+        emit-layout
+      </button>
+    </div>
+  ),
 }))
 
 const apartment = {
@@ -42,6 +61,7 @@ const design = (over: Partial<AdminFloorplanDesign>): AdminFloorplanDesign => ({
   palette: {},
   furnishing: null,
   defaultHour: 10,
+  layout: { items: {}, extras: [] },
   visible: true,
   order: 0,
   updatedAt: '2026-10-01T00:00:00.000Z',
@@ -130,5 +150,87 @@ describe('ApartmentDesignsManager', () => {
     expect(await screen.findByTestId('preview')).toHaveTextContent('2 designs')
     fireEvent.click(screen.getByRole('button', { name: 'Sửa thiết kế Bắc Âu' }))
     expect(screen.getByTestId('preview')).toHaveTextContent('1 designs')
+  })
+
+  it('keeps the viewer read-only until a design is being edited', async () => {
+    vi.mocked(listAdminDesigns).mockResolvedValue([design({})])
+    render(<ApartmentDesignsManager apartment={apartment} onClose={() => {}} />)
+
+    expect(await screen.findByTestId('preview')).toHaveAttribute(
+      'data-editable',
+      'false'
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Sửa thiết kế Bắc Âu' }))
+    expect(screen.getByTestId('preview')).toHaveAttribute(
+      'data-editable',
+      'true'
+    )
+  })
+
+  it('saves the dragged layout with the design and shows a summary', async () => {
+    vi.mocked(listAdminDesigns).mockResolvedValue([design({})])
+    vi.mocked(updateAdminDesign).mockResolvedValue(design({}))
+    render(<ApartmentDesignsManager apartment={apartment} onClose={() => {}} />)
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Sửa thiết kế Bắc Âu' })
+    )
+    expect(screen.getByTestId('layout-summary')).toHaveTextContent(
+      'Đang dùng bố cục mẫu'
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'emit-layout' }))
+    expect(screen.getByTestId('layout-summary')).toHaveTextContent(
+      '1 đồ đã chỉnh · 0 đang ẩn · 1 đồ thêm'
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
+
+    await waitFor(() => expect(updateAdminDesign).toHaveBeenCalled())
+    expect(vi.mocked(updateAdminDesign).mock.calls[0]?.[2]).toMatchObject({
+      layout: {
+        items: { 'sofa-1': { x: 2, z: 3 } },
+        extras: [{ id: 'extra-1', kind: 'chair', x: 1, z: 1, rot: 0 }],
+      },
+    })
+  })
+
+  it('keeps the unsaved layout for a retry when saving fails', async () => {
+    vi.mocked(listAdminDesigns).mockResolvedValue([design({})])
+    vi.mocked(updateAdminDesign).mockRejectedValueOnce(new Error('500'))
+    render(<ApartmentDesignsManager apartment={apartment} onClose={() => {}} />)
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Sửa thiết kế Bắc Âu' })
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'emit-layout' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
+
+    await waitFor(() => expect(updateAdminDesign).toHaveBeenCalledTimes(1))
+    // vẫn ở form, bản nháp còn nguyên để thử lại
+    expect(screen.getByTestId('layout-summary')).toHaveTextContent(
+      '1 đồ đã chỉnh'
+    )
+    vi.mocked(updateAdminDesign).mockResolvedValueOnce(design({}))
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu thay đổi' }))
+    await waitFor(() => expect(updateAdminDesign).toHaveBeenCalledTimes(2))
+  })
+
+  it('asks before discarding unsaved layout changes and can reset to the template', async () => {
+    vi.mocked(listAdminDesigns).mockResolvedValue([design({})])
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false)
+    render(<ApartmentDesignsManager apartment={apartment} onClose={() => {}} />)
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Sửa thiết kế Bắc Âu' })
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'emit-layout' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Huỷ' }))
+    expect(confirm).toHaveBeenCalled()
+    expect(screen.getByTestId('layout-summary')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Đặt lại bố cục' }))
+    expect(screen.getByTestId('layout-summary')).toHaveTextContent(
+      'Đang dùng bố cục mẫu'
+    )
+    confirm.mockRestore()
   })
 })

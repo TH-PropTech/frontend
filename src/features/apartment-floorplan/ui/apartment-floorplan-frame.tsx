@@ -7,6 +7,7 @@ import {
   parseFloorplanMessage,
 } from '../lib/floorplan-messages'
 import type { FloorplanConfig } from '../model/floorplan-config'
+import type { FloorplanLayout } from '../model/floorplan-design'
 
 interface ApartmentFloorplanFrameProps {
   config: FloorplanConfig
@@ -14,6 +15,10 @@ interface ApartmentFloorplanFrameProps {
   /** 'bare': chỉ vùng xem 3D (dùng cho xem trước trong trang quản trị). */
   variant?: 'card' | 'bare'
   heightClass?: string
+  /** Chỉ trang quản trị bật: cho phép chỉnh bố cục trong khung. Người xem công khai luôn chỉ đọc. */
+  editable?: boolean
+  /** Nhận bản nháp bố cục (toạ độ mẫu, đã chuẩn hoá) mỗi khi admin hoàn tất một thao tác chỉnh. */
+  onLayoutChange?: (designId: string, layout: FloorplanLayout) => void
 }
 
 export function ApartmentFloorplanFrame({
@@ -21,6 +26,8 @@ export function ApartmentFloorplanFrame({
   onClose,
   variant = 'card',
   heightClass = 'h-[560px]',
+  editable = false,
+  onLayoutChange,
 }: ApartmentFloorplanFrameProps): React.ReactElement {
   const frameRef = React.useRef<HTMLIFrameElement>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -31,6 +38,17 @@ export function ApartmentFloorplanFrame({
   const [attempt, setAttempt] = React.useState(0)
   // Phóng to khung ra toàn màn hình khi trình duyệt không cho iframe dùng Fullscreen API (ví dụ iOS Safari).
   const [expanded, setExpanded] = React.useState(false)
+
+  // Cấu hình gửi cho viewer: cờ editable chỉ có khi host cho phép (preview của admin); ngược lại bị loại bỏ hẳn.
+  const initConfig = React.useMemo<FloorplanConfig>(() => {
+    const { editable: _ignored, ...rest } = config
+    void _ignored
+    return editable ? { ...rest, editable: true } : rest
+  }, [config, editable])
+  const onLayoutRef = React.useRef(onLayoutChange)
+  React.useEffect(() => {
+    onLayoutRef.current = onLayoutChange
+  }, [onLayoutChange])
 
   const postToFrame = React.useCallback(
     (
@@ -67,7 +85,16 @@ export function ApartmentFloorplanFrame({
       if (!message) return
       if (message.type === 'FLOORPLAN_READY') {
         setStatus('ready')
-        postToFrame(createFloorplanInitMessage(config))
+        postToFrame(createFloorplanInitMessage(initConfig))
+        return
+      }
+      if (message.type === 'FLOORPLAN_LAYOUT_CHANGED') {
+        // chỉ nhận bản nháp khi host đã bật chỉnh sửa; khung công khai bỏ qua hoàn toàn
+        if (editable)
+          onLayoutRef.current?.(
+            message.payload.designId,
+            message.payload.layout
+          )
         return
       }
       if (message.type === 'FLOORPLAN_EXPAND_TOGGLE') {
@@ -84,12 +111,12 @@ export function ApartmentFloorplanFrame({
       window.clearTimeout(timeout)
       window.removeEventListener('message', handleMessage)
     }
-  }, [attempt, config, postToFrame])
+  }, [attempt, initConfig, editable, postToFrame])
 
   // Admin sửa thiết kế khi đang xem trước: gửi lại cấu hình, viewer tự dựng lại cảnh (bỏ qua nếu y hệt).
   React.useEffect(() => {
-    if (status === 'ready') postToFrame(createFloorplanInitMessage(config))
-  }, [config, status, postToFrame])
+    if (status === 'ready') postToFrame(createFloorplanInitMessage(initConfig))
+  }, [initConfig, status, postToFrame])
 
   React.useEffect(() => {
     const handleVisibility = (): void => {

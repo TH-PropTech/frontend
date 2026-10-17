@@ -63,4 +63,121 @@ describe('ApartmentFloorplanFrame', () => {
     })
     expect(container.className).not.toContain('fixed')
   })
+
+  describe('layout editing', () => {
+    const post = (frame: HTMLIFrameElement, data: unknown): void => {
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            data,
+            origin: window.location.origin,
+            source: frame.contentWindow,
+          })
+        )
+      })
+    }
+    const initPayloads = (spy: ReturnType<typeof vi.spyOn>): unknown[] =>
+      spy.mock.calls
+        .map(call => call[0] as { type?: string; payload?: unknown })
+        .filter(message => message.type === 'FLOORPLAN_INIT')
+        .map(message => message.payload)
+
+    it('opts the viewer into editing only when the host allows it', () => {
+      render(
+        <ApartmentFloorplanFrame config={config} variant="bare" editable />
+      )
+      const frame = screen.getByTitle('Sơ đồ 3D minh hoạ') as HTMLIFrameElement
+      const spy = vi.spyOn(frame.contentWindow as Window, 'postMessage')
+
+      post(frame, { version: 1, type: 'FLOORPLAN_READY' })
+
+      expect(initPayloads(spy).at(-1)).toMatchObject({ editable: true })
+    })
+
+    it('never sends the editable flag to a public viewer, even if the config carries it', () => {
+      render(
+        <ApartmentFloorplanFrame
+          config={{ ...config, editable: true }}
+          variant="bare"
+        />
+      )
+      const frame = screen.getByTitle('Sơ đồ 3D minh hoạ') as HTMLIFrameElement
+      const spy = vi.spyOn(frame.contentWindow as Window, 'postMessage')
+
+      post(frame, { version: 1, type: 'FLOORPLAN_READY' })
+
+      const payload = initPayloads(spy).at(-1) as Record<string, unknown>
+      expect(payload).toBeTruthy()
+      expect(payload).not.toHaveProperty('editable')
+    })
+
+    it('hands a normalized layout draft to the host when editing is on', () => {
+      const onLayoutChange = vi.fn()
+      render(
+        <ApartmentFloorplanFrame
+          config={config}
+          variant="bare"
+          editable
+          onLayoutChange={onLayoutChange}
+        />
+      )
+      const frame = screen.getByTitle('Sơ đồ 3D minh hoạ') as HTMLIFrameElement
+
+      post(frame, {
+        version: 1,
+        type: 'FLOORPLAN_LAYOUT_CHANGED',
+        payload: {
+          designId: 'd1',
+          layout: {
+            items: { 'sofa-1': { x: 1, z: 2 }, 'bad id': { x: 1 } },
+            extras: [],
+          },
+        },
+      })
+
+      expect(onLayoutChange).toHaveBeenCalledWith('d1', {
+        items: { 'sofa-1': { x: 1, z: 2 } },
+        extras: [],
+      })
+    })
+
+    it('ignores layout drafts in a read-only frame and from untrusted sources', () => {
+      const onLayoutChange = vi.fn()
+      const { rerender } = render(
+        <ApartmentFloorplanFrame
+          config={config}
+          variant="bare"
+          onLayoutChange={onLayoutChange}
+        />
+      )
+      const frame = screen.getByTitle('Sơ đồ 3D minh hoạ') as HTMLIFrameElement
+      const draft = {
+        version: 1,
+        type: 'FLOORPLAN_LAYOUT_CHANGED',
+        payload: { designId: 'd1', layout: { items: {}, extras: [] } },
+      }
+
+      post(frame, draft)
+      expect(onLayoutChange).not.toHaveBeenCalled()
+
+      rerender(
+        <ApartmentFloorplanFrame
+          config={config}
+          variant="bare"
+          editable
+          onLayoutChange={onLayoutChange}
+        />
+      )
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            data: draft,
+            origin: 'https://evil.example',
+            source: frame.contentWindow,
+          })
+        )
+      })
+      expect(onLayoutChange).not.toHaveBeenCalled()
+    })
+  })
 })

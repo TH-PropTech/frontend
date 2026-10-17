@@ -13,6 +13,8 @@ import { toFloorplanConfig } from '../model/floorplan-config'
 import {
   THEME_META,
   normalizeFloorplanDesign,
+  normalizeFloorplanLayout,
+  type FloorplanLayout,
   resolveDesignPalette,
   type AdminFloorplanDesign,
   type FloorplanDesign,
@@ -48,6 +50,7 @@ function toDraft(design: AdminFloorplanDesign): DesignDraft {
     description: design.description,
     theme: design.theme,
     palette: design.palette,
+    layout: normalizeFloorplanLayout(design.layout),
     furnishing: design.furnishing ?? 'inherit',
     defaultHour: design.defaultHour,
     visible: design.visible,
@@ -61,6 +64,7 @@ function toInput(draft: DesignDraft): FloorplanDesignInput {
     description: draft.description.trim(),
     theme: draft.theme,
     palette: draft.palette,
+    layout: draft.layout,
     furnishing: draft.furnishing === 'inherit' ? null : draft.furnishing,
     defaultHour: draft.defaultHour,
     visible: draft.visible,
@@ -75,6 +79,7 @@ function previewDesign(draft: DesignDraft): FloorplanDesign | null {
     description: draft.description,
     theme: draft.theme,
     palette: draft.palette,
+    layout: draft.layout,
     furnishing: draft.furnishing === 'inherit' ? null : draft.furnishing,
     defaultHour: draft.defaultHour,
   })
@@ -90,6 +95,8 @@ export function ApartmentDesignsManager({
   )
   const [loadError, setLoadError] = React.useState(false)
   const [draft, setDraft] = React.useState<DesignDraft | null>(null)
+  // Ảnh chụp bản nháp lúc mở form: so sánh để biết có thay đổi chưa lưu hay không.
+  const [baseline, setBaseline] = React.useState('')
   const [saving, setSaving] = React.useState(false)
 
   React.useEffect(() => {
@@ -128,6 +135,34 @@ export function ApartmentDesignsManager({
       .filter((design): design is FloorplanDesign => design !== null)
     return toFloorplanConfig(property, saved)
   }, [draft, designs, property])
+
+  const openDraft = (next: DesignDraft): void => {
+    setBaseline(JSON.stringify(next))
+    setDraft(next)
+  }
+
+  const isDirty = draft !== null && JSON.stringify(draft) !== baseline
+
+  /** Có thay đổi chưa lưu thì hỏi lại trước khi bỏ; bản đã lưu luôn giữ nguyên. */
+  const confirmDiscard = (): boolean =>
+    !isDirty || window.confirm('Bỏ các thay đổi chưa lưu của thiết kế này?')
+
+  const handleCancel = (): void => {
+    if (confirmDiscard()) setDraft(null)
+  }
+
+  const handleClose = (): void => {
+    if (confirmDiscard()) onClose()
+  }
+
+  // Bản nháp bố cục từ khung xem trước (chỉ nhận cho đúng thiết kế đang xem trước).
+  const handleLayoutChange = React.useCallback(
+    (designId: string, layout: FloorplanLayout): void => {
+      if (designId !== PREVIEW_ID) return
+      setDraft(current => (current ? { ...current, layout } : current))
+    },
+    []
+  )
 
   const handleSave = async (): Promise<void> => {
     if (!draft) return
@@ -201,7 +236,7 @@ export function ApartmentDesignsManager({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Đóng"
             className="rounded-xl border border-border p-2 text-muted hover:bg-surface-muted"
           >
@@ -217,13 +252,13 @@ export function ApartmentDesignsManager({
                 saving={saving}
                 onChange={setDraft}
                 onSave={() => void handleSave()}
-                onCancel={() => setDraft(null)}
+                onCancel={handleCancel}
               />
             ) : (
               <>
                 <button
                   type="button"
-                  onClick={() => setDraft({ ...EMPTY_DRAFT })}
+                  onClick={() => openDraft({ ...EMPTY_DRAFT })}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white transition hover:bg-primary-hover"
                 >
                   <Plus className="h-4 w-4" aria-hidden="true" />
@@ -295,7 +330,7 @@ export function ApartmentDesignsManager({
                             </button>
                             <button
                               type="button"
-                              onClick={() => setDraft(toDraft(design))}
+                              onClick={() => openDraft(toDraft(design))}
                               aria-label={`Sửa thiết kế ${design.name}`}
                               className="rounded-lg p-1.5 text-muted hover:bg-surface-muted"
                             >
@@ -323,11 +358,17 @@ export function ApartmentDesignsManager({
             <p className="mb-2 text-xs font-semibold text-fg">
               {draft ? 'Xem trước bản nháp' : 'Xem trước'}
             </p>
-            {previewConfig ? (
+            {designs === null && !loadError ? (
+              <p className="rounded-2xl border border-border p-6 text-sm text-muted">
+                Đang chuẩn bị xem trước...
+              </p>
+            ) : previewConfig ? (
               <ApartmentFloorplanFrame
                 config={previewConfig}
                 variant="bare"
                 heightClass="h-[460px] lg:h-[560px]"
+                editable={draft !== null}
+                onLayoutChange={handleLayoutChange}
               />
             ) : (
               <p className="rounded-2xl border border-border p-6 text-sm text-muted">
