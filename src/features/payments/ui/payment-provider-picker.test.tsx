@@ -30,7 +30,7 @@ const gateways: PaymentProviderOption[] = [
     ],
   },
   { provider: 'zalopay', label: 'ZaloPay', simulation: false },
-  { provider: 'mocbank', label: 'Mộc Bank (sandbox)', simulation: false },
+  { provider: 'mocbank', label: 'Ví Mộc (sandbox)', simulation: false },
   { provider: 'mock-bank', label: 'Mock Bank (sandbox)', simulation: true },
 ]
 
@@ -71,7 +71,7 @@ describe('PaymentProviderPicker', () => {
 
     expect(onChange).toHaveBeenCalledWith('zalopay')
 
-    fireEvent.click(screen.getByRole('radio', { name: 'Mộc Bank (sandbox)' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'Ví Mộc (sandbox)' }))
 
     expect(onChange).toHaveBeenCalledWith('mocbank')
   })

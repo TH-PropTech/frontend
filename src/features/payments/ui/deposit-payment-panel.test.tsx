@@ -351,7 +351,7 @@ describe('DepositPaymentPanel', () => {
       { provider: 'zalopay' as const, label: 'ZaloPay', simulation: false },
       {
         provider: 'mocbank' as const,
-        label: 'Mộc Bank (sandbox)',
+        label: 'Ví Mộc (sandbox)',
         simulation: false,
       },
     ]
@@ -397,7 +397,7 @@ describe('DepositPaymentPanel', () => {
       expect(screen.queryByText(/ngân hàng mô phỏng/)).toBeNull()
     })
 
-    it('redirects to the Mộc Bank page returned as deepLink', async () => {
+    it('redirects to the Ví Mộc page returned as deepLink', async () => {
       vi.mocked(paymentsApi.getPaymentProviders).mockResolvedValueOnce(gateways)
       vi.mocked(paymentsApi.initDepositPayment).mockResolvedValue({
         provider: 'mocbank',
@@ -423,7 +423,7 @@ describe('DepositPaymentPanel', () => {
         />
       )
       fireEvent.click(
-        await screen.findByRole('radio', { name: 'Mộc Bank (sandbox)' })
+        await screen.findByRole('radio', { name: 'Ví Mộc (sandbox)' })
       )
       fireEvent.click(screen.getByLabelText('Thanh toán cọc ngay'))
 
