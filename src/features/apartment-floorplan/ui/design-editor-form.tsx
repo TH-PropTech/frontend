@@ -296,7 +296,7 @@ export function DesignEditorForm({
         Hiển thị cho người xem
       </label>
 
-      <div className="flex gap-2 pt-1">
+      <div className="sticky bottom-0 -mx-1 flex gap-2 bg-surface px-1 pb-1 pt-3">
         <button
           type="submit"
           disabled={saving || !draft.name.trim()}

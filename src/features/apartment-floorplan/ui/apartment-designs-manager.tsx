@@ -223,7 +223,7 @@ export function ApartmentDesignsManager({
       aria-label={`Thiết kế 3D: ${apartment.title}`}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3"
     >
-      <div className="flex max-h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-3xl bg-surface shadow-xl">
+      <div className="flex h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-3xl bg-surface shadow-xl">
         <header className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
           <div className="min-w-0">
             <h2 className="font-marketing text-lg font-bold text-fg">
@@ -244,8 +244,8 @@ export function ApartmentDesignsManager({
           </button>
         </header>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-5 lg:grid-cols-[320px_1fr]">
-          <div className="space-y-3">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 lg:grid-cols-[320px_1fr] lg:overflow-hidden">
+          <div className="min-h-0 space-y-3 lg:overflow-y-auto lg:pr-2">
             {draft ? (
               <DesignEditorForm
                 draft={draft}
@@ -354,8 +354,8 @@ export function ApartmentDesignsManager({
             )}
           </div>
 
-          <div>
-            <p className="mb-2 text-xs font-semibold text-fg">
+          <div className="flex min-h-[420px] min-w-0 flex-col lg:min-h-0">
+            <p className="mb-2 shrink-0 text-xs font-semibold text-fg">
               {draft ? 'Xem trước bản nháp' : 'Xem trước'}
             </p>
             {designs === null && !loadError ? (
@@ -366,7 +366,8 @@ export function ApartmentDesignsManager({
               <ApartmentFloorplanFrame
                 config={previewConfig}
                 variant="bare"
-                heightClass="h-[480px] lg:h-[calc(90vh-200px)] lg:min-h-[560px]"
+                className="min-h-0 flex-1"
+                heightClass="min-h-[360px] flex-1"
                 editable={draft !== null}
                 onLayoutChange={handleLayoutChange}
               />
