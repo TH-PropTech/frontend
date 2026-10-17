@@ -6,6 +6,7 @@ import {
   isTrustedFloorplanMessage,
   parseFloorplanMessage,
 } from '../lib/floorplan-messages'
+import { VIEWER_VERSION } from '../lib/viewer-version'
 import type { FloorplanConfig } from '../model/floorplan-config'
 import type { FloorplanLayout } from '../model/floorplan-design'
 
@@ -238,7 +239,7 @@ export function ApartmentFloorplanFrame({
         <iframe
           key={attempt}
           ref={frameRef}
-          src="/apartment-floorplan/index.html"
+          src={`/apartment-floorplan/index.html?v=${VIEWER_VERSION}`}
           title="Sơ đồ 3D minh hoạ"
           className="h-full w-full border-0"
           loading="eager"
