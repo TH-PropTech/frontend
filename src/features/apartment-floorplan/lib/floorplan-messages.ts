@@ -7,9 +7,15 @@ export type FloorplanHostMessage =
   | { version: 1; type: 'FLOORPLAN_PAUSE' }
   | { version: 1; type: 'FLOORPLAN_RESUME' }
   | { version: 1; type: 'FLOORPLAN_RESET' }
+  | {
+      version: 1
+      type: 'FLOORPLAN_EXPANDED'
+      payload: { expanded: boolean }
+    }
 
 export type FloorplanFrameMessage =
   | { version: 1; type: 'FLOORPLAN_READY' }
+  | { version: 1; type: 'FLOORPLAN_EXPAND_TOGGLE' }
   | { version: 1; type: 'FLOORPLAN_ROOM_SELECTED'; payload: { roomId: string } }
   | { version: 1; type: 'FLOORPLAN_ERROR'; payload: { code: string } }
   | {
@@ -39,6 +45,8 @@ export function parseFloorplanMessage(value: unknown): FloorplanMessage | null {
     return null
   if (value.type === 'FLOORPLAN_READY')
     return { version: 1, type: 'FLOORPLAN_READY' }
+  if (value.type === 'FLOORPLAN_EXPAND_TOGGLE')
+    return { version: 1, type: 'FLOORPLAN_EXPAND_TOGGLE' }
   if (value.type === 'FLOORPLAN_ROOM_SELECTED' && isRecord(value.payload)) {
     if (typeof value.payload.roomId !== 'string' || !value.payload.roomId)
       return null

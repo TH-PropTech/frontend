@@ -54,6 +54,12 @@ describe('floorplan messages', () => {
     ).toBeNull()
   })
 
+  it('accepts the viewer request to expand the frame', () => {
+    expect(
+      parseFloorplanMessage({ version: 1, type: 'FLOORPLAN_EXPAND_TOGGLE' })
+    ).toEqual({ version: 1, type: 'FLOORPLAN_EXPAND_TOGGLE' })
+  })
+
   it('requires the expected origin and iframe source', () => {
     const source = window
     const event = {
