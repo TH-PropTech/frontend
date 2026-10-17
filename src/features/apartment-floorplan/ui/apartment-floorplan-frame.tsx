@@ -6,6 +6,7 @@ import {
   isTrustedFloorplanMessage,
   parseFloorplanMessage,
 } from '../lib/floorplan-messages'
+import { VIEWER_VERSION } from '../lib/viewer-version'
 import type { FloorplanConfig } from '../model/floorplan-config'
 import type { FloorplanLayout } from '../model/floorplan-design'
 
@@ -15,6 +16,8 @@ interface ApartmentFloorplanFrameProps {
   /** 'bare': chỉ vùng xem 3D (dùng cho xem trước trong trang quản trị). */
   variant?: 'card' | 'bare'
   heightClass?: string
+  /** Lớp bổ sung cho khung ngoài cùng (ví dụ để chiếm hết chiều cao còn lại của cột). */
+  className?: string
   /** Chỉ trang quản trị bật: cho phép chỉnh bố cục trong khung. Người xem công khai luôn chỉ đọc. */
   editable?: boolean
   /** Nhận bản nháp bố cục (toạ độ mẫu, đã chuẩn hoá) mỗi khi admin hoàn tất một thao tác chỉnh. */
@@ -26,6 +29,7 @@ export function ApartmentFloorplanFrame({
   onClose,
   variant = 'card',
   heightClass = 'h-[560px]',
+  className = '',
   editable = false,
   onLayoutChange,
 }: ApartmentFloorplanFrameProps): React.ReactElement {
@@ -190,7 +194,7 @@ export function ApartmentFloorplanFrame({
         expanded
           ? 'fixed inset-0 z-[70] flex flex-col overflow-hidden bg-surface'
           : bare
-            ? 'overflow-hidden rounded-2xl border border-border bg-surface'
+            ? `flex flex-col overflow-hidden rounded-2xl border border-border bg-surface ${className}`
             : 'overflow-hidden rounded-3xl border border-border bg-surface'
       }
     >
@@ -235,7 +239,7 @@ export function ApartmentFloorplanFrame({
         <iframe
           key={attempt}
           ref={frameRef}
-          src="/apartment-floorplan/index.html"
+          src={`/apartment-floorplan/index.html?v=${VIEWER_VERSION}`}
           title="Sơ đồ 3D minh hoạ"
           className="h-full w-full border-0"
           loading="eager"

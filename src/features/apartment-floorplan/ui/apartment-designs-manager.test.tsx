@@ -233,4 +233,41 @@ describe('ApartmentDesignsManager', () => {
     )
     confirm.mockRestore()
   })
+
+  it('renders the dialog straight under <body> so a transformed ancestor cannot offset it', async () => {
+    vi.mocked(listAdminDesigns).mockResolvedValue([])
+    const { container } = render(
+      <div style={{ transform: 'translateX(0)' }}>
+        <ApartmentDesignsManager apartment={apartment} onClose={() => {}} />
+      </div>
+    )
+
+    const dialog = await screen.findByRole('dialog')
+
+    expect(dialog.parentElement).toBe(document.body)
+    expect(container.contains(dialog)).toBe(false)
+  })
+
+  it('tells the admin why the save button is disabled and marks unsaved changes', async () => {
+    vi.mocked(listAdminDesigns).mockResolvedValue([])
+    render(<ApartmentDesignsManager apartment={apartment} onClose={() => {}} />)
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /Thêm thiết kế/ })
+    )
+    expect(screen.getByRole('status')).toHaveTextContent('Tên thiết kế')
+    expect(screen.getByRole('button', { name: 'Thêm thiết kế' })).toBeDisabled()
+    expect(screen.queryByText('Chưa lưu')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'emit-layout' }))
+    expect(screen.getByText('Chưa lưu')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Tên thiết kế'), {
+      target: { value: 'Bản của tôi' },
+    })
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Thêm thiết kế' })
+    ).not.toBeDisabled()
+  })
 })

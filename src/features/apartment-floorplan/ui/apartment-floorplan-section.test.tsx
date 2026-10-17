@@ -53,10 +53,10 @@ describe('ApartmentFloorplanSection', () => {
       screen.getByRole('button', { name: 'Xem sơ đồ 3D minh hoạ' })
     )
 
-    expect(await screen.findByTitle('Sơ đồ 3D minh hoạ')).toHaveAttribute(
-      'src',
-      '/apartment-floorplan/index.html'
+    const src = (await screen.findByTitle('Sơ đồ 3D minh hoạ')).getAttribute(
+      'src'
     )
+    expect(src).toMatch(/^\/apartment-floorplan\/index\.html\?v=[a-z0-9]+$/)
     expect(listApartmentDesigns).toHaveBeenCalledWith('apt-1')
     expect(
       screen.getByRole('button', { name: 'Đóng sơ đồ 3D' })

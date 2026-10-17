@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { Eye, EyeOff, Pencil, Plus, Trash2, X } from 'lucide-react'
 import {
@@ -216,14 +217,15 @@ export function ApartmentDesignsManager({
     }
   }
 
-  return (
+  // Gắn thẳng vào <body>: modal nằm trong khối cha có transform/hiệu ứng thì `fixed` bị tính theo khối đó (hở một dải trắng ở trên).
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={`Thiết kế 3D: ${apartment.title}`}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3"
     >
-      <div className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-surface shadow-xl">
+      <div className="flex h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-3xl bg-surface shadow-xl">
         <header className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
           <div className="min-w-0">
             <h2 className="font-marketing text-lg font-bold text-fg">
@@ -244,8 +246,8 @@ export function ApartmentDesignsManager({
           </button>
         </header>
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-5 lg:grid-cols-[360px_1fr]">
-          <div className="space-y-3">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-4 lg:grid-cols-[320px_1fr] lg:overflow-hidden">
+          <div className="min-h-0 space-y-3 lg:overflow-y-auto lg:pr-2">
             {draft ? (
               <DesignEditorForm
                 draft={draft}
@@ -354,9 +356,14 @@ export function ApartmentDesignsManager({
             )}
           </div>
 
-          <div>
-            <p className="mb-2 text-xs font-semibold text-fg">
+          <div className="flex min-h-[420px] min-w-0 flex-col lg:min-h-0">
+            <p className="mb-2 shrink-0 text-xs font-semibold text-fg">
               {draft ? 'Xem trước bản nháp' : 'Xem trước'}
+              {isDirty ? (
+                <span className="ml-2 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-bold text-primary">
+                  Chưa lưu
+                </span>
+              ) : null}
             </p>
             {designs === null && !loadError ? (
               <p className="rounded-2xl border border-border p-6 text-sm text-muted">
@@ -366,7 +373,8 @@ export function ApartmentDesignsManager({
               <ApartmentFloorplanFrame
                 config={previewConfig}
                 variant="bare"
-                heightClass="h-[460px] lg:h-[560px]"
+                className="min-h-0 flex-1"
+                heightClass="min-h-[360px] flex-1"
                 editable={draft !== null}
                 onLayoutChange={handleLayoutChange}
               />
@@ -378,6 +386,7 @@ export function ApartmentDesignsManager({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
