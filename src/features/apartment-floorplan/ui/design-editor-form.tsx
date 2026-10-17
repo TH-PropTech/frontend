@@ -296,21 +296,36 @@ export function DesignEditorForm({
         Hiển thị cho người xem
       </label>
 
-      <div className="sticky bottom-0 -mx-1 flex gap-2 bg-surface px-1 pb-1 pt-3">
-        <button
-          type="submit"
-          disabled={saving || !draft.name.trim()}
-          className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white transition hover:bg-primary-hover disabled:opacity-50"
-        >
-          {saving ? 'Đang lưu...' : draft.id ? 'Lưu thay đổi' : 'Thêm thiết kế'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold text-muted hover:bg-surface-muted"
-        >
-          Huỷ
-        </button>
+      <div className="sticky bottom-0 -mx-1 bg-surface px-1 pb-1 pt-3">
+        {!draft.name.trim() ? (
+          <p
+            role="status"
+            className="mb-2 rounded-lg bg-primary-soft px-3 py-2 text-xs font-semibold text-primary"
+          >
+            Nhập <b>Tên thiết kế</b> ở đầu form để bật nút lưu. Bố cục bạn vừa
+            chỉnh được lưu cùng thiết kế này.
+          </p>
+        ) : null}
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={saving || !draft.name.trim()}
+            className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white transition hover:bg-primary-hover disabled:opacity-50"
+          >
+            {saving
+              ? 'Đang lưu...'
+              : draft.id
+                ? 'Lưu thay đổi'
+                : 'Thêm thiết kế'}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold text-muted hover:bg-surface-muted"
+          >
+            Huỷ
+          </button>
+        </div>
       </div>
     </form>
   )

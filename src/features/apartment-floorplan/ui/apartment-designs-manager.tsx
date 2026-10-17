@@ -359,6 +359,11 @@ export function ApartmentDesignsManager({
           <div className="flex min-h-[420px] min-w-0 flex-col lg:min-h-0">
             <p className="mb-2 shrink-0 text-xs font-semibold text-fg">
               {draft ? 'Xem trước bản nháp' : 'Xem trước'}
+              {isDirty ? (
+                <span className="ml-2 rounded-full bg-primary-soft px-2 py-0.5 text-[11px] font-bold text-primary">
+                  Chưa lưu
+                </span>
+              ) : null}
             </p>
             {designs === null && !loadError ? (
               <p className="rounded-2xl border border-border p-6 text-sm text-muted">
