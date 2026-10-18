@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, type FormEvent, type ReactElement } from 'react'
-import { AlertTriangle, CheckCircle2, Clock } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Clock, FileDown } from 'lucide-react'
+import { toast } from 'sonner'
 import type { MoveInSettlementView } from '@/features/contracts/api/contracts-api'
 import { Button } from '@/shared/ui/button'
+import { downloadHandoverPdf } from '../api/move-in-settlement-api'
 import {
   ITEM_CONDITION_LABELS,
   getCompletionReasonLabel,
@@ -12,6 +14,7 @@ import {
 type Handover = NonNullable<MoveInSettlementView['handover']>
 
 export interface HandoverRecordViewProps {
+  settlementId: string
   handover: Handover
   role: 'tenant' | 'landlord'
   busy: boolean
@@ -26,6 +29,7 @@ const confirmationLabel = (confirmed: boolean): string =>
   confirmed ? 'Đã xác nhận' : 'Chưa xác nhận'
 
 export function HandoverRecordView({
+  settlementId,
   handover,
   role,
   busy,
@@ -34,6 +38,7 @@ export function HandoverRecordView({
 }: HandoverRecordViewProps): ReactElement {
   const [isReporting, setIsReporting] = useState(false)
   const [note, setNote] = useState('')
+  const [downloading, setDownloading] = useState(false)
   const items = handover.inventoryItems ?? []
   const discrepancies = handover.discrepancies ?? []
   const hasOpenDiscrepancy = discrepancies.some(
@@ -65,6 +70,27 @@ export function HandoverRecordView({
     event.preventDefault()
     if (!note.trim()) return
     onReportDiscrepancy(note.trim())
+  }
+
+  const handleDownloadPdf = async (): Promise<void> => {
+    setDownloading(true)
+    try {
+      const blob = await downloadHandoverPdf(settlementId)
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `bien-ban-ban-giao-${settlementId}.pdf`
+      anchor.click()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Không thể tải PDF biên bản bàn giao.'
+      )
+    } finally {
+      setDownloading(false)
+    }
   }
 
   return (
@@ -138,11 +164,23 @@ export function HandoverRecordView({
         </div>
       ) : null}
       {isCompleted ? (
-        <p className="inline-flex items-start gap-1 text-[var(--success)]">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          Bàn giao hoàn tất.{' '}
-          {getCompletionReasonLabel(handover.completionReason)}
-        </p>
+        <div className="space-y-2">
+          <p className="inline-flex items-start gap-1 text-[var(--success)]">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            Bàn giao hoàn tất.{' '}
+            {getCompletionReasonLabel(handover.completionReason)}
+          </p>
+          <Button
+            type="button"
+            variant="secondary"
+            className="min-h-11"
+            disabled={downloading}
+            onClick={() => void handleDownloadPdf()}
+          >
+            <FileDown className="h-4 w-4" />
+            {downloading ? 'Đang tải...' : 'Tải PDF biên bản'}
+          </Button>
+        </div>
       ) : null}
       {canTenantRespond || canLandlordConfirm ? (
         <div className="flex flex-wrap gap-2">

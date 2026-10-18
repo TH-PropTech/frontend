@@ -40,6 +40,10 @@ export async function confirmHandover(
   )
 }
 
+export async function downloadHandoverPdf(settlementId: string): Promise<Blob> {
+  return apiClient.getBlob(`/move-in-settlements/${settlementId}/handover/pdf`)
+}
+
 export async function reportHandoverDiscrepancy(
   settlementId: string,
   handoverHash: string,

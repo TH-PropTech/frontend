@@ -184,6 +184,7 @@ export function MoveInSettlementPanel({
       ) : null}
       {handover ? (
         <HandoverRecordView
+          settlementId={settlement.id}
           handover={handover}
           role={role}
           busy={busy}
