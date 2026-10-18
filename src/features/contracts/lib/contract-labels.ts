@@ -72,6 +72,7 @@ const CONTRACT_PAYOUT_ITEM_STATUS_LABELS: Record<string, string> = {
   released: 'Đã nhận',
   refunded: 'Đã hoàn cho khách thuê',
   unpaid: 'Chưa thanh toán',
+  'paid-pending-disbursement': 'Khách đã trả, chờ chuyển cho chủ nhà',
 }
 
 const AMENDMENT_FIELD_LABELS: Record<string, string> = {
