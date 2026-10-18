@@ -97,6 +97,16 @@ describe('payments API', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/bank/providers')
   })
 
+  it('asks for deposit-capable gateways when purpose is deposit', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue([])
+
+    await getPaymentProviders('deposit')
+
+    expect(apiClient.get).toHaveBeenCalledWith(
+      '/bank/providers?purpose=deposit'
+    )
+  })
+
   it('loads a gateway result by server reference', async () => {
     vi.mocked(apiClient.get).mockResolvedValue({ targetPaid: true })
 

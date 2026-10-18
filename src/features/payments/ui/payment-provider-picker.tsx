@@ -20,6 +20,7 @@ import {
   type PaymentChoice,
   type PaymentProviderName,
   type PaymentProviderOption,
+  type PaymentProviderPurpose,
 } from '../api/payments-api'
 
 const FALLBACK_PROVIDERS: PaymentProviderOption[] = [
@@ -129,7 +130,9 @@ export interface PaymentProvidersState {
  * Loads the server allow-list once. Falls back to Mock Bank when the list
  * cannot be loaded so the existing simulation flow keeps working.
  */
-export function usePaymentProviders(): PaymentProvidersState {
+export function usePaymentProviders(
+  purpose?: PaymentProviderPurpose
+): PaymentProvidersState {
   const [providers, setProviders] =
     React.useState<PaymentProviderOption[]>(FALLBACK_PROVIDERS)
   const [selected, setSelected] =
@@ -139,7 +142,7 @@ export function usePaymentProviders(): PaymentProvidersState {
 
   React.useEffect(() => {
     let active = true
-    getPaymentProviders()
+    getPaymentProviders(purpose)
       .then(list => {
         if (!active || list.length === 0) return
         setProviders(list)
@@ -149,7 +152,7 @@ export function usePaymentProviders(): PaymentProvidersState {
     return () => {
       active = false
     }
-  }, [])
+  }, [purpose])
 
   const choice: PaymentChoice =
     selected === 'momo'

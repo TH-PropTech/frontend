@@ -112,8 +112,15 @@ function choiceBody(choice: PaymentChoice): {
     : { provider: choice.provider, clientChannel: 'web' }
 }
 
-export async function getPaymentProviders(): Promise<PaymentProviderOption[]> {
-  return apiClient.get<PaymentProviderOption[]>('/bank/providers')
+export type PaymentProviderPurpose = 'deposit'
+
+/** `purpose: 'deposit'` asks the server for the gateways that can hold a deposit. */
+export async function getPaymentProviders(
+  purpose?: PaymentProviderPurpose
+): Promise<PaymentProviderOption[]> {
+  return apiClient.get<PaymentProviderOption[]>(
+    purpose ? `/bank/providers?purpose=${purpose}` : '/bank/providers'
+  )
 }
 
 export async function getPaymentsByContract(
