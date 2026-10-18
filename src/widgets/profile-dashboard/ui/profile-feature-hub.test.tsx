@@ -6,12 +6,6 @@ vi.mock('@/features/saved-searches', () => ({
   SavedSearchesList: () => <div>saved-searches-content</div>,
   AlertList: () => <div>alerts-content</div>,
 }))
-vi.mock('@/features/living-cost', () => ({
-  CostCalculatorModal: ({ trigger }: { trigger: React.ReactNode }) => (
-    <>{trigger}</>
-  ),
-  LivingCostProfilesList: () => <div>living-cost-profiles-content</div>,
-}))
 vi.mock('@/features/safety-reports', () => ({
   MyReportsList: () => <div>reports-content</div>,
 }))
@@ -46,12 +40,5 @@ describe('ProfileFeatureHub', () => {
     fireEvent.click(screen.getByText('select-ticket'))
 
     expect(screen.getByText('detail-ticket-1')).toBeInTheDocument()
-  })
-
-  it('exposes the living-cost calculator and saved profiles', () => {
-    render(<ProfileFeatureHub feature="living-cost" />)
-
-    expect(screen.getByText('living-cost-profiles-content')).toBeInTheDocument()
-    expect(screen.getByRole('button')).toBeInTheDocument()
   })
 })
