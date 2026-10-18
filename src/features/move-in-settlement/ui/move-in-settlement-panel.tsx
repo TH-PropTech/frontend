@@ -1,14 +1,25 @@
 'use client'
 
-import { useState, type FormEvent, type ReactElement } from 'react'
-import { CheckCircle2, ClipboardList, Loader2 } from 'lucide-react'
-import type { MoveInSettlementView } from '@/features/contracts/api/contracts-api'
+import { useState, type ReactElement } from 'react'
+import { ClipboardList, Loader2 } from 'lucide-react'
+import type {
+  HandoverInput,
+  MoveInSettlementView,
+} from '@/features/contracts/api/contracts-api'
 import { Button } from '@/shared/ui/button'
 import {
   confirmHandover,
   initSettlementPayment,
+  reportHandoverDiscrepancy,
   updateHandover,
 } from '../api/move-in-settlement-api'
+import {
+  getHandoverErrorMessage,
+  getSettlementLineLabel,
+  getSettlementStatusLabel,
+} from '../lib/move-in-labels'
+import { HandoverRecordForm } from './handover-record-form'
+import { HandoverRecordView } from './handover-record-view'
 
 export interface MoveInSettlementPanelProps {
   settlement: MoveInSettlementView | null
@@ -28,12 +39,6 @@ export function MoveInSettlementPanel({
 }: MoveInSettlementPanelProps): ReactElement {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [handedOverAt, setHandedOverAt] = useState('')
-  const [electricity, setElectricity] = useState('')
-  const [water, setWater] = useState('')
-  const [keyCount, setKeyCount] = useState('')
-  const [inventoryReference, setInventoryReference] = useState('')
-  const [notes, setNotes] = useState('')
   const [paymentRequest, setPaymentRequest] = useState<{
     txRef: string
     deepLink: string
@@ -52,75 +57,64 @@ export function MoveInSettlementPanel({
   }
 
   const handover = settlement.handover
-  const handleRecord = async (
-    event: FormEvent<HTMLFormElement>
+  const run = async (
+    action: () => Promise<unknown>,
+    fallback: string,
+    refresh = true
   ): Promise<void> => {
-    event.preventDefault()
     setBusy(true)
     setError(null)
     try {
-      await updateHandover(settlement.id, {
-        handedOverAt,
-        electricity: Number(electricity),
-        water: Number(water),
-        keyCount: Number(keyCount),
-        ...(inventoryReference ? { inventoryReference } : {}),
-        ...(notes ? { notes } : {}),
-      })
-      onRefresh()
-    } catch (saveError) {
-      setError(
-        saveError instanceof Error
-          ? saveError.message
-          : 'Không ghi được biên bản bàn giao.'
-      )
+      await action()
+      if (refresh) onRefresh()
+    } catch (actionError) {
+      setError(getHandoverErrorMessage(actionError, fallback))
     } finally {
       setBusy(false)
     }
   }
 
-  const handleConfirm = async (): Promise<void> => {
+  const handleRecord = (input: HandoverInput): void =>
+    void run(
+      () => updateHandover(settlement.id, input),
+      'Không ghi được biên bản bàn giao.'
+    )
+  const handleConfirm = (): void => {
     if (!handover) return
-    setBusy(true)
-    setError(null)
-    try {
-      await confirmHandover(settlement.id, handover.handoverHash, role)
-      onRefresh()
-    } catch (confirmError) {
-      setError(
-        confirmError instanceof Error
-          ? confirmError.message
-          : 'Không xác nhận được bàn giao.'
-      )
-    } finally {
-      setBusy(false)
-    }
+    void run(
+      () => confirmHandover(settlement.id, handover.handoverHash, role),
+      'Không xác nhận được biên bản bàn giao.'
+    )
   }
+  const handleReport = (note: string): void => {
+    if (!handover) return
+    void run(
+      () =>
+        reportHandoverDiscrepancy(settlement.id, handover.handoverHash, note),
+      'Không gửi được phản hồi sai lệch.'
+    )
+  }
+  const handleSettlementPayment = (): void =>
+    void run(
+      async () => {
+        setPaymentRequest(await initSettlementPayment(settlement.id))
+        onOpenInvoices()
+      },
+      'Không tạo được yêu cầu thanh toán.',
+      false
+    )
 
-  const handleSettlementPayment = async (): Promise<void> => {
-    setBusy(true)
-    setError(null)
-    try {
-      const request = await initSettlementPayment(settlement.id)
-      setPaymentRequest(request)
-      onOpenInvoices()
-    } catch (paymentError) {
-      setError(
-        paymentError instanceof Error
-          ? paymentError.message
-          : 'Unable to create the settlement payment request.'
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
+  const canRecord =
+    role === 'landlord' &&
+    settlement.status === 'paid' &&
+    !handover?.completedAt
 
   return (
     <section
       data-testid="move-in-settlement-panel"
       className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"
     >
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-[var(--fg)]">
             Quyết toán nhận nhà
@@ -130,8 +124,8 @@ export function MoveInSettlementPanel({
             {new Date(settlement.dueAt).toLocaleDateString('vi-VN')}
           </p>
         </div>
-        <span className="rounded-full bg-[var(--surface-muted)] px-2.5 py-1 text-[11px] font-semibold text-[var(--warning)]">
-          {settlement.status}
+        <span className="shrink-0 whitespace-nowrap rounded-full bg-[var(--surface-muted)] px-2.5 py-1 text-[11px] font-semibold text-[var(--warning)]">
+          {getSettlementStatusLabel(settlement.status)}
         </span>
       </header>
       <ul className="space-y-2">
@@ -141,7 +135,7 @@ export function MoveInSettlementPanel({
             className="flex justify-between gap-3 text-xs"
           >
             <span className="text-[var(--muted)]">
-              {line.kind.replaceAll('_', ' ')}
+              {getSettlementLineLabel(line.kind)}
             </span>
             <strong className="text-[var(--fg)]">
               {formatMoney(line.amount)}
@@ -157,8 +151,9 @@ export function MoveInSettlementPanel({
         <Button
           type="button"
           variant="secondary"
+          className="min-h-11"
           disabled={busy}
-          onClick={() => void handleSettlementPayment()}
+          onClick={handleSettlementPayment}
         >
           {busy ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -178,129 +173,35 @@ export function MoveInSettlementPanel({
             href={paymentRequest.deepLink}
             target="_blank"
             rel="noreferrer"
-            className="mt-2 inline-flex rounded-lg border border-[var(--border)] px-3 py-2 font-semibold text-[var(--fg)]"
+            className="mt-2 inline-flex min-h-11 items-center rounded-lg border border-[var(--border)] px-3 py-2 font-semibold text-[var(--fg)]"
           >
             Mở cổng thanh toán
           </a>
         </div>
       ) : null}
-      {role === 'landlord' && !handover?.completedAt ? (
-        <form
-          onSubmit={event => void handleRecord(event)}
-          className="grid gap-3 border-t border-[var(--border)] pt-4 sm:grid-cols-2"
-        >
-          <label className="text-xs">
-            Thời gian bàn giao
-            <input
-              required
-              type="datetime-local"
-              value={handedOverAt}
-              onChange={event => setHandedOverAt(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2"
-            />
-          </label>
-          <label className="text-xs">
-            Chỉ số điện
-            <input
-              required
-              type="number"
-              min="0"
-              value={electricity}
-              onChange={event => setElectricity(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2"
-            />
-          </label>
-          <label className="text-xs">
-            Chỉ số nước
-            <input
-              required
-              type="number"
-              min="0"
-              value={water}
-              onChange={event => setWater(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2"
-            />
-          </label>
-          <label className="text-xs">
-            Số chìa khóa
-            <input
-              required
-              type="number"
-              min="0"
-              value={keyCount}
-              onChange={event => setKeyCount(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2"
-            />
-          </label>
-          <label className="text-xs sm:col-span-2">
-            Mã danh mục tài sản
-            <input
-              value={inventoryReference}
-              onChange={event => setInventoryReference(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2"
-            />
-          </label>
-          <label className="text-xs sm:col-span-2">
-            Ghi chú
-            <textarea
-              value={notes}
-              onChange={event => setNotes(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2"
-            />
-          </label>
-          <Button type="submit" disabled={busy} className="sm:col-span-2">
-            {busy ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ClipboardList className="h-4 w-4" />
-            )}
-            Ghi biên bản bàn giao
-          </Button>
-        </form>
-      ) : null}
       {handover ? (
-        <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-xs">
-          <div className="flex items-center justify-between gap-2">
-            <strong>Biên bản v{handover.revision}</strong>
-            <span className="font-mono text-[var(--muted)]">
-              {handover.handoverHash.slice(0, 12)}
-            </span>
-          </div>
-          <p>
-            Điện {handover.meterReadings.electricity} · Nước{' '}
-            {handover.meterReadings.water} · {handover.keyCount} chìa khóa
-          </p>
-          <p>
-            Tenant:{' '}
-            {handover.tenantConfirmation ? 'Đã xác nhận' : 'Chưa xác nhận'} ·
-            Landlord:{' '}
-            {handover.landlordConfirmation ? 'Đã xác nhận' : 'Chưa xác nhận'}
-          </p>
-          {handover.completedAt ? (
-            <p className="inline-flex items-center gap-1 text-[var(--success)]">
-              <CheckCircle2 className="h-4 w-4" />
-              Bàn giao hoàn tất
-            </p>
-          ) : (
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={
-                busy ||
-                Boolean(
-                  handover[
-                    role === 'tenant'
-                      ? 'tenantConfirmation'
-                      : 'landlordConfirmation'
-                  ]
-                )
-              }
-              onClick={() => void handleConfirm()}
-            >
-              Xác nhận biên bản
-            </Button>
-          )}
-        </div>
+        <HandoverRecordView
+          handover={handover}
+          role={role}
+          busy={busy}
+          onConfirm={handleConfirm}
+          onReportDiscrepancy={handleReport}
+        />
+      ) : null}
+      {canRecord && !handover ? (
+        <HandoverRecordForm
+          busy={busy}
+          isRevision={false}
+          onSubmit={handleRecord}
+        />
+      ) : null}
+      {canRecord && handover ? (
+        <details className="text-xs">
+          <summary className="min-h-11 cursor-pointer py-2 font-semibold text-[var(--fg)]">
+            Sửa biên bản (tạo bản mới, khách thuê xác nhận lại)
+          </summary>
+          <HandoverRecordForm busy={busy} isRevision onSubmit={handleRecord} />
+        </details>
       ) : null}
       {error ? (
         <p role="alert" className="text-xs text-[var(--danger)]">

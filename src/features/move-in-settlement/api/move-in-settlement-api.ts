@@ -39,3 +39,14 @@ export async function confirmHandover(
     { handoverHash, role }
   )
 }
+
+export async function reportHandoverDiscrepancy(
+  settlementId: string,
+  handoverHash: string,
+  note: string
+): Promise<MoveInSettlementView> {
+  return apiClient.post<MoveInSettlementView>(
+    `/move-in-settlements/${settlementId}/handover/discrepancy`,
+    { handoverHash, note }
+  )
+}
