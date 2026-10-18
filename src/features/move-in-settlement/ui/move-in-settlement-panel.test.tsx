@@ -46,12 +46,14 @@ const settlement: MoveInSettlementView = {
 const renderPanel = (
   view: MoveInSettlementView,
   role: 'tenant' | 'landlord',
-  onRefresh = vi.fn()
+  onRefresh = vi.fn(),
+  depositConfirmed = true
 ): ReturnType<typeof render> =>
   render(
     <MoveInSettlementPanel
       settlement={view}
       role={role}
+      depositConfirmed={depositConfirmed}
       onRefresh={onRefresh}
       onOpenInvoices={vi.fn()}
     />
@@ -74,6 +76,7 @@ describe('MoveInSettlementPanel', () => {
       <MoveInSettlementPanel
         settlement={settlement}
         role="tenant"
+        depositConfirmed
         onRefresh={onRefresh}
         onOpenInvoices={onOpenInvoices}
       />
@@ -145,11 +148,18 @@ describe('MoveInSettlementPanel', () => {
     )
   })
 
-  it('does not offer the record form to the landlord before the settlement is paid', () => {
-    renderPanel({ ...settlement, handover: null }, 'landlord')
+  it('does not offer the record form to the landlord before the settlement is paid nor the deposit confirmed', () => {
+    renderPanel({ ...settlement, handover: null }, 'landlord', undefined, false)
     expect(
       screen.queryByRole('button', { name: 'Ghi biên bản bàn giao' })
     ).not.toBeInTheDocument()
+  })
+
+  it('offers the record form to the landlord once the deposit is confirmed, even before the settlement is paid', () => {
+    renderPanel({ ...settlement, handover: null }, 'landlord', undefined, true)
+    expect(
+      screen.getByRole('button', { name: 'Ghi biên bản bàn giao' })
+    ).toBeInTheDocument()
   })
 
   it('shows the tenant the full record, deadline and both actions before responding', () => {

@@ -8,6 +8,7 @@ import {
   ContractViewSwitcher,
   FabricLedgerEvidenceCard,
   getLedgerStatusLabel,
+  isDepositPaid,
   lockContractContent,
   renderAndLockContractArtifact,
   SigningCeremonyModal,
@@ -332,6 +333,7 @@ export function ContractStepContent({
         <MoveInSettlementPanel
           settlement={data.settlement ?? null}
           role={signerRole}
+          depositConfirmed={isDepositPaid(data.deposit?.status)}
           onRefresh={() => void refresh()}
           onOpenInvoices={() =>
             document

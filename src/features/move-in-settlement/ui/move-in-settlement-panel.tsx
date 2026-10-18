@@ -24,6 +24,8 @@ import { HandoverRecordView } from './handover-record-view'
 export interface MoveInSettlementPanelProps {
   settlement: MoveInSettlementView | null
   role: 'tenant' | 'landlord'
+  /** Cọc đã xác nhận (ký hợp đồng + chuyển cọc) — đủ để mở biên bản bàn giao, không cần chờ quyết toán nhận nhà. */
+  depositConfirmed: boolean
   onRefresh: () => void
   onOpenInvoices: () => void
 }
@@ -34,6 +36,7 @@ const formatMoney = (amount: number): string =>
 export function MoveInSettlementPanel({
   settlement,
   role,
+  depositConfirmed,
   onRefresh,
   onOpenInvoices,
 }: MoveInSettlementPanelProps): ReactElement {
@@ -106,7 +109,7 @@ export function MoveInSettlementPanel({
 
   const canRecord =
     role === 'landlord' &&
-    settlement.status === 'paid' &&
+    (settlement.status === 'paid' || depositConfirmed) &&
     !handover?.completedAt
 
   return (
