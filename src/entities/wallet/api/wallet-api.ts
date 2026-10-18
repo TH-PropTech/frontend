@@ -12,6 +12,8 @@ export interface Wallet {
   bank: WalletBank | null
   accountHolder: string | null
   accountNumberMasked: string | null
+  /** Full Ví Mộc account number, present only in the owner's own view (for QR). */
+  accountNumber: string | null
   linkedAt: string | null
 }
 
@@ -44,17 +46,11 @@ export interface PayableInvoice {
 }
 
 export interface LinkWalletInput {
-  bankCode: string
   accountNumber: string
-  accountHolder: string
 }
 
 export function getWallet(): Promise<Wallet> {
   return apiClient.get<Wallet>('/wallet')
-}
-
-export function getWalletBanks(): Promise<WalletBank[]> {
-  return apiClient.get<WalletBank[]>('/wallet/banks')
 }
 
 export function linkWallet(input: LinkWalletInput): Promise<Wallet> {

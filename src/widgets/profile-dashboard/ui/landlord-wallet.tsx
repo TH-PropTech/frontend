@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Landmark, Wallet as WalletIcon } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { useWallet } from '@/entities/wallet'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -55,7 +56,7 @@ export function LandlordWallet(): React.ReactElement {
 
       {data && linked ? (
         <>
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
+          <div className="flex flex-col gap-3 rounded-xl border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="flex items-center gap-2 text-sm text-fg">
               <Landmark className="h-4 w-4 text-primary" aria-hidden="true" />
               {data.bank?.name} · {data.accountNumberMasked} ·{' '}
@@ -67,10 +68,23 @@ export function LandlordWallet(): React.ReactElement {
                 size="sm"
                 onClick={() => setEditing(true)}
               >
-                Đổi tài khoản
+                Đổi ví
               </Button>
             ) : null}
           </div>
+          {data.accountNumber ? (
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-center">
+              <QRCodeSVG value={data.accountNumber} size={112} />
+              <div className="text-center sm:text-left">
+                <p className="text-xs text-muted">
+                  Khách/đối tác quét mã để chuyển vào ví này
+                </p>
+                <p className="font-mono text-sm font-bold text-fg">
+                  {data.accountNumber}
+                </p>
+              </div>
+            </div>
+          ) : null}
           <WalletInvoices />
           <WalletStatement />
         </>

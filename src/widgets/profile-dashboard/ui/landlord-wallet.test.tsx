@@ -4,7 +4,6 @@ import { LandlordWallet } from './landlord-wallet'
 
 const mocks = vi.hoisted(() => ({
   useWallet: vi.fn(),
-  useWalletBanks: vi.fn(),
   useLinkWallet: vi.fn(),
   useWalletTransactions: vi.fn(),
   usePayableInvoices: vi.fn(),
@@ -15,7 +14,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/entities/wallet', () => ({
   useWallet: mocks.useWallet,
-  useWalletBanks: mocks.useWalletBanks,
   useLinkWallet: mocks.useLinkWallet,
   useWalletTransactions: mocks.useWalletTransactions,
   usePayableInvoices: mocks.usePayableInvoices,
@@ -39,27 +37,23 @@ const unlinked = {
   bank: null,
   accountHolder: null,
   accountNumberMasked: null,
+  accountNumber: null,
   linkedAt: null,
 }
 
 const linked = {
   ...unlinked,
   status: 'linked',
-  bank: { code: 'VCB', name: 'Vietcombank' },
+  bank: { code: 'MOCBANK', name: 'Ví Mộc' },
   accountHolder: 'NGUYEN VAN A',
   accountNumberMasked: '****6789',
+  accountNumber: '810000006789',
   linkedAt: '2026-01-01T00:00:00.000Z',
 }
 
 describe('LandlordWallet', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.useWalletBanks.mockReturnValue({
-      data: [
-        { code: 'VCB', name: 'Vietcombank' },
-        { code: 'TCB', name: 'Techcombank' },
-      ],
-    })
     mocks.useLinkWallet.mockReturnValue({
       mutate: mocks.link,
       isPending: false,
@@ -75,39 +69,29 @@ describe('LandlordWallet', () => {
     ])
   })
 
-  it('asks an unlinked landlord for bank details and validates before submit', () => {
+  it('asks an unlinked landlord for a Ví Mộc account number and validates before submit', () => {
     mocks.useWallet.mockReturnValue({ isLoading: false, data: unlinked })
     render(<LandlordWallet />)
 
-    const submit = screen.getByRole('button', { name: 'Liên kết ngân hàng' })
+    const submit = screen.getByRole('button', { name: 'Liên kết ví' })
     expect(submit).toBeDisabled()
 
-    fireEvent.change(screen.getByLabelText('Ngân hàng'), {
-      target: { value: 'VCB' },
-    })
-    fireEvent.change(screen.getByLabelText('Số tài khoản'), {
+    fireEvent.change(screen.getByLabelText('Số tài khoản Ví Mộc'), {
       target: { value: '12ab' },
-    })
-    fireEvent.change(screen.getByLabelText('Tên chủ tài khoản'), {
-      target: { value: 'Nguyen Van A' },
     })
     expect(submit).toBeDisabled()
     expect(
-      screen.getByText('Số tài khoản gồm 6–19 chữ số.')
+      screen.getByText('Số tài khoản Ví Mộc gồm đúng 12 chữ số.')
     ).toBeInTheDocument()
 
-    fireEvent.change(screen.getByLabelText('Số tài khoản'), {
-      target: { value: '0123 456 789' },
+    fireEvent.change(screen.getByLabelText('Số tài khoản Ví Mộc'), {
+      target: { value: '8100 0000 6789' },
     })
     expect(submit).toBeEnabled()
     fireEvent.click(submit)
 
     expect(mocks.link).toHaveBeenCalledWith(
-      {
-        bankCode: 'VCB',
-        accountNumber: '0123456789',
-        accountHolder: 'Nguyen Van A',
-      },
+      { accountNumber: '810000006789' },
       expect.any(Object)
     )
   })
@@ -116,12 +100,12 @@ describe('LandlordWallet', () => {
     mocks.useWallet.mockReturnValue({ isLoading: false, data: linked })
     render(<LandlordWallet />)
 
-    expect(screen.getByText(/Vietcombank · \*\*\*\*6789/)).toBeInTheDocument()
+    expect(screen.getByText(/Ví Mộc · \*\*\*\*6789/)).toBeInTheDocument()
     expect(screen.queryByText('Số dư khả dụng')).not.toBeInTheDocument()
     expect(screen.queryByText('Tổng đã nhận')).not.toBeInTheDocument()
     expect(screen.queryByText('Phí sàn đã trả')).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('form', { name: 'Liên kết ngân hàng' })
+      screen.queryByRole('form', { name: 'Liên kết ví Ví Mộc' })
     ).not.toBeInTheDocument()
   })
 

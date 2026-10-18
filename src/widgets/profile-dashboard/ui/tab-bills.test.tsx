@@ -6,9 +6,6 @@ import { TabBills } from './tab-bills'
 vi.mock('./landlord-escrow', () => ({
   LandlordEscrow: () => <div />,
 }))
-vi.mock('./landlord-profit', () => ({
-  LandlordProfit: () => <div />,
-}))
 vi.mock('./components/tenant-bills-chart', () => ({
   TenantBillsChart: () => <div />,
 }))

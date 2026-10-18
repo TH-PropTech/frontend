@@ -2,82 +2,52 @@
 
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
-import { useLinkWallet, useWalletBanks } from '@/entities/wallet'
+import { useLinkWallet } from '@/entities/wallet'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { describeWalletError } from './wallet-error'
 
-const ACCOUNT_NUMBER_PATTERN = /^\d{6,19}$/
+const MOCBANK_ACCOUNT_PATTERN = /^\d{12}$/
 
 export function WalletLinkForm({
   onLinked,
 }: {
   onLinked?: () => void
 }): React.ReactElement {
-  const banks = useWalletBanks()
   const link = useLinkWallet()
-  const [bankCode, setBankCode] = useState('')
   const [accountNumber, setAccountNumber] = useState('')
-  const [accountHolder, setAccountHolder] = useState('')
 
   const digits = accountNumber.replace(/\s+/g, '')
   const numberError =
-    digits.length > 0 && !ACCOUNT_NUMBER_PATTERN.test(digits)
-      ? 'Số tài khoản gồm 6–19 chữ số.'
+    digits.length > 0 && !MOCBANK_ACCOUNT_PATTERN.test(digits)
+      ? 'Số tài khoản Ví Mộc gồm đúng 12 chữ số.'
       : undefined
-  const canSubmit =
-    bankCode !== '' &&
-    ACCOUNT_NUMBER_PATTERN.test(digits) &&
-    accountHolder.trim().length >= 2 &&
-    !link.isPending
+  const canSubmit = MOCBANK_ACCOUNT_PATTERN.test(digits) && !link.isPending
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault()
     if (!canSubmit) return
-    link.mutate(
-      { bankCode, accountNumber: digits, accountHolder: accountHolder.trim() },
-      { onSuccess: () => onLinked?.() }
-    )
+    link.mutate({ accountNumber: digits }, { onSuccess: () => onLinked?.() })
   }
 
   return (
     <form
       onSubmit={handleSubmit}
       className="space-y-4"
-      aria-label="Liên kết ngân hàng"
+      aria-label="Liên kết ví Ví Mộc"
     >
-      <div className="flex flex-col gap-1">
-        <label htmlFor="wallet-bank" className="text-sm font-medium text-fg">
-          Ngân hàng
-        </label>
-        <select
-          id="wallet-bank"
-          value={bankCode}
-          onChange={event => setBankCode(event.target.value)}
-          className="h-10 rounded-xl border border-border bg-surface px-3 text-sm text-fg"
-        >
-          <option value="">Chọn ngân hàng</option>
-          {banks.data?.map(bank => (
-            <option key={bank.code} value={bank.code}>
-              {bank.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <p className="text-sm text-muted">
+        Nhập số tài khoản ví Ví Mộc của bạn. Hệ thống tự tra tên chủ ví và xác
+        nhận trùng khớp với hồ sơ — không cần chọn ngân hàng hay tự gõ tên.
+      </p>
       <Input
-        label="Số tài khoản"
+        label="Số tài khoản Ví Mộc"
         inputMode="numeric"
         autoComplete="off"
+        placeholder="812345678901"
         value={accountNumber}
         onChange={event => setAccountNumber(event.target.value)}
         {...(numberError ? { error: numberError } : {})}
-      />
-      <Input
-        label="Tên chủ tài khoản"
-        autoComplete="off"
-        placeholder="Trùng với họ tên trên hồ sơ"
-        value={accountHolder}
-        onChange={event => setAccountHolder(event.target.value)}
       />
       {link.isError ? (
         <p role="alert" className="text-sm text-danger">
@@ -86,7 +56,7 @@ export function WalletLinkForm({
       ) : null}
       <Button type="submit" disabled={!canSubmit}>
         {link.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        Liên kết ngân hàng
+        Liên kết ví
       </Button>
     </form>
   )

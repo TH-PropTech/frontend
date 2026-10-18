@@ -10,13 +10,11 @@ import {
 import {
   getPayableInvoices,
   getWallet,
-  getWalletBanks,
   getWalletTransactions,
   linkWallet,
   type LinkWalletInput,
   type PayableInvoice,
   type Wallet,
-  type WalletBank,
   type WalletTransactionPage,
 } from '../api/wallet-api'
 
@@ -24,14 +22,6 @@ const WALLET_KEY = ['wallet'] as const
 
 export function useWallet(): UseQueryResult<Wallet, Error> {
   return useQuery({ queryKey: [...WALLET_KEY, 'me'], queryFn: getWallet })
-}
-
-export function useWalletBanks(): UseQueryResult<WalletBank[], Error> {
-  return useQuery({
-    queryKey: [...WALLET_KEY, 'banks'],
-    queryFn: getWalletBanks,
-    staleTime: Infinity,
-  })
 }
 
 export function useWalletTransactions(): UseQueryResult<

@@ -7,7 +7,6 @@ import type {
   Appointment,
   EscrowItem,
   ContractSummary,
-  ProfitItem,
   TenantReview,
   LandlordAlert,
   EventType,
@@ -326,13 +325,6 @@ export const DEMO_CONTRACT_SUMMARY: ContractSummary = {
   latePenalty: '1%/ngày (tối đa 10%)',
   daysRemaining: 364,
 }
-
-export const DEMO_PROFIT_ITEMS: ProfitItem[] = [
-  { label: 'Thu nhập thuê tháng', amount: 18000000, type: 'income' },
-  { label: 'Phí quản lý tòa nhà', amount: -450000, type: 'expense' },
-  { label: 'Chi phí bảo trì sửa chữa', amount: -250000, type: 'expense' },
-  { label: 'Phí nền tảng TH-PropTech (2%)', amount: -360000, type: 'expense' },
-]
 
 export const DEMO_TENANT_REVIEW: TenantReview = {
   author: 'Nguyễn Văn A',

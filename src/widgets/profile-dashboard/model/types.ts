@@ -256,12 +256,6 @@ export interface ContractSummary {
   daysRemaining: number
 }
 
-export interface ProfitItem {
-  label: string
-  amount: number
-  type: 'income' | 'expense'
-}
-
 export interface TenantReview {
   author: string
   date: string

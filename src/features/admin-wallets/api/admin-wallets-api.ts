@@ -7,6 +7,7 @@ export interface AdminWalletView {
   bank: { code: string; name: string } | null
   accountHolder: string | null
   accountNumberMasked: string | null
+  accountNumber: string | null
   linkedAt: string | null
 }
 

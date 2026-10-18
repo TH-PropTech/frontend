@@ -10,6 +10,5 @@ export {
   useLinkWallet,
   usePayableInvoices,
   useWallet,
-  useWalletBanks,
   useWalletTransactions,
 } from './model/use-wallet'
