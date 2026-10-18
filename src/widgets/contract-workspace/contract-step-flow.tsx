@@ -7,6 +7,7 @@ import {
   getContractFlowSteps,
   getContractStepState,
   getContractStatusLabel,
+  getDepositEscrowLabel,
   getNextContractStep,
   isDepositPaid,
   resolvePanelActivity,
@@ -86,6 +87,13 @@ export function getStepNotes(
   const deposit = data.deposit
   if (deposit && deposit.amount > 0 && !isDepositPaid(deposit.status)) {
     notes.deposit = { text: 'Chờ thanh toán', tone: 'warning' }
+  } else if (deposit) {
+    // Huy hiệu ký quỹ (D12): "Đang ký quỹ" / "Đang chuyển.../Đã chuyển..." / "Đã hoàn...".
+    // Không bao giờ hiện escrowId/transactionCodes thô ở đây (chỉ Chi tiết kỹ thuật).
+    const escrowLabel = getDepositEscrowLabel(deposit)
+    if (escrowLabel) {
+      notes.deposit = { text: escrowLabel, tone: 'info' }
+    }
   }
   const signed =
     Number(data.parties.tenant.hasSigned) +
