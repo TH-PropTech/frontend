@@ -10,6 +10,7 @@ import {
   Box,
   DollarSign,
   LayoutTemplate,
+  Wallet as WalletIcon,
 } from 'lucide-react'
 import { OverviewView } from './views/overview-view'
 import { ContractMonitorView } from './views/contract-monitor-view'
@@ -29,6 +30,7 @@ import { OwnershipTransferPanel } from '@/features/property-ownership-transfer'
 import { LayoutProfileEditor } from '@/features/contract-layouts'
 import { FeeRevenueReport, FeeScheduleEditor } from '@/features/platform-fees'
 import { StuckTransactionsView } from '@/features/rental-transactions'
+import { AdminWalletsView } from '@/features/admin-wallets'
 
 type TabType =
   | 'overview'
@@ -46,6 +48,7 @@ type TabType =
   | 'groq-keys'
   | 'apartment-designs'
   | 'legal-knowledge'
+  | 'wallets'
 
 const ADMIN_TABS: readonly TabType[] = [
   'overview',
@@ -63,6 +66,7 @@ const ADMIN_TABS: readonly TabType[] = [
   'groq-keys',
   'apartment-designs',
   'legal-knowledge',
+  'wallets',
 ]
 
 export function resolveAdminTab(pathname: string): TabType {
@@ -235,6 +239,11 @@ export function AdminDashboard({
       icon: <DollarSign className="h-[18px] w-[18px]" />,
     },
     {
+      type: 'wallets',
+      label: 'Ví & liên kết thanh toán',
+      icon: <WalletIcon className="h-[18px] w-[18px]" />,
+    },
+    {
       type: 'rental-ops',
       label: 'Vận hành giao dịch thuê',
       icon: <Activity className="h-[18px] w-[18px]" aria-hidden="true" />,
@@ -339,6 +348,8 @@ export function AdminDashboard({
             <FeeRevenueReport />
           </div>
         )
+      case 'wallets':
+        return <AdminWalletsView />
       case 'rental-ops':
         return <StuckTransactionsView />
       case 'fabric-audit':
