@@ -44,6 +44,7 @@ import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
 import { TransactionTimeline } from '@/features/rental-transactions'
 import { DepositPaymentPanel } from '@/features/payments'
 import { RailGroup } from './rail-group'
+import { LandlordReceiptsPanel } from './landlord-receipts-panel'
 import { useContractWorkspace } from './use-contract-workspace'
 
 export interface ContractWorkspaceProps {
@@ -517,6 +518,11 @@ export function ContractWorkspace({
               onPaymentSuccess={() => void refresh()}
               onRefresh={() => void refresh()}
               isActiveStep={resolvePanelActivity('deposit', activeStep, flow)}
+            />
+
+            <LandlordReceiptsPanel
+              contractId={contractId}
+              viewerRole={signerRole}
             />
 
             <BilateralSigningTimeline

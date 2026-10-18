@@ -62,6 +62,18 @@ const LEDGER_STATUS_LABELS: Record<string, string> = {
   'failed-terminal': 'Thất bại',
 }
 
+/** Trạng thái một khoản trong "Chủ nhà nhận tiền": Payout, ký quỹ cọc, hoặc `unpaid`. */
+const CONTRACT_PAYOUT_ITEM_STATUS_LABELS: Record<string, string> = {
+  'awaiting-wallet': 'Chờ liên kết ví',
+  pending: 'Đang chuyển',
+  'paid-out': 'Đã nhận',
+  failed: 'Chuyển thất bại, cần thử lại',
+  held: 'Đang ký quỹ',
+  released: 'Đã nhận',
+  refunded: 'Đã hoàn cho khách thuê',
+  unpaid: 'Chưa thanh toán',
+}
+
 const AMENDMENT_FIELD_LABELS: Record<string, string> = {
   monthlyRent: 'Giá thuê hàng tháng',
 }
@@ -107,6 +119,16 @@ export function getTemplateLabel(
 
 export function getLedgerStatusLabel(status: string): string {
   return LEDGER_STATUS_LABELS[status] ?? humanizeCode(status)
+}
+
+/** Nhãn tiếng Việt cho một dòng trong "Chủ nhà nhận tiền" (panel tổng hợp payout theo hợp đồng). */
+export function getContractPayoutItemStatusLabel(status: string): string {
+  return CONTRACT_PAYOUT_ITEM_STATUS_LABELS[status] ?? humanizeCode(status)
+}
+
+/** Khoản đã thực sự về tay chủ nhà (không gồm `awaiting-wallet`/`held`/`unpaid`). */
+export function isContractPayoutItemReceived(status: string): boolean {
+  return status === 'paid-out' || status === 'released'
 }
 
 export function getAmendmentFieldLabel(field: string): string {

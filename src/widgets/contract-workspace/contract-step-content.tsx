@@ -19,6 +19,7 @@ import { PaymentSchedulePanel } from '@/features/payments/ui/payment-schedule-pa
 import { MoveInSettlementPanel } from '@/features/move-in-settlement'
 import type { ContractAuditEventDto } from '@/features/contracts'
 import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
+import { LandlordReceiptsPanel } from './landlord-receipts-panel'
 import type { UseContractWorkspaceOptions } from './use-contract-workspace'
 
 function StepGuide({
@@ -324,6 +325,10 @@ export function ContractStepContent({
   if (step === 'move-in') {
     return (
       <div data-testid="contract-step-move-in" className="space-y-4">
+        <LandlordReceiptsPanel
+          contractId={contractId}
+          viewerRole={signerRole}
+        />
         <MoveInSettlementPanel
           settlement={data.settlement ?? null}
           role={signerRole}

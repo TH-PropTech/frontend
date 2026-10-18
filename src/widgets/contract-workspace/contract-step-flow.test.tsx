@@ -14,6 +14,16 @@ vi.mock('./use-contract-workspace', () => ({
   useContractWorkspace: mockUseContractWorkspace,
 }))
 
+// LandlordReceiptsPanel calls useContractPayoutSummary (react-query); these tests
+// don't wrap with a QueryClientProvider, so stub the hook directly.
+vi.mock('@/entities/payout', () => ({
+  useContractPayoutSummary: vi.fn().mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    error: null,
+  }),
+}))
+
 const contractView: ContractViewDto = {
   contract: {
     id: 'contract-1',

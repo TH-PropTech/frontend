@@ -37,3 +37,29 @@ export function settlePayout(
     {}
   )
 }
+
+export interface ContractPayoutSummaryItem {
+  kind: 'DEPOSIT' | 'RENT'
+  ref: string
+  label: string
+  dueAt: string | null
+  sentAmount: number
+  receivedAmount: number
+  /** `PayoutStatus`, trạng thái ký quỹ cọc (ví dụ `held`/`released`/`refunded`), hoặc `unpaid`. */
+  status: string
+}
+
+export interface ContractPayoutSummary {
+  contractId: string
+  wallet: { linked: boolean }
+  items: ContractPayoutSummaryItem[]
+  totals: { received: number; pending: number }
+}
+
+export function getContractPayoutSummary(
+  contractId: string
+): Promise<ContractPayoutSummary> {
+  return apiClient.get<ContractPayoutSummary>(
+    `/payouts/contracts/${encodeURIComponent(contractId)}/summary`
+  )
+}
