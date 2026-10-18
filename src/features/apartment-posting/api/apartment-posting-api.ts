@@ -14,6 +14,8 @@ function sanitizeApartmentPayload(
     delete cleanPackage.resolvedDepositAmount
     delete cleanPackage.resolvedHoldingDepositAmount
     delete cleanPackage.resolvedSecurityTopUpAmount
+    delete cleanPackage.resolvedPrepaidRentMonths
+    delete cleanPackage.resolvedPrepaidRentAmount
     return cleanPackage
   })
 

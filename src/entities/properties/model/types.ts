@@ -1,3 +1,5 @@
+import type { PrepaidRentPolicy } from '@/shared/lib/prepaid-rent'
+
 export type RentalPackageDuration = 1 | 3 | 6 | 12 | 24
 
 export type RentalAvailabilityStatus =
@@ -15,6 +17,10 @@ export interface RentalPackageItem {
     | { type: 'MONTHS_OF_RENT'; months: number }
     | { type: 'FIXED_AMOUNT'; amount: number }
   resolvedDepositAmount: number
+  /** Tiền thuê trả trước ngoài tiền cọc; vắng mặt = gói cũ (kỳ thanh toán đầu thu khi nhận nhà). */
+  prepaidRent?: PrepaidRentPolicy
+  resolvedPrepaidRentMonths?: number
+  resolvedPrepaidRentAmount?: number
   status: 'active' | 'inactive'
 }
 

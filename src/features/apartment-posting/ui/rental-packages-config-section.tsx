@@ -14,7 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select'
-import { CalendarDays, CircleDollarSign, Info, ShieldCheck } from 'lucide-react'
+import {
+  CalendarDays,
+  CircleDollarSign,
+  Info,
+  ShieldCheck,
+  Wallet,
+} from 'lucide-react'
+import { appToast } from '@/shared/ui/app-toast'
+import { resolvePrepaidMonths } from '@/shared/lib/prepaid-rent'
 import {
   getRentalExecutionPolicies,
   type RentalExecutionPolicyRecord,
@@ -154,6 +162,60 @@ export function RentalPackagesConfigSection({
           },
         }
       }),
+      { shouldValidate: true }
+    )
+  }
+
+  /**
+   * Chọn cách thu tiền thuê trả trước. Chọn một phương án cụ thể là cam kết với khách thuê và được ghi vào
+   * hợp đồng nên luôn nhắc chủ nhà phải quy định rõ ràng (hoàn / khấu trừ khi chấm dứt sớm).
+   */
+  const handleChoosePrepaidRent = (
+    duration: number,
+    mode: 'DEFAULT' | 'NONE' | 'MONTHS' | 'FULL'
+  ): void => {
+    const next: RentalPackagePostingSchemaType['prepaidRent'] =
+      mode === 'DEFAULT'
+        ? undefined
+        : mode === 'MONTHS'
+          ? { type: 'MONTHS', months: Math.min(2, Math.max(1, duration - 1)) }
+          : { type: mode }
+    setValue(
+      'rentalPackages',
+      currentPackages.map(pkg =>
+        pkg.durationMonths !== duration ? pkg : { ...pkg, prepaidRent: next }
+      ),
+      { shouldValidate: true }
+    )
+    if (mode === 'DEFAULT') return
+    appToast.info(
+      mode === 'NONE'
+        ? 'Gói này chỉ thu tiền cọc khi nhận nhà, tiền thuê thu theo lịch thanh toán. Hãy ghi rõ trong hợp đồng thời điểm thu tiền thuê tháng đầu.'
+        : 'Khoản tiền thuê trả trước sẽ được ghi vào hợp đồng và khách thuê thấy trước khi đặt cọc. Hãy quy định rõ việc hoàn lại hoặc khấu trừ khi chấm dứt hợp đồng sớm.',
+      { title: 'Cần quy định rõ ràng', duration: 7000 }
+    )
+  }
+
+  const handleUpdatePrepaidMonths = (
+    duration: number,
+    months: number
+  ): void => {
+    setValue(
+      'rentalPackages',
+      currentPackages.map(pkg =>
+        pkg.durationMonths !== duration
+          ? pkg
+          : {
+              ...pkg,
+              prepaidRent: {
+                type: 'MONTHS',
+                months: Math.min(
+                  Math.max(1, duration - 1),
+                  Math.max(1, Math.round(months) || 1)
+                ),
+              },
+            }
+      ),
       { shouldValidate: true }
     )
   }
@@ -441,6 +503,99 @@ export function RentalPackagesConfigSection({
                     </span>
                   </div>
 
+                  <section
+                    className="space-y-2 rounded-lg border border-border/70 bg-surface-muted/30 p-3"
+                    data-testid={`prepaid-rent-${duration}`}
+                  >
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-fg">
+                      <Wallet className="h-3 w-3 text-primary" />
+                      <span>Tiền thuê trả trước khi nhận nhà</span>
+                    </div>
+                    <div
+                      role="radiogroup"
+                      aria-label={`Tiền thuê trả trước gói ${duration} tháng`}
+                      className="space-y-1.5"
+                    >
+                      {(
+                        [
+                          ['DEFAULT', 'Theo kỳ thanh toán mặc định'],
+                          ['NONE', 'Chỉ đặt cọc, không trả trước tiền thuê'],
+                          ['MONTHS', 'Trả trước một số tháng'],
+                          ['FULL', `Trả trước toàn bộ (${duration} tháng)`],
+                        ] as const
+                      ).map(([mode, text]) => {
+                        const current = pkg.prepaidRent?.type ?? 'DEFAULT'
+                        return (
+                          <label
+                            key={mode}
+                            className="flex items-center gap-2 text-[11px] text-muted"
+                          >
+                            <input
+                              type="radio"
+                              name={`prepaid-mode-${duration}`}
+                              checked={current === mode}
+                              onChange={() =>
+                                handleChoosePrepaidRent(duration, mode)
+                              }
+                              data-testid={`prepaid-mode-${duration}-${mode}`}
+                              className="accent-[var(--primary)]"
+                            />
+                            <span className={current === mode ? 'text-fg' : ''}>
+                              {text}
+                            </span>
+                            {mode === 'MONTHS' &&
+                            pkg.prepaidRent?.type === 'MONTHS' ? (
+                              <Input
+                                type="number"
+                                min={1}
+                                max={Math.max(1, duration - 1)}
+                                step={1}
+                                aria-label={`Số tháng trả trước gói ${duration} tháng`}
+                                value={pkg.prepaidRent.months}
+                                onChange={e =>
+                                  handleUpdatePrepaidMonths(
+                                    duration,
+                                    parseFloat(e.target.value) || 1
+                                  )
+                                }
+                                className="h-7 w-16 bg-surface text-xs"
+                                data-testid={`prepaid-months-${duration}`}
+                              />
+                            ) : null}
+                          </label>
+                        )
+                      })}
+                    </div>
+                    {pkg.prepaidRent ? (
+                      <p
+                        className="text-[10px] text-muted"
+                        data-testid={`prepaid-summary-${duration}`}
+                      >
+                        {(() => {
+                          const months =
+                            resolvePrepaidMonths(pkg.prepaidRent, duration) ?? 0
+                          const prepaid = pkg.monthlyRent * months
+                          const deposit =
+                            pkg.depositPolicy.type === 'MONTHS_OF_RENT'
+                              ? pkg.monthlyRent * pkg.depositPolicy.months
+                              : pkg.depositPolicy.amount
+                          return months === 0
+                            ? `Khách trả khi nhận nhà: ${formatVnd(deposit)} ₫ (chỉ cọc).`
+                            : `Khách trả khi nhận nhà: ${formatVnd(deposit)} ₫ cọc + ${formatVnd(prepaid)} ₫ tiền thuê (${months} tháng) = ${formatVnd(deposit + prepaid)} ₫.`
+                        })()}
+                        {pkg.prepaidRent.type !== 'NONE' &&
+                        !pkg.settlementPolicy
+                          ? ' Bật "Quyết toán nhận nhà" bên dưới để thu khoản này cùng lúc nhận nhà.'
+                          : ''}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-muted">
+                        Chưa chọn: áp dụng kỳ thanh toán đầu theo quy tắc hiện
+                        tại.
+                      </p>
+                    )}
+                  </section>
+
                   {executionPolicies.length > 0 ? (
                     <div
                       data-testid={`execution-policy-config-${duration}`}
@@ -481,10 +636,14 @@ export function RentalPackagesConfigSection({
                                     )
                                   }
                                 />
-                                <span className="truncate">
-                                  {policy.strategy === 'DEPOSIT_FIRST'
-                                    ? 'Cọc trước, ký sau'
-                                    : 'Ký trước, cọc sau'}
+                                <span
+                                  className="truncate"
+                                  title={policy.description}
+                                >
+                                  {policy.name ||
+                                    (policy.strategy === 'DEPOSIT_FIRST'
+                                      ? 'Cọc trước, ký sau'
+                                      : 'Ký trước, cọc sau')}
                                 </span>
                               </label>
                               <button
@@ -648,7 +807,12 @@ export function RentalPackagesConfigSection({
                           Kỳ đầu:{' '}
                           {formatVnd(
                             pkg.monthlyRent *
-                              pkg.settlementPolicy.defaultPaymentCycle
+                              (pkg.prepaidRent
+                                ? (resolvePrepaidMonths(
+                                    pkg.prepaidRent,
+                                    duration
+                                  ) ?? 0)
+                                : pkg.settlementPolicy.defaultPaymentCycle)
                           )}{' '}
                           ₫ thuê + bù cọc được tính khi gửi hồ sơ.
                         </p>

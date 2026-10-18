@@ -1,4 +1,5 @@
 import { apiClient, ApiClientError } from '@/shared/api'
+import type { PrepaidRentPolicy } from '@/shared/lib/prepaid-rent'
 import type { FlowProfileSteps } from '@/features/rental-flow-config'
 
 export type RentalApplicationStatus = 'pending' | 'accepted' | 'rejected'
@@ -72,6 +73,10 @@ export interface RentalApplicationContext {
     }
     resolvedHoldingDepositAmount?: number
     resolvedSecurityTopUpAmount?: number
+    /** Tiền thuê trả trước ngoài tiền cọc; vắng mặt = gói cũ, kỳ thanh toán đầu thu khi nhận nhà. */
+    prepaidRent?: PrepaidRentPolicy
+    resolvedPrepaidRentMonths?: number
+    resolvedPrepaidRentAmount?: number
     feeSnapshot?: FeeSnapshot | null
     status: 'active' | 'inactive'
     currency: 'VND'

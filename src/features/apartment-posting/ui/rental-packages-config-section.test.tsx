@@ -6,6 +6,11 @@ import { RentalPackagesConfigSection } from './rental-packages-config-section'
 import type { ApartmentFormValues } from '../model/types'
 import { getRentalExecutionPolicies } from '@/features/rental-execution-policies/api/rental-execution-policies-api'
 
+const toastMocks = vi.hoisted(() => ({ info: vi.fn() }))
+vi.mock('@/shared/ui/app-toast', () => ({
+  appToast: { info: toastMocks.info, success: vi.fn(), error: vi.fn() },
+}))
+
 vi.mock(
   '@/features/rental-execution-policies/api/rental-execution-policies-api',
   () => ({
@@ -83,6 +88,7 @@ function TestHarness({
 
 describe('RentalPackagesConfigSection', () => {
   beforeEach(() => {
+    toastMocks.info.mockClear()
     vi.mocked(getRentalExecutionPolicies).mockResolvedValue(executionPolicies)
   })
 
@@ -227,5 +233,120 @@ describe('RentalPackagesConfigSection', () => {
     fireEvent.click(screen.getByTestId('policy-toggle-12-DEPOSIT_FIRST'))
     fireEvent.click(screen.getByTestId('policy-default-12-DEPOSIT_FIRST'))
     expect(screen.getByTestId('policy-default-12-DEPOSIT_FIRST')).toBeDefined()
+  })
+
+  describe('prepaid rent', () => {
+    const sixMonth = {
+      packageId: 'pkg-6',
+      version: 1,
+      durationMonths: 6 as const,
+      monthlyRent: 10_000_000,
+      depositPolicy: { type: 'MONTHS_OF_RENT' as const, months: 1 },
+      status: 'active' as const,
+    }
+    const renderSix = (extra: Record<string, unknown> = {}) =>
+      render(
+        <TestHarness
+          initialValues={{
+            rentalPackages: [{ ...sixMonth, ...extra }],
+          }}
+        />
+      )
+
+    it('starts on the default rule and tells the landlord nothing was chosen', () => {
+      renderSix()
+      expect(
+        (screen.getByTestId('prepaid-mode-6-DEFAULT') as HTMLInputElement)
+          .checked
+      ).toBe(true)
+      expect(
+        screen.getByText(/Chưa chọn: áp dụng kỳ thanh toán đầu/)
+      ).toBeDefined()
+      expect(toastMocks.info).not.toHaveBeenCalled()
+    })
+
+    it('warns that the terms must be stated clearly when a deposit-only package is chosen', () => {
+      renderSix()
+      fireEvent.click(screen.getByTestId('prepaid-mode-6-NONE'))
+
+      expect(toastMocks.info).toHaveBeenCalledTimes(1)
+      expect(toastMocks.info.mock.calls[0]?.[0]).toMatch(/chỉ thu tiền cọc/i)
+      expect(toastMocks.info.mock.calls[0]?.[1]).toMatchObject({
+        title: 'Cần quy định rõ ràng',
+      })
+      expect(screen.getByTestId('prepaid-summary-6').textContent).toContain(
+        'Khách trả khi nhận nhà: 10.000.000 ₫ (chỉ cọc)'
+      )
+    })
+
+    it('shows the amount the tenant pays at move-in for a prepaid-months package', () => {
+      renderSix()
+      fireEvent.click(screen.getByTestId('prepaid-mode-6-MONTHS'))
+
+      expect(toastMocks.info).toHaveBeenCalledTimes(1)
+      expect(toastMocks.info.mock.calls[0]?.[0]).toMatch(/ghi vào hợp đồng/i)
+      const months = screen.getByTestId('prepaid-months-6') as HTMLInputElement
+      expect(months.value).toBe('2')
+      expect(screen.getByTestId('prepaid-summary-6').textContent).toContain(
+        '10.000.000 ₫ cọc + 20.000.000 ₫ tiền thuê (2 tháng) = 30.000.000 ₫'
+      )
+
+      fireEvent.change(months, { target: { value: '4' } })
+      expect(screen.getByTestId('prepaid-summary-6').textContent).toContain(
+        '+ 40.000.000 ₫ tiền thuê (4 tháng) = 50.000.000 ₫'
+      )
+    })
+
+    it('keeps prepaid months below the package duration (a full prepayment is its own option)', () => {
+      renderSix()
+      fireEvent.click(screen.getByTestId('prepaid-mode-6-MONTHS'))
+      const months = screen.getByTestId('prepaid-months-6') as HTMLInputElement
+
+      fireEvent.change(months, { target: { value: '9' } })
+      expect(months.value).toBe('5')
+      fireEvent.change(months, { target: { value: '0' } })
+      expect(months.value).toBe('1')
+    })
+
+    it('charges the whole duration when the rent is fully prepaid', () => {
+      renderSix()
+      fireEvent.click(screen.getByTestId('prepaid-mode-6-FULL'))
+
+      expect(screen.getByTestId('prepaid-summary-6').textContent).toContain(
+        '10.000.000 ₫ cọc + 60.000.000 ₫ tiền thuê (6 tháng) = 70.000.000 ₫'
+      )
+    })
+
+    it('goes back to the default rule without warning', () => {
+      renderSix({ prepaidRent: { type: 'FULL' } })
+      toastMocks.info.mockClear()
+
+      fireEvent.click(screen.getByTestId('prepaid-mode-6-DEFAULT'))
+
+      expect(toastMocks.info).not.toHaveBeenCalled()
+      expect(screen.queryByTestId('prepaid-summary-6')).toBeNull()
+    })
+
+    it('reminds the landlord to enable move-in settlement so the prepayment is collected then', () => {
+      renderSix({ prepaidRent: { type: 'MONTHS', months: 2 } })
+      expect(screen.getByTestId('prepaid-summary-6').textContent).toMatch(
+        /Bật "Quyết toán nhận nhà"/
+      )
+    })
+
+    it('labels execution policies with their real names so two policies never look identical', async () => {
+      vi.mocked(getRentalExecutionPolicies).mockResolvedValue([
+        ...executionPolicies,
+        {
+          ...executionPolicies[0]!,
+          policyId: 'deposit-first-b',
+          name: 'Cọc trước, ký sau (bản 2)',
+          contentHash: 'b',
+        },
+      ])
+      renderSix()
+      expect(await screen.findByText('Cọc trước, ký sau (bản 2)')).toBeDefined()
+      expect(screen.getByText('Deposit first')).toBeDefined()
+    })
   })
 })

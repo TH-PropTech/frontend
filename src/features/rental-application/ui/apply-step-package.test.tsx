@@ -244,4 +244,71 @@ describe('ApplyStepPackage Component', () => {
       contentHash: 'hash-sign',
     })
   })
+
+  describe('prepaid rent', () => {
+    const withPrepaid = (
+      prepaidRent: NonNullable<
+        RentalApplicationContext['packages'][number]['prepaidRent']
+      >,
+      months: number
+    ): RentalApplicationContext['packages'] => [
+      {
+        ...mockPackages[0]!,
+        prepaidRent,
+        resolvedPrepaidRentMonths: months,
+        resolvedPrepaidRentAmount: 15_000_000 * months,
+      },
+    ]
+    const renderWith = (packages: RentalApplicationContext['packages']) =>
+      render(
+        <ApplyStepPackage
+          packages={packages}
+          selectedPackageId="pkg-6m"
+          onSelectPackage={vi.fn()}
+          onBack={vi.fn()}
+          onNext={vi.fn()}
+        />
+      )
+
+    it('shows nothing extra for a legacy package without a prepayment policy', () => {
+      renderWith([mockPackages[0]!])
+      expect(screen.queryByTestId('prepaid-rent-summary')).toBeNull()
+      expect(screen.queryByTestId('package-prepaid-pkg-6m')).toBeNull()
+      expect(screen.getByText(/Kỳ đầu dự kiến/)).toBeInTheDocument()
+    })
+
+    it('tells the tenant a deposit-only package asks for no prepaid rent', () => {
+      renderWith(withPrepaid({ type: 'NONE' }, 0))
+      expect(screen.getByTestId('package-prepaid-pkg-6m')).toHaveTextContent(
+        'Tiền thuê trả trước: không (chỉ đặt cọc)'
+      )
+      const summary = screen.getByTestId('prepaid-rent-summary')
+      expect(summary).toHaveTextContent('Chỉ cần đặt cọc khi nhận nhà')
+      expect(summary).toHaveTextContent('15.000.000 ₫')
+      expect(summary).toHaveTextContent('ghi vào hợp đồng')
+    })
+
+    it('adds the prepaid months to the amount due at move-in', () => {
+      renderWith(withPrepaid({ type: 'MONTHS', months: 2 }, 2))
+      expect(screen.getByTestId('package-prepaid-pkg-6m')).toHaveTextContent(
+        'Tiền thuê trả trước: 2 tháng: 30.000.000 ₫'
+      )
+      // cọc 15.000.000 + 2 tháng x 15.000.000
+      expect(screen.getByTestId('prepaid-rent-summary')).toHaveTextContent(
+        'Thanh toán khi nhận nhà dự kiến: 45.000.000 ₫'
+      )
+      expect(screen.queryByText(/Kỳ đầu dự kiến/)).not.toBeInTheDocument()
+    })
+
+    it('shows the whole duration for a fully prepaid package', () => {
+      renderWith(withPrepaid({ type: 'FULL' }, 6))
+      expect(screen.getByTestId('package-prepaid-pkg-6m')).toHaveTextContent(
+        'toàn bộ (6 tháng)'
+      )
+      // cọc 15.000.000 + 6 tháng x 15.000.000
+      expect(screen.getByTestId('prepaid-rent-summary')).toHaveTextContent(
+        'Thanh toán khi nhận nhà dự kiến: 105.000.000 ₫'
+      )
+    })
+  })
 })

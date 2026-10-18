@@ -163,4 +163,59 @@ describe('ContractSummaryCard', () => {
     )
     expect(screen.queryByText('Phí dịch vụ tenant')).not.toBeInTheDocument()
   })
+
+  it('lists the prepaid rent recorded in the contract, and nothing for legacy contracts', () => {
+    const baseProps = {
+      contract,
+      parties: {
+        tenant: party('tenant', 'A'),
+        landlord: party('landlord', 'B'),
+      },
+      ledger,
+      activeStage: 'move-in' as const,
+      viewerRole: 'tenant' as const,
+    }
+    const summary = {
+      initialPaymentTotal: 44_000_000,
+      holdingDeposit: 14_000_000,
+      securityTopUpAmount: 16_000_000,
+      tenantServiceFee: 330_000,
+      landlordCommission: 0,
+    }
+    const { rerender } = render(
+      <ContractSummaryCard
+        {...baseProps}
+        financialSummary={{
+          ...summary,
+          prepaidRent: { policy: 'MONTHS', months: 3, amount: 45_000_000 },
+        }}
+      />
+    )
+    const card = screen.getByTestId('contract-summary-card')
+    expect(card).toHaveTextContent('Tiền thuê trả trước: 3 tháng')
+    expect(card).toHaveTextContent('45.000.000')
+
+    rerender(
+      <ContractSummaryCard
+        {...baseProps}
+        financialSummary={{
+          ...summary,
+          prepaidRent: { policy: 'NONE', months: 0, amount: 0 },
+        }}
+      />
+    )
+    expect(screen.getByTestId('contract-summary-card')).toHaveTextContent(
+      'Tiền thuê trả trước: không (chỉ đặt cọc)'
+    )
+
+    rerender(
+      <ContractSummaryCard
+        {...baseProps}
+        financialSummary={{ ...summary, prepaidRent: null }}
+      />
+    )
+    expect(screen.getByTestId('contract-summary-card')).not.toHaveTextContent(
+      'Tiền thuê trả trước'
+    )
+  })
 })
