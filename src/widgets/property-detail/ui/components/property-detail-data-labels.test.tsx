@@ -1,10 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { ApartmentItem } from '@/entities/properties'
-import { AmbientRadarPanel } from './ambient-radar-panel'
-import { EnergyEfficiencyPanel } from './energy-efficiency-panel'
 import { PriceTrendPanel } from './price-trend-panel'
-import { PropertyComparison } from './property-comparison'
 import { PropertyReviews } from './property-reviews'
 
 const property = {
@@ -25,13 +22,10 @@ describe('property detail demo-data disclosures', () => {
     render(
       <>
         <PriceTrendPanel property={property} onExplain={vi.fn()} />
-        <AmbientRadarPanel onExplain={vi.fn()} />
-        <EnergyEfficiencyPanel onExplain={vi.fn()} />
-        <PropertyComparison property={property} />
         <PropertyReviews />
       </>
     )
 
-    expect(screen.getAllByText('Dữ liệu minh hoạ')).toHaveLength(6)
+    expect(screen.getAllByText('Dữ liệu minh hoạ')).toHaveLength(3)
   })
 })

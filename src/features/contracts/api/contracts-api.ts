@@ -395,6 +395,12 @@ export interface ContractFinancialSummaryView {
   securityTopUpAmount: number
   tenantServiceFee: number
   landlordCommission: number
+  /** Tiền thuê trả trước ghi trong hợp đồng; null/vắng mặt với hợp đồng cũ. */
+  prepaidRent?: {
+    policy: 'NONE' | 'MONTHS' | 'FULL'
+    months: number
+    amount: number
+  } | null
 }
 
 export interface MoveInSettlementView {

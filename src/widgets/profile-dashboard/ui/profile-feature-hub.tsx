@@ -1,13 +1,9 @@
 'use client'
 
 import * as React from 'react'
-import { Bell, Calculator, Headphones, Plus, ShieldCheck } from 'lucide-react'
+import { Bell, Headphones, Plus, ShieldCheck } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { AlertList, SavedSearchesList } from '@/features/saved-searches'
-import {
-  CostCalculatorModal,
-  LivingCostProfilesList,
-} from '@/features/living-cost'
 import { MyReportsList } from '@/features/safety-reports'
 import {
   CreateTicketDialog,
@@ -18,7 +14,6 @@ import {
 
 export type ProfileFeature =
   | 'saved-searches'
-  | 'living-cost'
   | 'safety-reports'
   | 'support-tickets'
 
@@ -35,7 +30,6 @@ export function ProfileFeatureHub({
     null
   )
   const [ticketRevision, setTicketRevision] = React.useState(0)
-  const [profileRevision, setProfileRevision] = React.useState(0)
 
   if (feature === 'saved-searches') {
     return (
@@ -59,39 +53,6 @@ export function ProfileFeatureHub({
           <AlertList />
         </section>
       </div>
-    )
-  }
-
-  if (feature === 'living-cost') {
-    return (
-      <section className={PANEL_CLASS} aria-labelledby="living-cost-title">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2
-              id="living-cost-title"
-              className="flex items-center gap-2 text-lg font-bold text-fg"
-            >
-              <Calculator className="h-5 w-5 text-primary" /> Ước tính chi phí
-              sinh hoạt
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              So sánh tổng chi phí hàng tháng với ngân sách trước khi thuê.
-            </p>
-          </div>
-          <CostCalculatorModal
-            onSaved={() => setProfileRevision(value => value + 1)}
-            trigger={
-              <Button className="gap-2">
-                <Calculator className="h-4 w-4" /> Mở máy tính
-              </Button>
-            }
-          />
-        </div>
-        <div className="mt-6 border-t border-border pt-5">
-          <h3 className="mb-3 text-sm font-bold text-fg">Há»“ sÆ¡ Ä‘Ã£ lÆ°u</h3>
-          <LivingCostProfilesList key={profileRevision} />
-        </div>
-      </section>
     )
   }
 

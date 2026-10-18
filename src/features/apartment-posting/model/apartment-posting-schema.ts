@@ -49,6 +49,21 @@ export const rentalPackagePostingSchema = z.object({
       firstPaymentDueOffsetDays: z.number().int().min(0).max(15),
     })
     .optional(),
+  // tiền thuê trả trước ngoài tiền cọc; vắng mặt = giữ quy tắc cũ (thu kỳ thanh toán đầu khi nhận nhà)
+  prepaidRent: z
+    .discriminatedUnion('type', [
+      z.object({ type: z.literal('NONE') }),
+      z.object({
+        type: z.literal('MONTHS'),
+        months: z
+          .number()
+          .int()
+          .min(1, 'Trả trước tối thiểu 1 tháng')
+          .max(24, 'Trả trước tối đa 24 tháng'),
+      }),
+      z.object({ type: z.literal('FULL') }),
+    ])
+    .optional(),
   status: z.enum(['active', 'inactive']).default('active'),
   allowedExecutionPolicies: z
     .array(rentalExecutionPolicyRefSchema)

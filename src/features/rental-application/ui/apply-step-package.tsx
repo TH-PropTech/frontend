@@ -16,6 +16,7 @@ import {
   Scale,
   ShieldCheck,
   Sparkles,
+  Wallet,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import type {
@@ -23,6 +24,10 @@ import type {
   RentalExecutionPolicyRef,
 } from '../api/rental-application-api'
 import { FeeBreakdown } from '@/features/platform-fees'
+import {
+  describePrepaidRent,
+  explainPrepaidRent,
+} from '@/shared/lib/prepaid-rent'
 
 export interface ApplyStepPackageProps {
   packages: RentalApplicationContext['packages']
@@ -188,6 +193,27 @@ export function ApplyStepPackage({
                           </strong>
                         </span>
                       </div>
+                      {pkg.prepaidRent &&
+                      pkg.resolvedPrepaidRentMonths !== undefined ? (
+                        <div
+                          data-testid={`package-prepaid-${pkg.packageId}`}
+                          className="mt-1 flex items-center gap-1.5 text-xs text-muted"
+                        >
+                          <Wallet
+                            aria-hidden="true"
+                            className="h-3.5 w-3.5 text-accent"
+                          />
+                          <span>
+                            {describePrepaidRent({
+                              policy: pkg.prepaidRent.type,
+                              months: pkg.resolvedPrepaidRentMonths,
+                            })}
+                            {pkg.resolvedPrepaidRentMonths > 0
+                              ? `: ${formatVnd(pkg.monthlyRent * pkg.resolvedPrepaidRentMonths)} ₫`
+                              : ''}
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
 
@@ -251,13 +277,50 @@ export function ApplyStepPackage({
               )
             )}
           </select>
-          <p className="text-xs text-muted">
-            Kỳ đầu dự kiến:{' '}
-            {formatVnd(selectedPkg.monthlyRent * selectedPaymentCycleMonths)} ₫
-            {selectedPkg.resolvedSecurityTopUpAmount
-              ? ` + bù cọc ${formatVnd(selectedPkg.resolvedSecurityTopUpAmount)} ₫`
-              : ''}
-          </p>
+          {selectedPkg.prepaidRent &&
+          selectedPkg.resolvedPrepaidRentMonths !== undefined ? (
+            <div
+              data-testid="prepaid-rent-summary"
+              className="space-y-1 rounded-lg border border-border/70 bg-surface-muted/40 p-3 text-xs"
+            >
+              <p className="font-semibold text-fg">
+                {describePrepaidRent({
+                  policy: selectedPkg.prepaidRent.type,
+                  months: selectedPkg.resolvedPrepaidRentMonths,
+                })}
+              </p>
+              <p className="text-muted">
+                {explainPrepaidRent({
+                  policy: selectedPkg.prepaidRent.type,
+                  months: selectedPkg.resolvedPrepaidRentMonths,
+                })}
+              </p>
+              <p className="text-muted">
+                Khoản này được ghi vào hợp đồng và không thể thay đổi sau khi
+                gửi hồ sơ.
+              </p>
+              <p className="text-fg">
+                Thanh toán khi nhận nhà dự kiến:{' '}
+                <strong>
+                  {formatVnd(
+                    selectedPkg.resolvedDepositAmount +
+                      selectedPkg.monthlyRent *
+                        selectedPkg.resolvedPrepaidRentMonths
+                  )}{' '}
+                  ₫
+                </strong>
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-muted">
+              Kỳ đầu dự kiến:{' '}
+              {formatVnd(selectedPkg.monthlyRent * selectedPaymentCycleMonths)}{' '}
+              ₫
+              {selectedPkg.resolvedSecurityTopUpAmount
+                ? ` + bù cọc ${formatVnd(selectedPkg.resolvedSecurityTopUpAmount)} ₫`
+                : ''}
+            </p>
+          )}
           <FeeBreakdown snapshot={selectedPkg.feeSnapshot ?? null} />
         </section>
       ) : null}

@@ -1,3 +1,5 @@
+import type { PrepaidRentPolicy } from '@/shared/lib/prepaid-rent'
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ApartmentStatus =
@@ -28,6 +30,7 @@ export interface StaffRentalPackage {
     | { type: 'FIXED_AMOUNT'; amount: number }
   status: 'active' | 'inactive'
   resolvedDepositAmount?: number
+  prepaidRent?: PrepaidRentPolicy
   allowedExecutionPolicies?: StaffExecutionPolicyRef[]
   defaultExecutionPolicy?: StaffExecutionPolicyRef
 }

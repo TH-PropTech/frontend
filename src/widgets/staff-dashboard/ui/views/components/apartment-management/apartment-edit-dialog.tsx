@@ -111,6 +111,7 @@ function stripPackage(pkg: StaffRentalPackage): StaffRentalPackage {
     monthlyRent: pkg.monthlyRent,
     depositPolicy: pkg.depositPolicy,
     status: pkg.status,
+    ...(pkg.prepaidRent ? { prepaidRent: pkg.prepaidRent } : {}),
     ...(pkg.allowedExecutionPolicies
       ? { allowedExecutionPolicies: pkg.allowedExecutionPolicies }
       : {}),

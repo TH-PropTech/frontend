@@ -27,9 +27,6 @@ vi.mock('./components/booking-widget', () => ({
     <div data-testid="booking-id">{propertyId}</div>
   ),
 }))
-vi.mock('./components/property-analytics', () => ({
-  PropertyAnalytics: () => null,
-}))
 vi.mock('./components/property-gallery', () => ({
   PropertyGallery: () => null,
 }))
@@ -60,24 +57,12 @@ vi.mock('@/features/viewing-notes', () => ({
     <div data-testid="viewing-note-id">{apartmentId}</div>
   ),
 }))
-vi.mock('@/features/area-profile', () => ({
-  getAreaProfileForApartment: vi.fn(),
-  NearbyFacilitiesCard: () => null,
-}))
 vi.mock('@/features/listing-quality', () => ({
   getListingQualityScore: vi.fn(),
   ImprovementChecklist: () => null,
   QualityScoreCard: () => null,
 }))
 
-vi.mock('@/features/condition-analysis', () => ({
-  ConditionAnalysisPanel: () => null,
-}))
-vi.mock('@/features/location-risk', () => ({
-  LocationRiskPanel: ({ apartmentId }: { apartmentId: string }) => (
-    <div data-testid="location-risk-id">{apartmentId}</div>
-  ),
-}))
 vi.mock('@/features/apartment-floorplan', () => ({
   ApartmentFloorplanSection: () => null,
 }))
@@ -132,9 +117,6 @@ describe('PropertyDetail backend resource identity', () => {
         '6a811b784cb8ecf7051f5e8d'
       )
     })
-    expect(screen.getByTestId('location-risk-id')).toHaveTextContent(
-      '6a811b784cb8ecf7051f5e8d'
-    )
     expect(screen.getByTestId('booking-id')).toHaveTextContent(
       '6a811b784cb8ecf7051f5e8d'
     )
@@ -227,39 +209,21 @@ describe('PropertyDetail backend resource identity', () => {
     })
   })
 
-  it('renders 4 intelligence tabs and handles tab switching', async () => {
+  it('renders the finance and reviews tabs and handles tab switching', async () => {
     render(<PropertyDetail />)
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole('tab', { name: /Tài chính & Chi phí/i })
-      ).toBeInTheDocument()
+    const financeTab = await screen.findByRole('tab', {
+      name: /Tài chính & Chi phí/i,
     })
+    const reviewsTab = screen.getByRole('tab', { name: /Đánh giá/i })
 
-    const financeTab = screen.getByRole('tab', { name: /Tài chính & Chi phí/i })
-    const locationTab = screen.getByRole('tab', { name: /Vị trí & Kết nối/i })
-    const livingTab = screen.getByRole('tab', { name: /Môi trường sống/i })
-    const reviewsTab = screen.getByRole('tab', { name: /Đánh giá & So sánh/i })
-
+    expect(screen.getAllByRole('tab')).toHaveLength(2)
     expect(financeTab).toHaveAttribute('aria-selected', 'true')
-    expect(locationTab).toHaveAttribute('aria-selected', 'false')
-    expect(livingTab).toHaveAttribute('aria-selected', 'false')
     expect(reviewsTab).toHaveAttribute('aria-selected', 'false')
 
-    // Switch to Location tab
-    fireEvent.click(locationTab)
-    expect(locationTab).toHaveAttribute('aria-selected', 'true')
-    expect(financeTab).toHaveAttribute('aria-selected', 'false')
-
-    // Switch to Living tab
-    fireEvent.click(livingTab)
-    expect(livingTab).toHaveAttribute('aria-selected', 'true')
-    expect(locationTab).toHaveAttribute('aria-selected', 'false')
-
-    // Switch to Reviews tab
     fireEvent.click(reviewsTab)
     expect(reviewsTab).toHaveAttribute('aria-selected', 'true')
-    expect(livingTab).toHaveAttribute('aria-selected', 'false')
+    expect(financeTab).toHaveAttribute('aria-selected', 'false')
   })
 
   it('renders an explicit error instead of substituting mock data for a missing API property', async () => {

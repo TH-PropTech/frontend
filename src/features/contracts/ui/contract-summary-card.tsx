@@ -10,6 +10,7 @@ import {
   type ContractFinancialSummaryView,
 } from '../api/contracts-api'
 import type { ContractActiveStep } from '../lib/resolve-contract-active-step'
+import { describePrepaidRent } from '@/shared/lib/prepaid-rent'
 
 export interface ContractSummaryCardProps {
   contract: ContractOverviewSnapshot
@@ -111,6 +112,15 @@ export function ContractSummaryCard({
             value: financialSummary.initialPaymentTotal,
             primary: false,
           },
+          ...(financialSummary.prepaidRent
+            ? [
+                {
+                  label: describePrepaidRent(financialSummary.prepaidRent),
+                  value: financialSummary.prepaidRent.amount,
+                  primary: false,
+                },
+              ]
+            : []),
           {
             label: 'Cọc giữ chỗ',
             value: financialSummary.holdingDeposit,

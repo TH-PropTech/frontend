@@ -32,7 +32,6 @@ import {
   Building,
   Bookmark,
   Headphones,
-  Calculator,
   ShieldCheck,
   ChevronDown,
   Users,
@@ -46,7 +45,6 @@ type TabKey =
   | 'security'
   | 'listings'
   | 'saved-searches'
-  | 'living-cost'
   | 'safety-reports'
   | 'support-tickets'
   | 'rental-applications'
@@ -65,11 +63,6 @@ export function ProfileWidget(): React.ReactElement {
   const { activeTab, setActiveTab, role } = profile
 
   const moreItems: MoreItem[] = [
-    {
-      value: 'living-cost',
-      label: 'Chi phí sinh hoạt',
-      icon: <Calculator className="h-4 w-4 text-primary shrink-0" />,
-    },
     {
       value: 'safety-reports',
       label: 'Báo cáo an toàn',
@@ -197,10 +190,6 @@ export function ProfileWidget(): React.ReactElement {
 
         <TabsContent value="saved-searches" className="outline-none">
           <ProfileFeatureHub feature="saved-searches" />
-        </TabsContent>
-
-        <TabsContent value="living-cost" className="outline-none">
-          <ProfileFeatureHub feature="living-cost" />
         </TabsContent>
 
         <TabsContent value="safety-reports" className="outline-none">

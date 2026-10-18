@@ -22,10 +22,6 @@ import { PropertyDecisionActions } from './components/property-decision-actions'
 import { PriceTrendPanel } from './components/price-trend-panel'
 import { CostBreakdownPanel } from './components/cost-breakdown-panel'
 import { RentCalculator } from './components/rent-calculator'
-import { CommuteEstimator } from './components/commute-estimator'
-import { AmbientRadarPanel } from './components/ambient-radar-panel'
-import { EnergyEfficiencyPanel } from './components/energy-efficiency-panel'
-import { PropertyComparison } from './components/property-comparison'
 import { AnalyticsExplainModal } from './components/analytics-explain-modal'
 import { apiClient } from '@/shared/api/api-client'
 import Link from 'next/link'
@@ -38,7 +34,6 @@ import {
   Mail,
   FileText,
   Coins,
-  MapPin,
   Sparkles,
   Scale,
 } from 'lucide-react'
@@ -46,16 +41,10 @@ import { FreshnessBadge } from '@/features/listing-freshness'
 import { PriceBenchmarkCard } from '@/features/price-benchmark'
 import { ViewingNoteEditor } from '@/features/viewing-notes'
 import {
-  getAreaProfileForApartment,
-  NearbyFacilitiesCard,
-} from '@/features/area-profile'
-import {
   getListingQualityScore,
   ImprovementChecklist,
   QualityScoreCard,
 } from '@/features/listing-quality'
-import { ConditionAnalysisPanel } from '@/features/condition-analysis'
-import { LocationRiskPanel } from '@/features/location-risk'
 import { ApartmentFloorplanSection } from '@/features/apartment-floorplan'
 
 const DETAIL_TABS = [
@@ -65,18 +54,8 @@ const DETAIL_TABS = [
     icon: Coins,
   },
   {
-    id: 'location',
-    label: 'Vị trí & Kết nối',
-    icon: MapPin,
-  },
-  {
-    id: 'living',
-    label: 'Môi trường sống',
-    icon: Sparkles,
-  },
-  {
     id: 'reviews',
-    label: 'Đánh giá & So sánh',
+    label: 'Đánh giá',
     icon: Scale,
   },
 ] as const
@@ -140,32 +119,6 @@ function OwnerQualitySection({
       <ImprovementChecklist checklist={quality.data.checklist} />
     </div>
   )
-}
-
-function AreaProfileSection({
-  apartmentId,
-}: {
-  apartmentId: string
-}): React.ReactElement {
-  const profile = useQuery({
-    queryKey: ['area-profile', apartmentId],
-    queryFn: () => getAreaProfileForApartment(apartmentId),
-  })
-  if (profile.isLoading)
-    return <div className="h-32 animate-pulse rounded-3xl bg-surface-muted" />
-  if (profile.isError)
-    return (
-      <p className="rounded-2xl border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
-        Không tải được thông tin khu vực.
-      </p>
-    )
-  if (!profile.data)
-    return (
-      <p className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted">
-        Chưa có thông tin khu vực.
-      </p>
-    )
-  return <NearbyFacilitiesCard profile={profile.data} />
 }
 
 // Map amenities keys to Vietnamese labels
@@ -333,7 +286,6 @@ export function PropertyDetail(): React.ReactElement {
           <PropertyDecisionActions
             propertyId={apartmentResourceId}
             title={property.title}
-            monthlyRent={property.priceNum * 1_000_000}
           />
           <FreshnessBadge listingId={apartmentResourceId} />
           {viewer?.roles?.includes('tenant') ? (
@@ -653,7 +605,7 @@ export function PropertyDetail(): React.ReactElement {
           <div
             role="tablist"
             aria-label="Nhóm dữ liệu phân tích căn hộ"
-            className="grid grid-cols-2 md:grid-cols-4 gap-2 p-1.5 rounded-2xl bg-surface-muted/70 border border-border shadow-sm"
+            className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-surface-muted/70 border border-border shadow-sm"
           >
             {DETAIL_TABS.map(tab => {
               const Icon = tab.icon
@@ -710,40 +662,13 @@ export function PropertyDetail(): React.ReactElement {
             <RentCalculator price={price} />
           </div>
 
-          {/* Tab 2: Location Panel */}
-          <div
-            role="tabpanel"
-            id="tabpanel-location"
-            aria-labelledby="tab-location"
-            className={activeTab === 'location' ? 'space-y-4' : 'hidden'}
-          >
-            <CommuteEstimator property={property} />
-            <AreaProfileSection apartmentId={apartmentResourceId} />
-            <LocationRiskPanel apartmentId={apartmentResourceId} />
-          </div>
-
-          {/* Tab 3: Living Environment Panel */}
-          <div
-            role="tabpanel"
-            id="tabpanel-living"
-            aria-labelledby="tab-living"
-            className={activeTab === 'living' ? 'space-y-4' : 'hidden'}
-          >
-            <AmbientRadarPanel onExplain={setExplainData} />
-            <EnergyEfficiencyPanel onExplain={setExplainData} />
-            {viewer ? (
-              <ConditionAnalysisPanel apartmentId={apartmentResourceId} />
-            ) : null}
-          </div>
-
-          {/* Tab 4: Reviews & Comparison Panel */}
+          {/* Tab 2: Reviews Panel */}
           <div
             role="tabpanel"
             id="tabpanel-reviews"
             aria-labelledby="tab-reviews"
             className={activeTab === 'reviews' ? 'space-y-4' : 'hidden'}
           >
-            <PropertyComparison property={property} />
             <OwnerQualitySection
               apartmentId={apartmentResourceId}
               enabled={Boolean(
