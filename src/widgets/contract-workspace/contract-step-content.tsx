@@ -339,7 +339,9 @@ export function ContractStepContent({
               ?.scrollIntoView({ behavior: 'smooth' })
           }
         />
-        <PaymentSchedulePanel contractId={contractId} />
+        {signerRole === 'tenant' ? (
+          <PaymentSchedulePanel contractId={contractId} />
+        ) : null}
       </div>
     )
   }
