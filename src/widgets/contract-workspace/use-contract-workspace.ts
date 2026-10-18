@@ -13,6 +13,7 @@ import {
   getContractAuditEvents,
   downloadContractArtifact,
   verifyContractIntegrity,
+  isDepositPaid,
   type ContractViewDto,
   type ContractAuditEventDto,
   type ContractIntegrityResult,
@@ -28,7 +29,7 @@ export function paymentReturnNotice(
   hint: PaymentReturnStatus,
   depositStatus: string | null | undefined
 ): string {
-  if (depositStatus === 'paid' || depositStatus === 'transferred') {
+  if (isDepositPaid(depositStatus)) {
     return 'Thanh toán đã được hệ thống xác nhận.'
   }
   return hint === 'succeeded'

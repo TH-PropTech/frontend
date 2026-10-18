@@ -8,6 +8,7 @@ import {
   getContractStepState,
   getContractStatusLabel,
   getNextContractStep,
+  isDepositPaid,
   resolvePanelActivity,
   toContractStepHref,
   ContractPdfDialog,
@@ -69,9 +70,7 @@ function getNextDisabled(
   }
   if (step === 'document') return data.document.mode !== 'locked'
   if (step === 'deposit') {
-    return (
-      !data.deposit || !['paid', 'transferred'].includes(data.deposit.status)
-    )
+    return !data.deposit || !isDepositPaid(data.deposit.status)
   }
   if (step === 'signing') {
     return !(data.parties.tenant.hasSigned && data.parties.landlord.hasSigned)
@@ -85,11 +84,7 @@ export function getStepNotes(
 ): Partial<Record<ContractRouteStep, ContractStepNote>> {
   const notes: Partial<Record<ContractRouteStep, ContractStepNote>> = {}
   const deposit = data.deposit
-  if (
-    deposit &&
-    deposit.amount > 0 &&
-    !['paid', 'transferred'].includes(deposit.status)
-  ) {
+  if (deposit && deposit.amount > 0 && !isDepositPaid(deposit.status)) {
     notes.deposit = { text: 'Chờ thanh toán', tone: 'warning' }
   }
   const signed =

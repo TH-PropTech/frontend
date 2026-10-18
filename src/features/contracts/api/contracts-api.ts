@@ -236,12 +236,26 @@ export interface ContractPartyView {
   verifiedAt?: string | null
 }
 
+/** Trạng thái ký quỹ cọc tại Ví Mộc; không chứa mã ký quỹ hay mã giao dịch. */
+export interface ContractDepositEscrowView {
+  status: string
+  autoRefundAt: string | null
+  heldAt: string | null
+  settlement: {
+    kind: 'release' | 'refund'
+    state: 'requested' | 'settled' | 'failed'
+    settledAt: string | null
+  } | null
+}
+
 export interface ContractDepositView {
   agreementId: string | null
   agreementCode?: string | null
   amount: number
   currency?: string
-  status: 'draft' | 'pending' | 'paid' | 'transferred'
+  status: 'draft' | 'pending' | 'paid' | 'transferred' | 'released' | 'refunded'
+  /** Null/vắng với thỏa thuận cũ trả trực tiếp (không ký quỹ). */
+  escrow?: ContractDepositEscrowView | null
   consentGiven?: boolean
   contentRevision?: number | null
   contentHash?: string | null

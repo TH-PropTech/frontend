@@ -1,4 +1,4 @@
-import type { ContractStatus } from '../api/contracts-api'
+import type { ContractDepositView, ContractStatus } from '../api/contracts-api'
 
 const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
   draft: 'Bản nháp',
@@ -111,4 +111,28 @@ export function getLedgerStatusLabel(status: string): string {
 
 export function getAmendmentFieldLabel(field: string): string {
   return AMENDMENT_FIELD_LABELS[field] ?? humanizeCode(field)
+}
+
+/** Cọc đã được xác nhận (đang giữ, đã áp vào hợp đồng hoặc đã giải ngân). */
+export function isDepositPaid(status: string | null | undefined): boolean {
+  return status === 'paid' || status === 'transferred' || status === 'released'
+}
+
+type DepositEscrowSource = Pick<ContractDepositView, 'status' | 'escrow'>
+
+/**
+ * Nhãn trạng thái ký quỹ cọc cho người dùng; null khi không có ký quỹ để nói
+ * (thỏa thuận cũ trả trực tiếp, hoặc ký quỹ chưa nhận tiền).
+ */
+export function getDepositEscrowLabel(
+  deposit: DepositEscrowSource
+): string | null {
+  const settlement = deposit.escrow?.settlement ?? null
+  if (deposit.status === 'refunded') return 'Đã hoàn cho khách thuê'
+  if (deposit.status === 'released') return 'Đã chuyển cho chủ nhà'
+  if (settlement) {
+    if (settlement.kind === 'release') return 'Đang chuyển cho chủ nhà'
+    return 'Đang hoàn cho khách thuê'
+  }
+  return deposit.escrow?.status === 'HELD' ? 'Đang ký quỹ' : null
 }

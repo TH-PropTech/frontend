@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   getContractStatusLabel,
+  getDepositEscrowLabel,
+  isDepositPaid,
   getExecutionStrategyLabel,
   getLedgerStatusLabel,
   getLegalBasisLabel,
@@ -41,5 +43,70 @@ describe('contract labels', () => {
     )
     expect(getLedgerStatusLabel('failed-retryable')).toBe('Lỗi, đang thử lại')
     expect(humanizeCode('SOME_RAW_CODE')).toBe('Some raw code')
+  })
+
+  it('treats paid, transferred and released deposits as paid', () => {
+    expect(isDepositPaid('paid')).toBe(true)
+    expect(isDepositPaid('transferred')).toBe(true)
+    expect(isDepositPaid('released')).toBe(true)
+    expect(isDepositPaid('refunded')).toBe(false)
+    expect(isDepositPaid('pending')).toBe(false)
+    expect(isDepositPaid(undefined)).toBe(false)
+  })
+
+  describe('getDepositEscrowLabel', () => {
+    const held = {
+      status: 'HELD',
+      autoRefundAt: '2026-12-01T00:00:00Z',
+      heldAt: '2026-10-01T00:00:00Z',
+    }
+
+    it('labels a held escrow', () => {
+      expect(
+        getDepositEscrowLabel({
+          status: 'paid',
+          escrow: { ...held, settlement: null },
+        })
+      ).toBe('Đang ký quỹ')
+    })
+
+    it('labels in-flight settlements by direction, including failed ones', () => {
+      const settlement = (
+        kind: 'release' | 'refund',
+        state: 'requested' | 'failed'
+      ) => ({
+        status: 'applied',
+        escrow: { ...held, settlement: { kind, state, settledAt: null } },
+      })
+      expect(
+        getDepositEscrowLabel(settlement('release', 'requested') as never)
+      ).toBe('Đang chuyển cho chủ nhà')
+      expect(
+        getDepositEscrowLabel(settlement('release', 'failed') as never)
+      ).toBe('Đang chuyển cho chủ nhà')
+      expect(
+        getDepositEscrowLabel(settlement('refund', 'requested') as never)
+      ).toBe('Đang hoàn cho khách thuê')
+    })
+
+    it('labels terminal states from the agreement status', () => {
+      expect(getDepositEscrowLabel({ status: 'released' })).toBe(
+        'Đã chuyển cho chủ nhà'
+      )
+      expect(getDepositEscrowLabel({ status: 'refunded' })).toBe(
+        'Đã hoàn cho khách thuê'
+      )
+    })
+
+    it('returns null for legacy deposits and escrow not yet funded', () => {
+      expect(getDepositEscrowLabel({ status: 'paid', escrow: null })).toBeNull()
+      expect(getDepositEscrowLabel({ status: 'paid' })).toBeNull()
+      expect(
+        getDepositEscrowLabel({
+          status: 'pending',
+          escrow: { ...held, status: 'AWAITING_PAYMENT', settlement: null },
+        })
+      ).toBeNull()
+    })
   })
 })

@@ -6,11 +6,17 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
+  Lock,
   ExternalLink,
   Info,
 } from 'lucide-react'
+import { readApiErrorCode } from '@/shared/api'
 import { vndInWords } from '@/shared/lib/vnd-in-words'
 import type { ContractDepositView } from '@/features/contracts/api/contracts-api'
+import {
+  getDepositEscrowLabel,
+  isDepositPaid,
+} from '@/features/contracts/lib/contract-labels'
 import {
   consentDepositAgreement,
   initDepositPayment,
@@ -54,7 +60,7 @@ export function DepositPaymentPanel({
     momoMethod,
     setMomoMethod,
     choice,
-  } = usePaymentProviders()
+  } = usePaymentProviders('deposit')
   const selectedLabel =
     providers.find(option => option.provider === selected)?.label ?? 'Mock Bank'
 
@@ -69,7 +75,13 @@ export function DepositPaymentPanel({
     )
   }
 
-  const isPaid = deposit.status === 'paid' || deposit.status === 'transferred'
+  const isPaid = isDepositPaid(deposit.status)
+  const isRefunded = deposit.status === 'refunded'
+  const escrowLabel = getDepositEscrowLabel(deposit)
+  const autoRefundAt =
+    deposit.escrow?.status === 'HELD' && !deposit.escrow.settlement
+      ? deposit.escrow.autoRefundAt
+      : null
   const hasConsent = deposit.consentGiven !== false
   const canConsent =
     isTenant &&
@@ -105,9 +117,11 @@ export function DepositPaymentPanel({
       }
     } catch (err: unknown) {
       const msg =
-        err instanceof Error
-          ? err.message
-          : 'Không thể khởi tạo cổng thanh toán cọc'
+        readApiErrorCode(err) === 'DEPOSIT_PROVIDER_NOT_SUPPORTED'
+          ? 'Tiền cọc chỉ thanh toán được qua Ví Mộc. Vui lòng chọn lại cổng thanh toán.'
+          : err instanceof Error
+            ? err.message
+            : 'Không thể khởi tạo cổng thanh toán cọc'
       setErrorMsg(msg)
     } finally {
       setLoading(false)
@@ -177,7 +191,7 @@ export function DepositPaymentPanel({
                 <CheckCircle2 className="w-3 h-3 text-[var(--success)]" />
                 Đã thanh toán
               </span>
-            ) : (
+            ) : isRefunded ? null : (
               <span
                 data-testid="deposit-status-pending"
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--surface-muted)] text-[var(--warning)] border border-[var(--border)]"
@@ -209,6 +223,25 @@ export function DepositPaymentPanel({
             </span>
           ) : null}
         </div>
+
+        {escrowLabel ? (
+          <div
+            data-testid="deposit-escrow-status"
+            className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-xs text-[var(--fg)]"
+          >
+            <Lock className="h-4 w-4 shrink-0 text-[var(--primary)]" />
+            <span className="font-semibold">{escrowLabel}</span>
+            {autoRefundAt ? (
+              <span
+                data-testid="deposit-escrow-auto-refund"
+                className="text-[11px] text-[var(--muted)]"
+              >
+                Tự hoàn cho khách thuê nếu chưa bàn giao nhà trước{' '}
+                {new Date(autoRefundAt).toLocaleDateString('vi-VN')}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* PoC Mock Bank Simulation Note */}
         {selected === 'mock-bank' ? (
@@ -252,7 +285,7 @@ export function DepositPaymentPanel({
         )}
 
         {/* Action / CTA for Pending */}
-        {!isPaid && (
+        {!isPaid && !isRefunded && (
           <div className="space-y-3 pt-2">
             {errorMsg && (
               <div className="flex items-center gap-1.5 text-xs text-[var(--danger)]">
