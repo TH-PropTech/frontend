@@ -403,9 +403,18 @@ export interface ContractFinancialSummaryView {
   } | null
 }
 
+export interface HandoverInventoryItem {
+  name: string
+  quantity: number
+  condition: 'good' | 'damaged'
+  note?: string | null
+}
+
+export type HandoverCompletionReason = 'both-confirmed' | 'tenant-no-response'
+
 export interface MoveInSettlementView {
   id: string
-  status: 'pending' | 'overdue' | 'paid'
+  status: 'pending' | 'partially-paid' | 'overdue' | 'paid' | 'cancelled'
   total: number
   dueAt: string
   statementHash: string
@@ -420,6 +429,11 @@ export interface MoveInSettlementView {
     meterReadings: { electricity: number; water: number }
     keyCount: number
     inventoryReference: string | null
+    /** Các trường phương án A; bản ghi cũ có thể thiếu. */
+    inventoryItems?: HandoverInventoryItem[]
+    discrepancies?: Array<{ revision: number; note: string; at: string }>
+    responseDueAt?: string | null
+    completionReason?: HandoverCompletionReason | null
     notes: string | null
     handoverHash: string
     tenantConfirmation: { at: string; hash: string } | null
@@ -433,6 +447,7 @@ export interface HandoverInput {
   electricity: number
   water: number
   keyCount: number
+  inventoryItems?: HandoverInventoryItem[]
   inventoryReference?: string
   notes?: string
 }
