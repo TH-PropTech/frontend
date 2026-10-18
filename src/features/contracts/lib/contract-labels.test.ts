@@ -108,5 +108,43 @@ describe('contract labels', () => {
         })
       ).toBeNull()
     })
+
+    // D12: mã kỹ thuật (escrowId "ESC_...", transactionCode "TX_...") chỉ
+    // hiện trong "Chi tiết kỹ thuật" của UI; nhãn người dùng không bao giờ
+    // lộ các mã này dù escrow có chứa chúng.
+    it('never leaks ESC_/TX_ technical codes into the user-facing label', () => {
+      const scenarios = [
+        { status: 'paid' as const, escrow: held },
+        {
+          status: 'applied' as const,
+          escrow: {
+            ...held,
+            settlement: {
+              kind: 'release' as const,
+              state: 'requested' as const,
+              settledAt: null,
+            },
+          },
+        },
+        {
+          status: 'applied' as const,
+          escrow: {
+            ...held,
+            settlement: {
+              kind: 'refund' as const,
+              state: 'failed' as const,
+              settledAt: null,
+            },
+          },
+        },
+        { status: 'released' as const },
+        { status: 'refunded' as const },
+      ]
+      for (const scenario of scenarios) {
+        const label = getDepositEscrowLabel(scenario as never)
+        expect(label).not.toBeNull()
+        expect(label).not.toMatch(/ESC_|TX_/)
+      }
+    })
   })
 })
