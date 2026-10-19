@@ -38,6 +38,8 @@ interface NotificationBellProps {
 /** Loại thông báo có nút đi tới `data.link`, kèm nhãn nút. */
 const LINK_LABEL_BY_TYPE: Record<string, string> = {
   PAYOUT_PENDING: 'Mở trang xác nhận chuyển tiền',
+  PAYOUT_FAILED: 'Xem trạng thái nhận tiền',
+  PAYOUT_REPORTED: 'Xem đối soát',
   PLATFORM_FEE_INVOICE: 'Xem hóa đơn phí hoa hồng',
   DESIGN_REQUEST: 'Xem yêu cầu thiết kế 3D',
 }

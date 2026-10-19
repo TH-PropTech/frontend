@@ -83,3 +83,63 @@ export function getWalletTransactions(): Promise<WalletTransactionPage> {
 export function getPayableInvoices(): Promise<PayableInvoice[]> {
   return apiClient.get<PayableInvoice[]>('/wallet/invoices')
 }
+
+export type ReceivingAccountState =
+  | 'active'
+  | 'not_found'
+  | 'unreachable'
+  | 'brand_mismatch'
+
+export interface ReceivingAccount {
+  brand: WalletBrand
+  accountNumberMasked: string
+  accountHolder: string | null
+  state: ReceivingAccountState
+  message: string
+}
+
+export interface ReceivingLastReceived {
+  payoutId: string
+  contractId: string | null
+  amount: number
+  paidOutAt: string
+  reference: string | null
+}
+
+export type ReceivingIssueStatus = 'awaiting-wallet' | 'pending' | 'failed'
+
+export interface ReceivingIssue {
+  payoutId: string
+  contractId: string | null
+  amount: number
+  status: ReceivingIssueStatus
+  reasonCode: string | null
+  reason: string
+  createdAt: string
+  reportedAt: string | null
+}
+
+export interface ReceivingStatus {
+  checkedAt: string
+  hasLinkedWallet: boolean
+  accounts?: ReceivingAccount[]
+  lastReceived?: ReceivingLastReceived | null
+  counts?: { awaitingWallet: number; pending: number; failed: number }
+  issues?: ReceivingIssue[]
+}
+
+export function getReceivingStatus(refresh = false): Promise<ReceivingStatus> {
+  return apiClient.get<ReceivingStatus>(
+    `/wallet/receiving-status?refresh=${refresh ? 'true' : 'false'}`
+  )
+}
+
+export function reportPayoutIssue(
+  payoutId: string,
+  note?: string
+): Promise<{ reportedAt: string }> {
+  return apiClient.post<{ reportedAt: string }>(
+    `/payouts/${encodeURIComponent(payoutId)}/report-issue`,
+    note ? { note } : {}
+  )
+}
