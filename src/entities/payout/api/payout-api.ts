@@ -45,7 +45,7 @@ export interface ContractPayoutSummaryItem {
   dueAt: string | null
   sentAmount: number
   receivedAmount: number
-  /** `PayoutStatus`, trạng thái ký quỹ cọc (ví dụ `held`/`released`/`refunded`), hoặc `unpaid`. */
+  /** `PayoutStatus` hoặc `unpaid`. */
   status: string
 }
 

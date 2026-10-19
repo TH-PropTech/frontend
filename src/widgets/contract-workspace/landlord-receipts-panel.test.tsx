@@ -48,7 +48,7 @@ describe('LandlordReceiptsPanel', () => {
           dueAt: null,
           sentAmount: 10_000_000,
           receivedAmount: 10_000_000,
-          status: 'held',
+          status: 'pending',
         },
         {
           kind: 'RENT',
@@ -71,7 +71,7 @@ describe('LandlordReceiptsPanel', () => {
     await waitFor(() =>
       expect(screen.getAllByTestId('landlord-receipt-item')).toHaveLength(2)
     )
-    expect(screen.getByText('Đang ký quỹ')).toBeInTheDocument()
+    expect(screen.getByText('Đang chuyển')).toBeInTheDocument()
     expect(screen.getAllByText('Đã nhận').length).toBeGreaterThan(0)
     expect(
       screen.queryByTestId('landlord-wallet-link-prompt')
