@@ -4,6 +4,11 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { LandlordCommissionDialog } from '@/features/platform-fees'
+import {
+  DESIGN_REQUEST_STATUS_META,
+  DesignRequestDialog,
+  type DesignRequestStatus,
+} from '@/features/design-requests'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import {
@@ -20,6 +25,8 @@ interface ListingCardProps {
   onEdit: (item: LandlordApartmentItem) => void
   onRenew: (id: string) => void
   isRenewing: boolean
+  /** Trạng thái yêu cầu thiết kế 3D đang xử lý của căn hộ (nếu có). */
+  designRequestStatus?: DesignRequestStatus
 }
 
 export function ListingCard({
@@ -27,6 +34,7 @@ export function ListingCard({
   onEdit,
   onRenew,
   isRenewing,
+  designRequestStatus,
 }: ListingCardProps): React.ReactElement {
   // priceMonthly là VND; hiển thị theo triệu/tháng.
   const formattedPrice = (item.priceMonthly / 1_000_000).toLocaleString('vi-VN')
@@ -84,6 +92,13 @@ export function ListingCard({
           </div>
         )}
         <div className="absolute top-3 left-3 z-10">{getStatusBadge()}</div>
+        {designRequestStatus ? (
+          <span
+            className={`absolute top-3 right-3 z-10 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${DESIGN_REQUEST_STATUS_META[designRequestStatus].className}`}
+          >
+            3D: {DESIGN_REQUEST_STATUS_META[designRequestStatus].label}
+          </span>
+        ) : null}
       </div>
 
       <CardContent className="p-5 flex flex-col flex-1 justify-between gap-4">
@@ -168,10 +183,20 @@ export function ListingCard({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
           <LandlordCommissionDialog
             apartmentId={item.id}
             className="shrink-0"
+          />
+          <DesignRequestDialog
+            apartmentId={item.id}
+            apartmentTitle={item.title}
+            apartment={{
+              bedrooms: item.bedrooms,
+              bathrooms: item.bathrooms,
+              area: item.area,
+              furniture: item.furniture,
+            }}
           />
           {item.status === 'rejected' && (
             <Button

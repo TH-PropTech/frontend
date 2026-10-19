@@ -96,6 +96,13 @@ describe('route resolution', () => {
   })
 })
 
+describe('design requests route', () => {
+  it('resolves the design requests section for admin and staff', () => {
+    expect(resolveAdminTab('/admin/design-requests')).toBe('design-requests')
+    expect(resolveStaffTab('/admin/design-requests')).toBe('design-requests')
+  })
+})
+
 describe.each([
   ['admin', AdminDashboard, ADMIN],
   ['staff', StaffOperationsDashboard, STAFF],

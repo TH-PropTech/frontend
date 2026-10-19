@@ -8,6 +8,7 @@ import {
   Blocks,
   Cpu,
   Box,
+  ClipboardList,
   DollarSign,
   History,
   LayoutTemplate,
@@ -33,6 +34,7 @@ import { FeeRevenueReport, FeeScheduleEditor } from '@/features/platform-fees'
 import { StuckTransactionsView } from '@/features/rental-transactions'
 import { AdminWalletsView } from '@/features/admin-wallets'
 import { PaymentHistoryView } from '@/features/payment-history'
+import { StaffDesignRequestsView } from '@/features/design-requests'
 
 type TabType =
   | 'overview'
@@ -49,6 +51,7 @@ type TabType =
   | 'fabric-audit'
   | 'groq-keys'
   | 'apartment-designs'
+  | 'design-requests'
   | 'legal-knowledge'
   | 'wallets'
   | 'payment-history'
@@ -68,6 +71,7 @@ const ADMIN_TABS: readonly TabType[] = [
   'fabric-audit',
   'groq-keys',
   'apartment-designs',
+  'design-requests',
   'legal-knowledge',
   'wallets',
   'payment-history',
@@ -268,6 +272,11 @@ export function AdminDashboard({
       icon: <Box className="h-[18px] w-[18px]" aria-hidden="true" />,
     },
     {
+      type: 'design-requests',
+      label: 'Yêu cầu thiết kế 3D',
+      icon: <ClipboardList className="h-[18px] w-[18px]" aria-hidden="true" />,
+    },
+    {
       type: 'groq-keys',
       label: 'Cấu hình API Key',
       icon: (
@@ -369,6 +378,8 @@ export function AdminDashboard({
         return <GroqKeysView />
       case 'apartment-designs':
         return <ApartmentDesignsView />
+      case 'design-requests':
+        return <StaffDesignRequestsView role="admin" />
       case 'legal-knowledge':
         return <LegalKnowledgeView />
       default:

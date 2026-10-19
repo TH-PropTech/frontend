@@ -110,6 +110,31 @@ describe('NotificationBell API failure states', () => {
     expect(link).toHaveAttribute('href', '/profile?tab=wallet')
   })
 
+  it('links a design request notification to its request page', async () => {
+    mocks.get.mockResolvedValue({
+      items: [
+        {
+          _id: 'notice-design',
+          title: 'Thiết kế 3D đã sẵn sàng',
+          body: 'Vui lòng xem và duyệt thiết kế.',
+          type: 'DESIGN_REQUEST',
+          data: { link: '/profile?tab=listings' },
+          isRead: false,
+          createdAt: '2026-10-04T00:00:00.000Z',
+        },
+      ],
+      total: 1,
+    })
+
+    render(<NotificationBell isLightHeader />)
+    fireEvent.click(screen.getByTitle('Thông báo'))
+
+    const link = await screen.findByRole('link', {
+      name: /Xem yêu cầu thiết kế 3D/,
+    })
+    expect(link).toHaveAttribute('href', '/profile?tab=listings')
+  })
+
   it('renders the received amount from a completed payout notification', async () => {
     mocks.get.mockResolvedValue({
       items: [

@@ -35,6 +35,13 @@ interface NotificationBellProps {
   isLightHeader: boolean
 }
 
+/** Loại thông báo có nút đi tới `data.link`, kèm nhãn nút. */
+const LINK_LABEL_BY_TYPE: Record<string, string> = {
+  PAYOUT_PENDING: 'Mở trang xác nhận chuyển tiền',
+  PLATFORM_FEE_INVOICE: 'Xem hóa đơn phí hoa hồng',
+  DESIGN_REQUEST: 'Xem yêu cầu thiết kế 3D',
+}
+
 type NotificationError = 'network' | 'auth' | 'unknown'
 
 export function NotificationBell({
@@ -280,15 +287,8 @@ export function NotificationBell({
                   n.type === 'BOOKING' &&
                   n.title.includes('Yêu cầu đặt lịch') &&
                   n.data?.bookingId
-                const payoutLink =
-                  n.type === 'PAYOUT_PENDING' ||
-                  n.type === 'PLATFORM_FEE_INVOICE'
-                    ? n.data?.link
-                    : undefined
-                const payoutLinkLabel =
-                  n.type === 'PLATFORM_FEE_INVOICE'
-                    ? 'Xem hóa đơn phí hoa hồng'
-                    : 'Mở trang xác nhận chuyển tiền'
+                const payoutLinkLabel = LINK_LABEL_BY_TYPE[n.type]
+                const payoutLink = payoutLinkLabel ? n.data?.link : undefined
                 return (
                   <div
                     key={n._id}

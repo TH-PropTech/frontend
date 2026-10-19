@@ -16,3 +16,6 @@ export type {
   FloorplanDesign,
   FloorplanTheme,
 } from './model/floorplan-design'
+export { ApartmentFloorplanFrame } from './ui/apartment-floorplan-frame'
+export { listAdminDesigns } from './api/floorplan-designs-api'
+export { listApartmentDesigns } from './api/floorplan-designs-api'
