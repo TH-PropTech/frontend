@@ -12,7 +12,7 @@ export const recommendationApi = {
   },
 
   sendFeedback: async (feedback: {
-    building_id: string | number
+    apartment_id: string | number
     age: number
     income: number
     preferred_district: string

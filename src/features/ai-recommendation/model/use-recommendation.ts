@@ -54,12 +54,12 @@ export const useRecommendation = () => {
   }, [survey])
 
   const handleFeedback = useCallback(
-    async (buildingId: string | number, type: 'like' | 'dislike') => {
+    async (apartmentId: string | number, type: 'like' | 'dislike') => {
       // Optimistic UI update
-      setLikedIds(prev => ({ ...prev, [buildingId]: type }))
+      setLikedIds(prev => ({ ...prev, [apartmentId]: type }))
       try {
         await recommendationApi.sendFeedback({
-          building_id: buildingId,
+          apartment_id: apartmentId,
           age: survey.age,
           income: survey.income,
           preferred_district: survey.preferred_district,
@@ -72,7 +72,7 @@ export const useRecommendation = () => {
         // Revert if error (optional, or just ignore for secondary action)
         setLikedIds(prev => {
           const next = { ...prev }
-          delete next[buildingId]
+          delete next[apartmentId]
           return next
         })
       }

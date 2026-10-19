@@ -4,7 +4,6 @@ import {
   resubmitApartment,
   uploadApartmentImages,
   searchProjects,
-  searchBuildings,
   getMyListings,
   renewApartment,
 } from './apartment-posting-api'
@@ -50,8 +49,6 @@ describe('apartment-posting-api', () => {
     amenities: ['pool', 'gym'],
     projectName: 'Vinhomes Smart City',
     projectId: 'proj-1',
-    buildingName: 'S2.01',
-    buildingId: 'b-1',
     rentalPackages: [
       {
         packageId: 'pkg-12m',
@@ -135,16 +132,6 @@ describe('apartment-posting-api', () => {
     await searchProjects('Vinhomes')
 
     expect(apiClient.get).toHaveBeenCalledWith('/projects?search=Vinhomes')
-  })
-
-  it('searchBuildings queries with search param and optional projectId', async () => {
-    vi.mocked(apiClient.get).mockResolvedValueOnce([])
-
-    await searchBuildings('S2', 'proj-1')
-
-    expect(apiClient.get).toHaveBeenCalledWith(
-      '/buildings?search=S2&projectId=proj-1'
-    )
   })
 
   it('renewApartment sends patch to /apartments/:id/renew', async () => {

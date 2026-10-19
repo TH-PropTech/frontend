@@ -469,8 +469,8 @@ export function useKycFlow(profile: UseProfileReturn) {
     }
   }
 
-  const handleFeedback = (buildingId: number, type: 'like' | 'dislike') => {
-    setFeedbackGiven(prev => ({ ...prev, [buildingId]: type }))
+  const handleFeedback = (apartmentId: number, type: 'like' | 'dislike') => {
+    setFeedbackGiven(prev => ({ ...prev, [apartmentId]: type }))
     toast.success(
       type === 'like'
         ? 'Đã lưu phản hồi học máy Naïve Bayes!'

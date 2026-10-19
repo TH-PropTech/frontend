@@ -1,9 +1,6 @@
 import { apiClient } from '@/shared/api/api-client'
 import type { ApartmentFormValues, LandlordApartmentItem } from '../model/types'
-import type {
-  ApiProjectItem,
-  ApiBuildingItem,
-} from '@/entities/properties/model/types'
+import type { ApiProjectItem } from '@/entities/properties/model/types'
 
 function sanitizeApartmentPayload(
   values: ApartmentFormValues
@@ -50,17 +47,6 @@ export async function searchProjects(query: string): Promise<ApiProjectItem[]> {
   return apiClient.get<ApiProjectItem[]>(
     `/projects?search=${encodeURIComponent(query)}`
   )
-}
-
-export async function searchBuildings(
-  query: string,
-  projectId?: string
-): Promise<ApiBuildingItem[]> {
-  let url = `/buildings?search=${encodeURIComponent(query)}`
-  if (projectId) {
-    url += `&projectId=${projectId}`
-  }
-  return apiClient.get<ApiBuildingItem[]>(url)
 }
 
 export async function updateApartment(

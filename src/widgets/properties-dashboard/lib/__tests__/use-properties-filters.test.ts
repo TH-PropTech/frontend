@@ -251,7 +251,7 @@ describe('usePropertiesFilters - Query Parameters & Normalization Suite (5 Dimen
 
   // Dimension 4: Full Branch Coverage
   describe('Dimension 4: Full Branch Coverage', () => {
-    it('matches apartment keyword across project name, building name, and district', () => {
+    it('matches apartment keyword across project name, project name, and district', () => {
       const sampleApt = mockApartments[0]
       if (!sampleApt) {
         throw new Error('No mock apartment found')

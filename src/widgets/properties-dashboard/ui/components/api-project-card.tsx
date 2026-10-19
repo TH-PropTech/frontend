@@ -123,7 +123,7 @@ export function ApiProjectCard({
             {project.city} • {project.district}
           </span>
           <span className="text-xs font-bold text-primary group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-            Xem tòa nhà
+            Xem căn hộ
             <svg
               className="h-3.5 w-3.5"
               fill="none"
