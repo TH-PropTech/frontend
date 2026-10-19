@@ -4,6 +4,7 @@ import * as React from 'react'
 import {
   AlertCircle,
   CheckCircle2,
+  Clock,
   Copy,
   ExternalLink,
   Eye,
@@ -16,12 +17,56 @@ import {
   Trash2,
 } from 'lucide-react'
 import {
+  approveTerms,
+  describeTermsError,
   getAdminLegalTermsState,
   publishLegalTerms,
+  readTermsErrorCode,
+  requestTermsChanges,
   saveLegalTermsDraft,
+  submitTermsForReview,
   type AdminLegalTermsStateResponse,
   type LegalTermsSection,
+  type TermsReviewStatus,
 } from '@/features/legal-terms/api/legal-terms-api'
+import { getAdminLegalSources } from '@/features/contracts/api/legal-sources-api'
+import type { LegalSource } from '@/features/contracts/model/legal-governance-data'
+
+const REVIEW_STEPS: {
+  status: TermsReviewStatus | 'published'
+  label: string
+}[] = [
+  { status: 'editing', label: 'Soạn thảo' },
+  { status: 'in_review', label: 'Chờ duyệt' },
+  { status: 'approved', label: 'Đã duyệt' },
+  { status: 'published', label: 'Công bố' },
+]
+
+const WITHDRAW_NOTE = 'Người soạn rút lại để chỉnh sửa'
+
+function shortId(id: string): string {
+  return id.length > 8 ? id.slice(0, 8) : id
+}
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('vi-VN')
+}
+
+function toLocalInput(d: Date): string {
+  const pad = (n: number): string => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function normalizeSections(sections: LegalTermsSection[]): string {
+  return JSON.stringify(
+    sections.map((sec, idx) => ({
+      id: sec.id.trim() || `sec-${idx + 1}`,
+      heading: sec.heading.trim(),
+      body: sec.body.trim(),
+      sourceKeys: [...(sec.sourceKeys ?? [])].sort(),
+    }))
+  )
+}
 
 export function LegalTermsAdminTab(): React.ReactElement {
   const [data, setData] = React.useState<AdminLegalTermsStateResponse | null>(
@@ -34,6 +79,14 @@ export function LegalTermsAdminTab(): React.ReactElement {
   const [copiedHash, setCopiedHash] = React.useState(false)
   const [showPublishModal, setShowPublishModal] = React.useState(false)
   const [previewMode, setPreviewMode] = React.useState(false)
+  const [reviewBusy, setReviewBusy] = React.useState(false)
+  const [showChangesModal, setShowChangesModal] = React.useState(false)
+  const [changesNote, setChangesNote] = React.useState('')
+  const [effectiveMode, setEffectiveMode] = React.useState<'now' | 'scheduled'>(
+    'now'
+  )
+  const [scheduledAt, setScheduledAt] = React.useState('')
+  const [modalError, setModalError] = React.useState<string | null>(null)
   const [successMessage, setSuccessMessage] = React.useState<string | null>(
     null
   )
@@ -44,6 +97,21 @@ export function LegalTermsAdminTab(): React.ReactElement {
   const [draftSections, setDraftSections] = React.useState<LegalTermsSection[]>(
     []
   )
+  const [legalSources, setLegalSources] = React.useState<LegalSource[]>([])
+
+  React.useEffect(() => {
+    let active = true
+    getAdminLegalSources()
+      .then(sources => {
+        if (active) setLegalSources(sources)
+      })
+      .catch(() => {
+        // Picker nguồn pháp lý là tùy chọn; để trống nếu tải lỗi.
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const applyLoadedData = React.useCallback(
     (res: AdminLegalTermsStateResponse) => {
@@ -61,6 +129,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
             heading: s.heading,
             body: s.body,
             order: s.order,
+            ...(s.sourceKeys ? { sourceKeys: s.sourceKeys } : {}),
           }))
         )
       }
@@ -68,23 +137,28 @@ export function LegalTermsAdminTab(): React.ReactElement {
     []
   )
 
-  const reloadData = React.useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    setSuccessMessage(null)
-    try {
-      const res = await getAdminLegalTermsState()
-      applyLoadedData(res)
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Không thể tải thông tin điều khoản dịch vụ'
-      )
-    } finally {
-      setLoading(false)
-    }
-  }, [applyLoadedData])
+  const reloadData = React.useCallback(
+    async (opts?: { keepMessages?: boolean }) => {
+      setLoading(true)
+      if (!opts?.keepMessages) {
+        setError(null)
+        setSuccessMessage(null)
+      }
+      try {
+        const res = await getAdminLegalTermsState()
+        applyLoadedData(res)
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Không thể tải thông tin điều khoản dịch vụ'
+        )
+      } finally {
+        setLoading(false)
+      }
+    },
+    [applyLoadedData]
+  )
 
   React.useEffect(() => {
     let active = true
@@ -129,10 +203,25 @@ export function LegalTermsAdminTab(): React.ReactElement {
       if (!current) return prev
       const next = [...prev]
       next[index] = {
-        id: current.id,
+        ...current,
         heading: field === 'heading' ? val : current.heading,
         body: field === 'body' ? val : current.body,
-        order: current.order,
+      }
+      return next
+    })
+  }
+
+  const handleToggleSectionSource = (index: number, key: string): void => {
+    setDraftSections(prev => {
+      const current = prev[index]
+      if (!current) return prev
+      const selected = current.sourceKeys ?? []
+      const next = [...prev]
+      next[index] = {
+        ...current,
+        sourceKeys: selected.includes(key)
+          ? selected.filter(k => k !== key)
+          : [...selected, key],
       }
       return next
     })
@@ -169,40 +258,117 @@ export function LegalTermsAdminTab(): React.ReactElement {
           heading: s.heading.trim(),
           body: s.body.trim(),
           order: idx + 1,
+          ...(s.sourceKeys?.length ? { sourceKeys: s.sourceKeys } : {}),
         })),
         expectedRevision,
       })
+      await reloadData({ keepMessages: true })
       setSuccessMessage('Đã lưu bản nháp thành công!')
-      await reloadData()
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : 'Lỗi lưu bản nháp. Có thể do phiên bản đã bị thay đổi.'
+        describeTermsError(
+          err,
+          'Lỗi lưu bản nháp. Có thể do phiên bản đã bị thay đổi.'
+        )
       )
+      if (readTermsErrorCode(err) === 'TERMS_DRAFT_STALE') {
+        await reloadData({ keepMessages: true })
+      }
     } finally {
       setSaving(false)
     }
   }
 
-  const handlePublish = async (): Promise<void> => {
-    const expectedRevision = data?.draft?.draftRevision ?? 1
-    setPublishing(true)
+  const runReviewAction = async (
+    fn: () => Promise<unknown>,
+    success: string,
+    onDone?: () => void
+  ): Promise<void> => {
+    setReviewBusy(true)
     setError(null)
     setSuccessMessage(null)
     try {
-      const publishedDoc = await publishLegalTerms({ expectedRevision })
-      setShowPublishModal(false)
-      setSuccessMessage(
-        `Đã công bố phiên bản v${publishedDoc.version} thành công! Mã băm SHA-256 đã được sinh bất biến.`
-      )
-      await reloadData()
+      await fn()
+      onDone?.()
+      await reloadData({ keepMessages: true })
+      setSuccessMessage(success)
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Lỗi công bố điều khoản. Vui lòng kiểm tra lại xung đột phiên bản.'
+      setError(describeTermsError(err, 'Thao tác duyệt thất bại.'))
+      const code = readTermsErrorCode(err)
+      if (
+        code === 'TERMS_DRAFT_STALE' ||
+        code === 'TERMS_INVALID_REVIEW_STATE'
+      ) {
+        await reloadData({ keepMessages: true })
+      }
+    } finally {
+      setReviewBusy(false)
+    }
+  }
+
+  const handleSubmitReview = (): Promise<void> =>
+    runReviewAction(
+      () => submitTermsForReview(data?.draft?.draftRevision ?? 1),
+      'Đã gửi bản nháp chờ duyệt.'
+    )
+
+  const handleApprove = (): Promise<void> =>
+    runReviewAction(
+      () => approveTerms(data?.draft?.draftRevision ?? 1),
+      'Đã duyệt bản nháp. Có thể công bố phiên bản mới.'
+    )
+
+  const handleRequestChanges = (note: string, success: string): Promise<void> =>
+    runReviewAction(
+      () => requestTermsChanges(data?.draft?.draftRevision ?? 1, note),
+      success,
+      () => {
+        setShowChangesModal(false)
+        setChangesNote('')
+      }
+    )
+
+  const handlePublish = async (): Promise<void> => {
+    const expectedRevision = data?.draft?.draftRevision ?? 1
+    if (effectiveMode === 'scheduled' && !scheduledAt) {
+      setModalError('Hãy chọn ngày giờ có hiệu lực.')
+      return
+    }
+    setPublishing(true)
+    setError(null)
+    setModalError(null)
+    setSuccessMessage(null)
+    try {
+      const publishedDoc = await publishLegalTerms({
+        expectedRevision,
+        ...(effectiveMode === 'scheduled'
+          ? { effectiveFrom: new Date(scheduledAt).toISOString() }
+          : {}),
+      })
+      setShowPublishModal(false)
+      const wasScheduled = effectiveMode === 'scheduled'
+      setEffectiveMode('now')
+      setScheduledAt('')
+      await reloadData({ keepMessages: true })
+      setSuccessMessage(
+        wasScheduled
+          ? `Đã công bố phiên bản v${publishedDoc.version}, sẽ có hiệu lực theo lịch hẹn.`
+          : `Đã công bố phiên bản v${publishedDoc.version} thành công! Mã băm SHA-256 đã được sinh bất biến.`
       )
+    } catch (err) {
+      const message = describeTermsError(
+        err,
+        'Lỗi công bố điều khoản. Vui lòng kiểm tra lại xung đột phiên bản.'
+      )
+      if (readTermsErrorCode(err) === 'TERMS_EFFECTIVE_FROM_INVALID') {
+        setModalError(message)
+      } else {
+        setShowPublishModal(false)
+        setError(message)
+        if (readTermsErrorCode(err) === 'TERMS_DRAFT_STALE') {
+          await reloadData({ keepMessages: true })
+        }
+      }
     } finally {
       setPublishing(false)
     }
@@ -218,7 +384,22 @@ export function LegalTermsAdminTab(): React.ReactElement {
   }
 
   const published = data?.published
+  const scheduled = data?.scheduled ?? null
   const draft = data?.draft
+  const reviewStatus: TermsReviewStatus = draft?.reviewStatus ?? 'editing'
+  const readOnly = reviewStatus !== 'editing'
+  const busy = saving || publishing || reviewBusy
+  const isDirty = draft
+    ? draftTitle.trim() !== draft.title.trim() ||
+      draftSummary.trim() !== draft.summary.trim() ||
+      normalizeSections(draftSections) !== normalizeSections(draft.sections)
+    : true
+  const activeStep = REVIEW_STEPS.findIndex(st => st.status === reviewStatus)
+  const now = new Date()
+  const minLocal = toLocalInput(now)
+  const maxLocal = toLocalInput(
+    new Date(now.getFullYear() + 1, now.getMonth(), now.getDate(), 23, 59)
+  )
 
   return (
     <div className="space-y-6">
@@ -232,6 +413,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
           </div>
           <button
             onClick={() => void reloadData()}
+            type="button"
             className="flex items-center gap-1 text-xs underline font-semibold hover:opacity-80"
           >
             <RefreshCw className="h-3 w-3" /> Tải lại
@@ -288,9 +470,17 @@ export function LegalTermsAdminTab(): React.ReactElement {
               <span className="text-muted block">Ngày công bố</span>
               <span className="font-semibold text-fg block">
                 {published.publishedAt
-                  ? new Date(published.publishedAt).toLocaleString('vi-VN')
+                  ? formatDateTime(published.publishedAt)
                   : 'N/A'}
               </span>
+              {(published.effectiveFrom ?? published.publishedAt) ? (
+                <span className="text-muted block">
+                  Có hiệu lực từ{' '}
+                  {formatDateTime(
+                    (published.effectiveFrom ?? published.publishedAt) as string
+                  )}
+                </span>
+              ) : null}
             </div>
             <div className="space-y-1 md:col-span-2">
               <span className="text-muted block">
@@ -316,6 +506,25 @@ export function LegalTermsAdminTab(): React.ReactElement {
           </div>
         ) : null}
       </div>
+
+      {scheduled ? (
+        <div className="flex items-start gap-3 p-4 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm">
+          <Clock className="h-5 w-5 shrink-0 mt-0.5" />
+          <div className="flex-1 text-xs space-y-1">
+            <p className="font-semibold">
+              Phiên bản v{scheduled.version} sẽ có hiệu lực từ{' '}
+              {formatDateTime(
+                (scheduled.effectiveFrom ??
+                  scheduled.publishedAt ??
+                  '') as string
+              )}
+            </p>
+            <p className="font-mono text-[11px] break-all">
+              Mã băm SHA-256: {scheduled.contentHash}
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       {/* ═══ DRAFT EDITOR / PREVIEW ═══ */}
       <div className="rounded-2xl border border-border bg-surface p-6 shadow-xs space-y-6">
@@ -346,7 +555,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
             <button
               type="button"
               onClick={() => void handleSaveDraft()}
-              disabled={saving || publishing}
+              disabled={busy || readOnly}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-primary text-white hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {saving ? (
@@ -356,16 +565,133 @@ export function LegalTermsAdminTab(): React.ReactElement {
               )}
               Lưu bản nháp
             </button>
+            {reviewStatus === 'editing' ? (
+              <button
+                type="button"
+                onClick={() => void handleSubmitReview()}
+                disabled={busy || !draft || isDirty}
+                title={
+                  isDirty ? 'Hãy lưu bản nháp trước khi gửi duyệt' : undefined
+                }
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl border border-primary text-primary hover:bg-primary/10 transition-colors disabled:opacity-50"
+              >
+                Gửi duyệt
+              </button>
+            ) : null}
+            {reviewStatus === 'in_review' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => void handleApprove()}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-success text-white hover:opacity-90 transition-all disabled:opacity-50"
+                >
+                  Duyệt
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowChangesModal(true)}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl border border-warning text-warning hover:bg-warning/10 transition-colors disabled:opacity-50"
+                >
+                  Yêu cầu sửa
+                </button>
+              </>
+            ) : null}
+            {readOnly ? (
+              <button
+                type="button"
+                onClick={() =>
+                  void handleRequestChanges(
+                    WITHDRAW_NOTE,
+                    'Đã đưa bản nháp về trạng thái soạn thảo.'
+                  )
+                }
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border border-border hover:bg-surface-muted text-fg transition-colors disabled:opacity-50"
+              >
+                Quay lại soạn thảo
+              </button>
+            ) : null}
             <button
               type="button"
-              onClick={() => setShowPublishModal(true)}
-              disabled={saving || publishing}
+              onClick={() => {
+                setModalError(null)
+                setShowPublishModal(true)
+              }}
+              disabled={busy || reviewStatus !== 'approved'}
+              title={
+                reviewStatus !== 'approved'
+                  ? 'Cần được duyệt trước khi công bố'
+                  : undefined
+              }
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-accent text-white hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               <Send className="h-3.5 w-3.5" />
               Công bố phiên bản mới
             </button>
           </div>
+        </div>
+
+        {/* Review status bar */}
+        <div className="space-y-3" data-testid="terms-review-bar">
+          <ol className="flex flex-wrap items-center gap-2 text-xs">
+            {REVIEW_STEPS.map((step, idx) => {
+              const active = idx === activeStep
+              const done = idx < activeStep
+              return (
+                <li
+                  key={step.status}
+                  aria-current={active ? 'step' : undefined}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border font-semibold ${
+                    active
+                      ? 'bg-primary text-white border-primary'
+                      : done
+                        ? 'bg-success/10 text-success border-success/30'
+                        : 'bg-bg text-muted border-border'
+                  }`}
+                >
+                  {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : null}
+                  {step.label}
+                </li>
+              )
+            })}
+          </ol>
+          {draft?.submittedAt && reviewStatus !== 'editing' ? (
+            <p className="text-[11px] text-muted">
+              Gửi duyệt
+              {draft.submittedBy
+                ? ` bởi ${shortId(draft.submittedBy)}`
+                : ''}{' '}
+              lúc {formatDateTime(draft.submittedAt)}
+            </p>
+          ) : null}
+          {draft?.reviewedAt && reviewStatus === 'approved' ? (
+            <p className="text-[11px] text-muted">
+              Duyệt
+              {draft.reviewedBy
+                ? ` bởi ${shortId(draft.reviewedBy)}`
+                : ''} lúc {formatDateTime(draft.reviewedAt)}
+            </p>
+          ) : null}
+          {reviewStatus === 'in_review' ? (
+            <p className="text-[11px] text-warning">
+              Đang chờ duyệt — chỉnh sửa sẽ đưa bản nháp về trạng thái soạn thảo
+            </p>
+          ) : null}
+          {reviewStatus === 'editing' && draft?.reviewNote ? (
+            <div className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs text-warning">
+              <p className="font-semibold">Yêu cầu sửa: {draft.reviewNote}</p>
+              {draft.reviewedBy ? (
+                <p className="mt-0.5 text-[11px]">
+                  Bởi {shortId(draft.reviewedBy)}
+                  {draft.reviewedAt
+                    ? ` lúc ${formatDateTime(draft.reviewedAt)}`
+                    : ''}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         {previewMode ? (
@@ -390,6 +716,18 @@ export function LegalTermsAdminTab(): React.ReactElement {
                   <p className="text-xs text-muted leading-relaxed whitespace-pre-wrap">
                     {sec.body}
                   </p>
+                  {sec.sourceKeys?.length ? (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {sec.sourceKeys.map(key => (
+                        <span
+                          key={key}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold"
+                        >
+                          {legalSources.find(s => s.key === key)?.title ?? key}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -404,6 +742,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
               <input
                 type="text"
                 value={draftTitle}
+                readOnly={readOnly}
                 onChange={e => setDraftTitle(e.target.value)}
                 placeholder="VD: Điều khoản Dịch vụ Thuê Căn hộ & Quy định Vận hành"
                 className="w-full h-10 px-3.5 text-xs rounded-xl border border-border bg-bg text-fg focus:outline-hidden focus:border-primary"
@@ -416,6 +755,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
               </label>
               <textarea
                 value={draftSummary}
+                readOnly={readOnly}
                 onChange={e => setDraftSummary(e.target.value)}
                 rows={3}
                 placeholder="Tóm tắt căn cứ pháp lý và nghĩa vụ cốt lõi của các bên tham gia thuê căn hộ..."
@@ -432,7 +772,8 @@ export function LegalTermsAdminTab(): React.ReactElement {
                 <button
                   type="button"
                   onClick={handleAddSection}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface-muted hover:bg-surface-raised border border-border text-primary transition-colors"
+                  disabled={readOnly}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-surface-muted hover:bg-surface-raised border border-border text-primary transition-colors disabled:opacity-50"
                 >
                   <Plus className="h-3.5 w-3.5" /> Thêm điều khoản
                 </button>
@@ -451,6 +792,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
                       <input
                         type="text"
                         value={sec.heading}
+                        readOnly={readOnly}
                         onChange={e =>
                           handleSectionChange(idx, 'heading', e.target.value)
                         }
@@ -460,7 +802,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
                       <button
                         type="button"
                         onClick={() => handleRemoveSection(idx)}
-                        disabled={draftSections.length <= 1}
+                        disabled={readOnly || draftSections.length <= 1}
                         aria-label="Xóa điều khoản"
                         className="p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors disabled:opacity-30"
                       >
@@ -469,6 +811,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
                     </div>
                     <textarea
                       value={sec.body}
+                      readOnly={readOnly}
                       onChange={e =>
                         handleSectionChange(idx, 'body', e.target.value)
                       }
@@ -476,6 +819,43 @@ export function LegalTermsAdminTab(): React.ReactElement {
                       placeholder="Nội dung chi tiết của điều khoản..."
                       className="w-full p-3 text-xs rounded-lg border border-border bg-bg text-fg focus:outline-hidden focus:border-primary resize-y"
                     />
+
+                    <div className="space-y-1.5">
+                      <span className="block text-[11px] font-semibold text-muted">
+                        Căn cứ Nguồn pháp lý (tùy chọn)
+                      </span>
+                      {legalSources.length === 0 ? (
+                        <p className="text-[11px] text-muted italic">
+                          Chưa tải được danh sách Nguồn pháp lý.
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {legalSources.map(source => {
+                            const selected = (sec.sourceKeys ?? []).includes(
+                              source.key
+                            )
+                            return (
+                              <button
+                                key={source.key}
+                                type="button"
+                                onClick={() =>
+                                  handleToggleSectionSource(idx, source.key)
+                                }
+                                aria-pressed={selected}
+                                disabled={readOnly}
+                                className={`px-2 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                                  selected
+                                    ? 'bg-primary text-white border-primary'
+                                    : 'bg-bg text-muted border-border hover:border-primary/50'
+                                }`}
+                              >
+                                {source.title}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -512,11 +892,60 @@ export function LegalTermsAdminTab(): React.ReactElement {
               </p>
               <p>
                 Sau khi công bố, hệ thống sẽ tạo mã băm SHA-256 chính thức từ
-                toàn bộ nội dung. Phiên bản này sẽ có hiệu lực ngay lập tức và{' '}
-                <strong>không thể chỉnh sửa hoặc xóa</strong> để đảm bảo tính
+                toàn bộ nội dung. Phiên bản này{' '}
+                {effectiveMode === 'now'
+                  ? 'sẽ có hiệu lực ngay lập tức'
+                  : 'sẽ có hiệu lực vào thời điểm đã hẹn'}{' '}
+                và <strong>không thể chỉnh sửa hoặc xóa</strong> để đảm bảo tính
                 toàn vẹn pháp lý với các hồ sơ thuê căn hộ.
               </p>
             </div>
+
+            <fieldset className="space-y-2 text-xs">
+              <legend className="font-semibold text-fg mb-1">
+                Có hiệu lực từ
+              </legend>
+              <label className="flex items-center gap-2 text-fg">
+                <input
+                  type="radio"
+                  name="effective-mode"
+                  checked={effectiveMode === 'now'}
+                  onChange={() => setEffectiveMode('now')}
+                />
+                Ngay khi công bố
+              </label>
+              <label className="flex items-center gap-2 text-fg">
+                <input
+                  type="radio"
+                  name="effective-mode"
+                  checked={effectiveMode === 'scheduled'}
+                  onChange={() => setEffectiveMode('scheduled')}
+                />
+                Hẹn ngày giờ
+              </label>
+              {effectiveMode === 'scheduled' ? (
+                <div className="space-y-1.5 pl-6">
+                  <input
+                    type="datetime-local"
+                    aria-label="Ngày giờ có hiệu lực"
+                    value={scheduledAt}
+                    min={minLocal}
+                    max={maxLocal}
+                    onChange={e => setScheduledAt(e.target.value)}
+                    className="h-9 px-3 text-xs rounded-lg border border-border bg-bg text-fg"
+                  />
+                  <p className="text-[11px] text-warning">
+                    Phiên bản hẹn giờ chỉ thay thế phiên bản hiện hành vào đúng
+                    thời điểm đã chọn.
+                  </p>
+                </div>
+              ) : null}
+              {modalError ? (
+                <p role="alert" className="text-[11px] text-danger">
+                  {modalError}
+                </p>
+              ) : null}
+            </fieldset>
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
@@ -534,7 +963,62 @@ export function LegalTermsAdminTab(): React.ReactElement {
                 className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-accent text-white hover:opacity-90 transition-all disabled:opacity-50"
               >
                 {publishing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                Xác nhận công bố ngay
+                {effectiveMode === 'now'
+                  ? 'Xác nhận công bố ngay'
+                  : 'Xác nhận hẹn công bố'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showChangesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            role="dialog"
+            aria-label="Yêu cầu sửa bản nháp"
+            className="max-w-md w-full rounded-2xl bg-surface border border-border p-6 shadow-xl space-y-4"
+          >
+            <h3 className="text-base font-bold text-fg">
+              Yêu cầu sửa bản nháp
+            </h3>
+            <div>
+              <label
+                htmlFor="terms-changes-note"
+                className="block text-xs font-semibold text-fg mb-1.5"
+              >
+                Nội dung cần sửa (bắt buộc)
+              </label>
+              <textarea
+                id="terms-changes-note"
+                value={changesNote}
+                maxLength={1000}
+                rows={4}
+                onChange={e => setChangesNote(e.target.value)}
+                className="w-full p-3 text-xs rounded-xl border border-border bg-bg text-fg resize-y"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowChangesModal(false)}
+                disabled={reviewBusy}
+                className="px-4 py-2 text-xs font-semibold rounded-xl border border-border text-fg hover:bg-surface-muted"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  void handleRequestChanges(
+                    changesNote.trim(),
+                    'Đã gửi yêu cầu sửa cho người soạn.'
+                  )
+                }
+                disabled={reviewBusy || !changesNote.trim()}
+                className="px-4 py-2 text-xs font-semibold rounded-xl bg-warning text-white disabled:opacity-50"
+              >
+                Gửi yêu cầu sửa
               </button>
             </div>
           </div>
