@@ -109,6 +109,38 @@ describe('LandlordWallet', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('lists extra brand accounts and tolerates a missing extraAccounts', () => {
+    mocks.useWallet.mockReturnValue({
+      isLoading: false,
+      data: {
+        ...linked,
+        extraAccounts: [
+          {
+            brand: 'momo',
+            accountHolder: 'NGUYEN VAN A',
+            accountNumberMasked: '****1111',
+            accountNumber: '820000001111',
+            linkedAt: null,
+          },
+        ],
+      },
+    })
+    const { unmount } = render(<LandlordWallet />)
+    expect(screen.getByTestId('wallet-extra-momo')).toHaveTextContent(
+      'Momo · ****1111 · NGUYEN VAN A'
+    )
+    expect(screen.getByText('820000001111')).toBeInTheDocument()
+    expect(screen.getByText(/Tài khoản mô phỏng trong Ví Mộc/)).toBeTruthy()
+    unmount()
+
+    mocks.useWallet.mockReturnValue({ isLoading: false, data: linked })
+    render(<LandlordWallet />)
+    expect(screen.queryByTestId('wallet-extra-momo')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Thêm ví khác' })
+    ).toBeInTheDocument()
+  })
+
   it('pays an invoice through the payment gateway instead of a wallet balance', async () => {
     mocks.useWallet.mockReturnValue({ isLoading: false, data: linked })
     mocks.usePayableInvoices.mockReturnValue({

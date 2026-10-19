@@ -34,6 +34,8 @@ export function WalletInvoices(): React.ReactElement | null {
     setSelected,
     momoMethod,
     setMomoMethod,
+    brand,
+    setBrand,
     choice,
   } = usePaymentProviders()
 
@@ -69,6 +71,8 @@ export function WalletInvoices(): React.ReactElement | null {
         onChange={setSelected}
         momoMethod={momoMethod}
         onMomoMethodChange={setMomoMethod}
+        brand={brand}
+        onBrandChange={setBrand}
         disabled={busyPaymentId !== null}
       />
       {errorMsg ? (

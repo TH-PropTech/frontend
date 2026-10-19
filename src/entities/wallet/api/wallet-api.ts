@@ -5,6 +5,18 @@ export interface WalletBank {
   name: string
 }
 
+export type WalletBrand = 'mocbank' | 'momo' | 'zalopay' | 'vnpay'
+
+/** Tài khoản mô phỏng thuộc thương hiệu khác (Momo/ZaloPay/VNPay) trong Ví Mộc. */
+export interface WalletExtraAccount {
+  brand: Exclude<WalletBrand, 'mocbank'>
+  accountHolder: string
+  accountNumberMasked: string
+  /** Full number, present only in the owner's own view (for QR). */
+  accountNumber?: string | null
+  linkedAt: string | null
+}
+
 export interface Wallet {
   userId: string
   status: 'linked' | 'unlinked'
@@ -15,6 +27,8 @@ export interface Wallet {
   /** Full Ví Mộc account number, present only in the owner's own view (for QR). */
   accountNumber: string | null
   linkedAt: string | null
+  /** Empty when none; treat missing as empty. */
+  extraAccounts?: WalletExtraAccount[]
 }
 
 /** Một dòng sao kê dựng từ Payout/Payment (D5); không có balanceAfter, không phải sổ cái. */
@@ -47,6 +61,8 @@ export interface PayableInvoice {
 
 export interface LinkWalletInput {
   accountNumber: string
+  /** Omitted or 'mocbank' = primary wallet. */
+  brand?: WalletBrand
 }
 
 export function getWallet(): Promise<Wallet> {
@@ -54,7 +70,10 @@ export function getWallet(): Promise<Wallet> {
 }
 
 export function linkWallet(input: LinkWalletInput): Promise<Wallet> {
-  return apiClient.post<Wallet>('/wallet/link', input)
+  return apiClient.post<Wallet>('/wallet/link', {
+    accountNumber: input.accountNumber,
+    ...(input.brand ? { brand: input.brand } : {}),
+  })
 }
 
 export function getWalletTransactions(): Promise<WalletTransactionPage> {

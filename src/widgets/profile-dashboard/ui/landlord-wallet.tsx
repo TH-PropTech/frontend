@@ -3,18 +3,27 @@
 import { useState } from 'react'
 import { Landmark, Wallet as WalletIcon } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
-import { useWallet } from '@/entities/wallet'
+import { useWallet, type WalletBrand } from '@/entities/wallet'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { WalletLinkForm } from './wallet-link-form'
 import { WalletInvoices, WalletStatement } from './wallet-statement'
 
+const BRAND_LABELS: Record<WalletBrand, string> = {
+  mocbank: 'Ví Mộc',
+  momo: 'Momo',
+  zalopay: 'ZaloPay',
+  vnpay: 'VNPay',
+}
+
 export function LandlordWallet(): React.ReactElement {
   const wallet = useWallet()
   const [editing, setEditing] = useState(false)
+  const [adding, setAdding] = useState(false)
   const data = wallet.data
   const linked = data?.status === 'linked'
+  const extraAccounts = data?.extraAccounts ?? []
 
   return (
     <Card className="space-y-5 border border-border bg-surface p-6 shadow-sm">
@@ -85,6 +94,50 @@ export function LandlordWallet(): React.ReactElement {
               </div>
             </div>
           ) : null}
+          <p className="text-xs text-muted">
+            Tài khoản mô phỏng trong Ví Mộc — dùng để minh chứng ví nhận tiền
+            của chủ nhà.
+          </p>
+          {extraAccounts.map(account => (
+            <div
+              key={account.brand}
+              data-testid={`wallet-extra-${account.brand}`}
+              className="space-y-3 rounded-xl border border-border p-3"
+            >
+              <p className="flex items-center gap-2 text-sm text-fg">
+                <Landmark className="h-4 w-4 text-primary" aria-hidden="true" />
+                {BRAND_LABELS[account.brand]} · {account.accountNumberMasked} ·{' '}
+                {account.accountHolder}
+              </p>
+              {account.accountNumber ? (
+                <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+                  <QRCodeSVG value={account.accountNumber} size={96} />
+                  <p className="font-mono text-sm font-bold text-fg">
+                    {account.accountNumber}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ))}
+          {adding ? (
+            <div className="space-y-2 rounded-xl border border-border p-3">
+              <WalletLinkForm
+                defaultBrand="momo"
+                onLinked={() => setAdding(false)}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAdding(false)}
+              >
+                Hủy
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
+              Thêm ví khác
+            </Button>
+          )}
           <WalletInvoices />
           <WalletStatement />
         </>

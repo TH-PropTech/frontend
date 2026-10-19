@@ -177,6 +177,51 @@ describe('PaymentProviderPicker', () => {
     expect(screen.queryByLabelText(/Thẻ Visa/)).toBeNull()
   })
 
+  it('shows the brand group only when the mocbank option has brands', () => {
+    const onBrand = vi.fn()
+    const withBrands = gateways.map(option =>
+      option.provider === 'mocbank'
+        ? {
+            ...option,
+            brands: [
+              { brand: 'mocbank' as const, label: 'Ví Mộc' },
+              { brand: 'momo' as const, label: 'Momo' },
+            ],
+          }
+        : option
+    )
+    const { rerender } = render(
+      <PaymentProviderPicker
+        providers={gateways}
+        value="mocbank"
+        onChange={vi.fn()}
+      />
+    )
+    expect(screen.queryByText('Nhận tiền vào ví')).toBeNull()
+
+    rerender(
+      <PaymentProviderPicker
+        providers={withBrands}
+        value="vnpay"
+        onChange={vi.fn()}
+      />
+    )
+    expect(screen.queryByText('Nhận tiền vào ví')).toBeNull()
+
+    rerender(
+      <PaymentProviderPicker
+        providers={withBrands}
+        value="mocbank"
+        onChange={vi.fn()}
+        brand="mocbank"
+        onBrandChange={onBrand}
+      />
+    )
+    expect(screen.getByText('Nhận tiền vào ví')).toBeTruthy()
+    fireEvent.click(screen.getByRole('radio', { name: 'Momo' }))
+    expect(onBrand).toHaveBeenCalledWith('momo')
+  })
+
   it('explains why the chosen method cannot pay an amount', () => {
     const choice = { provider: 'momo' as const, momoMethod: 'card' as const }
 

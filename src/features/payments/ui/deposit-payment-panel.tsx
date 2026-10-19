@@ -59,6 +59,8 @@ export function DepositPaymentPanel({
     setSelected,
     momoMethod,
     setMomoMethod,
+    brand,
+    setBrand,
     choice,
   } = usePaymentProviders('deposit')
   const selectedLabel =
@@ -302,6 +304,8 @@ export function DepositPaymentPanel({
                   onChange={setSelected}
                   momoMethod={momoMethod}
                   onMomoMethodChange={setMomoMethod}
+                  brand={brand}
+                  onBrandChange={setBrand}
                   amount={deposit.amount}
                   disabled={loading || consenting}
                 />
