@@ -52,6 +52,34 @@ describe('TermsDocument', () => {
     expect(screen.getByText('Tuân thủ Luật Nhà ở 2023.')).toBeDefined()
   })
 
+  it('shows the effective date, preferring effectiveFrom over publishedAt', () => {
+    render(
+      <TermsDocument
+        terms={{ ...mockTerms, effectiveFrom: '2026-12-01T03:00:00.000Z' }}
+        policies={mockPolicies}
+      />
+    )
+    expect(
+      screen.getByText(
+        `Có hiệu lực từ ${new Date('2026-12-01T03:00:00.000Z').toLocaleDateString('vi-VN')}`
+      )
+    ).toBeDefined()
+  })
+
+  it('falls back to publishedAt when effectiveFrom is null', () => {
+    render(
+      <TermsDocument
+        terms={{ ...mockTerms, effectiveFrom: null }}
+        policies={mockPolicies}
+      />
+    )
+    expect(
+      screen.getByText(
+        `Có hiệu lực từ ${new Date(mockTerms.publishedAt as string).toLocaleDateString('vi-VN')}`
+      )
+    ).toBeDefined()
+  })
+
   it('renders public policies appendix', () => {
     render(<TermsDocument terms={mockTerms} policies={mockPolicies} />)
 

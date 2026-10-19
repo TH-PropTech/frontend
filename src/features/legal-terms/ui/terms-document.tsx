@@ -65,6 +65,14 @@ export function TermsDocument({
             <span className="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-xs font-medium text-fg">
               Phiên bản: <strong>v{terms.version}</strong>
             </span>
+            {(terms.effectiveFrom ?? terms.publishedAt) ? (
+              <span className="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-xs font-medium text-fg">
+                Có hiệu lực từ{' '}
+                {new Date(
+                  (terms.effectiveFrom ?? terms.publishedAt) as string
+                ).toLocaleDateString('vi-VN')}
+              </span>
+            ) : null}
             {terms.publishedAt ? (
               <span className="rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-xs font-medium text-muted">
                 Ngày công bố:{' '}

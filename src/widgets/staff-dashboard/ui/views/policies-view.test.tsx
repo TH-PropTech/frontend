@@ -14,14 +14,23 @@ import {
   REGULATIONS,
 } from '@/features/contracts/test-fixtures/legal-sources.fixture'
 
-vi.mock('@/features/legal-terms/api/legal-terms-api', () => ({
-  getAdminLegalTermsState: vi.fn(),
-  saveLegalTermsDraft: vi.fn(),
-  publishLegalTerms: vi.fn(),
-  getAdminPolicies: vi.fn(),
-  updatePolicy: vi.fn(),
-  updatePolicyStatus: vi.fn(),
-}))
+vi.mock('@/features/legal-terms/api/legal-terms-api', async () => {
+  const actual = await vi.importActual<typeof legalTermsApi>(
+    '@/features/legal-terms/api/legal-terms-api'
+  )
+  return {
+    ...actual,
+    getAdminLegalTermsState: vi.fn(),
+    saveLegalTermsDraft: vi.fn(),
+    publishLegalTerms: vi.fn(),
+    submitTermsForReview: vi.fn(),
+    approveTerms: vi.fn(),
+    requestTermsChanges: vi.fn(),
+    getAdminPolicies: vi.fn(),
+    updatePolicy: vi.fn(),
+    updatePolicyStatus: vi.fn(),
+  }
+})
 
 vi.mock('@/features/contracts/api/legal-sources-api', async () => {
   const actual = await vi.importActual<typeof legalSourcesApi>(
@@ -174,6 +183,10 @@ describe('PoliciesView', () => {
   })
 
   it('opens confirmation modal and publishes terms', async () => {
+    vi.mocked(legalTermsApi.getAdminLegalTermsState).mockResolvedValue({
+      ...mockTermsState,
+      draft: { ...mockTermsState.draft!, reviewStatus: 'approved' },
+    })
     render(<PoliciesView />)
 
     const publishBtn = await screen.findByRole('button', {
@@ -193,6 +206,31 @@ describe('PoliciesView', () => {
       expect(legalTermsApi.publishLegalTerms).toHaveBeenCalledWith({
         expectedRevision: 2,
       })
+    })
+  })
+
+  it('lets staff tag a clause with an existing legal source and saves the key', async () => {
+    render(<PoliciesView />)
+
+    await screen.findByDisplayValue('Điều khoản Dịch vụ Thuê Căn hộ (Dự thảo)')
+
+    const sourceButton = await screen.findByRole('button', {
+      name: 'Đăng ký tạm trú tại chỗ ở hợp pháp do thuê',
+    })
+    expect(sourceButton).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(sourceButton)
+    expect(sourceButton).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(screen.getByRole('button', { name: /Lưu bản nháp/i }))
+
+    await waitFor(() => {
+      expect(legalTermsApi.saveLegalTermsDraft).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sections: expect.arrayContaining([
+            expect.objectContaining({ sourceKeys: ['1.004194'] }),
+          ]),
+        })
+      )
     })
   })
 
@@ -264,9 +302,10 @@ describe('PoliciesView', () => {
     expect(screen.getByTestId('regulation-card-REG-RES-01')).toBeDefined()
   })
 
-  it('switches to legal sources tab and lists admin-managed sources', async () => {
+  it('switches to legal sources section inside governance and lists admin-managed sources', async () => {
     render(<PoliciesView />)
 
+    fireEvent.click(await screen.findByTestId('tab-public-services-governance'))
     fireEvent.click(await screen.findByTestId('tab-legal-sources'))
 
     expect(await screen.findByTestId('legal-sources-admin-tab')).toBeDefined()

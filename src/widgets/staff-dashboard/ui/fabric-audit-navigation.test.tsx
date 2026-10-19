@@ -44,9 +44,6 @@ vi.mock('@/features/rental-transactions', () => ({
 }))
 
 vi.mock('./views/overview-view', () => ({ OverviewView: () => null }))
-vi.mock('./views/contract-monitor-view', () => ({
-  ContractMonitorView: () => null,
-}))
 vi.mock('./views/ai-consultation-view', () => ({
   AiConsultationView: () => null,
 }))
@@ -66,7 +63,6 @@ vi.mock('./views/property-approvals-view', () => ({
 }))
 vi.mock('./views/kyc-approvals-view', () => ({ KycApprovalsView: () => null }))
 vi.mock('./views/schedules-view', () => ({ SchedulesView: () => null }))
-vi.mock('./views/disputes-view', () => ({ DisputesView: () => null }))
 vi.mock('./views/community-view', () => ({ CommunityView: () => null }))
 vi.mock('./views/safety-reports-view', () => ({
   SafetyReportsView: () => null,

@@ -1,31 +1,19 @@
 'use client'
 
 import * as React from 'react'
-import {
-  BookOpen,
-  FileSignature,
-  FileText,
-  GitBranch,
-  Scale,
-  Sliders,
-} from 'lucide-react'
+import { BookOpen, FileText, Scale, Sliders } from 'lucide-react'
 import { LegalTermsAdminTab } from './components/policies/legal-terms-admin-tab'
 import { OperationalPoliciesAdminTab } from './components/policies/operational-policies-admin-tab'
 import { PublicServicesAdminTab } from './components/policies/public-services-admin-tab'
 import { LegalSourcesAdminTab } from './components/policies/legal-sources-admin-tab'
-import { ExecutionPoliciesAdminTab } from './components/policies/execution-policies-admin-tab'
-import { ContractTemplatesAdminTab } from './components/policies/contract-templates-admin-tab'
 
-type SubTab =
-  | 'terms'
-  | 'policies'
-  | 'governance'
-  | 'sources'
-  | 'execution'
-  | 'templates'
+type SubTab = 'terms' | 'policies' | 'governance'
+type GovernanceSection = 'services' | 'sources'
 
 export function PoliciesView(): React.ReactElement {
   const [activeTab, setActiveTab] = React.useState<SubTab>('terms')
+  const [governanceSection, setGovernanceSection] =
+    React.useState<GovernanceSection>('services')
 
   return (
     <div className="space-y-6">
@@ -42,7 +30,7 @@ export function PoliciesView(): React.ReactElement {
         </div>
 
         {/* Tab Switcher Pills */}
-        <div className="inline-flex p-1 rounded-xl border border-border bg-surface shadow-2xs self-start sm:self-auto overflow-x-auto">
+        <div className="inline-flex p-1 rounded-xl border border-border bg-surface shadow-2xs self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setActiveTab('terms')}
@@ -82,55 +70,46 @@ export function PoliciesView(): React.ReactElement {
             <Scale className="h-4 w-4" />
             Quy định & Dịch vụ công
           </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('sources')}
-            data-testid="tab-legal-sources"
-            className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-              activeTab === 'sources'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-muted hover:text-fg hover:bg-surface-muted'
-            }`}
-          >
-            <BookOpen className="h-4 w-4" />
-            Nguồn Pháp lý & DVC
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('execution')}
-            data-testid="tab-execution-policies"
-            className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-              activeTab === 'execution'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-muted hover:text-fg hover:bg-surface-muted'
-            }`}
-          >
-            <GitBranch className="h-4 w-4" />
-            Execution policy
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('templates')}
-            data-testid="tab-contract-templates"
-            className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-              activeTab === 'templates'
-                ? 'bg-primary text-white shadow-xs'
-                : 'text-muted hover:text-fg hover:bg-surface-muted'
-            }`}
-          >
-            <FileSignature className="h-4 w-4" />
-            Mẫu hợp đồng
-          </button>
         </div>
       </div>
 
       {/* ═══ ACTIVE SUB-TAB VIEW ═══ */}
       {activeTab === 'terms' && <LegalTermsAdminTab />}
       {activeTab === 'policies' && <OperationalPoliciesAdminTab />}
-      {activeTab === 'governance' && <PublicServicesAdminTab />}
-      {activeTab === 'sources' && <LegalSourcesAdminTab />}
-      {activeTab === 'execution' && <ExecutionPoliciesAdminTab />}
-      {activeTab === 'templates' && <ContractTemplatesAdminTab />}
+      {activeTab === 'governance' && (
+        <div className="space-y-4">
+          <div className="inline-flex p-1 rounded-lg border border-border bg-surface-muted/50">
+            <button
+              type="button"
+              onClick={() => setGovernanceSection('services')}
+              data-testid="tab-public-services-section"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                governanceSection === 'services'
+                  ? 'bg-surface text-fg shadow-xs'
+                  : 'text-muted hover:text-fg'
+              }`}
+            >
+              <Scale className="h-3.5 w-3.5" />
+              Dịch vụ công
+            </button>
+            <button
+              type="button"
+              onClick={() => setGovernanceSection('sources')}
+              data-testid="tab-legal-sources"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                governanceSection === 'sources'
+                  ? 'bg-surface text-fg shadow-xs'
+                  : 'text-muted hover:text-fg'
+              }`}
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              Nguồn pháp lý
+            </button>
+          </div>
+          {governanceSection === 'services' && <PublicServicesAdminTab />}
+          {governanceSection === 'sources' && <LegalSourcesAdminTab />}
+        </div>
+      )}
     </div>
   )
 }
