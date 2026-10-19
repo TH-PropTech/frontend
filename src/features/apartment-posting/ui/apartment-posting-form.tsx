@@ -18,7 +18,10 @@ import { LocationStep } from './location-step'
 import { DetailsStep } from './details-step'
 import { MediaStep } from './media-step'
 import { ReviewStep } from './review-step'
+import { DesignRequestOption } from './design-request-option'
 import { Button } from '@/shared/ui/button'
+import { createDesignRequest } from '@/features/design-requests'
+import { appToast } from '@/shared/ui/app-toast'
 import { toast } from 'sonner'
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react'
 
@@ -43,6 +46,9 @@ export function ApartmentPostingForm({
   const router = useRouter()
   const [currentStep, setCurrentStep] = React.useState(1)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  // Yêu cầu thiết kế 3D đi kèm: tách khỏi form căn hộ, không gửi trong payload căn hộ.
+  const [wantsDesign, setWantsDesign] = React.useState(false)
+  const [designBrief, setDesignBrief] = React.useState('')
 
   // Map initial data to form fields
   const defaultValues: Partial<ApartmentFormValues> = React.useMemo(() => {
@@ -192,11 +198,27 @@ export function ApartmentPostingForm({
           })
         }
       } else {
-        await createApartment(values)
+        const created = await createApartment(values)
         toast.success(
           'Đăng bài thành công! Bài đăng đang chờ Staff kiểm duyệt.',
           { id: toastId }
         )
+        const brief = designBrief.trim()
+        if (wantsDesign && brief) {
+          try {
+            await createDesignRequest({
+              apartmentId: created.id,
+              kind: 'create',
+              brief,
+            })
+          } catch (designErr: unknown) {
+            console.error('Design request failed:', designErr)
+            appToast.info(
+              'Đã đăng tin nhưng chưa gửi được yêu cầu thiết kế 3D — bạn có thể gửi lại trong tab Tin đăng.',
+              { title: 'Cảnh báo' }
+            )
+          }
+        }
       }
 
       // Redirect back to profile page and activate the 'listings' tab
@@ -283,6 +305,15 @@ export function ApartmentPostingForm({
           {currentStep === 1 && <LocationStep form={form} />}
           {currentStep === 2 && <DetailsStep form={form} />}
           {currentStep === 3 && <MediaStep form={form} />}
+          {currentStep === 4 && mode === 'create' && (
+            <DesignRequestOption
+              enabled={wantsDesign}
+              brief={designBrief}
+              onEnabledChange={setWantsDesign}
+              onBriefChange={setDesignBrief}
+              disabled={isSubmitting}
+            />
+          )}
           {currentStep === 4 && (
             <ReviewStep
               form={form}

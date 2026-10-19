@@ -111,7 +111,29 @@ describe('ListingCard', () => {
     // Only the commission info button remains; no edit/renew actions.
     expect(
       screen.getAllByRole('button').map(b => b.getAttribute('aria-label'))
-    ).toEqual(['Xem phí hoa hồng'])
+    ).toEqual(['Xem phí hoa hồng', null])
+    expect(
+      screen.getByRole('button', { name: 'Yêu cầu thiết kế 3D' })
+    ).toBeTruthy()
+  })
+
+  it('shows the 3D design request trigger and active status chip', () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <ListingCard
+          item={buildItem({ status: 'available' })}
+          onEdit={vi.fn()}
+          onRenew={vi.fn()}
+          isRenewing={false}
+          designRequestStatus="delivered"
+        />
+      </QueryClientProvider>
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'Yêu cầu thiết kế 3D' })
+    ).toBeTruthy()
+    expect(screen.getByText('3D: Chờ bạn duyệt')).toBeTruthy()
   })
 
   it('renders the commission info button and opens the dialog', async () => {

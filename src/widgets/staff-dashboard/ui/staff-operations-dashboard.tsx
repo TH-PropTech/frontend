@@ -16,6 +16,7 @@ import { RecommendationEngineView } from './views/recommendation-engine-view'
 import { FabricAuditView } from './views/fabric-audit-view'
 import {
   Blocks,
+  ClipboardList,
   LifeBuoy,
   ShieldAlert,
   Building2,
@@ -25,6 +26,7 @@ import {
 import { Logo } from '@/shared/ui/logo'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { StaffDesignRequestsView } from '@/features/design-requests'
 
 type TabType =
   | 'overview'
@@ -39,6 +41,7 @@ type TabType =
   | 'support-tickets'
   | 'ai-engine'
   | 'fabric-audit'
+  | 'design-requests'
 
 const STAFF_TABS: readonly TabType[] = [
   'overview',
@@ -53,6 +56,7 @@ const STAFF_TABS: readonly TabType[] = [
   'support-tickets',
   'ai-engine',
   'fabric-audit',
+  'design-requests',
 ]
 
 export function resolveStaffTab(pathname: string): TabType {
@@ -219,6 +223,12 @@ export function StaffOperationsDashboard({
     icon: <Blocks className="h-[18px] w-[18px]" aria-hidden="true" />,
   })
 
+  sidebarItems.push({
+    type: 'design-requests',
+    label: 'Yêu cầu thiết kế 3D',
+    icon: <ClipboardList className="h-[18px] w-[18px]" aria-hidden="true" />,
+  })
+
   // Only administrators can access and configure the AI Recommendation Engine
   if (initialUser?.roles?.includes('admin')) {
     sidebarItems.push({
@@ -278,6 +288,8 @@ export function StaffOperationsDashboard({
         return <RecommendationEngineView />
       case 'fabric-audit':
         return <FabricAuditView />
+      case 'design-requests':
+        return <StaffDesignRequestsView role="staff" />
       default:
         return <HomeView onNavigateTab={handleSidebarItemClick} />
     }

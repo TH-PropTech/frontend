@@ -8,11 +8,24 @@ import {
   ApartmentPostingForm,
   type LandlordApartmentItem,
 } from '@/features/apartment-posting'
+import {
+  useMyDesignRequests,
+  type DesignRequestStatus,
+} from '@/features/design-requests'
 import { ListingCard } from './components/listing-card'
 import { Button } from '@/shared/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { toast } from 'sonner'
 import { Plus, ArrowLeft, Loader2, Building } from 'lucide-react'
+
+const ACTIVE_DESIGN_STATUSES: DesignRequestStatus[] = [
+  'submitted',
+  'needs_info',
+  'escalated',
+  'in_progress',
+  'delivered',
+  'changes_requested',
+]
 
 export function TabMyListings(): React.ReactElement {
   const queryClient = useQueryClient()
@@ -32,6 +45,19 @@ export function TabMyListings(): React.ReactElement {
     queryKey: ['my-listings'],
     queryFn: getMyListings,
   })
+
+  // Trạng thái yêu cầu thiết kế 3D đang xử lý theo căn hộ (mỗi căn hộ tối đa một).
+  const designRequests = useMyDesignRequests({
+    statuses: ACTIVE_DESIGN_STATUSES,
+    limit: 100,
+  })
+  const designStatusByApartment = React.useMemo(() => {
+    const map = new Map<string, DesignRequestStatus>()
+    for (const request of designRequests.data?.items ?? []) {
+      map.set(request.apartmentId, request.status)
+    }
+    return map
+  }, [designRequests.data])
 
   // Renew listing mutation
   const renewMutation = useMutation({
@@ -216,6 +242,9 @@ export function TabMyListings(): React.ReactElement {
               onEdit={setEditingListing}
               onRenew={id => renewMutation.mutate(id)}
               isRenewing={renewMutation.isPending}
+              {...(designStatusByApartment.has(item.id)
+                ? { designRequestStatus: designStatusByApartment.get(item.id)! }
+                : {})}
             />
           ))}
         </div>

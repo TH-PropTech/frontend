@@ -19,4 +19,8 @@ describe('admin dashboard navigation', () => {
   it('resolves the payment history section from the admin route', () => {
     expect(resolveAdminTab('/admin/payment-history')).toBe('payment-history')
   })
+
+  it('resolves the design requests section from the admin route', () => {
+    expect(resolveAdminTab('/admin/design-requests')).toBe('design-requests')
+  })
 })
