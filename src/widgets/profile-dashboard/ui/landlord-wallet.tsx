@@ -8,6 +8,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { WalletLinkForm } from './wallet-link-form'
+import { ReceivingStatusPanel } from './receiving-status-panel'
 import { WalletInvoices, WalletStatement } from './wallet-statement'
 
 const BRAND_LABELS: Record<WalletBrand, string> = {
@@ -138,6 +139,7 @@ export function LandlordWallet(): React.ReactElement {
               Thêm ví khác
             </Button>
           )}
+          <ReceivingStatusPanel />
           <WalletInvoices />
           <WalletStatement />
         </>

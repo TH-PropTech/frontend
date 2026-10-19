@@ -16,7 +16,33 @@ export interface AdminPaymentParty {
   email: string
 }
 
+export type PayoutSettlement = 'direct' | 'relay' | 'external'
+
+export type GatewayReconcileStatus =
+  | 'unverified'
+  | 'verified'
+  | 'mismatch'
+  | 'unavailable'
+  | 'not_applicable'
+
+export type GatewayQueryStatus =
+  | 'succeeded'
+  | 'pending'
+  | 'failed'
+  | 'not_found'
+  | 'unavailable'
+
+export interface AdminPaymentGateway {
+  kind: 'external' | 'internal'
+  reconcileStatus: GatewayReconcileStatus
+  gatewayStatus: GatewayQueryStatus | null
+  providerTransactionId: string | null
+  checkedAt: string | null
+}
+
 export interface AdminPaymentPayout {
+  id?: string
+  settlement?: PayoutSettlement
   status: PayoutStatus
   relayRef: string | null
   failureReason: string | null
@@ -38,6 +64,7 @@ export interface AdminPaymentRow {
   paidAt: string | null
   payout: AdminPaymentPayout | null
   anomalies: string[]
+  gateway?: AdminPaymentGateway
 }
 
 export interface AdminPaymentsPage {
@@ -84,5 +111,21 @@ export function recheckAdminPayment(txRef: string): Promise<AdminPaymentRow> {
   return apiClient.post<AdminPaymentRow>(
     `/admin/payments/${encodeURIComponent(txRef)}/recheck`,
     {}
+  )
+}
+
+export interface PayoutView {
+  id: string
+  status: PayoutStatus
+  settlement?: PayoutSettlement
+}
+
+export function markPayoutSettledExternally(
+  payoutId: string,
+  note?: string
+): Promise<PayoutView> {
+  return apiClient.post<PayoutView>(
+    `/payouts/${encodeURIComponent(payoutId)}/mark-settled-externally`,
+    note ? { note } : {}
   )
 }

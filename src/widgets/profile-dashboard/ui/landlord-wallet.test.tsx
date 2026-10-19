@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   useLinkWallet: vi.fn(),
   useWalletTransactions: vi.fn(),
   usePayableInvoices: vi.fn(),
+  useReceivingStatus: vi.fn(),
+  useReportPayoutIssue: vi.fn(),
   link: vi.fn(),
   getPaymentProviders: vi.fn(),
   initInvoicePayment: vi.fn(),
@@ -18,6 +20,8 @@ vi.mock('@/entities/wallet', () => ({
   useLinkWallet: mocks.useLinkWallet,
   useWalletTransactions: mocks.useWalletTransactions,
   usePayableInvoices: mocks.usePayableInvoices,
+  useReceivingStatus: mocks.useReceivingStatus,
+  useReportPayoutIssue: mocks.useReportPayoutIssue,
 }))
 
 vi.mock('@/features/payments/api/payments-api', async importOriginal => {
@@ -65,6 +69,14 @@ describe('LandlordWallet', () => {
       data: { items: [] },
     })
     mocks.usePayableInvoices.mockReturnValue({ data: [] })
+    mocks.useReceivingStatus.mockReturnValue({
+      isLoading: true,
+      refreshNow: vi.fn(),
+    })
+    mocks.useReportPayoutIssue.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    })
     mocks.getPaymentProviders.mockResolvedValue([
       { provider: 'mock-bank', label: 'Mock Bank (sandbox)', simulation: true },
     ])

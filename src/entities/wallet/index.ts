@@ -1,6 +1,12 @@
 export type {
   LinkWalletInput,
   PayableInvoice,
+  ReceivingAccount,
+  ReceivingAccountState,
+  ReceivingIssue,
+  ReceivingIssueStatus,
+  ReceivingLastReceived,
+  ReceivingStatus,
   Wallet,
   WalletBank,
   WalletBrand,
@@ -11,6 +17,8 @@ export type {
 export {
   useLinkWallet,
   usePayableInvoices,
+  useReceivingStatus,
+  useReportPayoutIssue,
   useWallet,
   useWalletTransactions,
 } from './model/use-wallet'

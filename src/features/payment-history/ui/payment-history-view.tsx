@@ -4,6 +4,15 @@ import * as React from 'react'
 import { RefreshCw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/ui/dialog'
+import { Textarea } from '@/shared/ui/textarea'
 import { OptionSelect } from '@/shared/ui/option-select'
 import {
   Table,
@@ -15,15 +24,17 @@ import {
 } from '@/shared/ui/table'
 import {
   getAdminPayments,
+  markPayoutSettledExternally,
   recheckAdminPayment,
+  type AdminPaymentGateway,
   type AdminPaymentRow,
   type AdminPaymentsFilter,
 } from '../api/payment-history-api'
 
 const PROVIDER_OPTIONS = [
-  { value: 'vnpay', label: 'VNPay' },
-  { value: 'momo', label: 'MoMo' },
-  { value: 'zalopay', label: 'ZaloPay' },
+  { value: 'vnpay', label: 'VNPay (sandbox)' },
+  { value: 'momo', label: 'MoMo (sandbox)' },
+  { value: 'zalopay', label: 'ZaloPay (sandbox)' },
   { value: 'mocbank', label: 'Ví Mộc' },
   { value: 'mock-bank', label: 'Mock Bank' },
 ]
@@ -43,6 +54,20 @@ const PAYOUT_STATUS_OPTIONS = [
   { value: 'failed', label: 'Chuyển lỗi' },
 ]
 
+const PROVIDER_LABELS: Record<string, string> = Object.fromEntries(
+  PROVIDER_OPTIONS.map(o => [o.value, o.label])
+)
+
+const INFO_ANOMALIES = new Set(['awaiting-reconciliation'])
+
+const GATEWAY_STATUS_LABELS: Record<string, string> = {
+  succeeded: 'thành công',
+  pending: 'đang xử lý',
+  failed: 'thất bại',
+  not_found: 'không thấy giao dịch',
+  unavailable: 'không phản hồi',
+}
+
 const ANOMALY_LABELS: Record<string, string> = {
   'attempt-succeeded-payment-not-paid':
     'Cổng báo thành công nhưng hóa đơn chưa paid',
@@ -50,6 +75,10 @@ const ANOMALY_LABELS: Record<string, string> = {
   'payout-failed': 'Chuyển tiền cho chủ nhà thất bại',
   'payout-stuck': 'Chuyển tiền treo quá lâu',
   'attempt-stuck-processing': 'Giao dịch kẹt ở trạng thái đang xử lý',
+  'gateway-not-confirmed': 'Cổng không xác nhận giao dịch đã thanh toán',
+  'gateway-paid-not-settled': 'Cổng đã thu tiền nhưng chưa chuyển cho chủ nhà',
+  'gateway-amount-mismatch': 'Số tiền ở cổng lệch với hệ thống',
+  'awaiting-reconciliation': 'Đã thu qua cổng, chờ đối soát',
 }
 
 const money = (n: number): string => `${n.toLocaleString('vi-VN')} đ`
@@ -74,11 +103,76 @@ function attemptStatusBadge(
   )
 }
 
+function reconcileBadge(
+  gateway: AdminPaymentGateway | undefined
+): React.ReactElement {
+  if (!gateway) {
+    return <span className="text-[11px] text-[var(--muted)]">—</span>
+  }
+  if (gateway.kind === 'internal') {
+    return (
+      <Badge className="bg-zinc-200 text-zinc-700" variant="outline">
+        Nội bộ
+      </Badge>
+    )
+  }
+  const map: Record<string, [string, string]> = {
+    unverified: ['Chờ đối soát với cổng', 'bg-amber-100 text-amber-800'],
+    verified: ['Đã khớp với cổng', 'bg-emerald-100 text-emerald-800'],
+    mismatch: ['Lệch với cổng', 'bg-red-100 text-red-800'],
+    unavailable: ['Cổng không phản hồi', 'bg-zinc-200 text-zinc-700'],
+    not_applicable: ['—', 'bg-zinc-200 text-zinc-700'],
+  }
+  const [label, cls] = map[gateway.reconcileStatus] ?? ['—', '']
+  return (
+    <Badge className={cls} variant="outline">
+      {label}
+    </Badge>
+  )
+}
+
+function reconcileCell(
+  gateway: AdminPaymentGateway | undefined
+): React.ReactElement {
+  return (
+    <>
+      {reconcileBadge(gateway)}
+      {gateway?.gatewayStatus ? (
+        <div className="text-[11px] text-[var(--muted)]">
+          Cổng: {GATEWAY_STATUS_LABELS[gateway.gatewayStatus]}
+        </div>
+      ) : null}
+      {gateway?.checkedAt ? (
+        <div className="text-[11px] text-[var(--muted)]">
+          Kiểm tra lúc {dateTime(gateway.checkedAt)}
+        </div>
+      ) : null}
+      {gateway?.providerTransactionId ? (
+        <div
+          className="max-w-[140px] truncate font-mono text-[11px]"
+          title={gateway.providerTransactionId}
+        >
+          {gateway.providerTransactionId}
+        </div>
+      ) : null}
+    </>
+  )
+}
+
 function payoutStatusBadge(
   payout: AdminPaymentRow['payout']
 ): React.ReactElement {
   if (!payout) {
     return <span className="text-[11px] text-[var(--muted)]">—</span>
+  }
+  if (payout.settlement === 'external') {
+    return (
+      <span className="text-[11px] text-[var(--muted)]">
+        {payout.status === 'paid-out'
+          ? 'Đã chuyển cho chủ nhà ngoài hệ thống'
+          : 'Tiền nhận tại merchant của cổng — chuyển cho chủ nhà ngoài hệ thống'}
+      </span>
+    )
   }
   const map: Record<string, string> = {
     'paid-out': 'bg-emerald-100 text-emerald-800',
@@ -103,6 +197,11 @@ export function PaymentHistoryView(): React.ReactElement {
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [rechecking, setRechecking] = React.useState<string | null>(null)
+  const [settleTarget, setSettleTarget] =
+    React.useState<AdminPaymentRow | null>(null)
+  const [settleNote, setSettleNote] = React.useState('')
+  const [settling, setSettling] = React.useState(false)
+  const [settleError, setSettleError] = React.useState<string | null>(null)
 
   const load = React.useCallback(async (): Promise<void> => {
     setLoading(true)
@@ -141,6 +240,36 @@ export function PaymentHistoryView(): React.ReactElement {
     }
   }
 
+  const handleSettle = async (): Promise<void> => {
+    const target = settleTarget
+    const payoutId = target?.payout?.id
+    if (!target || !payoutId) return
+    setSettling(true)
+    setSettleError(null)
+    try {
+      await markPayoutSettledExternally(
+        payoutId,
+        settleNote.trim() || undefined
+      )
+      setSettleTarget(null)
+      setSettleNote('')
+      try {
+        const fresh = await recheckAdminPayment(target.txRef)
+        setRows(prev =>
+          prev.map(row => (row.txRef === target.txRef ? fresh : row))
+        )
+      } catch {
+        await load()
+      }
+    } catch (cause: unknown) {
+      setSettleError(
+        cause instanceof Error ? cause.message : 'Không thể đánh dấu đã chuyển.'
+      )
+    } finally {
+      setSettling(false)
+    }
+  }
+
   const totalPages = Math.max(1, Math.ceil(total / (filter.limit ?? 20)))
 
   const setFilterField = <K extends 'provider' | 'status' | 'payoutStatus'>(
@@ -166,8 +295,8 @@ export function PaymentHistoryView(): React.ReactElement {
         </h2>
         <p className="text-xs text-muted mt-1">
           Mọi giao dịch qua VNPay/MoMo/ZaloPay/Mock Bank/Ví Mộc trên toàn sàn.
-          &quot;Kiểm tra lại&quot; đọc lại trạng thái lưu trong hệ thống, không
-          gọi trực tiếp cổng thanh toán.
+          &quot;Kiểm tra lại&quot;: cổng thật được hỏi trực tiếp qua API tra
+          cứu, Ví Mộc/nội bộ đọc từ hệ thống.
         </p>
       </div>
 
@@ -219,6 +348,7 @@ export function PaymentHistoryView(): React.ReactElement {
                 <TableHead>Người trả</TableHead>
                 <TableHead>Chủ nhà nhận</TableHead>
                 <TableHead>Trạng thái cổng</TableHead>
+                <TableHead>Đối soát</TableHead>
                 <TableHead>Trạng thái chuyển tiền</TableHead>
                 <TableHead>Bất thường</TableHead>
                 <TableHead aria-label="Hành động" />
@@ -234,7 +364,9 @@ export function PaymentHistoryView(): React.ReactElement {
                   <TableCell className="font-mono text-[11px]">
                     {row.txRef}
                   </TableCell>
-                  <TableCell>{row.provider}</TableCell>
+                  <TableCell>
+                    {PROVIDER_LABELS[row.provider] ?? row.provider}
+                  </TableCell>
                   <TableCell>{money(row.amount)}</TableCell>
                   <TableCell>{row.payer?.name ?? '—'}</TableCell>
                   <TableCell>
@@ -243,14 +375,42 @@ export function PaymentHistoryView(): React.ReactElement {
                       : (row.landlord?.name ?? '—')}
                   </TableCell>
                   <TableCell>{attemptStatusBadge(row.attemptStatus)}</TableCell>
-                  <TableCell>{payoutStatusBadge(row.payout)}</TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      {reconcileCell(row.gateway)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      {payoutStatusBadge(row.payout)}
+                      {row.payout?.settlement === 'external' &&
+                      row.payout.status === 'pending' &&
+                      row.payout.id ? (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            setSettleError(null)
+                            setSettleTarget(row)
+                          }}
+                        >
+                          Đánh dấu đã chuyển ngoài hệ thống
+                        </Button>
+                      ) : null}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     {row.anomalies.length ? (
                       <ul className="space-y-0.5">
                         {row.anomalies.map(code => (
                           <li
                             key={code}
-                            className="text-[11px] text-[var(--warning)]"
+                            className={
+                              INFO_ANOMALIES.has(code)
+                                ? 'text-[11px] text-[var(--info,#0369a1)]'
+                                : 'text-[11px] text-[var(--warning)]'
+                            }
                           >
                             {ANOMALY_LABELS[code] ?? code}
                           </li>
@@ -265,6 +425,11 @@ export function PaymentHistoryView(): React.ReactElement {
                       type="button"
                       variant="secondary"
                       size="sm"
+                      title={
+                        row.gateway?.kind === 'external'
+                          ? 'Hỏi lại cổng thanh toán'
+                          : 'Đọc lại từ hệ thống'
+                      }
                       loading={rechecking === row.txRef}
                       onClick={() => void handleRecheck(row.txRef)}
                     >
@@ -310,6 +475,51 @@ export function PaymentHistoryView(): React.ReactElement {
           </div>
         </div>
       ) : null}
+
+      <Dialog
+        open={settleTarget !== null}
+        onOpenChange={open => {
+          if (!open && !settling) setSettleTarget(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận đã chuyển ngoài hệ thống</DialogTitle>
+            <DialogDescription>
+              Xác nhận tiền của giao dịch {settleTarget?.txRef} đã được chuyển
+              cho chủ nhà ngoài hệ thống.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            aria-label="Ghi chú"
+            placeholder="Ghi chú (không bắt buộc)"
+            value={settleNote}
+            onChange={e => setSettleNote(e.target.value)}
+          />
+          {settleError ? (
+            <p role="alert" className="text-sm text-danger">
+              {settleError}
+            </p>
+          ) : null}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={settling}
+              onClick={() => setSettleTarget(null)}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              loading={settling}
+              onClick={() => void handleSettle()}
+            >
+              Xác nhận
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

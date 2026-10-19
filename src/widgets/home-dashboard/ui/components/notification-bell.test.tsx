@@ -156,4 +156,28 @@ describe('NotificationBell API failure states', () => {
 
     expect(await screen.findByText(/5\.000\.000 VND/)).toBeInTheDocument()
   })
+
+  it.each([
+    ['PAYOUT_FAILED', '/profile?tab=wallet', /Xem trạng thái nhận tiền/],
+    ['PAYOUT_REPORTED', '/admin/payment-history', /Xem đối soát/],
+  ])('links %s notification to its target', async (type, link, name) => {
+    mocks.get.mockResolvedValue({
+      items: [
+        {
+          _id: 'n-x',
+          title: 'Thông báo',
+          body: 'Nội dung',
+          type,
+          data: { link },
+          isRead: false,
+          createdAt: '2026-10-04T00:00:00.000Z',
+        },
+      ],
+      total: 1,
+    })
+    render(<NotificationBell isLightHeader />)
+    fireEvent.click(screen.getByTitle('Thông báo'))
+    const anchor = await screen.findByRole('link', { name })
+    expect(anchor).toHaveAttribute('href', link)
+  })
 })

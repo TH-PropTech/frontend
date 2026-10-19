@@ -11,6 +11,7 @@ vi.mock('../api/payment-history-api', async () => {
     ...actual,
     getAdminPayments: vi.fn(),
     recheckAdminPayment: vi.fn(),
+    markPayoutSettledExternally: vi.fn(),
   }
 })
 
@@ -123,5 +124,176 @@ describe('PaymentHistoryView', () => {
     expect(
       await screen.findByText('Chưa có giao dịch nào khớp bộ lọc.')
     ).toBeInTheDocument()
+  })
+
+  const EXT: AdminPaymentRow = {
+    ...ROW,
+    provider: 'vnpay',
+    gateway: {
+      kind: 'external',
+      reconcileStatus: 'unverified',
+      gatewayStatus: null,
+      providerTransactionId: 'VNP-999',
+      checkedAt: null,
+    },
+    payout: {
+      id: 'po-1',
+      settlement: 'external',
+      status: 'pending',
+      relayRef: null,
+      failureReason: null,
+      paidOutAt: null,
+    },
+    anomalies: ['awaiting-reconciliation'],
+  }
+
+  const listOf = (items: AdminPaymentRow[]): void => {
+    vi.mocked(api.getAdminPayments).mockResolvedValue({
+      items,
+      total: items.length,
+      page: 1,
+      limit: 20,
+    })
+  }
+
+  it('shows unverified external row with provider id and info anomaly', async () => {
+    listOf([EXT])
+    render(<PaymentHistoryView />)
+    const row = await screen.findByTestId('payment-row-TX-1')
+    expect(within(row).getByText('Chờ đối soát với cổng')).toBeInTheDocument()
+    expect(within(row).getByText('VNP-999')).toBeInTheDocument()
+    expect(within(row).getByText('VNPay (sandbox)')).toBeInTheDocument()
+    expect(
+      within(row).getByText('Đã thu qua cổng, chờ đối soát')
+    ).toBeInTheDocument()
+  })
+
+  it('shows verified and mismatch badges with gateway status and check time', async () => {
+    listOf([
+      {
+        ...EXT,
+        txRef: 'TX-V',
+        gateway: {
+          ...EXT.gateway!,
+          reconcileStatus: 'verified',
+          gatewayStatus: 'succeeded',
+          checkedAt: '2026-01-11T00:00:00.000Z',
+        },
+      },
+      {
+        ...EXT,
+        txRef: 'TX-M',
+        anomalies: ['gateway-amount-mismatch'],
+        gateway: {
+          ...EXT.gateway!,
+          reconcileStatus: 'mismatch',
+          gatewayStatus: 'failed',
+        },
+      },
+    ])
+    render(<PaymentHistoryView />)
+    const v = await screen.findByTestId('payment-row-TX-V')
+    expect(within(v).getByText('Đã khớp với cổng')).toBeInTheDocument()
+    expect(within(v).getByText(/Cổng: thành công/)).toBeInTheDocument()
+    expect(within(v).getByText(/Kiểm tra lúc/)).toBeInTheDocument()
+    const m = screen.getByTestId('payment-row-TX-M')
+    expect(within(m).getByText('Lệch với cổng')).toBeInTheDocument()
+    expect(
+      within(m).getByText('Số tiền ở cổng lệch với hệ thống')
+    ).toBeInTheDocument()
+  })
+
+  it('labels the other new anomaly codes', async () => {
+    listOf([
+      {
+        ...EXT,
+        anomalies: ['gateway-not-confirmed', 'gateway-paid-not-settled'],
+      },
+    ])
+    render(<PaymentHistoryView />)
+    expect(
+      await screen.findByText('Cổng không xác nhận giao dịch đã thanh toán')
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Cổng đã thu tiền nhưng chưa chuyển cho chủ nhà')
+    ).toBeInTheDocument()
+  })
+
+  it('shows internal badge for Ví Mộc rows', async () => {
+    listOf([
+      {
+        ...ROW,
+        gateway: {
+          kind: 'internal',
+          reconcileStatus: 'not_applicable',
+          gatewayStatus: null,
+          providerTransactionId: null,
+          checkedAt: null,
+        },
+      },
+    ])
+    render(<PaymentHistoryView />)
+    expect(await screen.findByText('Nội bộ')).toBeInTheDocument()
+  })
+
+  it('shows off-system payout text and mark button only for pending external payouts', async () => {
+    listOf([
+      EXT,
+      {
+        ...EXT,
+        txRef: 'TX-2',
+        payout: { ...EXT.payout!, status: 'paid-out' },
+      },
+    ])
+    render(<PaymentHistoryView />)
+    const row = await screen.findByTestId('payment-row-TX-1')
+    expect(
+      within(row).getByText(/chuyển cho chủ nhà ngoài hệ thống/)
+    ).toBeInTheDocument()
+    expect(
+      within(row).getByRole('button', {
+        name: 'Đánh dấu đã chuyển ngoài hệ thống',
+      })
+    ).toBeInTheDocument()
+    expect(
+      within(screen.getByTestId('payment-row-TX-2')).queryByRole('button', {
+        name: 'Đánh dấu đã chuyển ngoài hệ thống',
+      })
+    ).toBeNull()
+  })
+
+  it('confirm dialog calls the API with the note and refreshes the row', async () => {
+    const user = userEvent.setup()
+    listOf([EXT])
+    vi.mocked(api.markPayoutSettledExternally).mockResolvedValue({
+      id: 'po-1',
+      status: 'paid-out',
+    })
+    vi.mocked(api.recheckAdminPayment).mockResolvedValue({
+      ...EXT,
+      payout: { ...EXT.payout!, status: 'paid-out' },
+    })
+    render(<PaymentHistoryView />)
+    await screen.findByTestId('payment-row-TX-1')
+    await user.click(
+      screen.getByRole('button', { name: 'Đánh dấu đã chuyển ngoài hệ thống' })
+    )
+    await user.type(screen.getByLabelText('Ghi chú'), 'ck 123')
+    await user.click(screen.getByRole('button', { name: 'Xác nhận' }))
+    expect(api.markPayoutSettledExternally).toHaveBeenCalledWith(
+      'po-1',
+      'ck 123'
+    )
+    expect(
+      await within(screen.getByTestId('payment-row-TX-1')).findByText(
+        'Đã chuyển cho chủ nhà ngoài hệ thống'
+      )
+    ).toBeInTheDocument()
+  })
+
+  it('renders rows without gateway info', async () => {
+    listOf([ROW])
+    render(<PaymentHistoryView />)
+    expect(await screen.findByTestId('payment-row-TX-1')).toBeInTheDocument()
   })
 })
