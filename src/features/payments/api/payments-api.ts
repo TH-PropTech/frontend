@@ -9,6 +9,14 @@ export type PaymentProviderName =
   | 'sepay'
   | 'techcombank'
 
+/** Ví nhận tiền của chủ nhà khi thanh toán qua Ví Mộc. */
+export type WalletBrand = 'mocbank' | 'momo' | 'zalopay' | 'vnpay'
+
+export interface WalletBrandOption {
+  brand: WalletBrand
+  label: string
+}
+
 export type PaymentStatus = 'unpaid' | 'paid' | 'overdue' | 'waived'
 export type PaymentType =
   | 'deposit'
@@ -60,6 +68,8 @@ export interface PaymentProviderOption {
   simulation: boolean
   /** MoMo only. */
   methods?: MomoMethodOption[]
+  /** Ví Mộc only: landlord wallet brands the money can be routed to. */
+  brands?: WalletBrandOption[]
 }
 
 /** True when `amount` fits the method's limits (unknown amount = allowed). */
@@ -95,28 +105,36 @@ export interface PaymentChoice {
   provider?: PaymentProviderName
   /** Only sent when `provider` is MoMo. */
   momoMethod?: MomoPaymentMethod
+  /** Only sent when `provider` is Ví Mộc and the brand is set. */
+  brand?: WalletBrand
 }
 
 function choiceBody(choice: PaymentChoice): {
   provider?: PaymentProviderName
   momoMethod?: MomoPaymentMethod
+  brand?: WalletBrand
   clientChannel: 'web'
 } {
   if (!choice.provider) return { clientChannel: 'web' }
-  return choice.provider === 'momo' && choice.momoMethod
-    ? {
-        provider: choice.provider,
-        momoMethod: choice.momoMethod,
-        clientChannel: 'web',
-      }
-    : { provider: choice.provider, clientChannel: 'web' }
+  if (choice.provider === 'momo' && choice.momoMethod) {
+    return {
+      provider: choice.provider,
+      momoMethod: choice.momoMethod,
+      clientChannel: 'web',
+    }
+  }
+  if (choice.provider === 'mocbank' && choice.brand) {
+    return {
+      provider: choice.provider,
+      brand: choice.brand,
+      clientChannel: 'web',
+    }
+  }
+  return { provider: choice.provider, clientChannel: 'web' }
 }
 
-export type PaymentProviderPurpose = 'deposit'
-
-/** `purpose: 'deposit'` asks the server for the gateways that can hold a deposit. */
 export async function getPaymentProviders(
-  purpose?: PaymentProviderPurpose
+  purpose?: 'invoice'
 ): Promise<PaymentProviderOption[]> {
   return apiClient.get<PaymentProviderOption[]>(
     purpose ? `/bank/providers?purpose=${purpose}` : '/bank/providers'

@@ -111,12 +111,6 @@ export function ApplicationDetailDialog({
     }
   })()
 
-  const executionPolicy = application.executionPolicySnapshot
-  const executionStrategy =
-    executionPolicy?.strategy ??
-    snapshot?.defaultExecutionPolicy?.strategy ??
-    'DEPOSIT_FIRST'
-
   const isAccepted = application.status === 'accepted'
   const isRejected = application.status === 'rejected'
   const hasContract = application.contractHandoff
@@ -374,15 +368,12 @@ export function ApplicationDetailDialog({
                   <Landmark className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <div className="space-y-0.5">
                     <strong className="text-fg font-semibold">
-                      Trình tự thực thi:{' '}
-                      {executionStrategy === 'DEPOSIT_FIRST'
-                        ? 'Cọc trước, sau đó ký hợp đồng'
-                        : 'Ký hợp đồng trước, sau đó thanh toán cọc'}
+                      Trình tự thực thi: Ký hợp đồng trước, sau đó thanh toán
+                      cọc
                     </strong>
                     <p className="text-muted text-[11px] leading-relaxed">
-                      {executionStrategy === 'DEPOSIT_FIRST'
-                        ? 'Yêu cầu thanh toán tiền cọc để khóa giữ chỗ trước khi hai bên chính thức ký hợp đồng số.'
-                        : 'Hai bên sẽ thực hiện ký hợp đồng số trước, sau đó mới tiến hành thanh toán khoản tiền cọc.'}
+                      Hai bên sẽ thực hiện ký hợp đồng số trước, sau đó mới tiến
+                      hành thanh toán khoản tiền cọc.
                     </p>
                   </div>
                 </div>

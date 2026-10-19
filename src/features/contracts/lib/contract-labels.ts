@@ -1,4 +1,4 @@
-import type { ContractDepositView, ContractStatus } from '../api/contracts-api'
+import type { ContractStatus } from '../api/contracts-api'
 
 const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
   draft: 'Bản nháp',
@@ -11,11 +11,6 @@ const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
   cancelled: 'Đã hủy',
   completed: 'Hoàn tất',
 }
-
-const EXECUTION_STRATEGY_LABELS = {
-  DEPOSIT_FIRST: 'Cọc trước, ký sau',
-  SIGN_FIRST: 'Ký trước, cọc sau',
-} as const
 
 interface LegalBasisLabel {
   label: string
@@ -62,13 +57,12 @@ const LEDGER_STATUS_LABELS: Record<string, string> = {
   'failed-terminal': 'Thất bại',
 }
 
-/** Trạng thái một khoản trong "Chủ nhà nhận tiền": Payout, ký quỹ cọc, hoặc `unpaid`. */
+/** Trạng thái một khoản trong "Chủ nhà nhận tiền": Payout hoặc `unpaid`. */
 const CONTRACT_PAYOUT_ITEM_STATUS_LABELS: Record<string, string> = {
   'awaiting-wallet': 'Chờ liên kết ví',
   pending: 'Đang chuyển',
   'paid-out': 'Đã nhận',
   failed: 'Chuyển thất bại, cần thử lại',
-  held: 'Đang ký quỹ',
   released: 'Đã nhận',
   refunded: 'Đã hoàn cho khách thuê',
   unpaid: 'Chưa thanh toán',
@@ -88,12 +82,6 @@ export function humanizeCode(code: string): string {
 /** Nhãn tiếng Việt cho trạng thái hợp đồng; giá trị lạ trả về nguyên bản. */
 export function getContractStatusLabel(status: string): string {
   return CONTRACT_STATUS_LABELS[status as ContractStatus] ?? status
-}
-
-export function getExecutionStrategyLabel(
-  strategy: keyof typeof EXECUTION_STRATEGY_LABELS
-): string {
-  return EXECUTION_STRATEGY_LABELS[strategy]
 }
 
 export function getLegalBasisLabel(id: string): string {
@@ -127,7 +115,7 @@ export function getContractPayoutItemStatusLabel(status: string): string {
   return CONTRACT_PAYOUT_ITEM_STATUS_LABELS[status] ?? humanizeCode(status)
 }
 
-/** Khoản đã thực sự về tay chủ nhà (không gồm `awaiting-wallet`/`held`/`unpaid`). */
+/** Khoản đã thực sự về tay chủ nhà (không gồm `awaiting-wallet`/`unpaid`). */
 export function isContractPayoutItemReceived(status: string): boolean {
   return status === 'paid-out' || status === 'released'
 }
@@ -136,26 +124,7 @@ export function getAmendmentFieldLabel(field: string): string {
   return AMENDMENT_FIELD_LABELS[field] ?? humanizeCode(field)
 }
 
-/** Cọc đã được xác nhận (đang giữ, đã áp vào hợp đồng hoặc đã giải ngân). */
+/** Cọc đã được xác nhận (đã thanh toán, đã áp vào hợp đồng hoặc đã chuyển). */
 export function isDepositPaid(status: string | null | undefined): boolean {
   return status === 'paid' || status === 'transferred' || status === 'released'
-}
-
-type DepositEscrowSource = Pick<ContractDepositView, 'status' | 'escrow'>
-
-/**
- * Nhãn trạng thái ký quỹ cọc cho người dùng; null khi không có ký quỹ để nói
- * (thỏa thuận cũ trả trực tiếp, hoặc ký quỹ chưa nhận tiền).
- */
-export function getDepositEscrowLabel(
-  deposit: DepositEscrowSource
-): string | null {
-  const settlement = deposit.escrow?.settlement ?? null
-  if (deposit.status === 'refunded') return 'Đã hoàn cho khách thuê'
-  if (deposit.status === 'released') return 'Đã chuyển cho chủ nhà'
-  if (settlement) {
-    if (settlement.kind === 'release') return 'Đang chuyển cho chủ nhà'
-    return 'Đang hoàn cho khách thuê'
-  }
-  return deposit.escrow?.status === 'HELD' ? 'Đang ký quỹ' : null
 }

@@ -2,56 +2,20 @@ import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RentalPackagesConfigSection } from './rental-packages-config-section'
 import type { ApartmentFormValues } from '../model/types'
-import { getRentalExecutionPolicies } from '@/features/rental-execution-policies/api/rental-execution-policies-api'
+
+const apiMocks = vi.hoisted(() => ({ post: vi.fn() }))
+vi.mock('@/shared/api', async importOriginal => {
+  const actual = await importOriginal<typeof import('@/shared/api')>()
+  return { ...actual, apiClient: { ...actual.apiClient, post: apiMocks.post } }
+})
 
 const toastMocks = vi.hoisted(() => ({ info: vi.fn() }))
 vi.mock('@/shared/ui/app-toast', () => ({
   appToast: { info: toastMocks.info, success: vi.fn(), error: vi.fn() },
 }))
-
-vi.mock(
-  '@/features/rental-execution-policies/api/rental-execution-policies-api',
-  () => ({
-    getRentalExecutionPolicies: vi.fn(),
-  })
-)
-
-const executionPolicies = [
-  {
-    policyId: 'deposit-first',
-    version: 1,
-    status: 'published' as const,
-    strategy: 'DEPOSIT_FIRST' as const,
-    name: 'Deposit first',
-    description: 'Deposit before signing',
-    disclosure: {
-      sequenceLabel: 'Deposit then sign',
-      depositLabel: 'Deposit required',
-      effectivenessLabel: 'Active after both gates',
-      cancellationLabel: 'Snapshot rule',
-    },
-    contentHash: 'deposit-hash',
-    draftRevision: 1,
-  },
-  {
-    policyId: 'sign-first',
-    version: 1,
-    status: 'published' as const,
-    strategy: 'SIGN_FIRST' as const,
-    name: 'Sign first',
-    description: 'Sign before deposit',
-    disclosure: {
-      sequenceLabel: 'Sign then deposit',
-      depositLabel: 'Deposit pending',
-      effectivenessLabel: 'Active after deposit',
-      cancellationLabel: 'Snapshot rule',
-    },
-    contentHash: 'sign-hash',
-    draftRevision: 1,
-  },
-]
 
 function TestHarness({
   initialValues,
@@ -89,7 +53,6 @@ function TestHarness({
 describe('RentalPackagesConfigSection', () => {
   beforeEach(() => {
     toastMocks.info.mockClear()
-    vi.mocked(getRentalExecutionPolicies).mockResolvedValue(executionPolicies)
   })
 
   it('renders all duration options and fallback info message when no package is active', () => {
@@ -104,6 +67,37 @@ describe('RentalPackagesConfigSection', () => {
     expect(
       screen.getByText(/hệ thống sẽ tự động tạo một gói chuẩn/i)
     ).toBeDefined()
+  })
+
+  it('disables the commission info button until a package is enabled, then previews enabled packages', async () => {
+    apiMocks.post.mockResolvedValue({
+      scheduleAvailable: true,
+      dueDaysAfterActivation: 7,
+      vatRatePercent: 10,
+      pricesIncludeVat: false,
+      landlordText: null,
+      packages: [],
+    })
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    render(
+      <QueryClientProvider client={client}>
+        <TestHarness initialValues={{ priceMonthly: 15 }} />
+      </QueryClientProvider>
+    )
+    const info = screen.getByRole('button', { name: 'Xem phí hoa hồng' })
+    expect((info as HTMLButtonElement).disabled).toBe(true)
+
+    fireEvent.click(screen.getByTestId('toggle-duration-12'))
+    expect((info as HTMLButtonElement).disabled).toBe(false)
+    fireEvent.click(info)
+
+    expect(await screen.findByText('Phí hoa hồng nền tảng')).toBeDefined()
+    expect(apiMocks.post).toHaveBeenCalledWith(
+      '/platform-fees/landlord-commission/preview',
+      { packages: [{ durationMonths: 12, monthlyRent: 15_000_000 }] }
+    )
   })
 
   it('allows toggling on a 12-month package and calculates default price and deposit', () => {
@@ -209,7 +203,7 @@ describe('RentalPackagesConfigSection', () => {
     expect(screen.queryByTestId('price-input-3')).toBeNull()
   })
 
-  it('assigns only published policy references and a default policy to a package', async () => {
+  it('offers no execution strategy selector (sign-first is the only flow)', () => {
     render(
       <TestHarness
         initialValues={{
@@ -227,12 +221,7 @@ describe('RentalPackagesConfigSection', () => {
       />
     )
 
-    expect(
-      await screen.findByTestId('execution-policy-config-12')
-    ).toBeDefined()
-    fireEvent.click(screen.getByTestId('policy-toggle-12-DEPOSIT_FIRST'))
-    fireEvent.click(screen.getByTestId('policy-default-12-DEPOSIT_FIRST'))
-    expect(screen.getByTestId('policy-default-12-DEPOSIT_FIRST')).toBeDefined()
+    expect(screen.queryByTestId('execution-policy-config-12')).toBeNull()
   })
 
   describe('prepaid rent', () => {
@@ -332,21 +321,6 @@ describe('RentalPackagesConfigSection', () => {
       expect(screen.getByTestId('prepaid-summary-6').textContent).toMatch(
         /Bật "Quyết toán nhận nhà"/
       )
-    })
-
-    it('labels execution policies with their real names so two policies never look identical', async () => {
-      vi.mocked(getRentalExecutionPolicies).mockResolvedValue([
-        ...executionPolicies,
-        {
-          ...executionPolicies[0]!,
-          policyId: 'deposit-first-b',
-          name: 'Cọc trước, ký sau (bản 2)',
-          contentHash: 'b',
-        },
-      ])
-      renderSix()
-      expect(await screen.findByText('Cọc trước, ký sau (bản 2)')).toBeDefined()
-      expect(screen.getByText('Deposit first')).toBeDefined()
     })
   })
 })

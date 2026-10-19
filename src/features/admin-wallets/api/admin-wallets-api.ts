@@ -25,15 +25,6 @@ export interface LandlordWalletPage {
   limit: number
 }
 
-export interface PlatformEscrowWallet {
-  accountNumber: string
-  accountName: string
-  availableBalance: number
-  heldBalance: number
-  currency: string
-  status: string
-}
-
 export function getLandlordWallets(
   page = 1,
   limit = 20
@@ -41,8 +32,4 @@ export function getLandlordWallets(
   return apiClient.get<LandlordWalletPage>(
     `/admin/wallets/landlords?page=${page}&limit=${limit}`
   )
-}
-
-export function getPlatformWallet(): Promise<PlatformEscrowWallet> {
-  return apiClient.get<PlatformEscrowWallet>('/admin/wallets/platform')
 }

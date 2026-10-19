@@ -77,28 +77,8 @@ describe('ContractStatusTimeline', () => {
     expect(screen.getByText('Hợp đồng đã chấm dứt')).toBeInTheDocument()
   })
 
-  it('orders the workflow as deposit first by default', () => {
-    render(<ContractStatusTimeline status="draft" />)
-
-    const stepIds = within(screen.getByTestId('contract-status-timeline'))
-      .getAllByTestId(/^step-/)
-      .map(step => step.getAttribute('data-testid'))
-
-    expect(stepIds).toEqual([
-      'step-draft',
-      'step-deposit',
-      'step-sign',
-      'step-ledger',
-    ])
-  })
-
-  it('orders signing before deposit for SIGN_FIRST contracts', () => {
-    render(
-      <ContractStatusTimeline
-        status="awaiting-signature"
-        strategy="SIGN_FIRST"
-      />
-    )
+  it('orders signing before deposit by default', () => {
+    render(<ContractStatusTimeline status="awaiting-signature" />)
 
     const stepIds = within(screen.getByTestId('contract-status-timeline'))
       .getAllByTestId(/^step-/)
@@ -112,11 +92,10 @@ describe('ContractStatusTimeline', () => {
     ])
   })
 
-  it('marks signing complete and deposit current after SIGN_FIRST signatures', () => {
+  it('marks signing complete and deposit current after both signatures', () => {
     render(
       <ContractStatusTimeline
         status="fully-signed-pending-deposit"
-        strategy="SIGN_FIRST"
         depositStatus="pending"
         signedByTenant={true}
         signedByLandlord={true}
@@ -146,7 +125,7 @@ describe('ContractStatusTimeline with serverFlow', () => {
     stages: Array<[ContractFlowStageKey, ContractFlowStageStatus]>
   ): ContractFlowView => ({
     version: 1,
-    strategy: 'DEPOSIT_FIRST',
+    strategy: 'SIGN_FIRST',
     stages: stages.map(([key, status]) => ({
       key,
       status,

@@ -3,6 +3,8 @@ export type {
   PayableInvoice,
   Wallet,
   WalletBank,
+  WalletBrand,
+  WalletExtraAccount,
   WalletStatementItem,
   WalletTransactionPage,
 } from './api/wallet-api'

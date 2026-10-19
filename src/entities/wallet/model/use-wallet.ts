@@ -34,10 +34,14 @@ export function useWalletTransactions(): UseQueryResult<
   })
 }
 
-export function usePayableInvoices(): UseQueryResult<PayableInvoice[], Error> {
+export function usePayableInvoices(options?: {
+  /** Poll interval while a payment dialog is open; false/undefined = off. */
+  refetchIntervalMs?: number | false
+}): UseQueryResult<PayableInvoice[], Error> {
   return useQuery({
     queryKey: [...WALLET_KEY, 'invoices'],
     queryFn: getPayableInvoices,
+    refetchInterval: options?.refetchIntervalMs ?? false,
   })
 }
 

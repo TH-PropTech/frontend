@@ -329,11 +329,9 @@ export function RentalApplicationApply({
               <ApplyStepPackage
                 packages={state.context.packages}
                 selectedPackageId={state.selectedPackageId}
-                selectedExecutionPolicy={state.selectedExecutionPolicy}
                 selectedPaymentCycleMonths={state.selectedPaymentCycleMonths}
                 onSelectPaymentCycle={actions.selectPaymentCycle}
                 onSelectPackage={actions.selectPackage}
-                onSelectExecutionPolicy={actions.selectExecutionPolicy}
                 onBack={() => actions.backToStep(1)}
                 onNext={actions.goToStep3}
               />

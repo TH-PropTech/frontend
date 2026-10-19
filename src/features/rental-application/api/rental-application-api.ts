@@ -3,7 +3,7 @@ import type { PrepaidRentPolicy } from '@/shared/lib/prepaid-rent'
 import type { FlowProfileSteps } from '@/features/rental-flow-config'
 
 export type RentalApplicationStatus = 'pending' | 'accepted' | 'rejected'
-export type RentalExecutionStrategy = 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+export type RentalExecutionStrategy = 'SIGN_FIRST'
 
 export interface RentalExecutionPolicyRef {
   policyId: string

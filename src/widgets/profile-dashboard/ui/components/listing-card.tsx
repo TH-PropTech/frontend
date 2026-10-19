@@ -3,6 +3,7 @@ import type { LandlordApartmentItem } from '@/features/apartment-posting'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { LandlordCommissionDialog } from '@/features/platform-fees'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 import {
@@ -168,6 +169,10 @@ export function ListingCard({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+          <LandlordCommissionDialog
+            apartmentId={item.id}
+            className="shrink-0"
+          />
           {item.status === 'rejected' && (
             <Button
               type="button"

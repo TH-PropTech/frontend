@@ -15,12 +15,6 @@ const mockPackages: RentalApplicationContext['packages'] = [
     currency: 'VND',
     allowedExecutionPolicies: [
       {
-        policyId: 'deposit-first',
-        version: 1,
-        strategy: 'DEPOSIT_FIRST',
-        contentHash: 'hash-deposit',
-      },
-      {
         policyId: 'sign-first',
         version: 1,
         strategy: 'SIGN_FIRST',
@@ -28,10 +22,10 @@ const mockPackages: RentalApplicationContext['packages'] = [
       },
     ],
     defaultExecutionPolicy: {
-      policyId: 'deposit-first',
+      policyId: 'sign-first',
       version: 1,
-      strategy: 'DEPOSIT_FIRST',
-      contentHash: 'hash-deposit',
+      strategy: 'SIGN_FIRST',
+      contentHash: 'hash-sign',
     },
   },
   {
@@ -220,29 +214,20 @@ describe('ApplyStepPackage Component', () => {
     expect(screen.getByTestId('no-active-packages')).toBeInTheDocument()
   })
 
-  it('renders admin-approved execution policies and emits the selected policy', () => {
-    const onSelectPolicy = vi.fn()
+  it('offers no execution strategy selection (sign-first is the only flow)', () => {
     render(
       <ApplyStepPackage
         packages={mockPackages}
         selectedPackageId="pkg-6m"
-        selectedExecutionPolicy={null}
         onSelectPackage={vi.fn()}
-        onSelectExecutionPolicy={onSelectPolicy}
         onBack={vi.fn()}
         onNext={vi.fn()}
       />
     )
 
-    expect(screen.getByTestId('execution-policy-selection')).toBeInTheDocument()
-    const signFirst = screen.getByTestId('execution-policy-SIGN_FIRST')
-    fireEvent.click(signFirst)
-    expect(onSelectPolicy).toHaveBeenCalledWith({
-      policyId: 'sign-first',
-      version: 1,
-      strategy: 'SIGN_FIRST',
-      contentHash: 'hash-sign',
-    })
+    expect(
+      screen.queryByTestId('execution-policy-selection')
+    ).not.toBeInTheDocument()
   })
 
   describe('prepaid rent', () => {

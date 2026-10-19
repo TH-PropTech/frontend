@@ -10,8 +10,6 @@ import {
   Coins,
   CreditCard,
   FileText,
-  Landmark,
-  PenLine,
   RotateCcw,
   Scale,
   ShieldCheck,
@@ -19,10 +17,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
-import type {
-  RentalApplicationContext,
-  RentalExecutionPolicyRef,
-} from '../api/rental-application-api'
+import type { RentalApplicationContext } from '../api/rental-application-api'
 import { FeeBreakdown } from '@/features/platform-fees'
 import {
   describePrepaidRent,
@@ -32,11 +27,9 @@ import {
 export interface ApplyStepPackageProps {
   packages: RentalApplicationContext['packages']
   selectedPackageId: string
-  selectedExecutionPolicy?: RentalExecutionPolicyRef | null
   selectedPaymentCycleMonths?: 1 | 3 | 6
   onSelectPaymentCycle?: (cycle: 1 | 3 | 6) => void
   onSelectPackage: (packageId: string) => void
-  onSelectExecutionPolicy?: (policy: RentalExecutionPolicyRef) => void
   onBack: () => void
   onNext: () => void
 }
@@ -48,11 +41,9 @@ function formatVnd(amount: number): string {
 export function ApplyStepPackage({
   packages,
   selectedPackageId,
-  selectedExecutionPolicy = null,
   selectedPaymentCycleMonths = 1,
   onSelectPaymentCycle = () => undefined,
   onSelectPackage,
-  onSelectExecutionPolicy = () => undefined,
   onBack,
   onNext,
 }: ApplyStepPackageProps): React.ReactElement {
@@ -65,12 +56,6 @@ export function ApplyStepPackage({
     () => activePackages.find(p => p.packageId === selectedPackageId),
     [activePackages, selectedPackageId]
   )
-  const executionPolicies = selectedPkg?.allowedExecutionPolicies ?? []
-
-  const policyLabel = (policy: RentalExecutionPolicyRef): string =>
-    policy.strategy === 'DEPOSIT_FIRST'
-      ? 'Cọc trước, sau đó ký hợp đồng'
-      : 'Ký hợp đồng trước, sau đó thanh toán cọc'
 
   return (
     <div data-testid="apply-step-package" className="space-y-6">
@@ -325,89 +310,6 @@ export function ApplyStepPackage({
         </section>
       ) : null}
 
-      {selectedPkg && executionPolicies.length > 0 ? (
-        <section
-          data-testid="execution-policy-selection"
-          className="space-y-3 rounded-2xl border border-primary/25 bg-primary-soft/10 p-5"
-        >
-          <div className="flex items-start gap-2">
-            <Landmark
-              aria-hidden="true"
-              className="mt-0.5 h-4 w-4 text-primary"
-            />
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-fg">
-                Trình tự đặt cọc và ký hợp đồng
-              </h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted">
-                Chủ nhà đã công bố các trình tự được phép cho gói thuê này. Bạn
-                chọn một trình tự; lựa chọn sẽ được lưu cùng hồ sơ và không thể
-                tự ý thay đổi sau khi gửi.
-              </p>
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {executionPolicies.map(policy => {
-              const isSelected =
-                selectedExecutionPolicy?.policyId === policy.policyId &&
-                selectedExecutionPolicy?.version === policy.version
-              return (
-                <label
-                  key={`${policy.policyId}-${policy.version}`}
-                  data-testid={`execution-policy-${policy.strategy}`}
-                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${
-                    isSelected
-                      ? 'border-primary bg-surface ring-2 ring-primary/20'
-                      : 'border-border bg-surface hover:border-border-strong'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="rental-execution-policy"
-                    value={policy.strategy}
-                    checked={isSelected}
-                    onChange={() => onSelectExecutionPolicy(policy)}
-                    className="sr-only"
-                  />
-                  {policy.strategy === 'DEPOSIT_FIRST' ? (
-                    <Coins
-                      aria-hidden="true"
-                      className="mt-0.5 h-4 w-4 shrink-0 text-accent"
-                    />
-                  ) : (
-                    <PenLine
-                      aria-hidden="true"
-                      className="mt-0.5 h-4 w-4 shrink-0 text-primary"
-                    />
-                  )}
-                  <span className="text-xs leading-relaxed text-fg">
-                    <strong className="block">{policyLabel(policy)}</strong>
-                    <span className="mt-1 block text-muted">
-                      {policy.strategy === 'DEPOSIT_FIRST'
-                        ? 'Hợp đồng chỉ được kích hoạt sau khi cọc đã xác nhận và hai bên ký hợp lệ.'
-                        : 'Hai bên có thể ký trước; hợp đồng chờ xác nhận cọc rồi mới được kích hoạt.'}
-                    </span>
-                  </span>
-                </label>
-              )
-            })}
-          </div>
-          {selectedExecutionPolicy ? (
-            <div className="flex items-start gap-2 rounded-xl border border-success/30 bg-success-soft/30 p-3 text-xs text-fg">
-              <ShieldCheck
-                aria-hidden="true"
-                className="mt-0.5 h-4 w-4 shrink-0 text-success"
-              />
-              <p>
-                Trình tự đã chọn:{' '}
-                <strong>{policyLabel(selectedExecutionPolicy)}</strong>. Hệ
-                thống sẽ hiển thị lại lựa chọn này ở bước xác nhận.
-              </p>
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-
       {/* Statutory Deposit Regulation Notice */}
       <section className="space-y-3 rounded-2xl border border-border bg-surface p-5 shadow-sm">
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted">
@@ -474,10 +376,7 @@ export function ApplyStepPackage({
 
         <Button
           type="button"
-          disabled={
-            !selectedPackageId ||
-            (executionPolicies.length > 1 && !selectedExecutionPolicy)
-          }
+          disabled={!selectedPackageId}
           onClick={onNext}
           className="flex w-full items-center justify-center gap-2 bg-control px-6 py-2.5 text-xs font-semibold text-on-control shadow-sm hover:opacity-90 disabled:opacity-50 sm:w-auto"
         >

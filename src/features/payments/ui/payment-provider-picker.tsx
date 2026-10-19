@@ -20,7 +20,7 @@ import {
   type PaymentChoice,
   type PaymentProviderName,
   type PaymentProviderOption,
-  type PaymentProviderPurpose,
+  type WalletBrand,
 } from '../api/payments-api'
 
 const FALLBACK_PROVIDERS: PaymentProviderOption[] = [
@@ -122,6 +122,8 @@ export interface PaymentProvidersState {
   setSelected: (provider: PaymentProviderName) => void
   momoMethod: MomoPaymentMethod
   setMomoMethod: (method: MomoPaymentMethod) => void
+  brand: WalletBrand
+  setBrand: (brand: WalletBrand) => void
   /** Body fragment for the init calls. */
   choice: PaymentChoice
 }
@@ -131,7 +133,7 @@ export interface PaymentProvidersState {
  * cannot be loaded so the existing simulation flow keeps working.
  */
 export function usePaymentProviders(
-  purpose?: PaymentProviderPurpose
+  purpose?: 'invoice'
 ): PaymentProvidersState {
   const [providers, setProviders] =
     React.useState<PaymentProviderOption[]>(FALLBACK_PROVIDERS)
@@ -139,6 +141,8 @@ export function usePaymentProviders(
     React.useState<PaymentProviderName>('mock-bank')
   const [momoMethod, setMomoMethod] =
     React.useState<MomoPaymentMethod>('wallet')
+
+  const [brand, setBrand] = React.useState<WalletBrand>('mocbank')
 
   React.useEffect(() => {
     let active = true
@@ -154,12 +158,21 @@ export function usePaymentProviders(
     }
   }, [purpose])
 
-  const choice: PaymentChoice =
-    selected === 'momo'
-      ? { provider: selected, momoMethod }
-      : { provider: selected }
+  let choice: PaymentChoice = { provider: selected }
+  if (selected === 'momo') choice = { provider: selected, momoMethod }
+  else if (selected === 'mocbank' && brand !== 'mocbank')
+    choice = { provider: selected, brand }
 
-  return { providers, selected, setSelected, momoMethod, setMomoMethod, choice }
+  return {
+    providers,
+    selected,
+    setSelected,
+    momoMethod,
+    setMomoMethod,
+    brand,
+    setBrand,
+    choice,
+  }
 }
 
 /** Picker is only meaningful when a real gateway is enabled. */
@@ -198,6 +211,8 @@ export interface PaymentProviderPickerProps {
   onChange: (provider: PaymentProviderName) => void
   momoMethod?: MomoPaymentMethod
   onMomoMethodChange?: (method: MomoPaymentMethod) => void
+  brand?: WalletBrand
+  onBrandChange?: (brand: WalletBrand) => void
   /** Amount to pay; out-of-limit MoMo methods are dimmed. Omit when unknown. */
   amount?: number
   disabled?: boolean
@@ -209,6 +224,8 @@ export function PaymentProviderPicker({
   onChange,
   momoMethod = 'wallet',
   onMomoMethodChange,
+  brand = 'mocbank',
+  onBrandChange,
   amount,
   disabled = false,
 }: PaymentProviderPickerProps): React.ReactElement | null {
@@ -217,6 +234,13 @@ export function PaymentProviderPicker({
     value === 'momo'
       ? providers.find(option => option.provider === 'momo')?.methods
       : undefined
+  const brands =
+    value === 'mocbank'
+      ? providers.find(option => option.provider === 'mocbank')?.brands
+      : undefined
+  const handleBrandChange = (next: string): void => {
+    onBrandChange?.(next as WalletBrand)
+  }
   const handleProviderChange = (next: string): void => {
     onChange(next as PaymentProviderName)
   }
@@ -313,6 +337,35 @@ export function PaymentProviderPicker({
             )
           })}
         </RadioGroup>
+      ) : null}
+      {brands && brands.length > 0 ? (
+        <div className="space-y-1.5">
+          <p className="text-[11px] font-semibold text-[var(--muted)]">
+            Nhận tiền vào ví
+          </p>
+          <RadioGroup
+            value={brand}
+            onValueChange={handleBrandChange}
+            className="grid grid-cols-1 gap-2 sm:grid-cols-4"
+            aria-label="Nhận tiền vào ví"
+          >
+            {brands.map(option => {
+              const id = `wallet-brand-${option.brand}`
+              return (
+                <label
+                  key={option.brand}
+                  htmlFor={id}
+                  className="flex cursor-pointer items-center gap-2 rounded-sm border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs has-[[data-state=checked]]:border-[var(--primary)]"
+                >
+                  <RadioGroupItem id={id} value={option.brand} />
+                  <span className="font-semibold text-[var(--fg)]">
+                    {option.label}
+                  </span>
+                </label>
+              )
+            })}
+          </RadioGroup>
+        </div>
       ) : null}
     </fieldset>
   )

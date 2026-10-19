@@ -39,6 +39,8 @@ export function PaymentSchedulePanel({
     setSelected,
     momoMethod,
     setMomoMethod,
+    brand,
+    setBrand,
     choice,
   } = usePaymentProviders()
 
@@ -142,6 +144,8 @@ export function PaymentSchedulePanel({
         onChange={setSelected}
         momoMethod={momoMethod}
         onMomoMethodChange={setMomoMethod}
+        brand={brand}
+        onBrandChange={setBrand}
         disabled={busyPaymentId !== null}
       />
 

@@ -99,3 +99,41 @@ export function publishPlatformFeeSchedule(input: {
 export function getPlatformFeeRevenue(): Promise<PlatformFeeRevenue> {
   return apiClient.get<PlatformFeeRevenue>('/platform-fees/revenue')
 }
+
+export interface LandlordCommissionPackageInput {
+  durationMonths: number
+  monthlyRent: number
+}
+
+export interface LandlordCommissionPackagePreview extends LandlordCommissionPackageInput {
+  applicable: boolean
+  amountBeforeVat: number | null
+  vatAmount: number | null
+  amount: number | null
+}
+
+export interface LandlordCommissionPreview {
+  scheduleAvailable: boolean
+  dueDaysAfterActivation: number | null
+  vatRatePercent: number | null
+  pricesIncludeVat: boolean | null
+  landlordText: string | null
+  packages: LandlordCommissionPackagePreview[]
+}
+
+export function getApartmentCommission(
+  apartmentId: string
+): Promise<LandlordCommissionPreview> {
+  return apiClient.get<LandlordCommissionPreview>(
+    `/platform-fees/apartments/${encodeURIComponent(apartmentId)}/commission`
+  )
+}
+
+export function previewLandlordCommission(
+  packages: LandlordCommissionPackageInput[]
+): Promise<LandlordCommissionPreview> {
+  return apiClient.post<LandlordCommissionPreview>(
+    '/platform-fees/landlord-commission/preview',
+    { packages }
+  )
+}

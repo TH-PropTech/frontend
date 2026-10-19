@@ -14,20 +14,10 @@ import {
 } from './contract-flow-steps'
 
 describe('contract-flow-steps', () => {
-  it('keeps all four route steps in deposit-first order', () => {
-    const steps = getContractFlowSteps('DEPOSIT_FIRST')
+  it('keeps all four route steps in sign-first order', () => {
+    const steps = getContractFlowSteps()
 
-    expect(steps.map(step => step.key)).toEqual([
-      'document',
-      'deposit',
-      'signing',
-      'ledger',
-    ])
     expect(CONTRACT_FLOW_STEPS).toHaveLength(4)
-  })
-
-  it('places signing before deposit for sign-first contracts', () => {
-    const steps = getContractFlowSteps('SIGN_FIRST')
 
     expect(steps.map(step => step.key)).toEqual([
       'document',
@@ -38,19 +28,19 @@ describe('contract-flow-steps', () => {
   })
 
   it('returns done, active and upcoming states relative to the active step', () => {
-    const steps = getContractFlowSteps('DEPOSIT_FIRST')
+    const steps = getContractFlowSteps()
 
-    expect(getContractStepState('document', 'deposit', steps)).toBe('done')
-    expect(getContractStepState('deposit', 'deposit', steps)).toBe('active')
-    expect(getContractStepState('signing', 'deposit', steps)).toBe('upcoming')
+    expect(getContractStepState('document', 'signing', steps)).toBe('done')
+    expect(getContractStepState('signing', 'signing', steps)).toBe('active')
+    expect(getContractStepState('deposit', 'signing', steps)).toBe('upcoming')
     expect(getContractStepState('ledger', 'completed', steps)).toBe('done')
   })
 
   it('supports guarded navigation and stable route hrefs', () => {
-    expect(getPreviousContractStep('document', 'DEPOSIT_FIRST')).toBeNull()
-    expect(getPreviousContractStep('deposit', 'DEPOSIT_FIRST')).toBe('document')
-    expect(getNextContractStep('deposit', 'DEPOSIT_FIRST')).toBe('signing')
-    expect(getNextContractStep('ledger', 'DEPOSIT_FIRST')).toBeNull()
+    expect(getPreviousContractStep('document')).toBeNull()
+    expect(getPreviousContractStep('signing')).toBe('document')
+    expect(getNextContractStep('signing')).toBe('deposit')
+    expect(getNextContractStep('ledger')).toBeNull()
     expect(toContractStepHref('contract-1', 'ledger')).toBe(
       '/contracts/contract-1/steps/ledger'
     )
@@ -65,7 +55,7 @@ describe('contract-flow-steps', () => {
 describe('contract-flow-steps with serverFlow', () => {
   const flowWith = (keys: ContractFlowStageKey[]): ContractFlowView => ({
     version: 1,
-    strategy: 'DEPOSIT_FIRST',
+    strategy: 'SIGN_FIRST',
     stages: keys.map(key => ({
       key,
       status: 'upcoming',
@@ -78,7 +68,6 @@ describe('contract-flow-steps with serverFlow', () => {
 
   it('theo thứ tự stage của server và thêm bước move-in khi có', () => {
     const steps = getContractFlowSteps(
-      'DEPOSIT_FIRST',
       flowWith(['document', 'deposit', 'signing', 'ledger', 'move-in'])
     )
 
@@ -92,8 +81,13 @@ describe('contract-flow-steps with serverFlow', () => {
     expect(steps.at(-1)?.label).toBe('Nhận nhà')
   })
 
-  it('giữ 4 bước theo strategy khi không có flow', () => {
-    expect(getContractFlowSteps('SIGN_FIRST', null)).toHaveLength(4)
+  it('giữ 4 bước theo luồng ký trước khi không có flow', () => {
+    expect(getContractFlowSteps(null).map(step => step.key)).toEqual([
+      'document',
+      'signing',
+      'deposit',
+      'ledger',
+    ])
   })
 
   it('chấp nhận move-in là route bước hợp lệ', () => {
@@ -107,7 +101,6 @@ describe('contract-flow-steps with serverFlow', () => {
     expect(
       getNextContractStep(
         'ledger',
-        'DEPOSIT_FIRST',
         flowWith(['document', 'deposit', 'signing', 'ledger', 'move-in'])
       )
     ).toBe('move-in')

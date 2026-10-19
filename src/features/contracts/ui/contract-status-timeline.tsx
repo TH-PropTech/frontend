@@ -18,7 +18,6 @@ import type {
 
 export interface ContractStatusTimelineProps {
   status: ContractStatus
-  strategy?: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
   depositStatus?: string | undefined
   signedByTenant?: boolean | undefined
   signedByLandlord?: boolean | undefined
@@ -56,15 +55,12 @@ const MOVE_IN_STEP: TimelineStep = {
 
 export function ContractStatusTimeline({
   status,
-  strategy = 'DEPOSIT_FIRST',
   depositStatus,
   signedByTenant = false,
   signedByLandlord = false,
   txHash,
   serverFlow,
 }: ContractStatusTimelineProps) {
-  const isSignFirst = strategy === 'SIGN_FIRST'
-
   // Determine state of each step
   const isDraft = status === 'draft'
   const isFullySignedPendingDeposit = status === 'fully-signed-pending-deposit'
@@ -74,7 +70,6 @@ export function ContractStatusTimeline({
     depositStatus === 'paid' ||
     depositStatus === 'transferred' ||
     status === 'deposit-paid' ||
-    (!isSignFirst && status === 'awaiting-signature') ||
     status === 'active' ||
     status === 'completed'
   const isAwaitingSig = status === 'awaiting-signature'
@@ -94,14 +89,13 @@ export function ContractStatusTimeline({
   const depositStep: TimelineStep = {
     id: 'step-deposit',
     title: 'Đặt cọc bảo đảm',
-    description:
-      isSignFirst && isFullySignedPendingDeposit
-        ? 'Chờ thanh toán cọc để kích hoạt'
-        : isDepositPaid
-          ? 'Đã thanh toán cọc an toàn'
-          : isDepositPending
-            ? 'Chờ thanh toán cọc'
-            : 'Chưa thanh toán cọc',
+    description: isFullySignedPendingDeposit
+      ? 'Chờ thanh toán cọc để kích hoạt'
+      : isDepositPaid
+        ? 'Đã thanh toán cọc an toàn'
+        : isDepositPending
+          ? 'Chờ thanh toán cọc'
+          : 'Chưa thanh toán cọc',
     state: isDepositPaid
       ? 'completed'
       : isDepositPending
@@ -139,7 +133,7 @@ export function ContractStatusTimeline({
     title: 'Lưu vết & Kích hoạt',
     description: isTerminated
       ? 'Hợp đồng đã chấm dứt'
-      : isSignFirst && isFullySignedPendingDeposit
+      : isFullySignedPendingDeposit
         ? 'Chờ cọc để lưu vết'
         : isActive
           ? txHash
@@ -162,9 +156,7 @@ export function ContractStatusTimeline({
         ...stepByStage[stage.key],
         state: SERVER_STEP_STATE[stage.status],
       }))
-    : strategy === 'SIGN_FIRST'
-      ? [draftStep, signStep, depositStep, ledgerStep]
-      : [draftStep, depositStep, signStep, ledgerStep]
+    : [draftStep, signStep, depositStep, ledgerStep]
 
   return (
     <div

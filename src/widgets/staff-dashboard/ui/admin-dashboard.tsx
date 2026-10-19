@@ -9,6 +9,7 @@ import {
   Cpu,
   Box,
   DollarSign,
+  History,
   LayoutTemplate,
   Wallet as WalletIcon,
 } from 'lucide-react'
@@ -31,6 +32,7 @@ import { LayoutProfileEditor } from '@/features/contract-layouts'
 import { FeeRevenueReport, FeeScheduleEditor } from '@/features/platform-fees'
 import { StuckTransactionsView } from '@/features/rental-transactions'
 import { AdminWalletsView } from '@/features/admin-wallets'
+import { PaymentHistoryView } from '@/features/payment-history'
 
 type TabType =
   | 'overview'
@@ -49,6 +51,7 @@ type TabType =
   | 'apartment-designs'
   | 'legal-knowledge'
   | 'wallets'
+  | 'payment-history'
 
 const ADMIN_TABS: readonly TabType[] = [
   'overview',
@@ -67,6 +70,7 @@ const ADMIN_TABS: readonly TabType[] = [
   'apartment-designs',
   'legal-knowledge',
   'wallets',
+  'payment-history',
 ]
 
 export function resolveAdminTab(pathname: string): TabType {
@@ -244,6 +248,11 @@ export function AdminDashboard({
       icon: <WalletIcon className="h-[18px] w-[18px]" />,
     },
     {
+      type: 'payment-history',
+      label: 'Lịch sử thanh toán & đối soát',
+      icon: <History className="h-[18px] w-[18px]" aria-hidden="true" />,
+    },
+    {
       type: 'rental-ops',
       label: 'Vận hành giao dịch thuê',
       icon: <Activity className="h-[18px] w-[18px]" aria-hidden="true" />,
@@ -350,6 +359,8 @@ export function AdminDashboard({
         )
       case 'wallets':
         return <AdminWalletsView />
+      case 'payment-history':
+        return <PaymentHistoryView />
       case 'rental-ops':
         return <StuckTransactionsView />
       case 'fabric-audit':

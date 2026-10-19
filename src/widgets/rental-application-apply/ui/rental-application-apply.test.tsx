@@ -91,7 +91,6 @@ const mockActions = {
   selectPackage: vi.fn(),
   selectPaymentCycle: vi.fn(),
   setFeeAcknowledged: vi.fn(),
-  selectExecutionPolicy: vi.fn(),
   setExecutionPolicyAccepted: vi.fn(),
   toggleDisclosure: vi.fn(),
   setTermsAccepted: vi.fn(),

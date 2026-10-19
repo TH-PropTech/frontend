@@ -179,10 +179,7 @@ export function ApplyStepSubmitted({
     } as const)
   const isContractReady = handoff.state === 'ready' && Boolean(handoff.href)
   const executionPolicy = application.executionPolicySnapshot
-  const executionPolicyLabel =
-    executionPolicy?.strategy === 'DEPOSIT_FIRST'
-      ? 'Cọc trước, sau đó ký hợp đồng'
-      : 'Ký hợp đồng trước, sau đó thanh toán cọc'
+  const executionPolicyLabel = 'Ký hợp đồng trước, sau đó thanh toán cọc'
 
   const formattedMoveIn = React.useMemo(() => {
     try {
@@ -369,9 +366,8 @@ export function ApplyStepSubmitted({
             </h3>
             <p className="font-semibold text-primary">{executionPolicyLabel}</p>
             <p className="leading-relaxed text-muted">
-              {executionPolicy.strategy === 'DEPOSIT_FIRST'
-                ? 'Hồ sơ sẽ chuyển sang ký SmartCA sau khi khoản cọc được xác nhận.'
-                : 'Hai bên có thể ký SmartCA trước; hợp đồng sẽ chờ xác nhận cọc để kích hoạt.'}
+              Hai bên có thể ký SmartCA trước; hợp đồng sẽ chờ xác nhận cọc để
+              kích hoạt.
             </p>
           </div>
         </section>

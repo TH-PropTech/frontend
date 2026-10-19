@@ -164,7 +164,6 @@ export function ContractWorkspace({
 
   // Compute active step once — used by ContractFlowGuide, DepositPaymentPanel, BilateralSigningTimeline
   const activeStep = resolveContractActiveStep({
-    strategy: contract.executionPolicy?.strategy ?? 'DEPOSIT_FIRST',
     status: contract.status,
     depositStatus: deposit?.status,
     signedByTenant: parties.tenant.hasSigned,
@@ -476,7 +475,6 @@ export function ContractWorkspace({
           >
             <ContractFlowGuide
               contractId={contractId}
-              strategy={contract.executionPolicy?.strategy ?? 'DEPOSIT_FIRST'}
               status={contract.status}
               depositStatus={deposit?.status}
               signedByTenant={parties.tenant.hasSigned}
@@ -499,9 +497,7 @@ export function ContractWorkspace({
                       Trình tự cọc và ký đã chốt
                     </h3>
                     <p className="font-semibold text-[var(--primary)]">
-                      {contract.executionPolicy.strategy === 'DEPOSIT_FIRST'
-                        ? 'Cọc trước, sau đó ký hợp đồng'
-                        : 'Ký hợp đồng trước, sau đó thanh toán cọc'}
+                      Ký hợp đồng trước, sau đó thanh toán cọc
                     </p>
                     <p className="leading-relaxed text-[var(--muted)]">
                       {contract.executionPolicy.nextAction}
@@ -538,9 +534,6 @@ export function ContractWorkspace({
 
             <ContractStatusTimeline
               status={contract.status}
-              {...(contract.executionPolicy?.strategy
-                ? { strategy: contract.executionPolicy.strategy }
-                : {})}
               depositStatus={deposit?.status}
               signedByTenant={parties.tenant.hasSigned}
               signedByLandlord={parties.landlord.hasSigned}

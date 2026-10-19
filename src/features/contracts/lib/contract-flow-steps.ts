@@ -51,6 +51,7 @@ const ALL_FLOW_STEPS: readonly ContractFlowStepDefinition[] = [
   MOVE_IN_FLOW_STEP,
 ]
 
+/** Luồng duy nhất: ký trước, cọc sau. */
 const SIGN_FIRST_ORDER: readonly ContractRouteStep[] = [
   'document',
   'signing',
@@ -58,27 +59,17 @@ const SIGN_FIRST_ORDER: readonly ContractRouteStep[] = [
   'ledger',
 ]
 
-const DEPOSIT_FIRST_ORDER: readonly ContractRouteStep[] = [
-  'document',
-  'deposit',
-  'signing',
-  'ledger',
-]
-
 export function isContractRouteStep(value: string): value is ContractRouteStep {
   return ALL_FLOW_STEPS.some(step => step.key === value)
 }
 
-/** Thứ tự bước lấy từ `flow` của server khi có, ngược lại theo strategy. */
+/** Thứ tự bước lấy từ `flow` của server khi có, ngược lại theo luồng ký trước. */
 export function getContractFlowSteps(
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST',
   serverFlow?: ContractFlowView | null
 ): readonly ContractFlowStepDefinition[] {
   const order: readonly ContractRouteStep[] = serverFlow
     ? serverFlow.stages.map(stage => stage.key)
-    : strategy === 'SIGN_FIRST'
-      ? SIGN_FIRST_ORDER
-      : DEPOSIT_FIRST_ORDER
+    : SIGN_FIRST_ORDER
   return order.map(stepKey => {
     const definition = ALL_FLOW_STEPS.find(step => step.key === stepKey)
     if (!definition) {
@@ -105,20 +96,18 @@ export function getContractStepState(
 
 export function getPreviousContractStep(
   step: ContractRouteStep,
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST',
   serverFlow?: ContractFlowView | null
 ): ContractRouteStep | null {
-  const steps = getContractFlowSteps(strategy, serverFlow)
+  const steps = getContractFlowSteps(serverFlow)
   const index = steps.findIndex(item => item.key === step)
   return index > 0 ? (steps[index - 1]?.key ?? null) : null
 }
 
 export function getNextContractStep(
   step: ContractRouteStep,
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST',
   serverFlow?: ContractFlowView | null
 ): ContractRouteStep | null {
-  const steps = getContractFlowSteps(strategy, serverFlow)
+  const steps = getContractFlowSteps(serverFlow)
   const index = steps.findIndex(item => item.key === step)
   return index >= 0 && index < steps.length - 1
     ? (steps[index + 1]?.key ?? null)

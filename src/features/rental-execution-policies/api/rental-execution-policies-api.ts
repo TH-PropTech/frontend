@@ -1,6 +1,6 @@
 import { apiClient } from '@/shared/api'
 
-export type RentalExecutionPolicyStrategy = 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+export type RentalExecutionPolicyStrategy = 'SIGN_FIRST'
 export type RentalExecutionPolicyStatus = 'draft' | 'published' | 'archived'
 
 export interface RentalExecutionPolicyDisclosure {

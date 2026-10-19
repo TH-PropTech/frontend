@@ -15,4 +15,8 @@ describe('admin dashboard navigation', () => {
   it('resolves the fee management section from the admin route', () => {
     expect(resolveAdminTab('/admin/fees')).toBe('fees')
   })
+
+  it('resolves the payment history section from the admin route', () => {
+    expect(resolveAdminTab('/admin/payment-history')).toBe('payment-history')
+  })
 })

@@ -24,7 +24,6 @@ import {
 import { toContractStepHref } from '../lib/contract-flow-steps'
 
 export interface ContractFlowGuideProps {
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
   status: ContractStatus
   depositStatus?: string | null | undefined
   signedByTenant?: boolean | undefined
@@ -41,33 +40,7 @@ interface StepDef {
   icon: React.ElementType
 }
 
-const DEPOSIT_FIRST_STEPS: StepDef[] = [
-  {
-    key: 'document',
-    label: 'Đọc hợp đồng',
-    shortLabel: 'Hợp đồng',
-    icon: FileText,
-  },
-  {
-    key: 'deposit',
-    label: 'Đặt cọc',
-    shortLabel: 'Đặt cọc',
-    icon: Coins,
-  },
-  {
-    key: 'signing',
-    label: 'Ký số SmartCA',
-    shortLabel: 'Ký số',
-    icon: PenLine,
-  },
-  {
-    key: 'ledger',
-    label: 'Kích hoạt',
-    shortLabel: 'Kích hoạt',
-    icon: Zap,
-  },
-]
-
+/** Luồng duy nhất: ký trước, cọc sau. */
 const SIGN_FIRST_STEPS: StepDef[] = [
   {
     key: 'document',
@@ -103,10 +76,10 @@ const MOVE_IN_STEP: StepDef = {
 }
 
 const STEP_BY_KEY: Record<Exclude<ContractActiveStep, 'completed'>, StepDef> = {
-  document: DEPOSIT_FIRST_STEPS[0] as StepDef,
-  deposit: DEPOSIT_FIRST_STEPS[1] as StepDef,
-  signing: DEPOSIT_FIRST_STEPS[2] as StepDef,
-  ledger: DEPOSIT_FIRST_STEPS[3] as StepDef,
+  document: SIGN_FIRST_STEPS[0] as StepDef,
+  signing: SIGN_FIRST_STEPS[1] as StepDef,
+  deposit: SIGN_FIRST_STEPS[2] as StepDef,
+  ledger: SIGN_FIRST_STEPS[3] as StepDef,
   'move-in': MOVE_IN_STEP,
 }
 
@@ -142,7 +115,6 @@ function getStepState(
  * [uc_contract_flow_guide]
  */
 export function ContractFlowGuide({
-  strategy,
   status,
   depositStatus,
   signedByTenant,
@@ -151,7 +123,6 @@ export function ContractFlowGuide({
   serverFlow,
 }: ContractFlowGuideProps): React.ReactElement {
   const activeStep = resolveContractActiveStep({
-    strategy,
     status,
     depositStatus,
     signedByTenant,
@@ -161,9 +132,7 @@ export function ContractFlowGuide({
 
   const steps = serverFlow
     ? serverFlow.stages.map(stage => STEP_BY_KEY[stage.key])
-    : strategy === 'DEPOSIT_FIRST'
-      ? DEPOSIT_FIRST_STEPS
-      : SIGN_FIRST_STEPS
+    : SIGN_FIRST_STEPS
   const stateOf = (stepKey: ContractActiveStep): StepState => {
     const serverStage = serverFlow?.stages.find(stage => stage.key === stepKey)
     return serverStage
@@ -269,9 +238,7 @@ export function ContractFlowGuide({
 
       {/* Strategy badge */}
       <p className="mt-2 text-right text-[11px] text-[var(--muted)]">
-        {strategy === 'DEPOSIT_FIRST'
-          ? 'Cọc trước → Ký sau'
-          : 'Ký trước → Cọc sau'}
+        Ký trước → Cọc sau
       </p>
 
       {contractId && activeStep !== 'completed' ? (

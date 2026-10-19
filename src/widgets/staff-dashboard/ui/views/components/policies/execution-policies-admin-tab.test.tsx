@@ -55,17 +55,15 @@ describe('ExecutionPoliciesAdminTab', () => {
     })
   })
 
-  it('loads both draft and published revisions with only the two supported strategies', async () => {
+  it('loads both draft and published revisions without a strategy selector', async () => {
     render(<ExecutionPoliciesAdminTab />)
 
     expect(
       await screen.findByTestId('execution-policies-admin-tab')
     ).toBeDefined()
-    expect(
-      screen.getByTestId('execution-policy-strategy').textContent
-    ).toContain('SIGN_FIRST')
-    expect(screen.getByText('sign-first · SIGN_FIRST · vdraft')).toBeDefined()
-    expect(screen.getByText('sign-first · SIGN_FIRST · v1')).toBeDefined()
+    expect(screen.queryByTestId('execution-policy-strategy')).toBeNull()
+    expect(screen.getByText('sign-first · vdraft')).toBeDefined()
+    expect(screen.getByText('sign-first · v1')).toBeDefined()
   })
 
   it('saves a draft with optimistic revision and publishes it', async () => {

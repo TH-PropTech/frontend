@@ -7,7 +7,7 @@ const flow = (
   nextActions: ContractFlowAction[] = []
 ): ContractFlowView => ({
   version: 1,
-  strategy: 'DEPOSIT_FIRST',
+  strategy: 'SIGN_FIRST',
   stages: [],
   activeStage,
   nextActions,
@@ -22,7 +22,7 @@ const consentAction = (enabled: boolean): ContractFlowAction => ({
 })
 
 describe('resolvePanelActivity', () => {
-  it('DEPOSIT_FIRST ở stage document: panel cọc active khi tenant có CONSENT_DEPOSIT bật', () => {
+  it('Ở stage document: panel cọc active khi tenant có CONSENT_DEPOSIT bật', () => {
     expect(
       resolvePanelActivity(
         'deposit',

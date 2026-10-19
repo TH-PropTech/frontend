@@ -21,12 +21,9 @@ import {
   ShieldCheck,
   Wallet,
 } from 'lucide-react'
+import { LandlordCommissionDialog } from '@/features/platform-fees/ui/landlord-commission-dialog'
 import { appToast } from '@/shared/ui/app-toast'
 import { resolvePrepaidMonths } from '@/shared/lib/prepaid-rent'
-import {
-  getRentalExecutionPolicies,
-  type RentalExecutionPolicyRecord,
-} from '@/features/rental-execution-policies/api/rental-execution-policies-api'
 
 export interface RentalPackagesConfigSectionProps {
   form: UseFormReturn<ApartmentFormValues, unknown, ApartmentFormValues>
@@ -59,26 +56,16 @@ export function RentalPackagesConfigSection({
   form,
 }: RentalPackagesConfigSectionProps): React.ReactElement {
   const { watch, setValue } = form
-  const [executionPolicies, setExecutionPolicies] = React.useState<
-    RentalExecutionPolicyRecord[]
-  >([])
   const currentPackages = (watch('rentalPackages') ||
     []) as RentalPackagePostingSchemaType[]
   const basePriceMonthly = watch('priceMonthly') || 0
 
-  React.useEffect(() => {
-    let active = true
-    void getRentalExecutionPolicies()
-      .then(policies => {
-        if (active) setExecutionPolicies(policies)
-      })
-      .catch(() => {
-        if (active) setExecutionPolicies([])
-      })
-    return () => {
-      active = false
-    }
-  }, [])
+  const activeCommissionPackages = currentPackages
+    .filter(p => p.status === 'active')
+    .map(p => ({
+      durationMonths: p.durationMonths,
+      monthlyRent: p.monthlyRent,
+    }))
 
   const handleToggleDuration = (
     duration: 3 | 6 | 12 | 24,
@@ -264,64 +251,6 @@ export function RentalPackagesConfigSection({
     )
   }
 
-  const handleToggleExecutionPolicy = (
-    duration: number,
-    policy: RentalExecutionPolicyRecord,
-    checked: boolean
-  ): void => {
-    if (policy.version === null || policy.contentHash === null) return
-    const ref = {
-      policyId: policy.policyId,
-      version: policy.version,
-      strategy: policy.strategy,
-      contentHash: policy.contentHash,
-    }
-    setValue(
-      'rentalPackages',
-      currentPackages.map(pkg => {
-        if (pkg.durationMonths !== duration) return pkg
-        const selected = pkg.allowedExecutionPolicies ?? []
-        const next = checked
-          ? selected.some(item => item.policyId === ref.policyId)
-            ? selected
-            : [...selected, ref].slice(0, 2)
-          : selected.filter(item => item.policyId !== ref.policyId)
-        const defaultStillSelected = next.some(
-          item =>
-            item.policyId === pkg.defaultExecutionPolicy?.policyId &&
-            item.version === pkg.defaultExecutionPolicy.version
-        )
-        return {
-          ...pkg,
-          allowedExecutionPolicies: next.length > 0 ? next : undefined,
-          defaultExecutionPolicy: defaultStillSelected
-            ? pkg.defaultExecutionPolicy
-            : next[0],
-        }
-      }),
-      { shouldValidate: true }
-    )
-  }
-
-  const handleSetDefaultExecutionPolicy = (
-    duration: number,
-    policyId: string
-  ): void => {
-    setValue(
-      'rentalPackages',
-      currentPackages.map(pkg => {
-        if (pkg.durationMonths !== duration) return pkg
-        const nextDefault = (pkg.allowedExecutionPolicies ?? []).find(
-          item => item.policyId === policyId
-        )
-        return nextDefault
-          ? { ...pkg, defaultExecutionPolicy: nextDefault }
-          : pkg
-      }),
-      { shouldValidate: true }
-    )
-  }
-
   return (
     <div
       className="space-y-4 rounded-xl border border-border bg-surface p-5"
@@ -337,7 +266,14 @@ export function RentalPackagesConfigSection({
             Chủ động thiết lập các gói thời hạn (3, 6, 12, 24 tháng) để tiếp cận
             nhiều đối tượng khách thuê hơn.
           </p>
+          <p className="text-xs text-muted mt-1">
+            Luồng thuê: ký hợp đồng số trước, sau đó khách đặt cọc.
+          </p>
         </div>
+        <LandlordCommissionDialog
+          packages={activeCommissionPackages}
+          disabled={activeCommissionPackages.length === 0}
+        />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -595,81 +531,6 @@ export function RentalPackagesConfigSection({
                       </p>
                     )}
                   </section>
-
-                  {executionPolicies.length > 0 ? (
-                    <div
-                      data-testid={`execution-policy-config-${duration}`}
-                      className="space-y-2 rounded-lg border border-border/70 bg-surface-muted/30 p-3"
-                    >
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-fg">
-                        <ShieldCheck className="h-3 w-3 text-primary" />
-                        <span>Trình tự đặt cọc & ký được phép</span>
-                      </div>
-                      <div className="space-y-1.5">
-                        {executionPolicies.map(policy => {
-                          const selected = (
-                            pkg.allowedExecutionPolicies ?? []
-                          ).some(
-                            item =>
-                              item.policyId === policy.policyId &&
-                              item.version === policy.version
-                          )
-                          const isDefault =
-                            pkg.defaultExecutionPolicy?.policyId ===
-                              policy.policyId &&
-                            pkg.defaultExecutionPolicy.version ===
-                              policy.version
-                          return (
-                            <div
-                              key={`${duration}-${policy.policyId}-${policy.version}`}
-                              className="flex items-center justify-between gap-2 text-[11px]"
-                            >
-                              <label className="flex min-w-0 items-center gap-2 text-muted">
-                                <Checkbox
-                                  data-testid={`policy-toggle-${duration}-${policy.strategy}`}
-                                  checked={selected}
-                                  onCheckedChange={checked =>
-                                    handleToggleExecutionPolicy(
-                                      duration,
-                                      policy,
-                                      Boolean(checked)
-                                    )
-                                  }
-                                />
-                                <span
-                                  className="truncate"
-                                  title={policy.description}
-                                >
-                                  {policy.name ||
-                                    (policy.strategy === 'DEPOSIT_FIRST'
-                                      ? 'Cọc trước, ký sau'
-                                      : 'Ký trước, cọc sau')}
-                                </span>
-                              </label>
-                              <button
-                                type="button"
-                                disabled={!selected}
-                                data-testid={`policy-default-${duration}-${policy.strategy}`}
-                                onClick={() =>
-                                  handleSetDefaultExecutionPolicy(
-                                    duration,
-                                    policy.policyId
-                                  )
-                                }
-                                className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] ${
-                                  isDefault
-                                    ? 'border-primary bg-primary-soft text-primary'
-                                    : 'border-border text-muted disabled:opacity-50'
-                                }`}
-                              >
-                                {isDefault ? 'Mặc định' : 'Chọn mặc định'}
-                              </button>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  ) : null}
 
                   <section
                     className="space-y-2 rounded-lg border border-border/70 bg-surface-muted/30 p-3"

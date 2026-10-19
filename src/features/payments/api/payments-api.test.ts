@@ -43,6 +43,31 @@ describe('payments API', () => {
     })
   })
 
+  it('sends brand only for mocbank when set', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({ status: 'pending' })
+
+    await initRentPayment('p1', { provider: 'mocbank', brand: 'momo' })
+    await initRentPayment('p2', { provider: 'mocbank' })
+    await initDepositPayment('d1', { provider: 'vnpay', brand: 'momo' })
+
+    expect(apiClient.post).toHaveBeenNthCalledWith(1, '/bank/rent/init', {
+      paymentId: 'p1',
+      provider: 'mocbank',
+      brand: 'momo',
+      clientChannel: 'web',
+    })
+    expect(apiClient.post).toHaveBeenNthCalledWith(2, '/bank/rent/init', {
+      paymentId: 'p2',
+      provider: 'mocbank',
+      clientChannel: 'web',
+    })
+    expect(apiClient.post).toHaveBeenNthCalledWith(3, '/bank/deposit/init', {
+      depositAgreementId: 'd1',
+      provider: 'vnpay',
+      clientChannel: 'web',
+    })
+  })
+
   it('sends the chosen gateway with the web channel on every init', async () => {
     vi.mocked(apiClient.post).mockResolvedValue({ status: 'pending' })
 
@@ -97,13 +122,13 @@ describe('payments API', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/bank/providers')
   })
 
-  it('asks for deposit-capable gateways when purpose is deposit', async () => {
+  it('asks for the invoice-only gateway list when a purpose is given', async () => {
     vi.mocked(apiClient.get).mockResolvedValue([])
 
-    await getPaymentProviders('deposit')
+    await getPaymentProviders('invoice')
 
     expect(apiClient.get).toHaveBeenCalledWith(
-      '/bank/providers?purpose=deposit'
+      '/bank/providers?purpose=invoice'
     )
   })
 
