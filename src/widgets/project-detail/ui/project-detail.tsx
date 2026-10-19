@@ -182,25 +182,25 @@ export function ProjectDetail(): React.ReactElement {
           </div>
         </section>
 
-        {/* 3D Building Overview Section */}
+        {/* 3D Project Overview Section */}
         <section className="mx-auto max-w-6xl px-6 py-8 md:px-10">
           <div className="space-y-2 text-left mb-6">
             <span className="font-display text-xs font-bold uppercase tracking-widest text-primary">
               TRỰC QUAN KHÔNG GIAN 3D
             </span>
             <h2 className="font-marketing text-2xl font-bold text-fg sm:text-3xl">
-              Sa bàn 3D Dự án & Tòa nhà
+              Sa bàn 3D Dự án
             </h2>
             <p className="font-body text-xs text-muted">
               Xoay và tương tác với cấu trúc 3D mô phỏng quy hoạch tổng thể của
-              tòa nhà để có góc nhìn chân thực nhất.
+              dự án để có góc nhìn chân thực nhất.
             </p>
           </div>
           <div className="rounded-3xl border border-border bg-white p-4 shadow-sm overflow-hidden h-[600px] relative">
             <iframe
               src="/3d-overview/index.html"
               className="w-full h-full border-0 rounded-2xl"
-              title="Sa bàn 3D Tòa nhà"
+              title="Sa bàn 3D Dự án"
               loading="lazy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen

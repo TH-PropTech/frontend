@@ -15,7 +15,6 @@ const BRAND_LABELS: Record<WalletBrand, string> = {
   mocbank: 'Ví Mộc',
   momo: 'Momo',
   zalopay: 'ZaloPay',
-  vnpay: 'VNPay',
 }
 
 export function LandlordWallet(): React.ReactElement {

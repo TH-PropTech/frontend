@@ -81,8 +81,6 @@ export function ApartmentPostingForm({
         amenities: initialData.amenities || [],
         projectName: initialData.projectName || '',
         projectId: initialData.projectId || null,
-        buildingName: initialData.buildingName || '',
-        buildingId: initialData.buildingId || null,
         rentalPackages: initialData.rentalPackages || [],
       }
     }
@@ -114,8 +112,6 @@ export function ApartmentPostingForm({
       amenities: [],
       projectName: '',
       projectId: null,
-      buildingName: '',
-      buildingId: null,
     }
   }, [initialData])
 

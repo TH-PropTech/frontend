@@ -115,16 +115,11 @@ export function ReviewStep({
               <p className="text-sm text-fg leading-relaxed">
                 {values.address || 'Chưa nhập địa chỉ'}
               </p>
-              {(values.projectName || values.buildingName) && (
+              {values.projectName && (
                 <div className="flex flex-wrap gap-2 mt-1.5">
                   {values.projectName && (
                     <Badge variant="secondary">
                       Dự án: {values.projectName}
-                    </Badge>
-                  )}
-                  {values.buildingName && (
-                    <Badge variant="secondary">
-                      Tòa: {values.buildingName}
                     </Badge>
                   )}
                 </div>

@@ -128,12 +128,12 @@ describe('PaymentHistoryView', () => {
 
   const EXT: AdminPaymentRow = {
     ...ROW,
-    provider: 'vnpay',
+    provider: 'zalopay',
     gateway: {
       kind: 'external',
       reconcileStatus: 'unverified',
       gatewayStatus: null,
-      providerTransactionId: 'VNP-999',
+      providerTransactionId: 'ZP-999',
       checkedAt: null,
     },
     payout: {
@@ -161,8 +161,8 @@ describe('PaymentHistoryView', () => {
     render(<PaymentHistoryView />)
     const row = await screen.findByTestId('payment-row-TX-1')
     expect(within(row).getByText('Chờ đối soát với cổng')).toBeInTheDocument()
-    expect(within(row).getByText('VNP-999')).toBeInTheDocument()
-    expect(within(row).getByText('VNPay (sandbox)')).toBeInTheDocument()
+    expect(within(row).getByText('ZP-999')).toBeInTheDocument()
+    expect(within(row).getByText('ZaloPay (sandbox)')).toBeInTheDocument()
     expect(
       within(row).getByText('Đã thu qua cổng, chờ đối soát')
     ).toBeInTheDocument()

@@ -134,14 +134,12 @@ export function ListingCard({
             <span className="line-clamp-1">{item.address}</span>
           </div>
 
-          {/* Projects / Buildings */}
-          {(item.projectName || item.buildingName) && (
+          {/* Project */}
+          {item.projectName && (
             <div className="flex items-center gap-1.5 pt-1">
               <Building className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <span className="text-[11px] text-muted-foreground font-medium">
-                {[item.projectName, item.buildingName]
-                  .filter(Boolean)
-                  .join(' • ')}
+                {item.projectName}
               </span>
             </div>
           )}

@@ -122,8 +122,6 @@ export const apartmentPostingSchema = z.object({
   amenities: z.array(z.string()).default([]),
   projectName: z.string().optional().default(''),
   projectId: z.string().nullable().default(null),
-  buildingName: z.string().optional().default(''),
-  buildingId: z.string().nullable().default(null),
 })
 
 export type ApartmentPostingSchemaType = z.infer<typeof apartmentPostingSchema>

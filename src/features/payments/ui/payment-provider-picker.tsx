@@ -7,7 +7,6 @@ import {
   CreditCard,
   Landmark,
   QrCode,
-  ScanLine,
   WalletCards,
   type LucideIcon,
 } from 'lucide-react'
@@ -21,6 +20,8 @@ import {
   type PaymentProviderName,
   type PaymentProviderOption,
   type WalletBrand,
+  type ZalopayMethodOption,
+  type ZalopayPaymentMethod,
 } from '../api/payments-api'
 
 const FALLBACK_PROVIDERS: PaymentProviderOption[] = [
@@ -40,10 +41,6 @@ const PROVIDER_VISUALS: Readonly<
   'mock-bank': {
     icon: Landmark,
     className: 'bg-[var(--primary-soft)] text-[var(--primary)]',
-  },
-  vnpay: {
-    icon: ScanLine,
-    className: 'bg-[var(--info-soft)] text-[var(--info)]',
   },
   momo: {
     icon: WalletCards,
@@ -69,7 +66,6 @@ const PROVIDER_VISUALS: Readonly<
 
 /** Logo thật của cổng đang tích hợp (file trong public/payments); cổng không có logo dùng icon. */
 const PROVIDER_LOGOS: Readonly<Partial<Record<PaymentProviderName, string>>> = {
-  vnpay: '/payments/vnpay.png',
   momo: '/payments/momo.png',
   zalopay: '/payments/zalopay.png',
 }
@@ -122,6 +118,8 @@ export interface PaymentProvidersState {
   setSelected: (provider: PaymentProviderName) => void
   momoMethod: MomoPaymentMethod
   setMomoMethod: (method: MomoPaymentMethod) => void
+  zalopayMethod: ZalopayPaymentMethod
+  setZalopayMethod: (method: ZalopayPaymentMethod) => void
   brand: WalletBrand
   setBrand: (brand: WalletBrand) => void
   /** Body fragment for the init calls. */
@@ -142,6 +140,8 @@ export function usePaymentProviders(
   const [momoMethod, setMomoMethod] =
     React.useState<MomoPaymentMethod>('wallet')
 
+  const [zalopayMethod, setZalopayMethod] =
+    React.useState<ZalopayPaymentMethod>('all')
   const [brand, setBrand] = React.useState<WalletBrand>('mocbank')
 
   React.useEffect(() => {
@@ -160,6 +160,8 @@ export function usePaymentProviders(
 
   let choice: PaymentChoice = { provider: selected }
   if (selected === 'momo') choice = { provider: selected, momoMethod }
+  else if (selected === 'zalopay' && zalopayMethod !== 'all')
+    choice = { provider: selected, zalopayMethod }
   else if (selected === 'mocbank' && brand !== 'mocbank')
     choice = { provider: selected, brand }
 
@@ -169,6 +171,8 @@ export function usePaymentProviders(
     setSelected,
     momoMethod,
     setMomoMethod,
+    zalopayMethod,
+    setZalopayMethod,
     brand,
     setBrand,
     choice,
@@ -187,7 +191,10 @@ function selectedMomoMethod(
   if (choice.provider !== 'momo') return undefined
   return providers
     .find(option => option.provider === 'momo')
-    ?.methods?.find(option => option.method === choice.momoMethod)
+    ?.methods?.find(
+      (option): option is MomoMethodOption =>
+        'minAmount' in option && option.method === choice.momoMethod
+    )
 }
 
 /**
@@ -211,6 +218,8 @@ export interface PaymentProviderPickerProps {
   onChange: (provider: PaymentProviderName) => void
   momoMethod?: MomoPaymentMethod
   onMomoMethodChange?: (method: MomoPaymentMethod) => void
+  zalopayMethod?: ZalopayPaymentMethod
+  onZalopayMethodChange?: (method: ZalopayPaymentMethod) => void
   brand?: WalletBrand
   onBrandChange?: (brand: WalletBrand) => void
   /** Amount to pay; out-of-limit MoMo methods are dimmed. Omit when unknown. */
@@ -224,6 +233,8 @@ export function PaymentProviderPicker({
   onChange,
   momoMethod = 'wallet',
   onMomoMethodChange,
+  zalopayMethod = 'all',
+  onZalopayMethodChange,
   brand = 'mocbank',
   onBrandChange,
   amount,
@@ -232,7 +243,15 @@ export function PaymentProviderPicker({
   if (!hasGatewayChoice(providers)) return null
   const momoMethods =
     value === 'momo'
-      ? providers.find(option => option.provider === 'momo')?.methods
+      ? (providers.find(option => option.provider === 'momo')?.methods as
+          | MomoMethodOption[]
+          | undefined)
+      : undefined
+  const zalopayMethods =
+    value === 'zalopay'
+      ? (providers.find(option => option.provider === 'zalopay')?.methods as
+          | ZalopayMethodOption[]
+          | undefined)
       : undefined
   const brands =
     value === 'mocbank'
@@ -243,6 +262,9 @@ export function PaymentProviderPicker({
   }
   const handleProviderChange = (next: string): void => {
     onChange(next as PaymentProviderName)
+  }
+  const handleZalopayMethodChange = (next: string): void => {
+    onZalopayMethodChange?.(next as ZalopayPaymentMethod)
   }
   const handleMomoMethodChange = (next: string): void => {
     onMomoMethodChange?.(next as MomoPaymentMethod)
@@ -332,6 +354,30 @@ export function PaymentProviderPicker({
                       ? `Hạn mức ${limitRange(option)}`
                       : `Vượt hạn mức (${limitRange(option)})`}
                   </span>
+                </span>
+              </label>
+            )
+          })}
+        </RadioGroup>
+      ) : null}
+      {zalopayMethods && zalopayMethods.length > 0 ? (
+        <RadioGroup
+          value={zalopayMethod}
+          onValueChange={handleZalopayMethodChange}
+          className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+          aria-label="Cách thanh toán ZaloPay"
+        >
+          {zalopayMethods.map(option => {
+            const id = `zalopay-method-${option.method}`
+            return (
+              <label
+                key={option.method}
+                htmlFor={id}
+                className="flex cursor-pointer items-center gap-2 rounded-sm border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs has-[[data-state=checked]]:border-[var(--primary)]"
+              >
+                <RadioGroupItem id={id} value={option.method} />
+                <span className="font-semibold text-[var(--fg)]">
+                  {option.label}
                 </span>
               </label>
             )

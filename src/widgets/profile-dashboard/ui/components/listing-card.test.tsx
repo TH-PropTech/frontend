@@ -46,8 +46,6 @@ function buildItem(
     expiresAt: null,
     projectName: '',
     projectId: null,
-    buildingName: '',
-    buildingId: null,
     ...overrides,
   }
 }

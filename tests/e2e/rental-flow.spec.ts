@@ -32,8 +32,6 @@ const apartmentResponse = {
   ward: 'Phường 22',
   street: 'Nguyễn Hữu Cảnh',
   projectName: null,
-  buildingId: null,
-  buildingName: null,
   bedrooms: 2,
   bathrooms: 2,
   direction: 'Đông',

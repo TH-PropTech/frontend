@@ -39,6 +39,8 @@ export function PaymentSchedulePanel({
     setSelected,
     momoMethod,
     setMomoMethod,
+    zalopayMethod,
+    setZalopayMethod,
     brand,
     setBrand,
     choice,
@@ -144,6 +146,8 @@ export function PaymentSchedulePanel({
         onChange={setSelected}
         momoMethod={momoMethod}
         onMomoMethodChange={setMomoMethod}
+        zalopayMethod={zalopayMethod}
+        onZalopayMethodChange={setZalopayMethod}
         brand={brand}
         onBrandChange={setBrand}
         disabled={busyPaymentId !== null}

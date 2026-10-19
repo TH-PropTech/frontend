@@ -2,7 +2,6 @@ import { apiClient } from '@/shared/api'
 
 export type PaymentProviderName =
   | 'mock-bank'
-  | 'vnpay'
   | 'momo'
   | 'zalopay'
   | 'mocbank'
@@ -10,7 +9,7 @@ export type PaymentProviderName =
   | 'techcombank'
 
 /** Ví nhận tiền của chủ nhà khi thanh toán qua Ví Mộc. */
-export type WalletBrand = 'mocbank' | 'momo' | 'zalopay' | 'vnpay'
+export type WalletBrand = 'mocbank' | 'momo' | 'zalopay'
 
 export interface WalletBrandOption {
   brand: WalletBrand
@@ -61,13 +60,21 @@ export interface MomoMethodOption {
   maxAmount: number
 }
 
+export type ZalopayPaymentMethod = 'all' | 'card'
+
+/** ZaloPay channel (gateway page or card entry); no amount limits. */
+export interface ZalopayMethodOption {
+  method: ZalopayPaymentMethod
+  label: string
+}
+
 /** Gateways the backend allow-list exposes for the picker (no credentials). */
 export interface PaymentProviderOption {
   provider: PaymentProviderName
   label: string
   simulation: boolean
-  /** MoMo only. */
-  methods?: MomoMethodOption[]
+  /** MoMo (with limits) or ZaloPay (channel only). */
+  methods?: MomoMethodOption[] | ZalopayMethodOption[]
   /** Ví Mộc only: landlord wallet brands the money can be routed to. */
   brands?: WalletBrandOption[]
 }
@@ -105,6 +112,8 @@ export interface PaymentChoice {
   provider?: PaymentProviderName
   /** Only sent when `provider` is MoMo. */
   momoMethod?: MomoPaymentMethod
+  /** Only sent when `provider` is ZaloPay. */
+  zalopayMethod?: ZalopayPaymentMethod
   /** Only sent when `provider` is Ví Mộc and the brand is set. */
   brand?: WalletBrand
 }
@@ -112,6 +121,7 @@ export interface PaymentChoice {
 function choiceBody(choice: PaymentChoice): {
   provider?: PaymentProviderName
   momoMethod?: MomoPaymentMethod
+  zalopayMethod?: ZalopayPaymentMethod
   brand?: WalletBrand
   clientChannel: 'web'
 } {
@@ -120,6 +130,13 @@ function choiceBody(choice: PaymentChoice): {
     return {
       provider: choice.provider,
       momoMethod: choice.momoMethod,
+      clientChannel: 'web',
+    }
+  }
+  if (choice.provider === 'zalopay' && choice.zalopayMethod) {
+    return {
+      provider: choice.provider,
+      zalopayMethod: choice.zalopayMethod,
       clientChannel: 'web',
     }
   }
@@ -193,7 +210,6 @@ export async function initInvoicePayment(
 
 /** True when the init URL points at a real external gateway page. */
 const EXTERNAL_GATEWAYS: readonly PaymentProviderName[] = [
-  'vnpay',
   'momo',
   'zalopay',
   'mocbank',

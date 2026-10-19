@@ -36,7 +36,5 @@ export interface LandlordApartmentItem {
   expiresAt: string | null
   projectName: string
   projectId: string | null
-  buildingName: string
-  buildingId: string | null
   rentalPackages?: ApartmentPostingSchemaType['rentalPackages']
 }

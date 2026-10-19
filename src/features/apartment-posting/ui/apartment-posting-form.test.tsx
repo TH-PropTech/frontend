@@ -20,7 +20,6 @@ vi.mock('../api/apartment-posting-api', () => ({
   resubmitApartment: vi.fn(),
   uploadApartmentImages: vi.fn(),
   searchProjects: vi.fn().mockResolvedValue([]),
-  searchBuildings: vi.fn().mockResolvedValue([]),
 }))
 
 vi.mock('sonner', () => ({
@@ -81,8 +80,6 @@ describe('ApartmentPostingForm', () => {
           expiresAt: null,
           projectName: 'River Gate',
           projectId: 'p-1',
-          buildingName: 'Tower A',
-          buildingId: 'b-1',
           rentalPackages: [],
         }}
       />

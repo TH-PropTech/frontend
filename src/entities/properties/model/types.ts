@@ -44,8 +44,6 @@ export interface ApartmentItem {
   ward: string
   street: string
   projectName: string // empty string if not in a project
-  buildingId?: string
-  buildingName?: string
 
   // Advanced Filter Specs
   bedrooms: number
@@ -135,24 +133,6 @@ export interface ApiProjectItem {
   investor: string
   amenities: string[]
   images: string[]
-  createdAt: string
-  updatedAt: string
-}
-
-/** Backend API response shape for a Building */
-export interface ApiBuildingItem {
-  id: string
-  name: string
-  projectId: string | null
-  projectName: string | null
-  description?: string
-  floorsCount?: number
-  location?: string
-  city?: string
-  district?: string
-  amenities: string[]
-  images: string[]
-  images360: string[]
   createdAt: string
   updatedAt: string
 }

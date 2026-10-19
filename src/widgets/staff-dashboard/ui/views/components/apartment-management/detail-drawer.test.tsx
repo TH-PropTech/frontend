@@ -38,7 +38,6 @@ const apartment: StaffApartment = {
   approvedAt: null,
   expiresAt: null,
   projectName: null,
-  buildingName: null,
 }
 
 function renderDrawer(onMediaChange = vi.fn()): void {

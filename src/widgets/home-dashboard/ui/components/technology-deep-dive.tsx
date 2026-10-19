@@ -255,7 +255,7 @@ export function TechnologyDeepDive(): React.ReactElement {
               Xem nhà từ xa, trải nghiệm như thực
             </h3>
             <p className="font-body text-sm leading-relaxed text-muted">
-              Mô hình 3D tương tác toàn khu đô thị cho phép bạn chọn tòa nhà,
+              Mô hình 3D tương tác toàn khu đô thị cho phép bạn chọn căn hộ,
               chọn tầng và bước vào xem nội thất căn hộ qua VR Tour 360°. Bếp,
               phòng khách, phòng ngủ, ban công — tất cả hiện lên chân thực với
               ảnh 360° chất lượng cao.

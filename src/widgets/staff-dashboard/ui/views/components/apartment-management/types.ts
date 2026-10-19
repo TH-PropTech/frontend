@@ -73,7 +73,6 @@ export interface StaffApartment {
   approvedAt: string | null
   expiresAt: string | null
   projectName: string | null
-  buildingName: string | null
   landlord?: {
     fullName: string
     phone: string

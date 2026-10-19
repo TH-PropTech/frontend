@@ -1,7 +1,7 @@
 import * as React from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import type { ApartmentFormValues } from '../model/types'
-import { searchProjects, searchBuildings } from '../api/apartment-posting-api'
+import { searchProjects } from '../api/apartment-posting-api'
 import { useLocationCascade } from '../model/use-location-cascade'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
@@ -12,11 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select'
-import { MapPin, Building, Folder } from 'lucide-react'
-import type {
-  ApiProjectItem,
-  ApiBuildingItem,
-} from '@/entities/properties/model/types'
+import { MapPin, Folder } from 'lucide-react'
+import type { ApiProjectItem } from '@/entities/properties/model/types'
 
 interface LocationStepProps {
   form: UseFormReturn<ApartmentFormValues, unknown, ApartmentFormValues>
@@ -30,20 +27,13 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
   const street = watch('street')
   const address = watch('address')
   const projectName = watch('projectName')
-  const projectId = watch('projectId')
-  const buildingName = watch('buildingName')
 
   // Suggestion lists state - now storing the full API item objects
   const [projectSuggestions, setProjectSuggestions] = React.useState<
     ApiProjectItem[]
   >([])
-  const [buildingSuggestions, setBuildingSuggestions] = React.useState<
-    ApiBuildingItem[]
-  >([])
   const [showProjList, setShowProjList] = React.useState(false)
-  const [showBuildList, setShowBuildList] = React.useState(false)
   const [isLoadingProj, setIsLoadingProj] = React.useState(false)
-  const [isLoadingBuild, setIsLoadingBuild] = React.useState(false)
 
   // Use custom hook to load Vietnamese administrative divisions & handle cascading auto-fill
   const { cities, wards, autoFillAddress } = useLocationCascade({
@@ -80,31 +70,6 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
 
     return () => clearTimeout(delayDebounce)
   }, [projectName])
-
-  // Search buildings on input change
-  React.useEffect(() => {
-    if (!buildingName || buildingName.trim() === '') {
-      setTimeout(() => setBuildingSuggestions([]), 0)
-      return
-    }
-
-    const delayDebounce = setTimeout(async () => {
-      setIsLoadingBuild(true)
-      try {
-        const results = await searchBuildings(
-          buildingName,
-          projectId || undefined
-        )
-        setBuildingSuggestions(results)
-      } catch (err) {
-        console.error('Error searching buildings:', err)
-      } finally {
-        setIsLoadingBuild(false)
-      }
-    }, 300)
-
-    return () => clearTimeout(delayDebounce)
-  }, [buildingName, projectId])
 
   return (
     <div className="space-y-6">
@@ -255,70 +220,6 @@ export function LocationStep({ form }: LocationStepProps): React.ReactElement {
                     }}
                   >
                     {proj.name}
-                  </div>
-                ))}
-              </div>
-            )}
-        </div>
-
-        {/* Tòa nhà */}
-        <div className="space-y-2 relative">
-          <Label htmlFor="buildingName" className="flex items-center gap-1.5">
-            <Building className="h-4 w-4 text-muted-foreground" />
-            Tòa nhà / Block (Tùy chọn)
-          </Label>
-          <Input
-            id="buildingName"
-            placeholder="Nhập để tìm kiếm hoặc tạo mới tòa nhà..."
-            className="bg-background/50 backdrop-blur-sm border-border"
-            autoComplete="off"
-            {...register('buildingName')}
-            onFocus={() => setShowBuildList(true)}
-            onBlur={() => setTimeout(() => setShowBuildList(false), 200)}
-          />
-          {showBuildList &&
-            (buildingName ||
-              isLoadingBuild ||
-              buildingSuggestions.length > 0) && (
-              <div className="absolute z-10 w-full bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
-                {isLoadingBuild && (
-                  <div className="p-2 text-sm text-muted-foreground">
-                    Đang tải...
-                  </div>
-                )}
-                {!isLoadingBuild &&
-                  buildingSuggestions.length === 0 &&
-                  buildingName.trim() !== '' && (
-                    <div
-                      className="p-2 text-sm text-primary font-medium cursor-pointer hover:bg-muted"
-                      onClick={() => {
-                        setValue('buildingId', null)
-                        setShowBuildList(false)
-                      }}
-                    >
-                      + Tạo mới tòa nhà: &quot;{buildingName}&quot;
-                    </div>
-                  )}
-                {buildingSuggestions.map(b => (
-                  <div
-                    key={b.id}
-                    className="p-2 text-sm text-fg cursor-pointer hover:bg-muted"
-                    onClick={() => {
-                      setValue('buildingName', b.name)
-                      setValue('buildingId', b.id)
-
-                      if (b.projectId && !watch('projectId')) {
-                        setValue('projectId', b.projectId)
-                        if (b.projectName) {
-                          setValue('projectName', b.projectName)
-                        }
-                      }
-
-                      autoFillAddress(b.location, b.city)
-                      setShowBuildList(false)
-                    }}
-                  >
-                    {b.name}
                   </div>
                 ))}
               </div>

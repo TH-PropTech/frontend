@@ -18,7 +18,6 @@ export {
   updateApartment,
   uploadApartmentImages,
   searchProjects,
-  searchBuildings,
   resubmitApartment,
   renewApartment,
   getMyListings,

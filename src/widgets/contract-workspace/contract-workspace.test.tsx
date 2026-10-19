@@ -659,7 +659,7 @@ describe('ContractWorkspace', () => {
       window.history.replaceState(
         null,
         '',
-        '/contracts/c-100?payment=succeeded&provider=vnpay'
+        '/contracts/c-100?payment=succeeded&provider=zalopay'
       )
 
       render(<ContractWorkspace contractId="c-100" />)

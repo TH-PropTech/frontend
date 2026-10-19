@@ -14,14 +14,12 @@ const BRAND_OPTIONS: ReadonlyArray<{ brand: WalletBrand; label: string }> = [
   { brand: 'mocbank', label: 'Ví Mộc (chính)' },
   { brand: 'momo', label: 'Momo (mô phỏng)' },
   { brand: 'zalopay', label: 'ZaloPay (mô phỏng)' },
-  { brand: 'vnpay', label: 'VNPay (mô phỏng)' },
 ]
 
 const BRAND_NAMES: Record<WalletBrand, string> = {
   mocbank: 'Ví Mộc',
   momo: 'Momo',
   zalopay: 'ZaloPay',
-  vnpay: 'VNPay',
 }
 
 export function WalletLinkForm({

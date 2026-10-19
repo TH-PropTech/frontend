@@ -54,6 +54,8 @@ export function DepositPaymentPanel({
     setSelected,
     momoMethod,
     setMomoMethod,
+    zalopayMethod,
+    setZalopayMethod,
     brand,
     setBrand,
     choice,
@@ -280,6 +282,8 @@ export function DepositPaymentPanel({
                   onChange={setSelected}
                   momoMethod={momoMethod}
                   onMomoMethodChange={setMomoMethod}
+                  zalopayMethod={zalopayMethod}
+                  onZalopayMethodChange={setZalopayMethod}
                   brand={brand}
                   onBrandChange={setBrand}
                   amount={deposit.amount}

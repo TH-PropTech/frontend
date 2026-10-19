@@ -9,7 +9,6 @@ import {
 import type { PaymentProviderOption } from '../api/payments-api'
 
 const gateways: PaymentProviderOption[] = [
-  { provider: 'vnpay', label: 'VNPAY', simulation: false },
   {
     provider: 'momo',
     label: 'MoMo',
@@ -29,13 +28,22 @@ const gateways: PaymentProviderOption[] = [
       },
     ],
   },
-  { provider: 'zalopay', label: 'ZaloPay', simulation: false },
+  {
+    provider: 'zalopay',
+    label: 'ZaloPay',
+    simulation: false,
+    methods: [
+      { method: 'all', label: 'ZaloPay (ví / QR / ATM)' },
+      { method: 'card', label: 'ZaloPay - Thẻ Visa / Master / JCB' },
+    ],
+  },
   { provider: 'mocbank', label: 'Ví Mộc (sandbox)', simulation: false },
   { provider: 'mock-bank', label: 'Mock Bank (sandbox)', simulation: true },
 ]
 
 function PaymentProviderPickerHarness() {
-  const [value, setValue] = useState<PaymentProviderOption['provider']>('vnpay')
+  const [value, setValue] =
+    useState<PaymentProviderOption['provider']>('zalopay')
 
   return (
     <PaymentProviderPicker
@@ -52,7 +60,7 @@ describe('PaymentProviderPicker', () => {
     render(
       <PaymentProviderPicker
         providers={gateways}
-        value="vnpay"
+        value="zalopay"
         onChange={onChange}
       />
     )
@@ -63,13 +71,13 @@ describe('PaymentProviderPicker', () => {
     // getByRole dùng accessible-name computation, bỏ qua phần aria-hidden
     // (huy hiệu chữ VN/M/Z cạnh tên cổng), khác getByLabelText vốn so khớp
     // nguyên textContent của <label>.
-    expect(screen.getByRole('radio', { name: 'VNPAY' })).toBeTruthy()
+    expect(screen.getByRole('radio', { name: 'ZaloPay' })).toBeTruthy()
     expect(screen.getByRole('radio', { name: 'MoMo' })).toBeTruthy()
     expect(screen.getByText('Mô phỏng')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('radio', { name: 'ZaloPay' }))
+    fireEvent.click(screen.getByRole('radio', { name: 'MoMo' }))
 
-    expect(onChange).toHaveBeenCalledWith('zalopay')
+    expect(onChange).toHaveBeenCalledWith('momo')
 
     fireEvent.click(screen.getByRole('radio', { name: 'Ví Mộc (sandbox)' }))
 
@@ -80,7 +88,7 @@ describe('PaymentProviderPicker', () => {
     render(
       <PaymentProviderPicker
         providers={gateways}
-        value="vnpay"
+        value="zalopay"
         onChange={vi.fn()}
       />
     )
@@ -103,16 +111,18 @@ describe('PaymentProviderPicker', () => {
     render(
       <PaymentProviderPicker
         providers={gateways}
-        value="vnpay"
+        value="zalopay"
         onChange={vi.fn()}
       />
     )
 
-    const selectedCard = screen.getByTestId('payment-provider-card-vnpay')
+    const selectedCard = screen.getByTestId('payment-provider-card-zalopay')
     expect(selectedCard).toHaveClass('min-h-16')
     expect(selectedCard).toHaveClass('bg-[var(--primary-soft)]')
     expect(selectedCard).toHaveClass('focus-within:ring-2')
-    expect(screen.getByTestId('payment-provider-selected-vnpay')).toBeVisible()
+    expect(
+      screen.getByTestId('payment-provider-selected-zalopay')
+    ).toBeVisible()
     expect(
       screen.getByRole('radiogroup', { name: 'Cổng thanh toán' })
     ).toHaveClass('grid-cols-[repeat(auto-fit,minmax(20rem,1fr))]')
@@ -122,20 +132,22 @@ describe('PaymentProviderPicker', () => {
     const user = userEvent.setup()
     render(<PaymentProviderPickerHarness />)
 
-    const vnpay = screen.getByRole('radio', { name: 'VNPAY' })
     const momo = screen.getByRole('radio', { name: 'MoMo' })
-    await user.click(vnpay)
+    const zalopay = screen.getByRole('radio', { name: 'ZaloPay' })
+    await user.click(momo)
     await user.keyboard('{ArrowRight}')
     await user.keyboard(' ')
 
-    expect(momo).toBeChecked()
-    expect(screen.getByTestId('payment-provider-selected-momo')).toBeVisible()
+    expect(zalopay).toBeChecked()
+    expect(
+      screen.getByTestId('payment-provider-selected-zalopay')
+    ).toBeVisible()
   })
 
   it('is hidden when only the Mock Bank simulation is enabled', () => {
     const { container } = render(
       <PaymentProviderPicker
-        providers={[gateways[4] as PaymentProviderOption]}
+        providers={[gateways[3] as PaymentProviderOption]}
         value="mock-bank"
         onChange={vi.fn()}
       />
@@ -169,7 +181,7 @@ describe('PaymentProviderPicker', () => {
     render(
       <PaymentProviderPicker
         providers={gateways}
-        value="vnpay"
+        value="mocbank"
         onChange={vi.fn()}
       />
     )
@@ -202,7 +214,7 @@ describe('PaymentProviderPicker', () => {
     rerender(
       <PaymentProviderPicker
         providers={withBrands}
-        value="vnpay"
+        value="zalopay"
         onChange={vi.fn()}
       />
     )
@@ -222,13 +234,29 @@ describe('PaymentProviderPicker', () => {
     expect(onBrand).toHaveBeenCalledWith('momo')
   })
 
+  it('offers ZaloPay card entry as a separate method', () => {
+    const onMethod = vi.fn()
+    render(
+      <PaymentProviderPicker
+        providers={gateways}
+        value="zalopay"
+        onChange={vi.fn()}
+        onZalopayMethodChange={onMethod}
+      />
+    )
+    fireEvent.click(
+      screen.getByRole('radio', { name: 'ZaloPay - Thẻ Visa / Master / JCB' })
+    )
+    expect(onMethod).toHaveBeenCalledWith('card')
+  })
+
   it('explains why the chosen method cannot pay an amount', () => {
     const choice = { provider: 'momo' as const, momoMethod: 'card' as const }
 
     expect(choiceLimitNote(gateways, choice, 12_000_000)).toMatch(/chỉ nhận/)
     expect(choiceLimitNote(gateways, choice, 5_000_000)).toBeNull()
     expect(
-      choiceLimitNote(gateways, { provider: 'vnpay' }, 99_000_000)
+      choiceLimitNote(gateways, { provider: 'zalopay' }, 99_000_000)
     ).toBeNull()
   })
 })
