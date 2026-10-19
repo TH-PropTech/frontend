@@ -138,14 +138,14 @@ describe('DepositPaymentPanel', () => {
     )
   })
 
-  it('redirects the current tab to a returned VNPay URL', async () => {
+  it('redirects the current tab to a returned ZaloPay URL', async () => {
     vi.mocked(paymentsApi.initDepositPayment).mockResolvedValue({
-      provider: 'vnpay',
-      txRef: 'VNPAY-1',
+      provider: 'zalopay',
+      txRef: 'ZP-1',
       amount: 15000000,
       description: 'Deposit',
       qrCode: 'qr',
-      deepLink: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?x=1',
+      deepLink: 'https://qcgateway.zalopay.vn/openinapp?x=1',
       expiresAt: '2026-03-14T03:00:00Z',
       status: 'pending',
     })
@@ -166,7 +166,7 @@ describe('DepositPaymentPanel', () => {
 
     await waitFor(() => {
       expect(assign).toHaveBeenCalledWith(
-        'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?x=1'
+        'https://qcgateway.zalopay.vn/openinapp?x=1'
       )
     })
   })
@@ -346,7 +346,6 @@ describe('DepositPaymentPanel', () => {
 
   describe('gateway picker', () => {
     const gateways = [
-      { provider: 'vnpay' as const, label: 'VNPAY', simulation: false },
       { provider: 'momo' as const, label: 'MoMo', simulation: false },
       { provider: 'zalopay' as const, label: 'ZaloPay', simulation: false },
       {
@@ -449,7 +448,7 @@ describe('DepositPaymentPanel', () => {
         />
       )
       // getByRole dùng accessible-name, bỏ qua huy hiệu chữ aria-hidden cạnh tên cổng.
-      await screen.findByRole('radio', { name: 'VNPAY' })
+      await screen.findByRole('radio', { name: 'MoMo' })
       fireEvent.click(screen.getByLabelText('Thanh toán cọc ngay'))
 
       expect(

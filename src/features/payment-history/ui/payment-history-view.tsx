@@ -32,7 +32,6 @@ import {
 } from '../api/payment-history-api'
 
 const PROVIDER_OPTIONS = [
-  { value: 'vnpay', label: 'VNPay (sandbox)' },
   { value: 'momo', label: 'MoMo (sandbox)' },
   { value: 'zalopay', label: 'ZaloPay (sandbox)' },
   { value: 'mocbank', label: 'Ví Mộc' },
@@ -54,9 +53,11 @@ const PAYOUT_STATUS_OPTIONS = [
   { value: 'failed', label: 'Chuyển lỗi' },
 ]
 
-const PROVIDER_LABELS: Record<string, string> = Object.fromEntries(
-  PROVIDER_OPTIONS.map(o => [o.value, o.label])
-)
+const PROVIDER_LABELS: Record<string, string> = {
+  ...Object.fromEntries(PROVIDER_OPTIONS.map(o => [o.value, o.label])),
+  // Cổng đã gỡ; giữ nhãn để các giao dịch cũ vẫn hiển thị đúng.
+  vnpay: 'VNPay (đã ngừng)',
+}
 
 const INFO_ANOMALIES = new Set(['awaiting-reconciliation'])
 
@@ -294,7 +295,7 @@ export function PaymentHistoryView(): React.ReactElement {
           Lịch sử thanh toán & đối soát
         </h2>
         <p className="text-xs text-muted mt-1">
-          Mọi giao dịch qua VNPay/MoMo/ZaloPay/Mock Bank/Ví Mộc trên toàn sàn.
+          Mọi giao dịch qua MoMo/ZaloPay/Mock Bank/Ví Mộc trên toàn sàn.
           &quot;Kiểm tra lại&quot;: cổng thật được hỏi trực tiếp qua API tra
           cứu, Ví Mộc/nội bộ đọc từ hệ thống.
         </p>

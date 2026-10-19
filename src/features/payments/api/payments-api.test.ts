@@ -43,12 +43,31 @@ describe('payments API', () => {
     })
   })
 
+  it('sends zalopayMethod only for zalopay', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({ status: 'pending' })
+
+    await initRentPayment('p1', { provider: 'zalopay', zalopayMethod: 'card' })
+    await initRentPayment('p2', { provider: 'momo', zalopayMethod: 'card' })
+
+    expect(apiClient.post).toHaveBeenNthCalledWith(1, '/bank/rent/init', {
+      paymentId: 'p1',
+      provider: 'zalopay',
+      zalopayMethod: 'card',
+      clientChannel: 'web',
+    })
+    expect(apiClient.post).toHaveBeenNthCalledWith(2, '/bank/rent/init', {
+      paymentId: 'p2',
+      provider: 'momo',
+      clientChannel: 'web',
+    })
+  })
+
   it('sends brand only for mocbank when set', async () => {
     vi.mocked(apiClient.post).mockResolvedValue({ status: 'pending' })
 
     await initRentPayment('p1', { provider: 'mocbank', brand: 'momo' })
     await initRentPayment('p2', { provider: 'mocbank' })
-    await initDepositPayment('d1', { provider: 'vnpay', brand: 'momo' })
+    await initDepositPayment('d1', { provider: 'zalopay', brand: 'momo' })
 
     expect(apiClient.post).toHaveBeenNthCalledWith(1, '/bank/rent/init', {
       paymentId: 'p1',
@@ -63,7 +82,7 @@ describe('payments API', () => {
     })
     expect(apiClient.post).toHaveBeenNthCalledWith(3, '/bank/deposit/init', {
       depositAgreementId: 'd1',
-      provider: 'vnpay',
+      provider: 'zalopay',
       clientChannel: 'web',
     })
   })
@@ -73,7 +92,7 @@ describe('payments API', () => {
 
     await initDepositPayment('deposit-1', { provider: 'zalopay' })
     await initRentPayment('payment-1', { provider: 'momo' })
-    await initInvoicePayment('invoice-1', { provider: 'vnpay' })
+    await initInvoicePayment('invoice-1', { provider: 'zalopay' })
 
     expect(apiClient.post).toHaveBeenCalledWith('/bank/deposit/init', {
       depositAgreementId: 'deposit-1',
@@ -87,7 +106,7 @@ describe('payments API', () => {
     })
     expect(apiClient.post).toHaveBeenCalledWith('/bank/invoice/init', {
       paymentId: 'invoice-1',
-      provider: 'vnpay',
+      provider: 'zalopay',
       clientChannel: 'web',
     })
   })
@@ -97,7 +116,7 @@ describe('payments API', () => {
 
     await initRentPayment('payment-1', { provider: 'momo', momoMethod: 'card' })
     await initRentPayment('payment-2', {
-      provider: 'vnpay',
+      provider: 'zalopay',
       momoMethod: 'card',
     })
 
@@ -109,7 +128,7 @@ describe('payments API', () => {
     })
     expect(apiClient.post).toHaveBeenCalledWith('/bank/rent/init', {
       paymentId: 'payment-2',
-      provider: 'vnpay',
+      provider: 'zalopay',
       clientChannel: 'web',
     })
   })

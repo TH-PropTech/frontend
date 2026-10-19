@@ -28,7 +28,6 @@ const BRAND_LABELS: Record<WalletBrand, string> = {
   mocbank: 'Ví Mộc',
   momo: 'Momo (mô phỏng)',
   zalopay: 'ZaloPay (mô phỏng)',
-  vnpay: 'VNPay (mô phỏng)',
 }
 
 const STATE_CLASS: Record<ReceivingAccountState, string> = {

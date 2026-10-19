@@ -5,9 +5,9 @@ export interface WalletBank {
   name: string
 }
 
-export type WalletBrand = 'mocbank' | 'momo' | 'zalopay' | 'vnpay'
+export type WalletBrand = 'mocbank' | 'momo' | 'zalopay'
 
-/** Tài khoản mô phỏng thuộc thương hiệu khác (Momo/ZaloPay/VNPay) trong Ví Mộc. */
+/** Tài khoản mô phỏng thuộc thương hiệu khác (Momo/ZaloPay) trong Ví Mộc. */
 export interface WalletExtraAccount {
   brand: Exclude<WalletBrand, 'mocbank'>
   accountHolder: string
