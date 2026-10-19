@@ -7,7 +7,6 @@ import { OverviewView } from './views/overview-view'
 import { PropertyApprovalsView } from './views/property-approvals-view'
 import { KycApprovalsView } from './views/kyc-approvals-view'
 import { SchedulesView } from './views/schedules-view'
-import { DisputesView } from './views/disputes-view'
 import { CommunityView } from './views/community-view'
 import { SafetyReportsView } from './views/safety-reports-view'
 import { SupportQueueView } from './views/support-queue-view'
@@ -35,7 +34,6 @@ type TabType =
   | 'properties'
   | 'kyc'
   | 'schedules'
-  | 'disputes'
   | 'community'
   | 'safety-reports'
   | 'support-tickets'
@@ -50,7 +48,6 @@ const STAFF_TABS: readonly TabType[] = [
   'properties',
   'kyc',
   'schedules',
-  'disputes',
   'community',
   'safety-reports',
   'support-tickets',
@@ -174,22 +171,6 @@ export function StaffOperationsDashboard({
       ),
     },
     {
-      type: 'disputes',
-      label: 'Tranh chấp cọc Escrow',
-      icon: (
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        </svg>
-      ),
-    },
-    {
       type: 'safety-reports',
       label: 'Báo cáo an toàn',
       icon: <ShieldAlert className="h-[18px] w-[18px]" />,
@@ -276,8 +257,6 @@ export function StaffOperationsDashboard({
         return <KycApprovalsView />
       case 'schedules':
         return <SchedulesView />
-      case 'disputes':
-        return <DisputesView />
       case 'community':
         return <CommunityView />
       case 'safety-reports':

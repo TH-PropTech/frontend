@@ -4,9 +4,7 @@ import * as React from 'react'
 import { IsometricBuilding } from './components/isometric-building'
 
 interface HomeViewProps {
-  onNavigateTab: (
-    tab: 'properties' | 'kyc' | 'disputes' | 'schedules' | 'community'
-  ) => void
+  onNavigateTab: (tab: 'properties' | 'kyc' | 'schedules' | 'community') => void
 }
 
 export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
@@ -178,33 +176,6 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
                   </span>
                   <span className="text-[10px] text-muted block mt-0.5">
                     2 người dùng chờ đối soát CCCD
-                  </span>
-                </div>
-              </button>
-
-              {/* Task 3 */}
-              <button
-                onClick={() => onNavigateTab('disputes')}
-                className="w-full p-3 bg-bg/40 border border-line hover:border-accent hover:bg-accent/10 rounded-xl text-left transition-all duration-200 flex items-center gap-3 group"
-              >
-                <div className="h-8 w-8 rounded-lg bg-[#d64545]/10 border border-[#d64545]/20 text-[#d64545] flex items-center justify-center shrink-0">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  >
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                </div>
-                <div className="flex-grow overflow-hidden">
-                  <span className="text-xs font-bold text-fg block group-hover:text-accent transition-colors leading-tight">
-                    Xử lý tranh chấp cọc Escrow
-                  </span>
-                  <span className="text-[10px] text-muted block mt-0.5">
-                    2 hợp đồng đang có khiếu nại cọc
                   </span>
                 </div>
               </button>

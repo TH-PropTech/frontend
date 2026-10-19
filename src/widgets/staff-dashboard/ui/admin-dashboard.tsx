@@ -15,7 +15,6 @@ import {
   Wallet as WalletIcon,
 } from 'lucide-react'
 import { OverviewView } from './views/overview-view'
-import { ContractMonitorView } from './views/contract-monitor-view'
 import { AiConsultationView } from './views/ai-consultation-view'
 import { PermissionMatrixView } from './views/permission-matrix-view'
 import { PoliciesView } from './views/policies-view'
@@ -38,7 +37,6 @@ import { StaffDesignRequestsView } from '@/features/design-requests'
 
 type TabType =
   | 'overview'
-  | 'contracts'
   | 'ai-consultation'
   | 'permissions'
   | 'policies'
@@ -58,7 +56,6 @@ type TabType =
 
 const ADMIN_TABS: readonly TabType[] = [
   'overview',
-  'contracts',
   'ai-consultation',
   'permissions',
   'policies',
@@ -124,23 +121,6 @@ export function AdminDashboard({
           <rect x="14" y="3" width="7" height="5" />
           <rect x="14" y="12" width="7" height="9" />
           <rect x="3" y="16" width="7" height="5" />
-        </svg>
-      ),
-    },
-    {
-      type: 'contracts',
-      label: 'Ví & Smart Contracts',
-      icon: (
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <rect x="2" y="5" width="20" height="14" rx="2" ry="2" />
-          <line x1="2" y1="10" x2="22" y2="10" />
         </svg>
       ),
     },
@@ -343,8 +323,6 @@ export function AdminDashboard({
     switch (activeTab) {
       case 'overview':
         return <OverviewView />
-      case 'contracts':
-        return <ContractMonitorView />
       case 'ai-consultation':
         return <AiConsultationView />
       case 'permissions':
