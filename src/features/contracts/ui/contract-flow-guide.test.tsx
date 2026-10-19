@@ -9,86 +9,12 @@ import type {
 
 describe('ContractFlowGuide', () => {
   // ---------------------------------------------------------------------------
-  // Happy path — DEPOSIT_FIRST
-  // ---------------------------------------------------------------------------
-  describe('DEPOSIT_FIRST strategy', () => {
-    it('renders with draft status — step document is active', () => {
-      render(<ContractFlowGuide strategy="DEPOSIT_FIRST" status="draft" />)
-      expect(screen.getByTestId('contract-flow-guide')).toBeInTheDocument()
-      expect(screen.getByTestId('flow-step-document')).toHaveAttribute(
-        'data-state',
-        'active'
-      )
-      expect(screen.getByTestId('flow-step-deposit')).toHaveAttribute(
-        'data-state',
-        'upcoming'
-      )
-      expect(screen.getByTestId('flow-step-signing')).toHaveAttribute(
-        'data-state',
-        'upcoming'
-      )
-      expect(screen.getByTestId('flow-step-ledger')).toHaveAttribute(
-        'data-state',
-        'upcoming'
-      )
-    })
-
-    it('renders deposit-pending — deposit step is active', () => {
-      render(
-        <ContractFlowGuide strategy="DEPOSIT_FIRST" status="deposit-pending" />
-      )
-      expect(screen.getByTestId('flow-step-document')).toHaveAttribute(
-        'data-state',
-        'done'
-      )
-      expect(screen.getByTestId('flow-step-deposit')).toHaveAttribute(
-        'data-state',
-        'active'
-      )
-      expect(screen.getByTestId('flow-step-signing')).toHaveAttribute(
-        'data-state',
-        'upcoming'
-      )
-      expect(screen.getByTestId('flow-step-ledger')).toHaveAttribute(
-        'data-state',
-        'upcoming'
-      )
-    })
-
-    it('renders awaiting-signature — signing step is active', () => {
-      render(
-        <ContractFlowGuide
-          strategy="DEPOSIT_FIRST"
-          status="awaiting-signature"
-        />
-      )
-      expect(screen.getByTestId('flow-step-document')).toHaveAttribute(
-        'data-state',
-        'done'
-      )
-      expect(screen.getByTestId('flow-step-deposit')).toHaveAttribute(
-        'data-state',
-        'done'
-      )
-      expect(screen.getByTestId('flow-step-signing')).toHaveAttribute(
-        'data-state',
-        'active'
-      )
-      expect(screen.getByTestId('flow-step-ledger')).toHaveAttribute(
-        'data-state',
-        'upcoming'
-      )
-    })
-  })
-
-  // ---------------------------------------------------------------------------
   // Happy path — SIGN_FIRST
   // ---------------------------------------------------------------------------
-  describe('SIGN_FIRST strategy', () => {
+  describe('sign-first flow (the only flow)', () => {
     it('renders awaiting-signature (neither signed) — signing is active', () => {
       render(
         <ContractFlowGuide
-          strategy="SIGN_FIRST"
           status="awaiting-signature"
           signedByTenant={false}
           signedByLandlord={false}
@@ -115,7 +41,6 @@ describe('ContractFlowGuide', () => {
     it('renders fully-signed-pending-deposit — deposit is active', () => {
       render(
         <ContractFlowGuide
-          strategy="SIGN_FIRST"
           status="fully-signed-pending-deposit"
           signedByTenant={true}
           signedByLandlord={true}
@@ -144,7 +69,7 @@ describe('ContractFlowGuide', () => {
   // Active / completed
   // ---------------------------------------------------------------------------
   it('renders active contract — ledger step is active', () => {
-    render(<ContractFlowGuide strategy="DEPOSIT_FIRST" status="active" />)
+    render(<ContractFlowGuide status="active" />)
     expect(screen.getByTestId('flow-step-ledger')).toHaveAttribute(
       'data-state',
       'active'
@@ -152,7 +77,7 @@ describe('ContractFlowGuide', () => {
   })
 
   it('renders completed contract — all steps done', () => {
-    render(<ContractFlowGuide strategy="DEPOSIT_FIRST" status="completed" />)
+    render(<ContractFlowGuide status="completed" />)
     expect(screen.getByTestId('flow-step-document')).toHaveAttribute(
       'data-state',
       'done'
@@ -175,13 +100,8 @@ describe('ContractFlowGuide', () => {
   // ---------------------------------------------------------------------------
   // Strategy badge
   // ---------------------------------------------------------------------------
-  it('shows "Cọc trước → Ký sau" badge for DEPOSIT_FIRST', () => {
-    render(<ContractFlowGuide strategy="DEPOSIT_FIRST" status="draft" />)
-    expect(screen.getByText('Cọc trước → Ký sau')).toBeInTheDocument()
-  })
-
-  it('shows "Ký trước → Cọc sau" badge for SIGN_FIRST', () => {
-    render(<ContractFlowGuide strategy="SIGN_FIRST" status="draft" />)
+  it('shows "Ký trước → Cọc sau" badge', () => {
+    render(<ContractFlowGuide status="draft" />)
     expect(screen.getByText('Ký trước → Cọc sau')).toBeInTheDocument()
   })
 
@@ -189,8 +109,9 @@ describe('ContractFlowGuide', () => {
     render(
       <ContractFlowGuide
         contractId="contract-1"
-        strategy="DEPOSIT_FIRST"
-        status="deposit-pending"
+        status="fully-signed-pending-deposit"
+        signedByTenant={true}
+        signedByLandlord={true}
       />
     )
 
@@ -202,11 +123,10 @@ describe('ContractFlowGuide', () => {
 
 describe('ContractFlowGuide with serverFlow', () => {
   const serverFlow = (
-    strategy: ContractFlowView['strategy'],
     stages: Array<[ContractFlowStageKey, ContractFlowStageStatus]>
   ): ContractFlowView => ({
     version: 1,
-    strategy,
+    strategy: 'SIGN_FIRST',
     stages: stages.map(([key, status]) => ({
       key,
       status,
@@ -223,9 +143,8 @@ describe('ContractFlowGuide with serverFlow', () => {
   it('đánh dấu bước đặt cọc active dù status vẫn là draft', () => {
     render(
       <ContractFlowGuide
-        strategy="DEPOSIT_FIRST"
         status="draft"
-        serverFlow={serverFlow('DEPOSIT_FIRST', [
+        serverFlow={serverFlow([
           ['document', 'done'],
           ['deposit', 'active'],
           ['signing', 'upcoming'],
@@ -248,9 +167,8 @@ describe('ContractFlowGuide with serverFlow', () => {
   it('render theo thứ tự stage của server cho SIGN_FIRST và thêm bước nhận nhà', () => {
     render(
       <ContractFlowGuide
-        strategy="SIGN_FIRST"
         status="active"
-        serverFlow={serverFlow('SIGN_FIRST', [
+        serverFlow={serverFlow([
           ['document', 'done'],
           ['signing', 'done'],
           ['deposit', 'done'],
@@ -275,9 +193,8 @@ describe('ContractFlowGuide with serverFlow', () => {
   it('hiển thị trạng thái blocked của server', () => {
     render(
       <ContractFlowGuide
-        strategy="DEPOSIT_FIRST"
         status="active"
-        serverFlow={serverFlow('DEPOSIT_FIRST', [
+        serverFlow={serverFlow([
           ['document', 'done'],
           ['deposit', 'done'],
           ['signing', 'done'],

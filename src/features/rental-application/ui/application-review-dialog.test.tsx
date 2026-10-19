@@ -185,124 +185,52 @@ describe('ApplicationReviewDialog', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // Policy Override Section Tests
+  // Execution strategy: sign-first only, no override control
   // ---------------------------------------------------------------------------
-  describe('policy override section', () => {
-    const policyDepositFirst = {
-      policyId: 'pol-deposit-first',
-      version: 1,
-      strategy: 'DEPOSIT_FIRST' as const,
-      contentHash: 'hash-df',
-    }
-
-    const policySignFirst = {
-      policyId: 'pol-sign-first',
-      version: 1,
-      strategy: 'SIGN_FIRST' as const,
-      contentHash: 'hash-sf',
-    }
-
-    it('does not render override section when allowedExecutionPolicies.length = 1', () => {
-      const appWithOnePolicy: RentalApplicationItem = {
-        ...mockApp,
-        packageSnapshot: {
-          ...mockApp.packageSnapshot!,
-          allowedExecutionPolicies: [policyDepositFirst],
-        },
-      }
-
-      render(
-        <ApplicationReviewDialog
-          application={appWithOnePolicy}
-          open={true}
-          onOpenChange={vi.fn()}
-        />
-      )
-
-      expect(
-        screen.queryByTestId('policy-override-section')
-      ).not.toBeInTheDocument()
-    })
-
-    it('renders override section when allowedExecutionPolicies.length = 2', () => {
-      const appWithTwoPolicies: RentalApplicationItem = {
-        ...mockApp,
-        packageSnapshot: {
-          ...mockApp.packageSnapshot!,
-          allowedExecutionPolicies: [policyDepositFirst, policySignFirst],
-        },
-      }
-
-      render(
-        <ApplicationReviewDialog
-          application={appWithTwoPolicies}
-          open={true}
-          onOpenChange={vi.fn()}
-        />
-      )
-
-      expect(screen.getByTestId('policy-override-section')).toBeInTheDocument()
-      expect(screen.getByTestId('policy-override-keep')).toBeInTheDocument()
-      expect(
-        screen.getByRole('radio', {
-          name: /Giữ nguyên lựa chọn của khách thuê/i,
-        })
-      ).toBeChecked()
-      expect(
-        screen.getByTestId('policy-override-SIGN_FIRST')
-      ).toBeInTheDocument()
-    })
-
-    it('shows confirmation banner when landlord selects override policy and appends note on submit', async () => {
+  describe('execution strategy', () => {
+    it('shows the sign-first sequence and no policy override, even for legacy snapshots', async () => {
       const onRespondMock = vi.fn().mockResolvedValue({})
-      const appWithTwoPolicies: RentalApplicationItem = {
+      const legacyPolicy = {
+        policyId: 'pol-legacy',
+        version: 1,
+        strategy: 'DEPOSIT_FIRST',
+        contentHash: 'hash-df',
+      } as unknown as NonNullable<
+        RentalApplicationItem['executionPolicySnapshot']
+      >
+      const legacyApp: RentalApplicationItem = {
         ...mockApp,
         packageSnapshot: {
           ...mockApp.packageSnapshot!,
-          allowedExecutionPolicies: [policyDepositFirst, policySignFirst],
+          allowedExecutionPolicies: [legacyPolicy, legacyPolicy],
         },
-        executionPolicySnapshot: policyDepositFirst,
+        executionPolicySnapshot: legacyPolicy,
       }
 
       render(
         <ApplicationReviewDialog
-          application={appWithTwoPolicies}
+          application={legacyApp}
           open={true}
           onOpenChange={vi.fn()}
           onRespond={onRespondMock}
         />
       )
 
-      // Initially no confirmation banner
       expect(
-        screen.queryByTestId('policy-override-confirmation')
+        screen.queryByTestId('policy-override-section')
       ).not.toBeInTheDocument()
-
-      // Select SIGN_FIRST override
-      const signFirstRadio = screen.getByTestId('policy-override-SIGN_FIRST')
-      fireEvent.click(signFirstRadio)
-
-      // Confirmation banner is now shown
       expect(
-        screen.getByTestId('policy-override-confirmation')
+        screen.getByText(/Ký hợp đồng trước, sau đó thanh toán cọc/i)
       ).toBeInTheDocument()
-      expect(screen.getByText(/Bạn đã đổi trình tự sang:/i)).toBeInTheDocument()
 
-      // Submit approve
-      const submitBtn = screen.getByTestId('submit-decision-btn')
-      fireEvent.click(submitBtn)
+      fireEvent.click(screen.getByTestId('submit-decision-btn'))
 
       await waitFor(() => {
         expect(onRespondMock).toHaveBeenCalledWith(
-          expect.objectContaining({
-            id: 'app-999',
-            status: 'accepted',
-            note: expect.stringContaining(
-              '[Chủ nhà đổi trình tự: Ký trước — đặt cọc sau]'
-            ),
-          })
+          expect.objectContaining({ id: 'app-999', status: 'accepted' })
         )
       })
+      expect(onRespondMock.mock.calls[0]?.[0].note).toBeUndefined()
     })
   })
 })

@@ -65,7 +65,6 @@ export type FlowAction =
   | { type: 'SELECT_PACKAGE'; packageId: string }
   | { type: 'SELECT_PAYMENT_CYCLE'; cycle: 1 | 3 | 6 }
   | { type: 'SET_FEE_ACKNOWLEDGED'; acknowledged: boolean }
-  | { type: 'SELECT_EXECUTION_POLICY'; policy: RentalExecutionPolicyRef }
   | { type: 'SET_EXECUTION_POLICY_ACCEPTED'; accepted: boolean }
   | { type: 'TOGGLE_DISCLOSURE'; id: string }
   | { type: 'SET_TERMS_ACCEPTED'; accepted: boolean }
@@ -98,7 +97,7 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
       )
       const availablePolicies = selectedPackage?.allowedExecutionPolicies ?? []
       const defaultPolicy =
-        availablePolicies.length === 1
+        availablePolicies.length > 0
           ? (selectedPackage?.defaultExecutionPolicy ??
             availablePolicies[0] ??
             null)
@@ -162,20 +161,13 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         selectedPaymentCycleMonths:
           selectedPackage?.settlementPolicy?.defaultPaymentCycle ?? 1,
         selectedExecutionPolicy:
-          policies.length === 1
+          policies.length > 0
             ? (selectedPackage?.defaultExecutionPolicy ?? policies[0] ?? null)
             : null,
         executionPolicyAccepted: false,
         feeAcknowledged: false,
       }
     }
-
-    case 'SELECT_EXECUTION_POLICY':
-      return {
-        ...state,
-        selectedExecutionPolicy: action.policy,
-        executionPolicyAccepted: false,
-      }
 
     case 'SELECT_PAYMENT_CYCLE':
       return { ...state, selectedPaymentCycleMonths: action.cycle }
@@ -411,18 +403,10 @@ export function useRentalApplicationFlow(apartmentId: string) {
   }, [state.details, state.context?.flowProfile?.steps?.step1])
 
   const goToStep3 = React.useCallback(() => {
-    const selectedPackage = state.context?.packages.find(
-      pkg => pkg.packageId === state.selectedPackageId
-    )
-    const availablePolicies = selectedPackage?.allowedExecutionPolicies ?? []
-    if (
-      !state.selectedPackageId ||
-      (availablePolicies.length > 1 && !state.selectedExecutionPolicy)
-    )
-      return false
+    if (!state.selectedPackageId) return false
     dispatch({ type: 'SET_STEP', step: 3 })
     return true
-  }, [state.context, state.selectedExecutionPolicy, state.selectedPackageId])
+  }, [state.selectedPackageId])
 
   const backToStep = React.useCallback((targetStep: FlowStep) => {
     dispatch({ type: 'SET_STEP', step: targetStep })
@@ -570,8 +554,6 @@ export function useRentalApplicationFlow(apartmentId: string) {
         dispatch({ type: 'SELECT_PAYMENT_CYCLE', cycle }),
       setFeeAcknowledged: (acknowledged: boolean) =>
         dispatch({ type: 'SET_FEE_ACKNOWLEDGED', acknowledged }),
-      selectExecutionPolicy: (policy: RentalExecutionPolicyRef) =>
-        dispatch({ type: 'SELECT_EXECUTION_POLICY', policy }),
       setExecutionPolicyAccepted: (accepted: boolean) =>
         dispatch({ type: 'SET_EXECUTION_POLICY_ACCEPTED', accepted }),
       toggleDisclosure: (id: string) =>

@@ -15,7 +15,11 @@ import {
   rentalPackagePostingSchema,
   type ApartmentFormValues,
 } from '@/features/apartment-posting'
-import type { StaffApartment, StaffRentalPackage } from './types'
+import type {
+  StaffApartment,
+  StaffExecutionPolicyRef,
+  StaffRentalPackage,
+} from './types'
 
 const VND_PER_MILLION = 1_000_000
 
@@ -99,6 +103,11 @@ const EDIT_SCHEMA = apartmentPostingSchema.pick({
 
 const PACKAGES_SCHEMA = z.array(rentalPackagePostingSchema)
 
+/** Chỉ còn luồng ký trước; dữ liệu cũ (DEPOSIT_FIRST) được chuẩn hóa khi ghi. */
+function toSignFirstRef(ref: StaffExecutionPolicyRef): StaffExecutionPolicyRef {
+  return { ...ref, strategy: 'SIGN_FIRST' }
+}
+
 /**
  * Chỉ giữ các trường backend chấp nhận khi ghi (whitelist + forbidNonWhitelisted):
  * bỏ resolvedDepositAmount, currency, capturedAt… nhưng giữ chính sách thực thi.
@@ -113,10 +122,13 @@ function stripPackage(pkg: StaffRentalPackage): StaffRentalPackage {
     status: pkg.status,
     ...(pkg.prepaidRent ? { prepaidRent: pkg.prepaidRent } : {}),
     ...(pkg.allowedExecutionPolicies
-      ? { allowedExecutionPolicies: pkg.allowedExecutionPolicies }
+      ? {
+          allowedExecutionPolicies:
+            pkg.allowedExecutionPolicies.map(toSignFirstRef),
+        }
       : {}),
     ...(pkg.defaultExecutionPolicy
-      ? { defaultExecutionPolicy: pkg.defaultExecutionPolicy }
+      ? { defaultExecutionPolicy: toSignFirstRef(pkg.defaultExecutionPolicy) }
       : {}),
   }
 }

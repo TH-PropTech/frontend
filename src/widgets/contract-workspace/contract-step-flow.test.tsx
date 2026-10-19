@@ -28,7 +28,7 @@ const contractView: ContractViewDto = {
   contract: {
     id: 'contract-1',
     code: 'HD-001',
-    status: 'deposit-pending',
+    status: 'fully-signed-pending-deposit',
     property: {
       id: 'property-1',
       title: 'Apartment',
@@ -51,7 +51,7 @@ const contractView: ContractViewDto = {
     executionPolicy: {
       policyId: 'policy-1',
       version: 1,
-      strategy: 'DEPOSIT_FIRST',
+      strategy: 'SIGN_FIRST',
       depositConfirmed: false,
       activationReady: false,
       nextAction: 'Thanh toán tiền cọc',
@@ -86,7 +86,7 @@ const contractView: ContractViewDto = {
       maskedCccd: null,
       address: null,
       kycStatus: 'verified',
-      hasSigned: false,
+      hasSigned: true,
     },
     landlord: {
       id: 'landlord-1',
@@ -95,7 +95,7 @@ const contractView: ContractViewDto = {
       maskedCccd: null,
       address: null,
       kycStatus: 'verified',
-      hasSigned: false,
+      hasSigned: true,
     },
   },
   deposit: {
@@ -211,7 +211,7 @@ describe('ContractStepFlow', () => {
     )
     expect(screen.getByRole('link', { name: /quay lại/i })).toHaveAttribute(
       'href',
-      '/contracts/contract-1/steps/document'
+      '/contracts/contract-1/steps/signing'
     )
   })
 
@@ -223,10 +223,10 @@ describe('ContractStepFlow', () => {
     expect(screen.getByTestId('contract-step-flow-loading')).toBeInTheDocument()
   })
 
-  it('guards an upcoming signing route and points back to the active deposit step', () => {
+  it('guards an upcoming ledger route and points back to the active deposit step', () => {
     configureHook()
 
-    render(<ContractStepFlow contractId="contract-1" step="signing" />)
+    render(<ContractStepFlow contractId="contract-1" step="ledger" />)
 
     expect(screen.getByTestId('contract-step-guard')).toHaveTextContent(
       /chưa đủ điều kiện/i
@@ -291,7 +291,7 @@ describe('ContractStepFlow with server flow', () => {
     },
     flow: {
       version: 1,
-      strategy: 'DEPOSIT_FIRST',
+      strategy: 'SIGN_FIRST',
       stages: stages.map(([key, status]) => ({
         key,
         status,
@@ -303,7 +303,7 @@ describe('ContractStepFlow with server flow', () => {
     },
   })
 
-  it('DEPOSIT_FIRST cho phép "Tiếp tục" từ document sang deposit sau khi đồng ý cọc', () => {
+  it('theo flow của server cho phép "Tiếp tục" từ document sang deposit sau khi đồng ý cọc', () => {
     configureHook({
       data: withFlow(
         [

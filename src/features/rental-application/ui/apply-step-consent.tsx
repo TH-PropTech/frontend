@@ -116,10 +116,7 @@ export function ApplyStepConsent({
     (!executionPolicy || executionPolicyAccepted) &&
     !submitting
 
-  const policyLabel =
-    executionPolicy?.strategy === 'DEPOSIT_FIRST'
-      ? 'Cọc trước, sau đó ký hợp đồng'
-      : 'Ký hợp đồng trước, sau đó thanh toán cọc'
+  const policyLabel = 'Ký hợp đồng trước, sau đó thanh toán cọc'
 
   return (
     <div data-testid="apply-step-consent" className="space-y-6">
@@ -150,10 +147,8 @@ export function ApplyStepConsent({
             <h3 className="font-bold text-fg">Trình tự đã chọn cho hồ sơ</h3>
             <p className="font-semibold text-primary">{policyLabel}</p>
             <p className="leading-relaxed text-muted">
-              Lựa chọn này được chụp cùng hồ sơ.{' '}
-              {executionPolicy.strategy === 'DEPOSIT_FIRST'
-                ? 'Bạn cần hoàn tất xác nhận tiền cọc trước khi bắt đầu ký SmartCA.'
-                : 'Hai bên có thể ký trước; hợp đồng chỉ kích hoạt sau khi khoản cọc được xác nhận.'}
+              Lựa chọn này được chụp cùng hồ sơ. Hai bên có thể ký trước; hợp
+              đồng chỉ kích hoạt sau khi khoản cọc được xác nhận.
             </p>
             <div
               className="mt-3 flex cursor-pointer items-start gap-2 rounded-xl border border-border bg-surface p-3"

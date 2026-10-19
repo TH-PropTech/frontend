@@ -7,7 +7,6 @@ import {
   getContractFlowSteps,
   getContractStepState,
   getContractStatusLabel,
-  getDepositEscrowLabel,
   getNextContractStep,
   isDepositPaid,
   resolvePanelActivity,
@@ -31,7 +30,6 @@ export interface ContractStepFlowProps {
 function getGuardMessage(
   step: ContractRouteStep,
   activeStep: ReturnType<typeof resolveContractActiveStep>,
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST',
   hasStep: boolean,
   activeLabel: string
 ): string | null {
@@ -39,18 +37,7 @@ function getGuardMessage(
     return 'Hợp đồng này không có bước nhận nhà vì không có quyết toán nhận nhà.'
   }
   if (activeStep === 'completed') return null
-  if (
-    step === 'signing' &&
-    strategy === 'DEPOSIT_FIRST' &&
-    activeStep === 'deposit'
-  ) {
-    return 'Hợp đồng này yêu cầu cọc trước, ký sau: hãy xác nhận tiền cọc để mở phiên ký số.'
-  }
-  if (
-    step === 'deposit' &&
-    strategy === 'SIGN_FIRST' &&
-    activeStep === 'signing'
-  ) {
+  if (step === 'deposit' && activeStep === 'signing') {
     return 'Hợp đồng này ký trước, cọc sau: bước đặt cọc mở khi cả hai bên đã ký số.'
   }
   return `Hợp đồng đang ở bước "${activeLabel}"; hãy hoàn tất bước này trước.`
@@ -87,13 +74,6 @@ export function getStepNotes(
   const deposit = data.deposit
   if (deposit && deposit.amount > 0 && !isDepositPaid(deposit.status)) {
     notes.deposit = { text: 'Chờ thanh toán', tone: 'warning' }
-  } else if (deposit) {
-    // Huy hiệu ký quỹ (D12): "Đang ký quỹ" / "Đang chuyển.../Đã chuyển..." / "Đã hoàn...".
-    // Không bao giờ hiện escrowId/transactionCodes thô ở đây (chỉ Chi tiết kỹ thuật).
-    const escrowLabel = getDepositEscrowLabel(deposit)
-    if (escrowLabel) {
-      notes.deposit = { text: escrowLabel, tone: 'info' }
-    }
   }
   const signed =
     Number(data.parties.tenant.hasSigned) +
@@ -187,23 +167,21 @@ function ContractStepFlowView({
   }
 
   const { data } = workspace
-  const strategy = data.contract.executionPolicy?.strategy ?? 'DEPOSIT_FIRST'
   const activeStep = resolveContractActiveStep({
-    strategy,
     status: data.contract.status,
     depositStatus: data.deposit?.status,
     signedByTenant: data.parties.tenant.hasSigned,
     signedByLandlord: data.parties.landlord.hasSigned,
     serverFlow: data.flow,
   })
-  const steps = getContractFlowSteps(strategy, data.flow)
+  const steps = getContractFlowSteps(data.flow)
   const hasStep = steps.some(item => item.key === step)
   const stepState = getContractStepState(step, activeStep, steps)
   const isGuarded =
     !hasStep ||
     (stepState === 'upcoming' &&
       !resolvePanelActivity(step, activeStep, data.flow))
-  const nextStep = getNextContractStep(step, strategy, data.flow)
+  const nextStep = getNextContractStep(step, data.flow)
   const nextStepHref = nextStep
     ? toContractStepHref(contractId, nextStep)
     : null
@@ -228,7 +206,6 @@ function ContractStepFlowView({
           ? getGuardMessage(
               step,
               activeStep,
-              strategy,
               hasStep,
               steps.find(item => item.key === activeStep)?.label ?? activeStep
             )

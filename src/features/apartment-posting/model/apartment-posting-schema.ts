@@ -4,7 +4,7 @@ import { APARTMENT_CATEGORIES } from './apartment-categories'
 const rentalExecutionPolicyRefSchema = z.object({
   policyId: z.string().min(1),
   version: z.number().int().min(1),
-  strategy: z.enum(['DEPOSIT_FIRST', 'SIGN_FIRST']),
+  strategy: z.literal('SIGN_FIRST'),
   contentHash: z.string().min(1),
 })
 

@@ -10,7 +10,6 @@ export type ContractActiveStep =
   | 'completed' // Hợp đồng hoàn tất
 
 export interface ResolveActiveStepInput {
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
   status: ContractStatus
   depositStatus?: string | null | undefined
   signedByTenant?: boolean | undefined
@@ -28,8 +27,7 @@ export interface ResolveActiveStepInput {
 export function resolveContractActiveStep(
   input: ResolveActiveStepInput
 ): ContractActiveStep {
-  const { strategy, status, signedByTenant, signedByLandlord, serverFlow } =
-    input
+  const { status, signedByTenant, signedByLandlord, serverFlow } = input
 
   if (serverFlow) return serverFlow.activeStage
 
@@ -47,21 +45,7 @@ export function resolveContractActiveStep(
     return 'ledger'
   }
 
-  if (strategy === 'DEPOSIT_FIRST') {
-    // Bước 1: draft → cần đọc hợp đồng
-    if (status === 'draft') return 'document'
-    // Bước 2: deposit-pending → đến lượt cọc
-    if (status === 'deposit-pending') return 'deposit'
-    // Bước 3: deposit-paid → đến lượt ký
-    if (status === 'deposit-paid' || status === 'awaiting-signature')
-      return 'signing'
-    // fully-signed-pending-deposit không xảy ra trong DEPOSIT_FIRST
-    // nhưng nếu có → coi là signing vẫn chưa xong
-    if (status === 'fully-signed-pending-deposit') return 'deposit'
-    return 'document'
-  }
-
-  // SIGN_FIRST
+  // Luồng duy nhất: ký trước, cọc sau (mọi strategy cũ từ API đều coi là ký trước)
   // Bước 1: draft → đọc hợp đồng
   if (status === 'draft') return 'document'
   // Bước 2: awaiting-signature hoặc deposit-pending chưa ký đủ → ký số

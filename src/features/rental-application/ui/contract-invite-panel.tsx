@@ -111,10 +111,7 @@ export function ContractInvitePanel({
   const totalEstimate = monthlyRent * durationMonths
 
   const executionPolicy = application.executionPolicySnapshot
-  const executionPolicyLabel =
-    executionPolicy?.strategy === 'DEPOSIT_FIRST'
-      ? 'Cọc trước → Ký hợp đồng'
-      : 'Ký hợp đồng → Thanh toán cọc'
+  const executionPolicyLabel = 'Ký hợp đồng → Thanh toán cọc'
 
   const handoff = application.contractHandoff
   const contractHref =

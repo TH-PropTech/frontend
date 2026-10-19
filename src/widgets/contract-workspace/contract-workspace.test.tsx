@@ -442,7 +442,7 @@ describe('ContractWorkspace', () => {
     })
   })
 
-  it('renders ContractFlowGuide and sets isActiveStep correctly when strategy=DEPOSIT_FIRST and status=deposit-pending', async () => {
+  it('renders ContractFlowGuide and sets isActiveStep correctly and treats a legacy DEPOSIT_FIRST strategy as sign-first (signing is active while deposit-pending is unsigned)', async () => {
     vi.mocked(contractsApi.getContractView).mockResolvedValueOnce({
       ...mockView,
       contract: {
@@ -450,7 +450,8 @@ describe('ContractWorkspace', () => {
         status: 'deposit-pending',
         executionPolicy: {
           ...mockView.contract.executionPolicy!,
-          strategy: 'DEPOSIT_FIRST',
+          // Dữ liệu cũ từ API vẫn có thể trả giá trị legacy
+          strategy: 'DEPOSIT_FIRST' as unknown as 'SIGN_FIRST',
         },
       },
       deposit: {
@@ -465,13 +466,13 @@ describe('ContractWorkspace', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('contract-flow-guide')).toBeInTheDocument()
-      const depositWrapper = screen.getByTestId('deposit-payment-panel-wrapper')
-      expect(depositWrapper.className).toContain('ring-2')
       const signingWrapper = screen.getByTestId(
         'bilateral-signing-timeline-wrapper'
       )
-      expect(signingWrapper.className).toContain('opacity-50')
-      expect(signingWrapper.className).toContain('pointer-events-none')
+      expect(signingWrapper.className).not.toContain('opacity-50')
+      const depositWrapper = screen.getByTestId('deposit-payment-panel-wrapper')
+      expect(depositWrapper.className).toContain('opacity-50')
+      expect(depositWrapper.className).toContain('pointer-events-none')
     })
   })
 
@@ -486,7 +487,7 @@ describe('ContractWorkspace', () => {
         executionPolicy: {
           policyId: 'deposit-first',
           version: 1,
-          strategy: 'DEPOSIT_FIRST',
+          strategy: 'SIGN_FIRST',
           depositConfirmed: false,
           activationReady: false,
           nextAction: 'Xác nhận tiền cọc trước khi ký SmartCA.',
@@ -506,7 +507,7 @@ describe('ContractWorkspace', () => {
       },
       flow: {
         version: 1,
-        strategy: 'DEPOSIT_FIRST',
+        strategy: 'SIGN_FIRST',
         stages: [
           {
             key: 'document',

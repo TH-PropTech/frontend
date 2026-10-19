@@ -8,7 +8,7 @@ const flow = (
   activeStage: ContractFlowView['activeStage'] = 'document'
 ): ContractFlowView => ({
   version: 1,
-  strategy: 'DEPOSIT_FIRST',
+  strategy: 'SIGN_FIRST',
   stages: [],
   activeStage,
   nextActions,

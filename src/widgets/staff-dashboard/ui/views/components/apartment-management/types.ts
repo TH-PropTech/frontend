@@ -15,7 +15,7 @@ export type FilterStatus = 'all' | ApartmentStatus
 export interface StaffExecutionPolicyRef {
   policyId: string
   version: number
-  strategy: 'DEPOSIT_FIRST' | 'SIGN_FIRST'
+  strategy: 'SIGN_FIRST'
   contentHash: string
 }
 

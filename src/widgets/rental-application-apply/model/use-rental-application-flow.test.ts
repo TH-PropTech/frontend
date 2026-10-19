@@ -223,14 +223,8 @@ describe('use-rental-application-flow reducer & hook', () => {
       )
     })
 
-    it('requires an explicit policy choice when a package exposes two policies', async () => {
+    it('auto-selects the default policy; no manual strategy choice is needed', async () => {
       const policies = [
-        {
-          policyId: 'deposit-first',
-          version: 1,
-          strategy: 'DEPOSIT_FIRST' as const,
-          contentHash: 'hash-deposit',
-        },
         {
           policyId: 'sign-first',
           version: 1,
@@ -254,16 +248,8 @@ describe('use-rental-application-flow reducer & hook', () => {
         expect(result.current.state.loadingContext).toBe(false)
       })
 
-      expect(result.current.state.selectedExecutionPolicy).toBeNull()
-      let canAdvance = true
-      act(() => {
-        canAdvance = result.current.actions.goToStep3()
-      })
-      expect(canAdvance).toBe(false)
-
-      act(() => {
-        result.current.actions.selectExecutionPolicy(policies[1]!)
-      })
+      expect(result.current.state.selectedExecutionPolicy).toEqual(policies[0])
+      let canAdvance = false
       act(() => {
         canAdvance = result.current.actions.goToStep3()
       })

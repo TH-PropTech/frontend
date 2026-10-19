@@ -203,7 +203,8 @@ describe('ApartmentEditDialog', () => {
 const policy = {
   policyId: 'policy-1',
   version: 1,
-  strategy: 'DEPOSIT_FIRST' as const,
+  // Dữ liệu cũ từ API có thể còn DEPOSIT_FIRST; khi ghi phải chuẩn hóa về SIGN_FIRST
+  strategy: 'DEPOSIT_FIRST' as unknown as 'SIGN_FIRST',
   contentHash: 'hash-1',
 }
 
@@ -333,8 +334,8 @@ describe('ApartmentEditDialog amenities and rental packages', () => {
         monthlyRent: 13_000_000,
         depositPolicy: { type: 'MONTHS_OF_RENT', months: 2 },
         status: 'active',
-        allowedExecutionPolicies: [policy],
-        defaultExecutionPolicy: policy,
+        allowedExecutionPolicies: [{ ...policy, strategy: 'SIGN_FIRST' }],
+        defaultExecutionPolicy: { ...policy, strategy: 'SIGN_FIRST' },
       },
     ])
   })

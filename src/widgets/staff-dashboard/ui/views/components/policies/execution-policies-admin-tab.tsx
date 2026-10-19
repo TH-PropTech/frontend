@@ -1,6 +1,5 @@
 'use client'
 
-import { OptionSelect } from '@/shared/ui/option-select'
 import * as React from 'react'
 import { Archive, CheckCircle2, Loader2, Plus, Save } from 'lucide-react'
 import {
@@ -32,7 +31,7 @@ type DraftState = {
 function toDraft(policy?: RentalExecutionPolicyRecord): DraftState {
   return {
     policyId: policy?.policyId ?? '',
-    strategy: policy?.strategy ?? 'DEPOSIT_FIRST',
+    strategy: 'SIGN_FIRST',
     name: policy?.name ?? '',
     description: policy?.description ?? '',
     disclosure: policy?.disclosure ?? EMPTY_DISCLOSURE,
@@ -214,7 +213,8 @@ export function ExecutionPoliciesAdminTab(): React.ReactElement {
               Catalog trình tự đặt cọc & ký
             </h3>
             <p className="mt-1 text-xs text-muted">
-              Chỉ cho phép hai strategy chuẩn; bản đã publish là immutable.
+              Chỉ còn một trình tự: ký trước, cọc sau; bản đã publish là
+              immutable.
             </p>
           </div>
           <button
@@ -241,24 +241,6 @@ export function ExecutionPoliciesAdminTab(): React.ReactElement {
               }
               className="h-9 w-full rounded-lg border border-border bg-bg px-3 text-xs text-fg"
               placeholder="sign-first"
-            />
-          </label>
-          <label className="space-y-1 text-xs text-muted">
-            Strategy
-            <OptionSelect
-              data-testid="execution-policy-strategy"
-              value={draft.strategy}
-              onChange={value =>
-                setDraft(previous => ({
-                  ...previous,
-                  strategy: value as RentalExecutionPolicyStrategy,
-                }))
-              }
-              className="text-xs"
-              options={[
-                { value: 'DEPOSIT_FIRST', label: 'DEPOSIT_FIRST' },
-                { value: 'SIGN_FIRST', label: 'SIGN_FIRST' },
-              ]}
             />
           </label>
           <label className="space-y-1 text-xs text-muted sm:col-span-2">
@@ -344,8 +326,7 @@ export function ExecutionPoliciesAdminTab(): React.ReactElement {
             >
               <div className="text-xs">
                 <p className="font-semibold text-fg">
-                  {policy.policyId} · {policy.strategy} · v
-                  {policy.version ?? 'draft'}
+                  {policy.policyId} · v{policy.version ?? 'draft'}
                 </p>
                 <p className="mt-1 text-muted">
                   {policy.name} · {policy.status}
