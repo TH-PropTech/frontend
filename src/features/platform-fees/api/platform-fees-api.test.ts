@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { apiClient } from '@/shared/api'
 import {
+  getApartmentCommission,
+  previewLandlordCommission,
   getPlatformFeeRevenue,
   publishPlatformFeeSchedule,
   savePlatformFeeDraft,
@@ -80,5 +82,25 @@ describe('platform fees API', () => {
     expect(get).toHaveBeenCalledWith('/platform-fees/revenue')
     post.mockRestore()
     get.mockRestore()
+  })
+})
+
+describe('landlord commission preview api', () => {
+  it('gets the apartment commission', async () => {
+    vi.spyOn(apiClient, 'get').mockResolvedValue({})
+    await getApartmentCommission('apt 1')
+    expect(apiClient.get).toHaveBeenCalledWith(
+      '/platform-fees/apartments/apt%201/commission'
+    )
+  })
+
+  it('posts draft packages for preview', async () => {
+    vi.spyOn(apiClient, 'post').mockResolvedValue({})
+    const packages = [{ durationMonths: 6, monthlyRent: 9_000_000 }]
+    await previewLandlordCommission(packages)
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/platform-fees/landlord-commission/preview',
+      { packages }
+    )
   })
 })

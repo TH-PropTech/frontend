@@ -133,11 +133,8 @@ function choiceBody(choice: PaymentChoice): {
   return { provider: choice.provider, clientChannel: 'web' }
 }
 
-export type PaymentProviderPurpose = 'deposit'
-
-/** `purpose: 'deposit'` asks the server for the gateways that can hold a deposit. */
 export async function getPaymentProviders(
-  purpose?: PaymentProviderPurpose
+  purpose?: 'invoice'
 ): Promise<PaymentProviderOption[]> {
   return apiClient.get<PaymentProviderOption[]>(
     purpose ? `/bank/providers?purpose=${purpose}` : '/bank/providers'

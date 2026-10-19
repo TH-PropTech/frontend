@@ -8,6 +8,8 @@ const WALLET_ERROR_MESSAGES: Record<string, string> = {
   WALLET_BRAND_MISMATCH: 'Số tài khoản này không phải ví thuộc loại bạn chọn.',
   PAYMENT_ALREADY_PAID: 'Hóa đơn này đã được thanh toán.',
   PAYMENT_ACCESS_DENIED: 'Bạn không có quyền thanh toán hóa đơn này.',
+  INVOICE_PROVIDER_NOT_SUPPORTED:
+    'Hóa đơn phí sàn chỉ thanh toán được qua Ví Mộc.',
 }
 
 export function describeWalletError(error: unknown): string {

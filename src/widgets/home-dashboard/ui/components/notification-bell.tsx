@@ -281,7 +281,14 @@ export function NotificationBell({
                   n.title.includes('Yêu cầu đặt lịch') &&
                   n.data?.bookingId
                 const payoutLink =
-                  n.type === 'PAYOUT_PENDING' ? n.data?.link : undefined
+                  n.type === 'PAYOUT_PENDING' ||
+                  n.type === 'PLATFORM_FEE_INVOICE'
+                    ? n.data?.link
+                    : undefined
+                const payoutLinkLabel =
+                  n.type === 'PLATFORM_FEE_INVOICE'
+                    ? 'Xem hóa đơn phí hoa hồng'
+                    : 'Mở trang xác nhận chuyển tiền'
                 return (
                   <div
                     key={n._id}
@@ -366,7 +373,7 @@ export function NotificationBell({
                         onClick={event => event.stopPropagation()}
                         className="mt-2 inline-flex min-h-8 items-center rounded-lg bg-primary px-3 py-1.5 text-[10px] font-bold text-white transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       >
-                        Mở trang xác nhận chuyển tiền
+                        {payoutLinkLabel}
                         {typeof n.data?.amount === 'number'
                           ? ` (${n.data.amount.toLocaleString('vi-VN')} VND)`
                           : ''}

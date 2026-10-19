@@ -1,7 +1,14 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { LandlordApartmentItem } from '@/features/apartment-posting'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ListingCard } from './listing-card'
+
+const apiMocks = vi.hoisted(() => ({ get: vi.fn() }))
+vi.mock('@/shared/api', async importOriginal => {
+  const actual = await importOriginal<typeof import('@/shared/api')>()
+  return { ...actual, apiClient: { ...actual.apiClient, get: apiMocks.get } }
+})
 
 function buildItem(
   overrides: Partial<LandlordApartmentItem> = {}
@@ -101,6 +108,40 @@ describe('ListingCard', () => {
     renderCard(buildItem({ status: 'pending' }))
 
     expect(screen.getByText('Chờ kiểm duyệt')).toBeTruthy()
-    expect(screen.queryByRole('button')).toBeNull()
+    // Only the commission info button remains; no edit/renew actions.
+    expect(
+      screen.getAllByRole('button').map(b => b.getAttribute('aria-label'))
+    ).toEqual(['Xem phí hoa hồng'])
+  })
+
+  it('renders the commission info button and opens the dialog', async () => {
+    apiMocks.get.mockResolvedValue({
+      scheduleAvailable: true,
+      dueDaysAfterActivation: 7,
+      vatRatePercent: 10,
+      pricesIncludeVat: false,
+      landlordText: null,
+      packages: [],
+    })
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    render(
+      <QueryClientProvider client={client}>
+        <ListingCard
+          item={buildItem({ status: 'available' })}
+          onEdit={vi.fn()}
+          onRenew={vi.fn()}
+          isRenewing={false}
+        />
+      </QueryClientProvider>
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Xem phí hoa hồng' }))
+
+    expect(await screen.findByText('Phí hoa hồng nền tảng')).toBeTruthy()
+    expect(apiMocks.get).toHaveBeenCalledWith(
+      '/platform-fees/apartments/apt-1/commission'
+    )
   })
 })

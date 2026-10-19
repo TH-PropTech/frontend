@@ -20,7 +20,6 @@ import {
   type PaymentChoice,
   type PaymentProviderName,
   type PaymentProviderOption,
-  type PaymentProviderPurpose,
   type WalletBrand,
 } from '../api/payments-api'
 
@@ -134,7 +133,7 @@ export interface PaymentProvidersState {
  * cannot be loaded so the existing simulation flow keeps working.
  */
 export function usePaymentProviders(
-  purpose?: PaymentProviderPurpose
+  purpose?: 'invoice'
 ): PaymentProvidersState {
   const [providers, setProviders] =
     React.useState<PaymentProviderOption[]>(FALLBACK_PROVIDERS)

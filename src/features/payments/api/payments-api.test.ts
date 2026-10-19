@@ -122,13 +122,13 @@ describe('payments API', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/bank/providers')
   })
 
-  it('asks for deposit-capable gateways when purpose is deposit', async () => {
+  it('asks for the invoice-only gateway list when a purpose is given', async () => {
     vi.mocked(apiClient.get).mockResolvedValue([])
 
-    await getPaymentProviders('deposit')
+    await getPaymentProviders('invoice')
 
     expect(apiClient.get).toHaveBeenCalledWith(
-      '/bank/providers?purpose=deposit'
+      '/bank/providers?purpose=invoice'
     )
   })
 

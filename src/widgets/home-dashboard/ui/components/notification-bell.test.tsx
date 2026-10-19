@@ -85,6 +85,31 @@ describe('NotificationBell API failure states', () => {
     expect(screen.getByText(/5\.000\.000 VND/)).toBeInTheDocument()
   })
 
+  it('links a platform fee invoice notification to the wallet invoices', async () => {
+    mocks.get.mockResolvedValue({
+      items: [
+        {
+          _id: 'notice-fee',
+          title: 'Phí hoa hồng cần thanh toán',
+          body: 'Hợp đồng đã kích hoạt.',
+          type: 'PLATFORM_FEE_INVOICE',
+          data: { link: '/profile?tab=wallet' },
+          isRead: false,
+          createdAt: '2026-10-04T00:00:00.000Z',
+        },
+      ],
+      total: 1,
+    })
+
+    render(<NotificationBell isLightHeader />)
+    fireEvent.click(screen.getByTitle('Thông báo'))
+
+    const link = await screen.findByRole('link', {
+      name: /Xem hóa đơn phí hoa hồng/,
+    })
+    expect(link).toHaveAttribute('href', '/profile?tab=wallet')
+  })
+
   it('renders the received amount from a completed payout notification', async () => {
     mocks.get.mockResolvedValue({
       items: [
