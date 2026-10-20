@@ -26,11 +26,9 @@ import {
   RecommendationModal,
   useRecommendation,
 } from '@/features/ai-recommendation'
-import { AuthRequiredModal } from '@/widgets/community-dashboard/ui/components/auth-required-modal'
 
 export function HomeDashboard(): React.ReactElement {
   const [isRecOpen, setIsRecOpen] = React.useState(false)
-  const [showAuthModal, setShowAuthModal] = React.useState(false)
   const [user, setUser] = React.useState<{
     name: string
     kycStatus: string
@@ -57,15 +55,7 @@ export function HomeDashboard(): React.ReactElement {
     }
   }, [])
 
-  const handleOpenSurvey = () => {
-    const token = localStorage.getItem('accessToken')
-    const storedUser = localStorage.getItem('user')
-    if (token && storedUser) {
-      setIsRecOpen(true)
-    } else {
-      setShowAuthModal(true)
-    }
-  }
+  const handleOpenSurvey = () => setIsRecOpen(true)
 
   return (
     <div className="relative min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary">
@@ -299,23 +289,6 @@ export function HomeDashboard(): React.ReactElement {
         isOpen={isRecOpen}
         onClose={() => setIsRecOpen(false)}
         recommendation={recommendation}
-      />
-
-      {/* Authentication Required Modal */}
-      <AuthRequiredModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        title="Yêu cầu đăng nhập"
-        description={
-          <>
-            Vui lòng đăng nhập để thực hiện khảo sát căn hộ.
-            <br />
-            <span className="text-xs text-subtle">
-              Hệ thống AI cần liên kết thông tin khảo sát với tài khoản của bạn
-              để đề xuất và lưu trữ danh sách phù hợp nhất.
-            </span>
-          </>
-        }
       />
     </div>
   )

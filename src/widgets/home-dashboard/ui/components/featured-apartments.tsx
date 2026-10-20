@@ -10,8 +10,6 @@ import {
   Sparkles,
   Building,
   ExternalLink,
-  Lock,
-  LogIn,
 } from 'lucide-react'
 import type { RecommendationResult } from '@/features/ai-recommendation'
 
@@ -68,7 +66,7 @@ export function FeaturedApartments({
           </h2>
         </div>
         <div className="mt-4 flex items-center gap-4 md:mt-0">
-          {isAuthenticated && (
+          {hasSubmitted && (
             <button
               type="button"
               onClick={onOpenSurvey}
@@ -118,28 +116,6 @@ export function FeaturedApartments({
               </div>
             </div>
           ))}
-        </div>
-      ) : !isAuthenticated ? (
-        // Login Required State
-        <div className="bg-[#FFFDF9] border border-[#E3D8D0] rounded-3xl p-12 text-center space-y-4 max-w-xl mx-auto shadow-sm">
-          <div className="w-12 h-12 rounded-full bg-[#9F3F2A]/5 flex items-center justify-center mx-auto">
-            <Lock className="w-5 h-5 text-[#9F3F2A]" />
-          </div>
-          <h3 className="text-base font-bold text-fg font-display">
-            Đăng nhập để nhận gợi ý từ Trợ lý ảo TH Proptech
-          </h3>
-          <p className="text-xs text-[#8A7968] font-body leading-relaxed">
-            Hệ thống gợi ý căn hộ thông minh bằng Trợ lý ảo TH Proptech yêu cầu
-            xác thực tài khoản để phân tích nhân khẩu học, nhu cầu phòng và sở
-            thích cá nhân nhằm đề xuất những căn hộ thuê phù hợp nhất cho bạn.
-          </p>
-          <Button
-            onClick={onOpenSurvey}
-            className="rounded-full bg-[#9F3F2A] hover:bg-[#833221] text-white font-bold text-xs px-8 py-3 transition-all shadow-md shadow-[#9F3F2A]/10 active:scale-95 cursor-pointer flex items-center justify-center gap-2 mx-auto"
-          >
-            <LogIn className="w-4 h-4" />
-            Đăng nhập để bắt đầu khảo sát
-          </Button>
         </div>
       ) : !hasSubmitted ? (
         // Survey Not Taken State
@@ -257,33 +233,37 @@ export function FeaturedApartments({
                   </div>
 
                   <div className="flex items-center gap-1.5">
-                    {/* Feedback Buttons */}
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className={`w-8 h-8 rounded-full ${
-                        likedIds[apt.id] === 'like'
-                          ? 'bg-[#6B8E4E] border-[#6B8E4E] text-white hover:bg-[#6B8E4E]'
-                          : 'border-[#E3D8D0] text-[#8A7968] hover:bg-[#E3D8D0]/10'
-                      }`}
-                      onClick={() => handleFeedback(apt.id, 'like')}
-                      disabled={likedIds[apt.id] !== undefined}
-                    >
-                      <ThumbsUp className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className={`w-8 h-8 rounded-full ${
-                        likedIds[apt.id] === 'dislike'
-                          ? 'bg-[#9F3F2A] border-[#9F3F2A] text-white hover:bg-[#9F3F2A]'
-                          : 'border-[#E3D8D0] text-[#8A7968] hover:bg-[#E3D8D0]/10'
-                      }`}
-                      onClick={() => handleFeedback(apt.id, 'dislike')}
-                      disabled={likedIds[apt.id] !== undefined}
-                    >
-                      <ThumbsDown className="w-3.5 h-3.5" />
-                    </Button>
+                    {/* Feedback Buttons (chỉ khi đã đăng nhập) */}
+                    {isAuthenticated && (
+                      <>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className={`w-8 h-8 rounded-full ${
+                            likedIds[apt.id] === 'like'
+                              ? 'bg-[#6B8E4E] border-[#6B8E4E] text-white hover:bg-[#6B8E4E]'
+                              : 'border-[#E3D8D0] text-[#8A7968] hover:bg-[#E3D8D0]/10'
+                          }`}
+                          onClick={() => handleFeedback(apt.id, 'like')}
+                          disabled={likedIds[apt.id] !== undefined}
+                        >
+                          <ThumbsUp className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className={`w-8 h-8 rounded-full ${
+                            likedIds[apt.id] === 'dislike'
+                              ? 'bg-[#9F3F2A] border-[#9F3F2A] text-white hover:bg-[#9F3F2A]'
+                              : 'border-[#E3D8D0] text-[#8A7968] hover:bg-[#E3D8D0]/10'
+                          }`}
+                          onClick={() => handleFeedback(apt.id, 'dislike')}
+                          disabled={likedIds[apt.id] !== undefined}
+                        >
+                          <ThumbsDown className="w-3.5 h-3.5" />
+                        </Button>
+                      </>
+                    )}
 
                     <Link href={`/properties/${apt.id}` as Route}>
                       <Button
