@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FloorplanConfig } from '../model/floorplan-config'
+import { toFloorplanCampus } from '../model/floorplan-campus'
 import { ApartmentFloorplanFrame } from './apartment-floorplan-frame'
 
 const LOAD_TIMEOUT_MS = 10_000
@@ -178,6 +179,50 @@ describe('ApartmentFloorplanFrame', () => {
         )
       })
       expect(onLayoutChange).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('campus', () => {
+    const post = (frame: HTMLIFrameElement, data: unknown): void => {
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            data,
+            origin: window.location.origin,
+            source: frame.contentWindow,
+          })
+        )
+      })
+    }
+    const types = (spy: ReturnType<typeof vi.spyOn>): string[] =>
+      spy.mock.calls.map(call => (call[0] as { type: string }).type)
+
+    it('mở sa bàn trước: chỉ gửi CAMPUS_INIT, chưa gửi INIT của căn', () => {
+      const campus = toFloorplanCampus(config, 'Căn A')
+      render(<ApartmentFloorplanFrame config={config} campus={campus} />)
+      const frame = screen.getByTitle('Sơ đồ 3D minh hoạ') as HTMLIFrameElement
+      const spy = vi.spyOn(frame.contentWindow as Window, 'postMessage')
+
+      post(frame, { version: 1, type: 'FLOORPLAN_READY' })
+
+      expect(types(spy)).toContain('FLOORPLAN_CAMPUS_INIT')
+      expect(types(spy)).not.toContain('FLOORPLAN_INIT')
+    })
+
+    it('bấm căn sáng (UNIT_SELECTED) thì mới gửi INIT đầy đủ', () => {
+      const campus = toFloorplanCampus(config, 'Căn A')
+      render(<ApartmentFloorplanFrame config={config} campus={campus} />)
+      const frame = screen.getByTitle('Sơ đồ 3D minh hoạ') as HTMLIFrameElement
+      const spy = vi.spyOn(frame.contentWindow as Window, 'postMessage')
+
+      post(frame, { version: 1, type: 'FLOORPLAN_READY' })
+      post(frame, {
+        version: 1,
+        type: 'FLOORPLAN_UNIT_SELECTED',
+        payload: { apartmentId: 'apt-1' },
+      })
+
+      expect(types(spy)).toContain('FLOORPLAN_INIT')
     })
   })
 })

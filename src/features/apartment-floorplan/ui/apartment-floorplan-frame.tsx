@@ -2,16 +2,20 @@
 
 import * as React from 'react'
 import {
+  createFloorplanCampusMessage,
   createFloorplanInitMessage,
   isTrustedFloorplanMessage,
   parseFloorplanMessage,
 } from '../lib/floorplan-messages'
 import { VIEWER_VERSION } from '../lib/viewer-version'
+import type { FloorplanCampus } from '../model/floorplan-campus'
 import type { FloorplanConfig } from '../model/floorplan-config'
 import type { FloorplanLayout } from '../model/floorplan-design'
 
 interface ApartmentFloorplanFrameProps {
   config: FloorplanConfig
+  /** Có sa bàn: viewer mở sa bàn trước, căn sáng lên; bấm vào mới vào xem phòng. Bỏ trống = vào thẳng phòng. */
+  campus?: FloorplanCampus
   onClose?: () => void
   /** 'bare': chỉ vùng xem 3D (dùng cho xem trước trong trang quản trị). */
   variant?: 'card' | 'bare'
@@ -26,6 +30,7 @@ interface ApartmentFloorplanFrameProps {
 
 export function ApartmentFloorplanFrame({
   config,
+  campus,
   onClose,
   variant = 'card',
   heightClass = 'h-[560px]',
@@ -42,6 +47,8 @@ export function ApartmentFloorplanFrame({
   const [attempt, setAttempt] = React.useState(0)
   // Phóng to khung ra toàn màn hình khi trình duyệt không cho iframe dùng Fullscreen API (ví dụ iOS Safari).
   const [expanded, setExpanded] = React.useState(false)
+  // đang ở sa bàn thì chưa được gửi INIT của căn (viewer sẽ nhảy thẳng vào phòng)
+  const [inUnit, setInUnit] = React.useState(!campus)
 
   // Cấu hình gửi cho viewer: cờ editable chỉ có khi host cho phép (preview của admin); ngược lại bị loại bỏ hẳn.
   const initConfig = React.useMemo<FloorplanConfig>(() => {
@@ -89,7 +96,21 @@ export function ApartmentFloorplanFrame({
       if (!message) return
       if (message.type === 'FLOORPLAN_READY') {
         setStatus('ready')
+        postToFrame(
+          campus
+            ? createFloorplanCampusMessage(campus)
+            : createFloorplanInitMessage(initConfig)
+        )
+        return
+      }
+      if (message.type === 'FLOORPLAN_UNIT_SELECTED') {
+        // người dùng bấm căn sáng trên sa bàn: gửi cấu hình đầy đủ (kèm thiết kế đang bật)
+        setInUnit(true)
         postToFrame(createFloorplanInitMessage(initConfig))
+        return
+      }
+      if (message.type === 'FLOORPLAN_CAMPUS_BACK') {
+        setInUnit(false)
         return
       }
       if (message.type === 'FLOORPLAN_LAYOUT_CHANGED') {
@@ -115,12 +136,13 @@ export function ApartmentFloorplanFrame({
       window.clearTimeout(timeout)
       window.removeEventListener('message', handleMessage)
     }
-  }, [attempt, initConfig, editable, postToFrame])
+  }, [attempt, initConfig, editable, postToFrame, campus])
 
   // Admin sửa thiết kế khi đang xem trước: gửi lại cấu hình, viewer tự dựng lại cảnh (bỏ qua nếu y hệt).
   React.useEffect(() => {
-    if (status === 'ready') postToFrame(createFloorplanInitMessage(initConfig))
-  }, [initConfig, status, postToFrame])
+    if (status === 'ready' && inUnit)
+      postToFrame(createFloorplanInitMessage(initConfig))
+  }, [initConfig, status, postToFrame, inUnit])
 
   React.useEffect(() => {
     const handleVisibility = (): void => {

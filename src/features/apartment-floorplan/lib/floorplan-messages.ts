@@ -1,3 +1,4 @@
+import type { FloorplanCampus } from '../model/floorplan-campus'
 import type { FloorplanConfig } from '../model/floorplan-config'
 import {
   normalizeFloorplanLayout,
@@ -8,6 +9,7 @@ export const FLOORPLAN_MESSAGE_VERSION = 1 as const
 
 export type FloorplanHostMessage =
   | { version: 1; type: 'FLOORPLAN_INIT'; payload: FloorplanConfig }
+  | { version: 1; type: 'FLOORPLAN_CAMPUS_INIT'; payload: FloorplanCampus }
   | { version: 1; type: 'FLOORPLAN_PAUSE' }
   | { version: 1; type: 'FLOORPLAN_RESUME' }
   | { version: 1; type: 'FLOORPLAN_RESET' }
@@ -20,6 +22,12 @@ export type FloorplanHostMessage =
 export type FloorplanFrameMessage =
   | { version: 1; type: 'FLOORPLAN_READY' }
   | { version: 1; type: 'FLOORPLAN_EXPAND_TOGGLE' }
+  | { version: 1; type: 'FLOORPLAN_CAMPUS_BACK' }
+  | {
+      version: 1
+      type: 'FLOORPLAN_UNIT_SELECTED'
+      payload: { apartmentId: string }
+    }
   | {
       version: 1
       type: 'FLOORPLAN_LAYOUT_CHANGED'
@@ -42,6 +50,16 @@ export function createFloorplanInitMessage(
     version: FLOORPLAN_MESSAGE_VERSION,
     type: 'FLOORPLAN_INIT',
     payload: config,
+  }
+}
+
+export function createFloorplanCampusMessage(
+  campus: FloorplanCampus
+): FloorplanHostMessage {
+  return {
+    version: FLOORPLAN_MESSAGE_VERSION,
+    type: 'FLOORPLAN_CAMPUS_INIT',
+    payload: campus,
   }
 }
 
@@ -68,6 +86,20 @@ export function parseFloorplanMessage(value: unknown): FloorplanMessage | null {
   }
   if (value.type === 'FLOORPLAN_EXPAND_TOGGLE')
     return { version: 1, type: 'FLOORPLAN_EXPAND_TOGGLE' }
+  if (value.type === 'FLOORPLAN_CAMPUS_BACK')
+    return { version: 1, type: 'FLOORPLAN_CAMPUS_BACK' }
+  if (value.type === 'FLOORPLAN_UNIT_SELECTED' && isRecord(value.payload)) {
+    if (
+      typeof value.payload.apartmentId !== 'string' ||
+      !value.payload.apartmentId
+    )
+      return null
+    return {
+      version: 1,
+      type: value.type,
+      payload: { apartmentId: value.payload.apartmentId },
+    }
+  }
   if (value.type === 'FLOORPLAN_ROOM_SELECTED' && isRecord(value.payload)) {
     if (typeof value.payload.roomId !== 'string' || !value.payload.roomId)
       return null

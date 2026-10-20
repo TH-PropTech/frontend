@@ -112,3 +112,29 @@ describe('floorplan messages', () => {
     ).toBe(false)
   })
 })
+
+describe('campus messages', () => {
+  it('parse UNIT_SELECTED và CAMPUS_BACK từ viewer', () => {
+    expect(
+      parseFloorplanMessage({
+        version: 1,
+        type: 'FLOORPLAN_UNIT_SELECTED',
+        payload: { apartmentId: 'apt-1' },
+      })
+    ).toEqual({
+      version: 1,
+      type: 'FLOORPLAN_UNIT_SELECTED',
+      payload: { apartmentId: 'apt-1' },
+    })
+    expect(
+      parseFloorplanMessage({ version: 1, type: 'FLOORPLAN_CAMPUS_BACK' })
+    ).toEqual({ version: 1, type: 'FLOORPLAN_CAMPUS_BACK' })
+    expect(
+      parseFloorplanMessage({
+        version: 1,
+        type: 'FLOORPLAN_UNIT_SELECTED',
+        payload: { apartmentId: '' },
+      })
+    ).toBeNull()
+  })
+})

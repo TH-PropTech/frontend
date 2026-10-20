@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Box } from 'lucide-react'
 import type { ApartmentItem } from '@/entities/properties'
 import { listApartmentDesigns } from '../api/floorplan-designs-api'
+import { toFloorplanCampus } from '../model/floorplan-campus'
 import { toFloorplanConfig } from '../model/floorplan-config'
 import type { FloorplanDesign } from '../model/floorplan-design'
 import { ApartmentFloorplanFrame } from './apartment-floorplan-frame'
@@ -12,7 +13,8 @@ interface ApartmentFloorplanSectionProps {
   property: Pick<
     ApartmentItem,
     'id' | 'bedrooms' | 'bathrooms' | 'areaNum' | 'furniture'
-  >
+  > &
+    Partial<Pick<ApartmentItem, 'title' | 'projectName'>>
 }
 
 /**
@@ -53,6 +55,18 @@ export function ApartmentFloorplanSection({
     () => toFloorplanConfig(property, designs ?? []),
     [property, designs]
   )
+  // Mở viewer: sa bàn trước, căn đang xem sáng lên; bấm vào mới vào phòng
+  const campus = React.useMemo(
+    () =>
+      config
+        ? toFloorplanCampus(
+            config,
+            property.title || 'Căn hộ này',
+            property.projectName || 'Tòa nhà'
+          )
+        : undefined,
+    [config, property.title, property.projectName]
+  )
   const handleOpen = (): void => setIsOpen(true)
   const handleClose = (): void => setIsOpen(false)
 
@@ -74,7 +88,11 @@ export function ApartmentFloorplanSection({
             Đang chuẩn bị sơ đồ 3D...
           </div>
         ) : (
-          <ApartmentFloorplanFrame config={config} onClose={handleClose} />
+          <ApartmentFloorplanFrame
+            config={config}
+            {...(campus ? { campus } : {})}
+            onClose={handleClose}
+          />
         )}
       </section>
     )
