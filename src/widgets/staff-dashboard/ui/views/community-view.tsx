@@ -3,6 +3,8 @@
 import * as React from 'react'
 import { apiClient } from '@/shared/api/api-client'
 import { CommunityPostDetailModal } from './components/community-post-detail-modal'
+import { AdminCard } from '@/shared/ui/admin-card'
+import { useCan } from '@/shared/lib/permissions'
 
 export interface CommunityPost {
   id: string
@@ -56,6 +58,9 @@ function formatTimeAgo(dateStr?: string): string {
 }
 
 export function CommunityView(): React.ReactElement {
+  const can = useCan()
+  const canApprove = can('approve', 'CommunityPost')
+  const canDelete = can('delete', 'CommunityPost')
   const [posts, setPosts] = React.useState<CommunityPost[]>([])
   const [loading, setLoading] = React.useState(true)
   const [selectedPost, setSelectedPost] = React.useState<CommunityPost | null>(
@@ -236,9 +241,9 @@ export function CommunityView(): React.ReactElement {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredPosts.map(post => (
-            <div
+            <AdminCard
               key={post.id}
-              className="bg-surface border border-line rounded-xl p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-all"
+              className="p-5 flex flex-col justify-between hover:shadow-md transition-all"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -308,7 +313,7 @@ export function CommunityView(): React.ReactElement {
                 </div>
               </div>
 
-              {post.status === 'pending' && (
+              {post.status === 'pending' && canApprove && (
                 <div className="mt-4 pt-3 border-t border-line/30 flex gap-2">
                   <button
                     onClick={() => {
@@ -328,7 +333,7 @@ export function CommunityView(): React.ReactElement {
                 </div>
               )}
 
-              {post.status === 'approved' && (
+              {post.status === 'approved' && canDelete && (
                 <div className="mt-4 pt-3 border-t border-line/30 flex gap-2">
                   <button
                     onClick={() => handleDeletePost(post.id)}
@@ -344,7 +349,7 @@ export function CommunityView(): React.ReactElement {
                   </button>
                 </div>
               )}
-            </div>
+            </AdminCard>
           ))}
 
           {filteredPosts.length === 0 && (
@@ -381,7 +386,7 @@ export function CommunityView(): React.ReactElement {
               setRejectReason('')
             }}
           />
-          <div className="relative z-10 w-full max-w-md bg-surface border border-line rounded-xl shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <AdminCard className="relative z-10 w-full max-w-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-5">
               <h3 className="text-base font-bold text-fg font-marketing">
                 Lý do từ chối bài viết
@@ -417,7 +422,7 @@ export function CommunityView(): React.ReactElement {
                 </button>
               </div>
             </div>
-          </div>
+          </AdminCard>
         </div>
       )}
 

@@ -5,12 +5,15 @@ import Image from 'next/image'
 import type { KycRecord } from '../kyc-approvals-view'
 import { CccdMockupCard } from './cccd-mockup-card'
 import { apiClient } from '@/shared/api/api-client'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 interface KycComparisonModalProps {
   selectedRecord: KycRecord
   onClose: () => void
   onVerify: (id: string) => Promise<void>
   onShowReject: () => void
+  /** Ẩn nút xác nhận / yêu cầu chụp lại khi người dùng chỉ được xem. */
+  canReview?: boolean
 }
 
 export function KycComparisonModal({
@@ -18,6 +21,7 @@ export function KycComparisonModal({
   onClose,
   onVerify,
   onShowReject,
+  canReview = true,
 }: KycComparisonModalProps): React.ReactElement {
   const frontCardUrl = useProtectedKycImage(selectedRecord.id, 'front-card')
   const backCardUrl = useProtectedKycImage(selectedRecord.id, 'back-card')
@@ -30,7 +34,7 @@ export function KycComparisonModal({
         onClick={onClose}
       />
 
-      <div className="relative z-10 flex h-[min(90vh,820px)] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg animate-in fade-in zoom-in-95 duration-200">
+      <AdminCard className="relative z-10 flex h-[min(90vh,820px)] w-full max-w-5xl flex-col overflow-hidden shadow-lg animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-border bg-surface-muted/30 px-6 py-4">
           <div>
             <span className="font-display text-[10px] font-bold text-primary">
@@ -92,7 +96,7 @@ export function KycComparisonModal({
                     Selfie người nộp hồ sơ
                   </span>
                 </div>
-                <div className="relative ml-auto aspect-square w-20 shrink-0 overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+                <AdminCard className="relative ml-auto aspect-square w-20 shrink-0 overflow-hidden">
                   <Image
                     src={selfieUrl}
                     alt="Ảnh selfie chân dung"
@@ -100,7 +104,7 @@ export function KycComparisonModal({
                     unoptimized
                     className="object-cover"
                   />
-                </div>
+                </AdminCard>
               </div>
             )}
           </div>
@@ -157,7 +161,7 @@ export function KycComparisonModal({
               </div>
             </div>
 
-            {selectedRecord.status === 'pending' && (
+            {selectedRecord.status === 'pending' && canReview && (
               <div className="flex shrink-0 gap-2 border-t border-border bg-surface p-5 pt-4">
                 <button
                   type="button"
@@ -177,7 +181,7 @@ export function KycComparisonModal({
             )}
           </div>
         </div>
-      </div>
+      </AdminCard>
     </div>
   )
 }
@@ -199,7 +203,7 @@ function KycDocumentImage({
         {label}
       </span>
       {url ? (
-        <div className="relative aspect-[1.58/1] w-full overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
+        <AdminCard className="relative aspect-[1.58/1] w-full overflow-hidden">
           <Image
             src={url}
             alt={label}
@@ -207,7 +211,7 @@ function KycDocumentImage({
             unoptimized
             className="object-cover"
           />
-        </div>
+        </AdminCard>
       ) : (
         <CccdMockupCard record={record} side={side} />
       )}

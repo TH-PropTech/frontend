@@ -4,6 +4,8 @@ import * as React from 'react'
 import { KycComparisonModal } from './components/kyc-comparison-modal'
 import { apiClient } from '@/shared/api/api-client'
 import { toast } from 'sonner'
+import { AdminCard } from '@/shared/ui/admin-card'
+import { useCan } from '@/shared/lib/permissions'
 
 export interface KycRecord {
   id: string
@@ -49,6 +51,8 @@ interface BackendKycListResult {
 }
 
 export function KycApprovalsView(): React.ReactElement {
+  const can = useCan()
+  const canApprove = can('approve', 'Kyc')
   const [records, setRecords] = React.useState<KycRecord[]>([])
   const [loading, setLoading] = React.useState(true)
   const [selectedRecord, setSelectedRecord] = React.useState<KycRecord | null>(
@@ -215,7 +219,7 @@ export function KycApprovalsView(): React.ReactElement {
       </div>
 
       {/* Records table */}
-      <div className="bg-surface border border-line rounded-xl overflow-hidden shadow-sm">
+      <AdminCard className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
@@ -272,7 +276,7 @@ export function KycApprovalsView(): React.ReactElement {
                       onClick={() => setSelectedRecord(record)}
                       className="px-3 py-1.5 bg-fg/5 hover:bg-fg/10 text-fg rounded-md font-semibold transition-colors"
                     >
-                      Đối chiếu & Duyệt
+                      {canApprove ? 'Đối chiếu & Duyệt' : 'Xem hồ sơ'}
                     </button>
                   </td>
                 </tr>
@@ -290,7 +294,7 @@ export function KycApprovalsView(): React.ReactElement {
             </tbody>
           </table>
         </div>
-      </div>
+      </AdminCard>
 
       {/* Side-by-Side Comparison Workspace Modal */}
       {selectedRecord && (
@@ -299,6 +303,7 @@ export function KycApprovalsView(): React.ReactElement {
           onClose={() => setSelectedRecord(null)}
           onVerify={handleVerify}
           onShowReject={() => setShowRejectDialog(true)}
+          canReview={canApprove}
         />
       )}
 
@@ -309,7 +314,7 @@ export function KycApprovalsView(): React.ReactElement {
             className="absolute inset-0 bg-fg/50 backdrop-blur-sm"
             onClick={() => setShowRejectDialog(false)}
           />
-          <div className="relative z-10 w-full max-w-md bg-surface border border-line rounded-xl shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <AdminCard className="relative z-10 w-full max-w-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-5">
               <h3 className="text-base font-bold text-fg font-marketing">
                 Lý do từ chối hồ sơ KYC
@@ -343,7 +348,7 @@ export function KycApprovalsView(): React.ReactElement {
                 </button>
               </div>
             </div>
-          </div>
+          </AdminCard>
         </div>
       )}
     </div>

@@ -17,6 +17,7 @@ import { Button } from '@/shared/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { toast } from 'sonner'
 import { Plus, ArrowLeft, Loader2, Building } from 'lucide-react'
+import { useCan } from '@/shared/lib/permissions'
 
 const ACTIVE_DESIGN_STATUSES: DesignRequestStatus[] = [
   'submitted',
@@ -28,6 +29,8 @@ const ACTIVE_DESIGN_STATUSES: DesignRequestStatus[] = [
 ]
 
 export function TabMyListings(): React.ReactElement {
+  const can = useCan()
+  const canPost = can('create', 'Apartment')
   const queryClient = useQueryClient()
   const [filter, setFilter] = React.useState<
     'all' | 'pending' | 'available' | 'rejected' | 'unavailable'
@@ -149,13 +152,15 @@ export function TabMyListings(): React.ReactElement {
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsCreating(true)}
-          className="gap-1.5 font-semibold shadow-lg"
-        >
-          <Plus className="h-4 w-4" />
-          Đăng tin mới
-        </Button>
+        {canPost ? (
+          <Button
+            onClick={() => setIsCreating(true)}
+            className="gap-1.5 font-semibold shadow-lg"
+          >
+            <Plus className="h-4 w-4" />
+            Đăng tin mới
+          </Button>
+        ) : null}
       </div>
 
       {/* Tabs Filter Bar */}
@@ -223,7 +228,7 @@ export function TabMyListings(): React.ReactElement {
                 : `Không có tin đăng nào ở trạng thái này.`}
             </p>
           </div>
-          {filter === 'all' && (
+          {filter === 'all' && canPost && (
             <Button
               onClick={() => setIsCreating(true)}
               variant="outline"

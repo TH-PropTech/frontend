@@ -9,8 +9,12 @@ import {
   type SafetyReportItem,
 } from '@/features/safety-reports'
 import { appToast } from '@/shared/ui/app-toast'
+import { AdminCard } from '@/shared/ui/admin-card'
+import { useCan } from '@/shared/lib/permissions'
 
 export function SafetyReportsView(): React.ReactElement {
+  const can = useCan()
+  const canUpdate = can('update', 'SafetyReport')
   const [reports, setReports] = React.useState<SafetyReportItem[]>([])
   const [loading, setLoading] = React.useState(true)
 
@@ -75,9 +79,9 @@ export function SafetyReportsView(): React.ReactElement {
         </p>
       </div>
       {reports.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center text-sm text-muted">
+        <AdminCard className="border-dashed p-8 text-center text-sm text-muted">
           Không có báo cáo chờ xử lý.
-        </div>
+        </AdminCard>
       ) : (
         reports.map(report => (
           <article
@@ -95,28 +99,30 @@ export function SafetyReportsView(): React.ReactElement {
                 {report.riskLevel} · {report.status}
               </span>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => void updateStatus(report, 'investigating')}
-              >
-                Điều tra
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => void updateStatus(report, 'resolved')}
-              >
-                Đã xử lý
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => void updateStatus(report, 'dismissed')}
-              >
-                Bỏ qua
-              </Button>
-            </div>
+            {canUpdate ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void updateStatus(report, 'investigating')}
+                >
+                  Điều tra
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => void updateStatus(report, 'resolved')}
+                >
+                  Đã xử lý
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => void updateStatus(report, 'dismissed')}
+                >
+                  Bỏ qua
+                </Button>
+              </div>
+            ) : null}
           </article>
         ))
       )}

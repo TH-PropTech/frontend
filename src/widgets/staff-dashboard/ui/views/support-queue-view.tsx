@@ -9,8 +9,12 @@ import {
   type SupportTicketItem,
 } from '@/features/support-tickets'
 import { appToast } from '@/shared/ui/app-toast'
+import { AdminCard } from '@/shared/ui/admin-card'
+import { useCan } from '@/shared/lib/permissions'
 
 export function SupportQueueView(): React.ReactElement {
+  const can = useCan()
+  const canUpdate = can('update', 'SupportTicket')
   const [tickets, setTickets] = React.useState<SupportTicketItem[]>([])
   const [loading, setLoading] = React.useState(true)
   const [now] = React.useState(() => Date.now())
@@ -63,9 +67,9 @@ export function SupportQueueView(): React.ReactElement {
         </p>
       </div>
       {tickets.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center text-sm text-muted">
+        <AdminCard className="border-dashed p-8 text-center text-sm text-muted">
           Không có ticket cần xử lý.
-        </div>
+        </AdminCard>
       ) : (
         tickets.map(ticket => {
           const breached =
@@ -98,11 +102,12 @@ export function SupportQueueView(): React.ReactElement {
                   <Clock className="h-4 w-4" /> SLA:{' '}
                   {new Date(ticket.slaDeadline).toLocaleString('vi-VN')}
                 </span>
-                {!['resolved', 'closed'].includes(ticket.status) && (
-                  <Button size="sm" onClick={() => void resolve(ticket)}>
-                    Đánh dấu đã xử lý
-                  </Button>
-                )}
+                {canUpdate &&
+                  !['resolved', 'closed'].includes(ticket.status) && (
+                    <Button size="sm" onClick={() => void resolve(ticket)}>
+                      Đánh dấu đã xử lý
+                    </Button>
+                  )}
               </div>
             </article>
           )

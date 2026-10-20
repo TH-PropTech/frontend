@@ -5,6 +5,8 @@ import { apiClient } from '@/shared/api/api-client'
 import { VrPreviewPanel } from './components/vr-preview-panel'
 import { toast } from 'sonner'
 import { ListingReviewQueue } from '@/features/listing-freshness'
+import { AdminCard } from '@/shared/ui/admin-card'
+import { useCan } from '@/shared/lib/permissions'
 
 // Khớp RejectApartmentDto.rejectedReason (@MinLength(10)) ở backend.
 const REJECT_REASON_MIN_LENGTH = 10
@@ -39,6 +41,8 @@ interface BackendApartmentResponse {
 }
 
 export function PropertyApprovalsView(): React.ReactElement {
+  const can = useCan()
+  const canApprove = can('approve', 'Apartment')
   const [properties, setProperties] = React.useState<Property[]>([])
   const [loading, setLoading] = React.useState(true)
   const [selectedProp, setSelectedProp] = React.useState<Property | null>(null)
@@ -201,9 +205,9 @@ export function PropertyApprovalsView(): React.ReactElement {
       {/* Grid List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProps.map(prop => (
-          <div
+          <AdminCard
             key={prop.id}
-            className="bg-surface border border-line rounded-xl overflow-hidden shadow-sm flex flex-col justify-between"
+            className="overflow-hidden flex flex-col justify-between"
           >
             <div className="p-5">
               <div className="flex items-center justify-between">
@@ -273,7 +277,7 @@ export function PropertyApprovalsView(): React.ReactElement {
                 Thẩm định & Duyệt
               </button>
             </div>
-          </div>
+          </AdminCard>
         ))}
       </div>
 
@@ -285,7 +289,7 @@ export function PropertyApprovalsView(): React.ReactElement {
             onClick={() => setSelectedProp(null)}
           />
 
-          <div className="relative z-10 flex flex-col lg:flex-row w-full max-w-5xl h-[85vh] bg-surface rounded-xl border border-line shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <AdminCard className="relative z-10 flex flex-col lg:flex-row w-full max-w-5xl h-[85vh] shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Left side: VR 360 Preview (Simulated interactive container) */}
             <VrPreviewPanel />
 
@@ -408,7 +412,7 @@ export function PropertyApprovalsView(): React.ReactElement {
               </div>
 
               {/* Action footer */}
-              {selectedProp.status === 'pending' && (
+              {selectedProp.status === 'pending' && canApprove && (
                 <div className="p-4 border-t border-line bg-surface-muted/20 space-y-2">
                   <div className="flex gap-2">
                     <button
@@ -427,7 +431,7 @@ export function PropertyApprovalsView(): React.ReactElement {
                 </div>
               )}
             </div>
-          </div>
+          </AdminCard>
         </div>
       )}
 
@@ -438,7 +442,7 @@ export function PropertyApprovalsView(): React.ReactElement {
             className="absolute inset-0 bg-fg/50 backdrop-blur-sm"
             onClick={() => setShowRejectDialog(false)}
           />
-          <div className="relative z-10 w-full max-w-md bg-surface border border-line rounded-xl shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <AdminCard className="relative z-10 w-full max-w-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-5">
               <h3 className="text-base font-bold text-fg font-marketing">
                 Lý do từ chối tin đăng
@@ -479,7 +483,7 @@ export function PropertyApprovalsView(): React.ReactElement {
                 </button>
               </div>
             </div>
-          </div>
+          </AdminCard>
         </div>
       )}
     </div>

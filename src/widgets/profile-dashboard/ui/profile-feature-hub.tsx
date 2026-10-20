@@ -11,6 +11,7 @@ import {
   TicketList,
   type SupportTicketItem,
 } from '@/features/support-tickets'
+import { useCan } from '@/shared/lib/permissions'
 
 export type ProfileFeature =
   | 'saved-searches'
@@ -30,6 +31,7 @@ export function ProfileFeatureHub({
     null
   )
   const [ticketRevision, setTicketRevision] = React.useState(0)
+  const can = useCan()
 
   if (feature === 'saved-searches') {
     return (
@@ -86,14 +88,16 @@ export function ProfileFeatureHub({
             Theo dõi hạn phản hồi và trao đổi trực tiếp trong từng yêu cầu.
           </p>
         </div>
-        <CreateTicketDialog
-          onSuccess={() => setTicketRevision(value => value + 1)}
-          trigger={
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" /> Tạo yêu cầu
-            </Button>
-          }
-        />
+        {can('create', 'SupportTicket') ? (
+          <CreateTicketDialog
+            onSuccess={() => setTicketRevision(value => value + 1)}
+            trigger={
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" /> Tạo yêu cầu
+              </Button>
+            }
+          />
+        ) : null}
       </div>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <TicketList

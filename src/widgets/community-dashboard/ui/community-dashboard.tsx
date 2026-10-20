@@ -9,6 +9,7 @@ import { PostCard } from './components/post-card'
 import { CreatePostModal } from './components/create-post-modal'
 import { CommunitySidebar } from './components/community-sidebar'
 import { AuthRequiredModal } from './components/auth-required-modal'
+import { useCan } from '@/shared/lib/permissions'
 
 const TOPIC_TABS = [
   { id: 'all' as const, label: 'Tất cả' },
@@ -18,6 +19,8 @@ const TOPIC_TABS = [
 ]
 
 export function CommunityDashboard(): React.ReactElement {
+  const can = useCan()
+  const canPost = can('create', 'CommunityPost')
   const state = useWebCommunity()
   const isAuthenticated = !!state.currentUser
   const [activeTab, setActiveTab] = React.useState<'public' | 'my-posts'>(
@@ -136,25 +139,27 @@ export function CommunityDashboard(): React.ReactElement {
                     {state.showMyPosts ? 'Hiển thị tất cả' : 'Bài viết của tôi'}
                   </button>
 
-                  <button
-                    onClick={() => state.setShowCreateModal(true)}
-                    className="flex-1 md:flex-initial rounded-xl bg-primary py-3 px-5 text-xs font-bold text-white shadow-[0_8px_24px_rgba(198,90,58,0.15)] hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
+                  {canPost ? (
+                    <button
+                      onClick={() => state.setShowCreateModal(true)}
+                      className="flex-1 md:flex-initial rounded-xl bg-primary py-3 px-5 text-xs font-bold text-white shadow-[0_8px_24px_rgba(198,90,58,0.15)] hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    Đăng bài mới
-                  </button>
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      Đăng bài mới
+                    </button>
+                  ) : null}
                 </>
               ) : (
                 <button
