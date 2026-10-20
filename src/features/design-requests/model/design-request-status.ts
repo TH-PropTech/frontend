@@ -17,7 +17,7 @@ export const DESIGN_REQUEST_STATUS_META: Record<
     className: 'bg-amber-100 text-amber-800 border-amber-200',
   },
   escalated: {
-    label: 'Đã chuyển quản trị viên',
+    label: 'Đang chờ nhân viên nhận thiết kế',
     className: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   },
   in_progress: {
@@ -65,7 +65,7 @@ export const DESIGN_REQUEST_EVENT_LABEL: Record<
   submitted: 'Gửi yêu cầu',
   info_requested: 'Yêu cầu bổ sung thông tin',
   info_provided: 'Bổ sung thông tin',
-  escalated: 'Chuyển cho quản trị viên',
+  escalated: 'Chuyển nhân viên thiết kế',
   rejected: 'Từ chối yêu cầu',
   started: 'Bắt đầu thiết kế',
   delivered: 'Bàn giao thiết kế',

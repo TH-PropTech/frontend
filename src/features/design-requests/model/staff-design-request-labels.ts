@@ -5,9 +5,9 @@ import type {
 } from '../api/design-requests-api'
 
 export const STAFF_STATUS_LABELS: Record<DesignRequestStatus, string> = {
-  submitted: 'Chờ tiếp nhận',
+  submitted: 'Chờ nhân viên nhận',
   needs_info: 'Chờ chủ nhà bổ sung',
-  escalated: 'Chờ quản trị viên',
+  escalated: 'Chờ nhận (chuyển từ trước)',
   in_progress: 'Đang thiết kế',
   delivered: 'Chờ chủ nhà duyệt',
   changes_requested: 'Chủ nhà yêu cầu sửa',
@@ -49,9 +49,9 @@ export const STAFF_EVENT_LABELS: Record<DesignRequestEventType, string> = {
   submitted: 'Chủ nhà gửi yêu cầu',
   info_requested: 'Yêu cầu bổ sung thông tin',
   info_provided: 'Chủ nhà bổ sung thông tin',
-  escalated: 'Chuyển quản trị viên',
+  escalated: 'Chuyển quản trị viên (cũ)',
   rejected: 'Từ chối yêu cầu',
-  started: 'Quản trị viên nhận thiết kế',
+  started: 'Nhân viên nhận thiết kế',
   delivered: 'Giao thiết kế cho chủ nhà',
   feedback: 'Chủ nhà yêu cầu chỉnh sửa',
   approved: 'Chủ nhà duyệt thiết kế',
@@ -64,10 +64,32 @@ export const STAFF_ROLE_LABELS = {
   admin: 'Quản trị viên',
 } as const
 
-export function defaultQueueStatuses(
-  role: 'staff' | 'admin'
-): DesignRequestStatus[] {
-  return role === 'staff'
-    ? ['submitted', 'needs_info', 'escalated']
-    : ['escalated', 'in_progress', 'changes_requested', 'delivered']
+/** Việc nhân viên cần làm hoặc đang theo dõi (không gồm `delivered`: đang chờ chủ nhà). */
+export function defaultQueueStatuses(): DesignRequestStatus[] {
+  return [
+    'submitted',
+    'escalated',
+    'in_progress',
+    'changes_requested',
+    'needs_info',
+  ]
+}
+
+/** Số giờ chờ nhân viên nhận (hoặc nhận sửa) trước khi bị đánh dấu quá hạn. */
+export const OVERDUE_HOURS = 48
+
+const WAITING_FOR_STAFF: ReadonlySet<DesignRequestStatus> = new Set([
+  'submitted',
+  'escalated',
+  'changes_requested',
+])
+
+/** Yêu cầu đang chờ nhân viên nhận mà đã nằm im quá `OVERDUE_HOURS`. */
+export function isOverdue(
+  item: { status: DesignRequestStatus; updatedAt: string },
+  now: number = Date.now()
+): boolean {
+  if (!WAITING_FOR_STAFF.has(item.status)) return false
+  const waitedMs = now - new Date(item.updatedAt).getTime()
+  return waitedMs > OVERDUE_HOURS * 3_600_000
 }

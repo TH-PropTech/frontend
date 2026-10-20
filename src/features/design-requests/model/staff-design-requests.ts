@@ -8,7 +8,6 @@ import {
 } from '@tanstack/react-query'
 import {
   deliverDesignRequest,
-  escalateDesignRequest,
   getDesignRequest,
   listDesignRequestQueue,
   rejectDesignRequest,
@@ -64,10 +63,6 @@ function useStaffTransition<TInput>(
   })
   // Một yêu cầu đã đổi trạng thái (409): vẫn phải tải lại cho đúng.
   return { ...mutation, refresh: invalidate }
-}
-
-export function useEscalateDesignRequest() {
-  return useStaffTransition<{ note?: string }>(escalateDesignRequest)
 }
 
 export function useRequestInfoDesignRequest() {

@@ -25,24 +25,20 @@ import {
   STAFF_STATUS_ORDER,
   STAFF_STATUS_TONE,
   defaultQueueStatuses,
+  isOverdue,
 } from '../model/staff-design-request-labels'
 import { useDesignRequestQueue } from '../model/staff-design-requests'
 import { StaffDesignRequestDetail } from './staff-design-request-detail'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 const PAGE_SIZE = 20
 
 const dateTime = (iso: string): string => new Date(iso).toLocaleString('vi-VN')
 
-export interface StaffDesignRequestsViewProps {
-  role: 'staff' | 'admin'
-}
-
-/** Hàng đợi yêu cầu thiết kế 3D: nhân viên phân loại, quản trị viên nhận và giao thiết kế. */
-export function StaffDesignRequestsView({
-  role,
-}: StaffDesignRequestsViewProps): React.ReactElement {
+/** Hàng đợi yêu cầu thiết kế 3D: nhân viên nhận yêu cầu, tự dựng thiết kế 3D và giao cho chủ nhà duyệt. */
+export function StaffDesignRequestsView(): React.ReactElement {
   const [statuses, setStatuses] = React.useState<DesignRequestStatus[]>(() =>
-    defaultQueueStatuses(role)
+    defaultQueueStatuses()
   )
   const [page, setPage] = React.useState(1)
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
@@ -69,9 +65,8 @@ export function StaffDesignRequestsView({
           Yêu cầu thiết kế 3D
         </h2>
         <p className="mt-1 text-xs text-muted">
-          {role === 'admin'
-            ? 'Nhận yêu cầu đã được chuyển lên, dựng thiết kế 3D và giao cho chủ nhà duyệt.'
-            : 'Phân loại yêu cầu của chủ nhà: chuyển quản trị viên, yêu cầu bổ sung hoặc từ chối.'}
+          Nhận yêu cầu của chủ nhà, dựng thiết kế 3D rồi giao cho chủ nhà duyệt.
+          Căn hộ không có yêu cầu vẫn hiển thị 3D mặc định.
         </p>
       </div>
 
@@ -113,7 +108,7 @@ export function StaffDesignRequestsView({
           Không có yêu cầu nào khớp bộ lọc.
         </p>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-line bg-surface">
+        <AdminCard className="overflow-hidden">
           <Table data-testid="design-request-table">
             <TableHeader>
               <TableRow>
@@ -134,7 +129,17 @@ export function StaffDesignRequestsView({
                   data-testid={`design-request-${item.id}`}
                 >
                   <TableCell>{dateTime(item.createdAt)}</TableCell>
-                  <TableCell>{dateTime(item.updatedAt)}</TableCell>
+                  <TableCell>
+                    {dateTime(item.updatedAt)}
+                    {isOverdue(item) ? (
+                      <Badge
+                        variant="outline"
+                        className="ml-2 bg-red-100 text-red-800"
+                      >
+                        Quá hạn
+                      </Badge>
+                    ) : null}
+                  </TableCell>
                   <TableCell>{item.apartment?.title ?? '—'}</TableCell>
                   <TableCell>{item.landlord?.name ?? '—'}</TableCell>
                   <TableCell>{STAFF_KIND_LABELS[item.kind]}</TableCell>
@@ -161,7 +166,7 @@ export function StaffDesignRequestsView({
               ))}
             </TableBody>
           </Table>
-        </div>
+        </AdminCard>
       )}
 
       {!queue.isPending && items.length > 0 ? (
@@ -206,7 +211,7 @@ export function StaffDesignRequestsView({
             </DialogDescription>
           </DialogHeader>
           {selectedId ? (
-            <StaffDesignRequestDetail requestId={selectedId} role={role} />
+            <StaffDesignRequestDetail requestId={selectedId} />
           ) : null}
         </DialogContent>
       </Dialog>

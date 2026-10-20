@@ -56,7 +56,9 @@ export interface DesignRequestSummary {
   status: DesignRequestStatus
   revision: number
   deliveredDesignId: string | null
+  /** Người đã nhận thiết kế (tên trường cũ giữ nguyên để khỏi migrate). */
   assignedAdminId: string | null
+  assignee: { id: string; name: string } | null
   createdAt: string
   updatedAt: string
 }
@@ -146,18 +148,11 @@ export function cancelDesignRequest(id: string): Promise<DesignRequest> {
   return apiClient.post<DesignRequest>(path(id, 'cancel'), {})
 }
 
-/** Staff / admin. */
+/** Nhân viên (admin cũng có quyền tương đương). */
 export function listDesignRequestQueue(
   filter: DesignRequestListFilter = {}
 ): Promise<DesignRequestPage> {
   return apiClient.get<DesignRequestPage>(`${base}/queue${toQuery(filter)}`)
-}
-
-export function escalateDesignRequest(
-  id: string,
-  input: { note?: string } = {}
-): Promise<DesignRequest> {
-  return apiClient.post<DesignRequest>(path(id, 'escalate'), input)
 }
 
 export function requestInfoDesignRequest(
@@ -174,7 +169,6 @@ export function rejectDesignRequest(
   return apiClient.post<DesignRequest>(path(id, 'reject'), input)
 }
 
-/** Admin. */
 export function startDesignRequest(id: string): Promise<DesignRequest> {
   return apiClient.post<DesignRequest>(path(id, 'start'), {})
 }

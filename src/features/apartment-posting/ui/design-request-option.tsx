@@ -27,6 +27,11 @@ export function DesignRequestOption({
       <h3 className="text-sm font-bold text-fg">
         Yêu cầu thiết kế 3D (tùy chọn)
       </h3>
+      <p className="text-xs text-muted leading-relaxed">
+        Không gửi yêu cầu thì căn hộ vẫn hiển thị 3D mặc định ngay khi đăng. Nếu
+        gửi, nhân viên sẽ dựng thiết kế riêng theo mô tả của bạn và gửi lại để
+        bạn duyệt.
+      </p>
       <div className="flex items-center gap-2">
         <Checkbox
           id="design-request-enabled"
