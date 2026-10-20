@@ -180,6 +180,46 @@ export const AI_GUIDES: Record<string, AiGuide> = {
       'Bước 3: Màn hình sẽ hiện chi tiết: Ngày giờ chính xác bạn nạp tiền, số tiền, và xác nhận kỹ thuật của sổ cái Blockchain.',
     ],
   },
+  'floorplan-3d': {
+    title: 'Hướng dẫn xem sơ đồ 3D',
+    summary:
+      'Sơ đồ 3D dựng từ thông tin tin đăng: bạn nhìn khu đô thị từ trên cao, thấy căn đang xem sáng lên rồi bấm vào để đi bộ trong căn hộ.',
+    steps: [
+      'Ở trang chi tiết căn hộ, nhấn Xem sơ đồ 3D minh hoạ. Căn bạn xem là cửa sổ sáng màu cam trên tòa nhà xanh.',
+      'Kéo để di chuyển và xoay, lăn chuột hoặc dùng hai ngón để phóng to. Dùng nút mặt trời hoặc mặt trăng để đổi ngày đêm.',
+      'Nhấn vào cửa sổ đang sáng để camera bay tới và vào bên trong căn hộ.',
+      'Chọn chế độ Đi vào để đi bộ: phím W A S D trên máy tính, hoặc cần điều khiển và các nút bên phải trên điện thoại.',
+      'Nhấn Sa bàn ở góc trên bên trái để quay lại khu đô thị.',
+    ],
+    tip: 'Bố cục 3D chỉ mang tính minh hoạ và có thể khác hiện trạng thực tế. Hãy đi xem nhà trước khi quyết định.',
+    stepTips: [
+      'Bước 1: Ở trang chi tiết căn hộ, nhấn nút Xem sơ đồ 3D minh hoạ. Bạn sẽ thấy khu đô thị từ trên cao, căn đang xem là cửa sổ sáng màu cam.',
+      'Bước 2: Kéo chuột hoặc một ngón tay để di chuyển, lăn chuột hoặc dùng hai ngón để phóng to. Nút mặt trời hoặc mặt trăng đổi giữa ban ngày và ban đêm.',
+      'Bước 3: Nhấn vào cửa sổ đang sáng. Camera sẽ bay tới sát cửa sổ rồi đưa bạn vào bên trong căn hộ.',
+      'Bước 4: Chọn chế độ Đi vào. Trên máy tính dùng phím W A S D hoặc mũi tên, giữ Shift để chạy. Trên điện thoại dùng cần điều khiển bên trái, nút quay và nút chạy bên phải, kéo màn hình để nhìn quanh.',
+      'Bước 5: Nhấn nút Sa bàn ở góc trên bên trái để trở về khu đô thị và xem căn khác.',
+    ],
+  },
+  'smartca-sign': {
+    title: 'Hướng dẫn ký bằng VNPT SmartCA',
+    summary:
+      'Hợp đồng được ký điện tử bằng chứng thư số VNPT SmartCA. Bạn chỉ cần duyệt giao dịch trong ứng dụng VNPT SmartCA trên điện thoại.',
+    steps: [
+      'Hoàn tất xác minh KYC và cài ứng dụng VNPT SmartCA đã có chứng thư số.',
+      'Trong trang hợp đồng, chuyển sang bước Ký số và nhấn Chuẩn bị ký VNPT SmartCA.',
+      'Chọn đúng chứng thư số của bạn rồi nhấn Gửi yêu cầu ký VNPT SmartCA.',
+      'Mở ứng dụng VNPT SmartCA, kiểm tra thông tin giao dịch và đồng ý ký trước khi hết thời gian đếm ngược.',
+      'Khi hiện Đã ký, đợi bên còn lại ký rồi chuyển sang bước đặt cọc và kích hoạt hợp đồng.',
+    ],
+    tip: 'Trang web không bao giờ hỏi mật khẩu hay mã OTP SmartCA của bạn. Chỉ duyệt giao dịch khi chính bạn vừa gửi yêu cầu ký.',
+    stepTips: [
+      'Bước 1: Hãy chắc chắn tài khoản đã được duyệt KYC và bạn đã cài ứng dụng VNPT SmartCA có chứng thư số. Thiếu một trong hai thì hệ thống sẽ báo chưa thể ký.',
+      'Bước 2: Ở bước Ký số của hợp đồng, nhấn nút Chuẩn bị ký VNPT SmartCA để hệ thống tải chứng thư số của bạn.',
+      'Bước 3: Nếu bạn có nhiều chứng thư, chọn đúng chứng thư của mình rồi nhấn Gửi yêu cầu ký VNPT SmartCA.',
+      'Bước 4: Mở ứng dụng VNPT SmartCA trên điện thoại, đọc lại thông tin giao dịch và đồng ý ký. Hãy làm trước khi đồng hồ đếm ngược kết thúc, nếu hết hạn bạn chỉ cần gửi yêu cầu ký lại.',
+      'Bước 5: Khi thấy thông báo Đã ký, chữ ký của bạn đã được ghi nhận. Hợp đồng có hiệu lực khi cả hai bên cùng ký.',
+    ],
+  },
   'vr-guide': {
     title: 'Trợ lý Xem Nhà 3D (VR Tour)',
     summary:

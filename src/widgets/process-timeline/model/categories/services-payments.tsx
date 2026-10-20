@@ -107,6 +107,98 @@ export const servicesPaymentsCategories: Category[] = [
         ),
       },
       {
+        id: 'smartca-sign',
+        title: 'Ký hợp đồng bằng VNPT SmartCA',
+        breadcrumbs: ['Sản phẩm & Dịch vụ', 'Ký hợp đồng bằng VNPT SmartCA'],
+        content: (
+          <div className="space-y-4 text-xs md:text-sm text-muted leading-relaxed">
+            <p className="font-bold text-fg text-sm">
+              Chữ ký số VNPT SmartCA là gì?
+            </p>
+            <p>
+              Hợp đồng thuê nhà trên TH-PropTech được ký điện tử bằng chứng thư
+              số do VNPT SmartCA cấp. Chữ ký gắn với đúng một người và có số
+              hiệu chứng thư để tra cứu ai đã ký. Bạn duyệt giao dịch ngay trong
+              ứng dụng VNPT SmartCA trên điện thoại, nên trên trang web không
+              phải nhập mật khẩu hay mã OTP của SmartCA.
+            </p>
+
+            <h3 className="font-bold text-fg text-sm mt-6">Điều kiện để ký:</h3>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                Tài khoản đã <strong>hoàn tất xác minh KYC</strong> (hồ sơ được
+                duyệt và có số CCCD).
+              </li>
+              <li>
+                Đã có tài khoản <strong>VNPT SmartCA</strong> được cấp chứng thư
+                số và cài ứng dụng VNPT SmartCA trên điện thoại.
+              </li>
+              <li>
+                Bản PDF hợp đồng đã được khóa nội dung (không còn chỉnh sửa).
+              </li>
+            </ul>
+
+            <h3 className="font-bold text-fg text-sm mt-6">
+              Các bước thao tác chi tiết:
+            </h3>
+            <ol className="list-decimal pl-5 space-y-3">
+              <li>
+                <strong>Mở bước Ký số:</strong> Trong trang hợp đồng, đọc kỹ nội
+                dung ở bước Hợp đồng rồi chuyển sang bước <em>Ký số</em>. Nếu
+                chưa ký được, hệ thống nêu rõ lý do (ví dụ chưa duyệt KYC).
+              </li>
+              <li>
+                <strong>Chuẩn bị ký:</strong> Nhấn{' '}
+                <em>Chuẩn bị ký VNPT SmartCA</em>. Hệ thống tải danh sách chứng
+                thư số SmartCA của bạn.
+              </li>
+              <li>
+                <strong>Chọn chứng thư và gửi yêu cầu:</strong> Nếu có nhiều
+                chứng thư, hãy chọn đúng chứng thư của bạn rồi nhấn{' '}
+                <em>Gửi yêu cầu ký VNPT SmartCA</em>.
+              </li>
+              <li>
+                <strong>Duyệt trong app VNPT SmartCA:</strong> Mở ứng dụng VNPT
+                SmartCA trên điện thoại, kiểm tra thông tin giao dịch và đồng ý
+                ký. Trang web tự cập nhật trạng thái và có đồng hồ đếm ngược
+                thời gian chờ; bạn cũng có thể nhấn kiểm tra trạng thái hoặc hủy
+                yêu cầu.
+              </li>
+              <li>
+                <strong>Hoàn tất:</strong> Khi hiện{' '}
+                <em>Đã ký: bằng chứng giao dịch SmartCA đã được xác minh</em>,
+                chữ ký của bạn đã được ghi nhận. Hợp đồng chỉ có hiệu lực khi cả
+                chủ nhà và khách thuê đều ký, sau đó chuyển sang bước đặt cọc và
+                kích hoạt.
+              </li>
+            </ol>
+
+            <h3 className="font-bold text-fg text-sm mt-6">
+              Khi giao dịch không thành công:
+            </h3>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                <strong>Bị từ chối / đã hủy / hết hạn:</strong> gửi lại yêu cầu
+                ký mới và duyệt trong app đúng thời gian đếm ngược.
+              </li>
+              <li>
+                <strong>Chứng thư không hợp lệ hoặc bị trùng:</strong> liên hệ
+                VNPT SmartCA để kiểm tra chứng thư số của bạn.
+              </li>
+            </ul>
+
+            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 mt-6">
+              <span className="font-bold text-primary text-xs block mb-1">
+                Lưu ý an toàn:
+              </span>
+              Chỉ duyệt giao dịch khi chính bạn vừa gửi yêu cầu ký và nội dung
+              đúng là hợp đồng của mình. TH-PropTech không bao giờ hỏi mật khẩu
+              hay mã OTP SmartCA của bạn.
+            </div>
+          </div>
+        ),
+      },
+      {
         id: 'ai-recommender',
         title: 'Hệ thống gợi ý AI gợi ý căn hộ',
         breadcrumbs: ['Sản phẩm & Dịch vụ', 'Hệ thống gợi ý AI gợi ý căn hộ'],

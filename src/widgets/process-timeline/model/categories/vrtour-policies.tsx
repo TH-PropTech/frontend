@@ -84,6 +84,75 @@ export const vrtourPoliciesCategories: Category[] = [
           </div>
         ),
       },
+      {
+        id: 'floorplan-3d',
+        title: 'Xem sơ đồ 3D căn hộ',
+        breadcrumbs: ['Tham quan VR Tour', 'Xem sơ đồ 3D căn hộ'],
+        content: (
+          <div className="space-y-4 text-xs md:text-sm text-muted leading-relaxed">
+            <p className="font-bold text-fg text-sm">
+              Sơ đồ 3D minh hoạ là gì?
+            </p>
+            <p>
+              Sơ đồ 3D được dựng ngay khi bạn xem, từ thông tin của tin đăng: số
+              phòng ngủ, số phòng vệ sinh, diện tích và mức nội thất. Bố cục
+              mang tính minh hoạ và có thể khác hiện trạng thực tế, bạn nên đi
+              xem nhà trước khi quyết định.
+            </p>
+
+            <h3 className="font-bold text-fg text-sm mt-6">
+              Các bước thao tác chi tiết:
+            </h3>
+            <ol className="list-decimal pl-5 space-y-3">
+              <li>
+                <strong>Mở sơ đồ:</strong> Ở trang chi tiết căn hộ, nhấn{' '}
+                <em>Xem sơ đồ 3D minh hoạ</em>. Màn hình mở ra một khu đô thị
+                nhìn từ trên cao, căn bạn đang xem là cửa sổ{' '}
+                <strong>sáng màu cam</strong> trên tòa nhà xanh, có ghim nổi
+                phía trên.
+              </li>
+              <li>
+                <strong>Di chuyển trong khu đô thị:</strong> Kéo chuột trái để
+                dịch chuyển, kéo chuột phải để xoay, lăn chuột để phóng to hoặc
+                thu nhỏ. Trên điện thoại: một ngón để kéo, hai ngón để phóng và
+                xoay. Nút mặt trời / mặt trăng đổi giữa ban ngày và ban đêm, nút
+                bên cạnh bật toàn màn hình.
+              </li>
+              <li>
+                <strong>Vào xem phòng:</strong> Nhấn vào cửa sổ đang sáng (hoặc
+                nhấn tòa nhà rồi chọn căn trong danh sách). Camera bay tới sát
+                cửa sổ rồi chuyển vào bên trong căn hộ.
+              </li>
+              <li>
+                <strong>Quan sát và đi trong phòng:</strong> Chế độ{' '}
+                <em>Tổng quan</em> cho nhìn toàn bộ mặt bằng từ trên cao; chế độ{' '}
+                <em>Đi vào</em> cho bạn đi bộ bên trong. Máy tính: phím W A S D
+                hoặc mũi tên để đi, Shift để chạy, kéo chuột để nhìn quanh. Điện
+                thoại: cần điều khiển bên trái để đi, nút bên phải để quay hoặc
+                chạy, kéo màn hình để nhìn quanh.
+              </li>
+              <li>
+                <strong>Tùy chỉnh khi xem:</strong> Đổi giờ trong ngày để xem
+                ánh sáng, chọn phong cách thiết kế (nếu căn có nhiều phong cách)
+                và dùng ô tìm kiếm để đến nhanh một phòng hoặc món đồ.
+              </li>
+              <li>
+                <strong>Quay lại:</strong> Nhấn <em>Sa bàn</em> ở góc trên bên
+                trái để trở về khu đô thị.
+              </li>
+            </ol>
+
+            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 mt-6">
+              <span className="font-bold text-primary text-xs block mb-1">
+                Trên ứng dụng điện thoại:
+              </span>
+              Xoay máy ngang để có không gian rộng hơn, hoặc nhấn nút xoay ở góc
+              trên màn hình. Thoát khỏi màn hình 3D thì ứng dụng tự trở về chiều
+              dọc.
+            </div>
+          </div>
+        ),
+      },
     ],
   },
   {
