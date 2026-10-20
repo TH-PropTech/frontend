@@ -396,7 +396,7 @@ export function ProcessTimeline(): React.ReactElement {
                         {activeArticle.title}
                       </h1>
                       <p className="text-[10px] text-muted">
-                        Cập nhật lần cuối: 15/06/2026
+                        Cập nhật lần cuối: 20/10/2026
                       </p>
                     </div>
 

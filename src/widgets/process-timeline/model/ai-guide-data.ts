@@ -6,178 +6,205 @@ export interface AnnotationAnchor {
   relatedStepIndex?: number
 }
 
+/**
+ * Hướng dẫn từng bước đi kèm mỗi bài Cẩm nang. `stepTips[i]` là lời đọc của bước `steps[i]`.
+ * Đây là kịch bản soạn sẵn (không phải AI): nội dung phải khớp với bài viết và với hành vi thật của hệ thống.
+ */
 export interface AiGuide {
   title: string
   summary: string
   steps: string[]
   tip: string
   stepTips: string[]
-  stepTipsEn?: string[] // Bilingual (§6C.5)
-  glossary?: Record<string, string> // Terminology tooltips (§5.5)
-  stepTipsByRole?: Partial<Record<UserRole, string[]>> // RBAC-aware tips (§6B.1)
-  annotations?: AnnotationAnchor[] // Content annotations (§6C.4)
+  stepTipsEn?: string[]
+  glossary?: Record<string, string>
+  stepTipsByRole?: Partial<Record<UserRole, string[]>>
+  annotations?: AnnotationAnchor[]
 }
 
 export const AI_GUIDES: Record<string, AiGuide> = {
   'post-desktop': {
-    title: 'Trợ lý Đăng tin Web (Máy tính)',
+    title: 'Hướng dẫn đăng tin trên máy tính',
     summary:
-      'Đăng tin trên máy tính giúp bạn dễ dàng tải lên các giấy tờ pháp lý và liên kết hình ảnh tham quan nhà 3D một cách trực quan, rõ nét nhất.',
+      'Đăng tin trên máy tính giúp bạn nhập thông tin căn hộ và ảnh nhanh chóng, rồi gửi nhân viên kiểm duyệt.',
     steps: [
-      'Đăng nhập tài khoản của bạn (đảm bảo tài khoản đã hoàn thành xác thực định danh eKYC).',
-      'Nhấn vào nút Đăng tin màu cam đất nổi bật ở góc phía trên bên phải màn hình.',
-      'Khai báo đầy đủ thông số kỹ thuật căn hộ bao gồm: Hướng nhà, Hướng ban công, Tình trạng bàn giao nội thất, Thời gian dọn vào, Đơn giá điện và đơn giá nước.',
-      'Tải lên ảnh chụp Sổ hồng pháp lý, dán đường link VR Tour 360 độ rồi gửi yêu cầu kiểm duyệt.',
+      'Đăng nhập tài khoản chủ nhà và bấm Đăng tin ở thanh trên cùng.',
+      'Nhập thông tin căn hộ: loại hình, địa chỉ, số phòng, diện tích, giá thuê, hướng nhà, nội thất, điện nước và tiện ích.',
+      'Tải lên ít nhất một ảnh thật của căn hộ, có thể thêm link VR Tour hoặc ảnh 360 độ.',
+      'Bấm Gửi kiểm duyệt và theo dõi trạng thái ở Tin đăng của tôi.',
     ],
-    tip: 'Các căn hộ được Staff kiểm duyệt chuyển sang trạng thái available sẽ tự động được gán cờ xác thực isVerified thành true và hiển thị nhãn chứng nhận chính chủ để thu hút khách thuê.',
+    tip: 'Tin được duyệt hiển thị 30 ngày. Hệ thống nhắc bạn trước khi hết hạn 3 ngày, và bạn có thể gia hạn thêm 30 ngày.',
     stepTips: [
-      'Bước 1: Đăng nhập tài khoản. Đảm bảo tài khoản của bạn đã hoàn thành eKYC thành công để bài đăng sau khi duyệt được gắn nhãn chính chủ.',
-      'Bước 2: Di chuyển con trỏ chuột lên góc trên cùng bên phải màn hình và nhấn vào nút Đăng tin để mở biểu mẫu khai báo thông tin.',
-      'Bước 3: Vui lòng điền chính xác giá thuê, tiền cọc, và các thông số chi tiết như hướng nhà, hướng ban công, tình trạng bàn giao nội thất, đơn giá điện nước.',
-      'Bước 4: Nhấp vào ô tải tài liệu để chọn ảnh chụp Sổ hồng từ máy tính của bạn. Dán link VR Tour 360 độ (nếu có) rồi nhấn nút gửi duyệt.',
+      'Bước 1: Đăng nhập tài khoản chủ nhà, sau đó bấm nút Đăng tin ở thanh trên cùng hoặc vào mục Tin đăng của tôi.',
+      'Bước 2: Nhập đầy đủ thông tin căn hộ, gồm loại hình, địa chỉ, số phòng ngủ, số phòng vệ sinh, diện tích, giá thuê, hướng nhà, tình trạng nội thất, điện nước và tiện ích.',
+      'Bước 3: Tải lên ít nhất một ảnh thật của căn hộ. Nếu có, bạn có thể thêm đường link VR Tour hoặc ảnh 360 độ.',
+      'Bước 4: Bấm Gửi kiểm duyệt. Nếu tin bị từ chối, bạn sẽ thấy lý do để chỉnh sửa và gửi lại.',
     ],
   },
   'post-mobile': {
-    title: 'Trợ lý Đăng tin App (Điện thoại)',
+    title: 'Hướng dẫn đăng tin trên điện thoại',
     summary:
-      'Đăng tin cho thuê nhà ngay trên điện thoại di động vô cùng tiện lợi nhờ khả năng chụp ảnh không gian phòng trực tiếp và tự động định vị địa chỉ.',
+      'Đăng tin ngay trên ứng dụng, chọn ảnh có sẵn hoặc chụp trực tiếp rồi gửi kiểm duyệt.',
     steps: [
-      'Mở ứng dụng trên điện thoại, nhấn vào biểu tượng Chủ nhà ở thanh menu dưới cùng.',
-      'Nhấn chọn nút Đăng tin căn hộ mới và chọn Đồng ý cho phép ứng dụng truy cập Máy ảnh (Camera).',
-      'Đi xung quanh nhà và chụp hình phòng khách, phòng ngủ, bếp. Bật định vị GPS để tự động lấy địa chỉ chính xác.',
-      'Khai báo đầy đủ thông số kỹ thuật (Hướng nhà, Hướng ban công, điện nước) rồi nhấn nút Gửi kiểm duyệt.',
+      'Mở ứng dụng, đăng nhập và chọn mục dành cho chủ nhà.',
+      'Chọn Đăng tin căn hộ mới.',
+      'Thêm ít nhất một ảnh: chọn ảnh có sẵn hoặc chụp trực tiếp.',
+      'Nhập thông tin căn hộ rồi gửi kiểm duyệt.',
     ],
-    tip: 'Bật định vị định vị GPS khi chụp ảnh giúp hệ thống tự điền địa chỉ chính xác, rút ngắn thời gian duyệt tin của nhân viên Staff.',
+    tip: 'Theo dõi trạng thái ở danh sách tin đăng. Tin bị từ chối có lý do để bạn sửa và gửi lại.',
     stepTips: [
-      'Bước 1: Trên điện thoại của bạn, mở ứng dụng TH-PropTech. Nhìn xuống thanh công cụ dưới cùng màn hình và nhấn vào biểu tượng có chữ Chủ nhà.',
-      'Bước 2: Bấm vào nút Đăng tin căn hộ mới. Khi hệ điều hành hiển thị thông báo hỏi quyền truy cập Máy ảnh, hãy chọn Đồng ý.',
-      'Bước 3: Hãy đứng ở các góc phòng để chụp được toàn cảnh rõ nét. Bật GPS trên điện thoại để hệ thống tự động điền vị trí căn hộ lên bản đồ.',
-      'Bước 4: Nhập đầy đủ giá thuê, tiền cọc, thông số nội thất, đơn giá điện nước chi tiết rồi nhấn nút Gửi kiểm duyệt.',
+      'Bước 1: Mở ứng dụng, đăng nhập tài khoản chủ nhà và chọn mục dành cho chủ nhà.',
+      'Bước 2: Chọn Đăng tin căn hộ mới.',
+      'Bước 3: Thêm ít nhất một ảnh. Bạn có thể chọn ảnh có sẵn hoặc chụp trực tiếp, hãy cho phép ứng dụng dùng Camera khi được hỏi.',
+      'Bước 4: Nhập địa chỉ, số phòng, diện tích, giá thuê và các thông tin còn lại, rồi gửi kiểm duyệt.',
     ],
   },
   'kyc-info': {
-    title: 'Trợ lý Định danh eKYC (Xác thực tài khoản)',
+    title: 'Hướng dẫn xác minh KYC',
     summary:
-      'Xác thực định danh eKYC giúp bảo vệ bạn khỏi các tài khoản giả mạo, lừa đảo, đồng thời đủ điều kiện ký hợp đồng thuê nhà điện tử hợp pháp trên hệ thống.',
+      'KYC xác nhận bạn là người thật với giấy tờ thật. Cần KYC đã duyệt để ký hợp đồng bằng VNPT SmartCA.',
     steps: [
-      'Đặt thẻ Căn cước công dân (CCCD) ngay ngắn trên mặt bàn và chụp rõ nét mặt trước, mặt sau.',
-      'Kiểm tra lại kỹ các thông tin (Họ tên, Số CCCD, Ngày sinh) do OCR tự động trích xuất và hiển thị.',
-      'Đưa camera trước lên trước mặt, thực hiện nháy mắt, mỉm cười và quay đầu chậm để quét sinh trắc học khuôn mặt.',
+      'Vào Trang cá nhân và chọn xác minh danh tính.',
+      'Chụp hoặc tải ảnh mặt trước và mặt sau CCCD.',
+      'Kiểm tra và sửa các thông tin hệ thống đọc được từ thẻ.',
+      'Gửi hồ sơ và chờ nhân viên duyệt.',
     ],
-    tip: 'Mã hash của hồ sơ eKYC sau khi xác thực thành công sẽ được ghi nhận lên Blockchain Hyperledger Fabric để lưu vết bằng chứng xác minh bất biến.',
+    tip: 'Ảnh CCCD được mã hóa khi lưu trữ. Để đọc thông tin trên thẻ, ảnh được gửi tới dịch vụ nhận dạng của bên thứ ba.',
     stepTips: [
-      'Bước 1: Hãy đặt thẻ CCCD của bạn trên một mặt phẳng đủ ánh sáng. Giữ chắc tay khi chụp, tránh để ánh đèn phản chiếu làm mờ các dòng chữ trên thẻ.',
-      'Bước 2: Hệ thống tự động phân tích OCR dữ liệu trên thẻ và điền vào các ô. Bạn hãy đọc lại thật kỹ xem số CCCD, họ tên đã hoàn toàn chính xác chưa.',
-      'Bước 3: Giữ điện thoại ngang tầm mắt, đưa khuôn mặt vào giữa khung tròn trên màn hình và làm theo hướng dẫn nháy mắt, mỉm cười hoặc quay đầu chậm.',
+      'Bước 1: Vào Trang cá nhân và chọn xác minh danh tính.',
+      'Bước 2: Chụp bằng webcam hoặc tải ảnh mặt trước và mặt sau của căn cước công dân. Hãy chụp rõ nét, đủ bốn góc.',
+      'Bước 3: Hệ thống tự đọc thông tin trên thẻ. Bạn kiểm tra kỹ họ tên, số CCCD, ngày sinh và các trường khác, sửa nếu có sai.',
+      'Bước 4: Gửi hồ sơ và chờ nhân viên duyệt. Nếu bị từ chối, bạn sẽ thấy lý do để chỉnh sửa và gửi lại.',
     ],
   },
-  'fabric-ca-cert': {
-    title: 'Trợ lý Chữ ký số VNPT SmartCA',
+  'account-security': {
+    title: 'Hướng dẫn bảo mật tài khoản',
     summary:
-      'Chữ ký số tích hợp qua VNPT SmartCA là danh tính điện tử duy nhất đại diện cho chữ ký tay của bạn trên môi trường mạng, giúp ký kết hợp đồng thuê nhà trực tuyến.',
+      'Bật xác thực hai lớp và dùng Smart OTP để bảo vệ tài khoản ngoài mật khẩu.',
     steps: [
-      'Đảm bảo tài khoản đã hoàn thành xác thực định danh eKYC thành công.',
-      'Liên kết trực tiếp dịch vụ chứng thư số cá nhân VNPT SmartCA hiển thị số seri chứng thư và thời hạn hiệu lực.',
-      'Tạo mã PIN bảo mật gồm 6 số tự chọn để bảo vệ quyền ký kết của bạn.',
+      'Vào Trang cá nhân, mục Bảo mật, chọn bật xác thực hai lớp.',
+      'Quét mã QR bằng ứng dụng xác thực và nhập mã 6 số để kích hoạt.',
+      'Lưu lại các mã dự phòng ở nơi an toàn.',
+      'Giữ kín mã PIN Smart OTP và không chia sẻ mã xác thực với ai.',
     ],
-    tip: 'Mã PIN chữ ký số VNPT SmartCA có giá trị pháp lý tương đương chữ ký tay của bạn. Tuyệt đối không chia sẻ mã PIN này cho người khác.',
+    tip: 'Smart OTP khác với chữ ký VNPT SmartCA. Khi ký hợp đồng bạn duyệt trong ứng dụng VNPT SmartCA, không nhập PIN trên web.',
     stepTips: [
-      'Bước 1: Để chữ ký số có giá trị pháp lý, tài khoản bắt buộc phải ở trạng thái Verified (hoàn thành eKYC thành công).',
-      'Bước 2: Hệ thống tự động liên kết tài khoản của bạn với dịch vụ chứng thư số cá nhân VNPT SmartCA.',
-      'Bước 3: Thiết lập mã PIN bảo mật gồm 6 chữ số để bảo vệ chữ ký số. Mã PIN này sẽ được yêu cầu mỗi khi bạn thực hiện ký số hợp đồng.',
+      'Bước 1: Vào Trang cá nhân, mở mục Bảo mật và chọn bật xác thực hai lớp.',
+      'Bước 2: Quét mã QR bằng ứng dụng xác thực như Google Authenticator, rồi nhập mã sáu số hiện trong ứng dụng để kích hoạt.',
+      'Bước 3: Hãy lưu lại các mã dự phòng ở nơi an toàn. Bạn sẽ cần chúng nếu mất điện thoại.',
+      'Bước 4: Giữ kín mã PIN Smart OTP và không chia sẻ mã xác thực cho bất kỳ ai, kể cả người tự xưng là nhân viên.',
     ],
   },
   'smart-contract': {
-    title: 'Trợ lý Ký Hợp Đồng Điện Tử',
+    title: 'Hướng dẫn quy trình thuê nhà',
     summary:
-      'Hợp đồng thuê nhà được quản lý bằng Blockchain giúp lưu trữ các điều khoản thuê vĩnh viễn, minh bạch và không một ai có thể tự ý sửa đổi sau khi đã ký kết.',
+      'Hợp đồng điện tử đi qua các bước: Hợp đồng, Ký số, Đặt cọc, Kích hoạt và Nhận nhà.',
     steps: [
-      'Chủ nhà soạn thảo bản thảo hợp đồng thuê (giá thuê, tiền cọc, ngày đóng tiền) gửi cho khách thuê.',
-      'Khách thuê mở hợp đồng ra đọc kỹ, nếu đồng ý thì nhấn nút Ký và nhập mã PIN chữ ký số VNPT SmartCA.',
-      'Hệ thống tính toán mã băm SHA-256 (contractHash) của hợp đồng và ghi nhận bất biến lên sổ cái Hyperledger Fabric.',
+      'Đọc nội dung hợp đồng ở bước Hợp đồng.',
+      'Ký số bằng VNPT SmartCA, cả hai bên cùng ký.',
+      'Đặt cọc sau khi ký.',
+      'Hợp đồng được kích hoạt và hóa đơn tiền thuê được tạo.',
+      'Hoàn tất nhận nhà nếu hợp đồng có quyết toán.',
     ],
-    tip: 'Hợp đồng đã ký số sẽ được lưu vết bất biến trên Blockchain làm bằng chứng pháp lý bảo vệ bạn nếu xảy ra tranh chấp sau này.',
+    tip: 'Thứ tự là ký trước, cọc sau. Hợp đồng chỉ có hiệu lực khi đủ hai chữ ký và tiền cọc đã được xác nhận.',
     stepTips: [
-      'Bước 1: Chủ nhà điền đầy đủ các thông tin thỏa thuận thuê nhà như giá tiền, ngày thanh toán, và các quy định của phòng trọ rồi bấm gửi bản thảo cho người thuê.',
-      'Bước 2: Khách thuê mở ứng dụng đọc kỹ từng điều khoản hợp đồng. Nếu đồng ý, nhấn nút Ký hợp đồng và nhập mã PIN VNPT SmartCA để hoàn tất.',
-      'Bước 3: Blockchain Hyperledger Fabric tự động lưu vết mã băm hợp đồng (contractHash) để đảm bảo không ai có thể đơn phương sửa đổi nội dung đã ký.',
+      'Bước 1: Đọc kỹ nội dung hợp đồng gồm thời hạn, giá thuê, ngày thanh toán hằng tháng và điều khoản chậm thanh toán.',
+      'Bước 2: Ký số bằng VNPT SmartCA. Cả chủ nhà và khách thuê đều cần ký và đã xác minh KYC.',
+      'Bước 3: Sau khi ký, khách thuê thanh toán tiền cọc. Hợp đồng ở trạng thái chờ cọc cho đến khi tiền cọc được xác nhận.',
+      'Bước 4: Khi đủ hai chữ ký và cọc đã xác nhận, hợp đồng được kích hoạt và hệ thống tạo lịch hóa đơn tiền thuê.',
+      'Bước 5: Nếu hợp đồng có quyết toán nhận nhà, bạn thanh toán các khoản đến hạn rồi hai bên xác nhận bàn giao.',
     ],
-    glossary: {
-      Blockchain: 'Giống cuốn sổ cái công khai mà không ai sửa xóa được.',
-      'Smart Contract':
-        'Thỏa thuận tự thực thi trên blockchain khi hai bên ký duyệt.',
-      contractHash: 'Mã băm duy nhất đại diện cho nội dung hợp đồng.',
-      'SHA-256': 'Thuật toán mã hóa tạo dấu vân tay số cho dữ liệu.',
-      'Hyperledger Fabric':
-        'Nền tảng blockchain doanh nghiệp, chỉ các bên được cấp quyền mới đọc được.',
-    },
-    annotations: [
-      {
-        keyword: 'mã băm',
-        explanation:
-          'Mã băm duy nhất đại diện cho toàn bộ nội dung hợp đồng. Bất kỳ thay đổi nào sẽ tạo ra hash khác hoàn toàn.',
-        relatedStepIndex: 2,
-      },
-      {
-        keyword: 'ký số',
-        explanation:
-          'Thay cho chữ ký tay. Sử dụng chứng chỉ số để xác nhận danh tính người ký.',
-        relatedStepIndex: 1,
-      },
-      {
-        keyword: 'Hyperledger Fabric',
-        explanation:
-          'Nền tảng blockchain doanh nghiệp, không công khai như Bitcoin. Chỉ các bên được cấp quyền mới đọc dữ liệu.',
-        relatedStepIndex: 2,
-      },
+  },
+  'smartca-sign': {
+    title: 'Hướng dẫn ký bằng VNPT SmartCA',
+    summary:
+      'Hợp đồng được ký điện tử bằng chứng thư số VNPT SmartCA. Bạn chỉ cần duyệt giao dịch trong ứng dụng VNPT SmartCA trên điện thoại.',
+    steps: [
+      'Hoàn tất xác minh KYC và cài ứng dụng VNPT SmartCA đã có chứng thư số.',
+      'Trong trang hợp đồng, chuyển sang bước Ký số và nhấn Chuẩn bị ký VNPT SmartCA.',
+      'Chọn đúng chứng thư số của bạn rồi nhấn Gửi yêu cầu ký VNPT SmartCA.',
+      'Mở ứng dụng VNPT SmartCA, kiểm tra thông tin giao dịch và đồng ý ký trước khi hết thời gian đếm ngược.',
+      'Khi hiện Đã ký, đợi bên còn lại ký rồi chuyển sang bước đặt cọc và kích hoạt hợp đồng.',
+    ],
+    tip: 'Trang web không bao giờ hỏi mật khẩu hay mã OTP SmartCA của bạn. Chỉ duyệt giao dịch khi chính bạn vừa gửi yêu cầu ký.',
+    stepTips: [
+      'Bước 1: Hãy chắc chắn tài khoản đã được duyệt KYC và bạn đã cài ứng dụng VNPT SmartCA có chứng thư số. Thiếu một trong hai thì hệ thống sẽ báo chưa thể ký.',
+      'Bước 2: Ở bước Ký số của hợp đồng, nhấn nút Chuẩn bị ký VNPT SmartCA để hệ thống tải chứng thư số của bạn.',
+      'Bước 3: Nếu bạn có nhiều chứng thư, chọn đúng chứng thư của mình rồi nhấn Gửi yêu cầu ký VNPT SmartCA.',
+      'Bước 4: Mở ứng dụng VNPT SmartCA trên điện thoại, đọc lại thông tin giao dịch và đồng ý ký. Hãy làm trước khi đồng hồ đếm ngược kết thúc, nếu hết hạn bạn chỉ cần gửi yêu cầu ký lại.',
+      'Bước 5: Khi thấy thông báo Đã ký, chữ ký của bạn đã được ghi nhận. Hợp đồng có hiệu lực khi cả hai bên cùng ký và tiền cọc đã được xác nhận.',
     ],
   },
   'ai-recommender': {
-    title: 'Trợ lý Gợi ý căn hộ bằng AI',
+    title: 'Hướng dẫn gợi ý căn hộ',
     summary:
-      'Thuật toán Naïve Bayes sẽ tự động học hỏi từ sở thích và thông tin KYC của bạn để tính toán điểm số tương thích căn hộ.',
+      'Bạn trả lời một khảo sát ngắn, hệ thống chấm điểm và đề xuất tối đa 5 căn hộ phù hợp.',
     steps: [
-      'Cập nhật các thông tin mong muốn tại hồ sơ cá nhân (vị trí mong muốn, tầm giá thuê, số phòng ngủ).',
-      'Tìm kiếm và tương tác lưu lại các tin đăng căn hộ phù hợp với nhu cầu sinh sống.',
-      'Xem mục Gợi ý dành riêng cho bạn và kiểm tra tỷ lệ Match Score cụ thể theo 3 chiều: Vị trí, Tài chính, Tiện ích.',
+      'Ở trang chủ, mở mục Đề xuất cá nhân hoá và bắt đầu khảo sát.',
+      'Điền tuổi, thu nhập, khu vực, số phòng ngủ và nhu cầu gym, chỗ để xe.',
+      'Xem điểm phù hợp, mức tin cậy và lý do của từng căn.',
+      'Đã đăng nhập thì có thể bấm thích hoặc không thích để cải thiện gợi ý.',
     ],
-    tip: 'Thuật toán Naïve Bayes phân tích các tiêu chí để tính toán điểm tương thích Match Score (%), giúp bạn nhanh chóng tìm được căn hộ phù hợp lâu dài.',
+    tip: 'Căn hộ có giá thuê vượt quá một nửa thu nhập bạn khai sẽ không được đề xuất. Gợi ý chỉ dùng câu trả lời khảo sát.',
     stepTips: [
-      'Bước 1: Cập nhật các thông tin mong muốn của bạn tại mục Hồ sơ cá nhân. Ví dụ: Bạn muốn thuê nhà ở Quận 9, tầm giá dưới 10 triệu đồng/tháng.',
-      'Bước 2: Tìm kiếm và tương tác lưu lại (thả tim) các tin đăng căn hộ phù hợp với nhu cầu của bạn.',
-      'Bước 3: Vào trang chủ, hệ thống sẽ đề xuất danh sách căn hộ kèm theo biểu đồ Match Score 3 chiều (Vị trí, Tài chính, Tiện ích) của Naïve Bayes.',
+      'Bước 1: Ở trang chủ, tìm mục Đề xuất cá nhân hoá cho bạn và bấm làm khảo sát. Bạn không cần đăng nhập để nhận gợi ý.',
+      'Bước 2: Điền tuổi, thu nhập hằng tháng, khu vực mong muốn, số phòng ngủ, và cho biết bạn có cần phòng gym hay chỗ để xe không.',
+      'Bước 3: Xem danh sách tối đa năm căn hộ. Mỗi căn có điểm phù hợp, mức tin cậy cao, trung bình hoặc thấp, và các lý do chính.',
+      'Bước 4: Nếu đã đăng nhập, bạn có thể bấm thích hoặc không thích để hệ thống học dần từ phản hồi.',
     ],
   },
   'payment-guide': {
-    title: 'Trợ lý Thanh toán Hóa đơn tiền thuê',
+    title: 'Hướng dẫn thanh toán cọc và tiền thuê',
     summary:
-      'Các hóa đơn tiền thuê nhà định kỳ hàng tháng được quản lý tập trung và phân loại theo các trạng thái thanh toán rõ ràng.',
+      'Tiền cọc và tiền thuê được chuyển cho chủ nhà. Nền tảng không giữ tiền và không có tài khoản giữ cọc trung gian.',
     steps: [
-      'Kiểm tra danh sách hóa đơn và thời hạn đóng tiền định kỳ ghi nhận trên hợp đồng thuê.',
-      'Xem trạng thái công nợ hiện tại của hóa đơn: Chưa thanh toán (unpaid), Đã thanh toán (paid), hoặc Quá hạn (overdue).',
-      'Thực hiện thanh toán và cập nhật mã băm giao dịch (txHash) trực tiếp vào hóa đơn.',
+      'Ký hợp đồng trước, rồi vào bước Đặt cọc.',
+      'Chọn phương thức thanh toán và quét mã QR trong vòng 15 phút.',
+      'Tiền thuê hằng tháng đến hạn theo ngày đã ghi trong hợp đồng; hệ thống nhắc trước 7 ngày.',
+      'Khi nhận nhà, thanh toán các khoản đến hạn trước ngày bắt đầu thuê.',
     ],
-    tip: 'Mã băm giao dịch txHash đóng vai trò như một biên lai điện tử vĩnh viễn ghi nhận việc nộp tiền nhà đúng hạn, không thể tẩy xóa.',
+    tip: 'Chỉ thanh toán qua cổng của TH-PropTech. Không chuyển tiền ngoài nền tảng; nếu bị yêu cầu, hãy báo cáo vi phạm.',
     stepTips: [
-      'Bước 1: Hệ thống phát sinh hóa đơn tiền thuê định kỳ hàng tháng dựa trên ngày thanh toán quy định trong hợp đồng.',
-      'Bước 2: Hãy kiểm tra trạng thái hóa đơn để tránh rơi vào trạng thái Quá hạn (overdue), dẫn đến phát sinh lãi phạt chậm thanh toán theo hợp đồng.',
-      'Bước 3: Sau khi chuyển khoản thanh toán thành công, cập nhật mã băm giao dịch txHash vào hóa đơn để hệ thống lưu vết đối soát.',
+      'Bước 1: Hoàn tất ký hợp đồng. Thứ tự là ký trước, cọc sau, nên sau khi đủ chữ ký bạn vào bước Đặt cọc.',
+      'Bước 2: Chọn phương thức thanh toán và quét mã QR hoặc làm theo hướng dẫn trên màn hình. Mỗi lần thanh toán có thời hạn khoảng 15 phút, hết hạn bạn tạo lượt mới.',
+      'Bước 3: Hóa đơn tiền thuê được tạo theo chu kỳ trong hợp đồng và đến hạn vào ngày thanh toán quy định. Hệ thống nhắc bạn trước hạn bảy ngày.',
+      'Bước 4: Với hợp đồng có quyết toán nhận nhà, hãy thanh toán các khoản đến hạn, thường là ba ngày trước ngày bắt đầu thuê. Lưu ý hệ thống hiện chạy với ví giả lập, không phải tiền thật.',
     ],
   },
   'blockchain-invoice': {
-    title: 'Trợ lý Tra cứu Lịch sử Hóa Đơn Blockchain',
+    title: 'Hướng dẫn xem hóa đơn và bằng chứng',
     summary:
-      'Mỗi lần hóa đơn được cập nhật trạng thái đã thanh toán kèm txHash, hệ thống sẽ tự động đồng bộ ghi nhật ký BlockchainLog lên sổ cái Hyperledger Fabric.',
+      'Hóa đơn nằm ở tab Hóa đơn. Hợp đồng có thẻ bằng chứng với mã giao dịch lưu vết và nút đối soát nội dung.',
     steps: [
-      'Vào mục quản lý tài khoản cá nhân, chọn phần Lịch sử hóa đơn.',
-      'Tìm hóa đơn bạn muốn kiểm tra và nhấn vào dòng mã băm (txHash) dài dưới hóa đơn.',
-      'Xem thông tin chi tiết biên lai gồm thời gian nộp tiền và chữ ký xác nhận bất biến của ngân hàng lưu trữ trên Blockchain.',
+      'Vào Trang cá nhân, tab Hóa đơn để xem hạn thanh toán, số tiền và trạng thái.',
+      'Mở hợp đồng, bước Kích hoạt, để xem mã giao dịch lưu vết và các sự kiện.',
+      'Nhấn Đối soát toàn vẹn nội dung hợp đồng để kiểm tra nội dung khớp bản đã ký.',
+      'Cần lưu trữ thì tải gói bằng chứng.',
     ],
-    tip: 'Biên lai trên Blockchain có giá trị như một chứng cứ thanh toán vĩnh viễn, bảo vệ bạn khỏi các tranh chấp tài chính.',
+    tip: 'Sổ cái chỉ ghi mã băm và mã định danh. Số tiền và thông tin cá nhân không được ghi lên sổ cái, và bạn không phải nhập mã giao dịch ở đâu cả.',
     stepTips: [
-      'Bước 1: Nhấp chọn mục Cá nhân, tìm đến dòng chữ Lịch sử hóa đơn. Tại đây hiển thị toàn bộ danh sách tiền nhà bạn đã đóng hàng tháng từ trước tới nay.',
-      'Bước 2: Dưới mỗi hóa đơn đã thanh toán sẽ có dòng mã chữ và số dài (txHash). Hãy chạm vào dòng mã này để mở trang tra cứu sổ cái Blockchain.',
-      'Bước 3: Màn hình sẽ hiện chi tiết: Ngày giờ chính xác bạn nạp tiền, số tiền, và xác nhận kỹ thuật của sổ cái Blockchain.',
+      'Bước 1: Vào Trang cá nhân và mở tab Hóa đơn để xem hạn thanh toán, số tiền và trạng thái từng hóa đơn.',
+      'Bước 2: Mở hợp đồng, đến bước Kích hoạt. Thẻ bằng chứng hiển thị mã giao dịch lưu vết với nút sao chép, cùng dòng thời gian các sự kiện.',
+      'Bước 3: Nhấn Đối soát toàn vẹn nội dung hợp đồng để kiểm tra nội dung hiện tại có khớp với bản đã ký hay không.',
+      'Bước 4: Nếu cần lưu trữ hoặc gửi cho bên thứ ba, hãy tải gói bằng chứng về máy.',
+    ],
+  },
+  'vr-guide': {
+    title: 'Hướng dẫn xem ảnh 360 độ',
+    summary:
+      'Nếu chủ nhà đã tải ảnh 360 độ, bạn có thể nhìn quanh từng phòng ngay trên trang chi tiết căn hộ.',
+    steps: [
+      'Mở trang chi tiết căn hộ và nhấn Trải nghiệm 360 độ VR Tour.',
+      'Nhấn giữ chuột và kéo, hoặc vuốt màn hình để nhìn quanh.',
+      'Nhấn vào các điểm Đi tới để sang phòng khác.',
+      'Dùng nút tự xoay và nút Toàn màn hình để xem rộng hơn.',
+    ],
+    tip: 'Ảnh 360 độ có dung lượng lớn, hãy xem khi có Wi-Fi hoặc 4G ổn định để ảnh tải nhanh và rõ nét.',
+    stepTips: [
+      'Bước 1: Mở trang chi tiết căn hộ và nhấn nút Trải nghiệm 360 độ VR Tour. Căn hộ chưa có ảnh 360 độ sẽ không có nút này.',
+      'Bước 2: Nhấn giữ chuột và kéo, hoặc vuốt trên màn hình cảm ứng để xoay góc nhìn.',
+      'Bước 3: Nhấn vào các điểm Đi tới, ví dụ Đi tới Phòng bếp, để chuyển sang phòng khác.',
+      'Bước 4: Bật hoặc tắt chế độ tự xoay, và nhấn Toàn màn hình để xem rộng hơn.',
     ],
   },
   'floorplan-3d': {
@@ -200,72 +227,56 @@ export const AI_GUIDES: Record<string, AiGuide> = {
       'Bước 5: Nhấn nút Sa bàn ở góc trên bên trái để trở về khu đô thị và xem căn khác.',
     ],
   },
-  'smartca-sign': {
-    title: 'Hướng dẫn ký bằng VNPT SmartCA',
+  'policy-report': {
+    title: 'Hướng dẫn báo cáo tin đăng vi phạm',
     summary:
-      'Hợp đồng được ký điện tử bằng chứng thư số VNPT SmartCA. Bạn chỉ cần duyệt giao dịch trong ứng dụng VNPT SmartCA trên điện thoại.',
+      'Gặp tin đăng giả, thông tin sai hoặc bị yêu cầu chuyển tiền ngoài hệ thống, hãy báo cáo để nhân viên xem xét.',
     steps: [
-      'Hoàn tất xác minh KYC và cài ứng dụng VNPT SmartCA đã có chứng thư số.',
-      'Trong trang hợp đồng, chuyển sang bước Ký số và nhấn Chuẩn bị ký VNPT SmartCA.',
-      'Chọn đúng chứng thư số của bạn rồi nhấn Gửi yêu cầu ký VNPT SmartCA.',
-      'Mở ứng dụng VNPT SmartCA, kiểm tra thông tin giao dịch và đồng ý ký trước khi hết thời gian đếm ngược.',
-      'Khi hiện Đã ký, đợi bên còn lại ký rồi chuyển sang bước đặt cọc và kích hoạt hợp đồng.',
+      'Ở trang chi tiết căn hộ, nhấn Báo cáo vi phạm.',
+      'Chọn loại vi phạm phù hợp và mô tả ngắn gọn.',
+      'Theo dõi kết quả ở Trang cá nhân, mục Báo cáo an toàn.',
+      'Không đồng ý kết quả thì có thể khiếu nại.',
     ],
-    tip: 'Trang web không bao giờ hỏi mật khẩu hay mã OTP SmartCA của bạn. Chỉ duyệt giao dịch khi chính bạn vừa gửi yêu cầu ký.',
+    tip: 'Không bao giờ chuyển tiền cọc hoặc tiền thuê ngoài nền tảng, kể cả khi chủ nhà hứa giảm giá.',
     stepTips: [
-      'Bước 1: Hãy chắc chắn tài khoản đã được duyệt KYC và bạn đã cài ứng dụng VNPT SmartCA có chứng thư số. Thiếu một trong hai thì hệ thống sẽ báo chưa thể ký.',
-      'Bước 2: Ở bước Ký số của hợp đồng, nhấn nút Chuẩn bị ký VNPT SmartCA để hệ thống tải chứng thư số của bạn.',
-      'Bước 3: Nếu bạn có nhiều chứng thư, chọn đúng chứng thư của mình rồi nhấn Gửi yêu cầu ký VNPT SmartCA.',
-      'Bước 4: Mở ứng dụng VNPT SmartCA trên điện thoại, đọc lại thông tin giao dịch và đồng ý ký. Hãy làm trước khi đồng hồ đếm ngược kết thúc, nếu hết hạn bạn chỉ cần gửi yêu cầu ký lại.',
-      'Bước 5: Khi thấy thông báo Đã ký, chữ ký của bạn đã được ghi nhận. Hợp đồng có hiệu lực khi cả hai bên cùng ký.',
-    ],
-  },
-  'vr-guide': {
-    title: 'Trợ lý Xem Nhà 3D (VR Tour)',
-    summary:
-      'Tính năng xem nhà 3D tích hợp WebGL cho phép bạn tham quan toàn diện mọi ngóc ngách của căn hộ thực tế mà không cần di chuyển trực tiếp.',
-    steps: [
-      'Kéo thả chuột hoặc dùng ngón tay vuốt màn hình để xoay camera 360 độ từ sàn nhà đến trần nhà.',
-      'Nhấn vào các biểu tượng vòng tròn nhấp nháy trên nền nhà để di chuyển robot đi từ phòng này sang phòng khác.',
-      'Chọn các điểm dịch chuyển nhanh (Podium, Sân thượng, Cầu đi bộ, Hồ bơi) trên bảng HUD điều khiển.',
-    ],
-    tip: 'Bật tính năng Thuyết minh giọng nói AI để nghe thuyết minh giới thiệu chi tiết về thông số kỹ thuật và hướng nhà trong quá trình tham quan.',
-    stepTips: [
-      'Bước 1: Khi mở màn hình VR Tour, bạn hãy chạm và vuốt màn hình để quay camera nhìn toàn diện căn phòng.',
-      'Bước 2: Tìm những vòng tròn nhấp nháy (Hotspots) nằm dưới sàn nhà hoặc cạnh cửa ra vào. Chạm vào vòng tròn đó để robot di chuyển sang phòng bên cạnh.',
-      'Bước 3: Sử dụng bảng điều khiển UI HUD (tour-hud) ở góc màn hình để di chuyển nhanh (teleport) đến các vị trí mong muốn hoặc ẩn hiện giao diện HUD.',
-    ],
-  },
-  'policy-blacklist': {
-    title: 'Trợ lý Báo cáo tin ảo và Blacklist',
-    summary:
-      'Để bảo vệ khách thuê khỏi các chiêu trò lừa đảo cọc hoặc đăng thông tin giá ảo, hệ thống áp dụng cơ chế xử phạt nghiêm khắc và đưa vào Blacklist.',
-    steps: [
-      'Nếu phát hiện tin đăng ghi giá sai sự thật hoặc địa chỉ giả, hãy nhấn nút Báo cáo vi phạm ở góc bài đăng.',
-      'Staff sẽ xác minh thực tế, nếu chủ nhà vi phạm sẽ bị tạm ẩn tin đăng sang trạng thái unavailable hoặc updating và khóa quyền đăng tin trong 30 ngày.',
-      'Trường hợp gian lận chiếm đoạt tiền cọc sẽ bị đưa vào danh sách đen Blacklist của Blockchain và tước quyền sử dụng vĩnh viễn.',
-    ],
-    tip: 'Hãy tích cực báo cáo nếu thấy dấu hiệu nghi ngờ để cùng nhau xây dựng môi trường thuê nhà an toàn, lành mạnh cho cộng đồng.',
-    stepTips: [
-      'Bước 1: Khi lướt xem tin, nếu bạn thấy hình ảnh không đúng thực tế hoặc giá thuê ghi quá rẻ so với thị trường, hãy nhấn nút Báo cáo vi phạm.',
-      'Bước 2: Staff sẽ kiểm tra lại ngay lập tức. Nếu chủ nhà đăng tin giả mạo để câu khách, tài khoản đó sẽ bị ẩn bài viết và khóa đăng tin 30 ngày.',
-      'Bước 3: Hành vi lừa đảo cọc sẽ bị lưu vết vĩnh viễn vào danh sách đen Blacklist trên Blockchain, không thể tẩy xóa, giúp nhận diện danh tính kẻ gian lận.',
+      'Bước 1: Ở trang chi tiết căn hộ, nhấn nút Báo cáo vi phạm.',
+      'Bước 2: Chọn loại vi phạm, ví dụ tin đăng ảo hoặc thông tin sai sự thật, hay yêu cầu chuyển tiền ngoài hệ thống, rồi mô tả ngắn gọn và gửi báo cáo.',
+      'Bước 3: Nhân viên sẽ xem xét. Bạn theo dõi trạng thái ở Trang cá nhân, mục Báo cáo an toàn. Với trường hợp nghiêm trọng, tin đăng có thể bị ẩn.',
+      'Bước 4: Nếu không đồng ý với kết quả, bạn có thể khiếu nại sau khi báo cáo được xử lý hoặc bác bỏ.',
     ],
   },
   'policy-privacy': {
-    title: 'Trợ lý Quyền riêng tư và Bảo mật',
+    title: 'Hướng dẫn về bảo mật dữ liệu',
     summary:
-      'Quy chế bảo vệ thông tin cá nhân của người dùng. Mọi hình ảnh giấy tờ tùy thân của bạn đều được mã hóa bảo mật.',
+      'Mật khẩu được băm, ảnh CCCD được mã hóa khi lưu, và sổ cái chỉ ghi mã băm chứ không ghi thông tin cá nhân.',
     steps: [
-      'Ảnh chụp CCCD và dữ liệu quét khuôn mặt được mã hóa AES-256 tự động trước khi lưu trữ vào cơ sở dữ liệu MongoDB.',
-      'Thông tin cá nhân chỉ được sử dụng cho việc xác minh tài khoản và ký kết hợp đồng thuê nhà của chính bạn.',
-      'Bạn có toàn quyền yêu cầu trích xuất dữ liệu cá nhân hoặc yêu cầu xóa vĩnh viễn tài khoản bất cứ lúc nào.',
+      'Bật xác thực hai lớp để bảo vệ tài khoản.',
+      'Biết rằng ảnh CCCD được gửi tới dịch vụ nhận dạng của bên thứ ba để đọc thông tin.',
+      'Gửi yêu cầu qua Hỗ trợ kỹ thuật nếu muốn xem, sửa hoặc xóa dữ liệu.',
     ],
-    tip: 'Hệ thống cam kết bảo vệ dữ liệu cá nhân đầu cuối, không chia sẻ số điện thoại, thông tin định danh của bạn cho bất kỳ bên thứ ba nào.',
+    tip: 'Không chia sẻ mã OTP với bất kỳ ai. Hiện chưa có chức năng tự xuất hoặc tự xóa dữ liệu cá nhân.',
     stepTips: [
-      'Bước 1: Khi bạn gửi ảnh chụp giấy tờ xác thực tài khoản, hệ thống sẽ tự động mã hóa AES-256 phức tạp để không ai có thể xem trộm được.',
-      'Bước 2: Hệ thống chỉ dùng thông tin này để đối chiếu xác minh tài khoản, đảm bảo an toàn giao dịch pháp lý cho hợp đồng thuê.',
-      'Bước 3: Nếu không còn nhu cầu dùng ứng dụng, bạn có thể gửi yêu cầu xóa tài khoản để hệ thống xóa bỏ vĩnh viễn mọi dữ liệu giấy tờ liên quan.',
+      'Bước 1: Bật xác thực hai lớp trong mục Bảo mật của Trang cá nhân để bảo vệ tài khoản tốt hơn.',
+      'Bước 2: Khi xác minh KYC, ảnh CCCD được mã hóa khi lưu trữ, nhưng để đọc thông tin trên thẻ, ảnh được gửi tới dịch vụ nhận dạng của bên thứ ba.',
+      'Bước 3: Muốn xem, chỉnh sửa hoặc xóa dữ liệu cá nhân, hãy gửi yêu cầu qua mục Hỗ trợ kỹ thuật trong Trang cá nhân.',
+    ],
+  },
+  'policy-fees': {
+    title: 'Hướng dẫn về biểu phí dịch vụ',
+    summary:
+      'Đăng tin không thu phí. Phí khi cho thuê thành công được xuất thành hóa đơn riêng.',
+    steps: [
+      'Đăng tin không thu phí.',
+      'Chủ nhà trả phí theo thời hạn hợp đồng khi cho thuê thành công.',
+      'Khách thuê trả phí dịch vụ cùng các khoản đến hạn khi nhận nhà.',
+      'Đối chiếu số tiền chính thức trên hóa đơn của bạn.',
+    ],
+    tip: 'Phí không trừ vào tiền cọc hay tiền thuê chuyển cho chủ nhà. Số liệu biểu phí có thể được cập nhật, hãy xem hóa đơn thực tế.',
+    stepTips: [
+      'Bước 1: Đăng tin cho thuê không thu phí.',
+      'Bước 2: Chủ nhà trả phí khi cho thuê thành công, tính theo thời hạn hợp đồng. Theo biểu phí mặc định, hợp đồng ba đến sáu tháng là nửa tháng tiền thuê, mười hai đến hai mươi bốn tháng là một tháng tiền thuê.',
+      'Bước 3: Khách thuê trả phí dịch vụ theo biểu phí mặc định là hai phần trăm tiền thuê một tháng, thấp nhất một trăm nghìn và cao nhất năm trăm nghìn đồng, thu cùng các khoản đến hạn khi nhận nhà.',
+      'Bước 4: Các khoản phí cộng thêm thuế giá trị gia tăng mười phần trăm. Hãy đối chiếu số tiền chính thức trên hóa đơn của bạn.',
     ],
   },
 }

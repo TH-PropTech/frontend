@@ -13,7 +13,6 @@ import { useSpeechFallback } from '../../model/use-speech-fallback'
 import { usePlatform } from '../../model/use-platform'
 
 import { AiMascot } from './ai-mascot'
-import { MiniUiPreview } from './mini-ui-preview'
 import { SpeechSubtitle } from './speech-subtitle'
 
 /* ─── Time-Aware Greeting ─── */
@@ -109,7 +108,7 @@ function AiGuideBotImpl({
       {
         targetSelector: '.mascot-title-box',
         message:
-          'Đây là bảng Hướng Dẫn Trực Quan để thực hiện các quy trình thuê nhà tích hợp Blockchain.',
+          'Đây là bảng hướng dẫn từng bước để thực hiện quy trình thuê nhà.',
         armState: 'greeting' as const,
       },
       {
@@ -129,7 +128,7 @@ function AiGuideBotImpl({
       {
         targetSelector: '#mascot-track-col',
         message:
-          'Mascot robot AI sẽ trườn theo các bước để chỉ dẫn trực quan từng thao tác cho bạn.',
+          'Mascot robot sẽ di chuyển theo các bước để chỉ dẫn từng thao tác cho bạn.',
         armState: 'celebrating' as const,
       },
     ],
@@ -944,32 +943,6 @@ function AiGuideBotImpl({
                               (greetingText ?? currentTip)
                             )}
                           </div>
-
-                          {/* Miniature Graphic UI Mockup — collapsed by default */}
-                          <details className="group">
-                            <summary className="flex items-center gap-1.5 text-[10px] font-bold text-muted uppercase tracking-wider cursor-pointer select-none hover:text-primary transition-colors list-none [&::-webkit-details-marker]:hidden">
-                              <svg
-                                className="h-3 w-3 transition-transform duration-200 group-open:rotate-90"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth="3"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M9 5l7 7-7 7"
-                                />
-                              </svg>
-                              Xem giao diện mẫu
-                            </summary>
-                            <div className="mt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                              <MiniUiPreview
-                                articleId={articleId}
-                                stepIndex={idx}
-                              />
-                            </div>
-                          </details>
                         </div>
                       )}
                     </div>
