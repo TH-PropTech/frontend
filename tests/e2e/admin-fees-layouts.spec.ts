@@ -6,7 +6,7 @@ import { expect, test, type Page } from '@playwright/test'
  *
  * Tham chiếu: frontend/src/features/platform-fees/ui/fee-schedule-editor.tsx,
  * frontend/src/features/contract-layouts/ui/layout-profile-editor.tsx,
- * frontend/src/widgets/staff-dashboard/ui/admin-dashboard.tsx (routes
+ * frontend/src/widgets/staff-dashboard/ui/console-dashboard.tsx (routes
  * /admin/fees và /admin/contract-layouts).
  */
 
