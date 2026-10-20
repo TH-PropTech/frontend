@@ -1,6 +1,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import * as React from 'react'
+import { renderHook as baseRenderHook, act } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useProfile } from './use-profile'
+
+// useProfile đọc danh mục chủ nhà qua react-query nên cần QueryClientProvider
+const renderHook = <T>(fn: () => T) =>
+  baseRenderHook(fn, {
+    wrapper: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(
+        QueryClientProvider,
+        {
+          client: new QueryClient({
+            defaultOptions: { queries: { retry: false } },
+          }),
+        },
+        children
+      ),
+  })
 
 const replaceMock = vi.fn()
 const pushMock = vi.fn()

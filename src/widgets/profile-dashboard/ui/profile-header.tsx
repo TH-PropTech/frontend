@@ -221,7 +221,7 @@ export function ProfileHeader({
                       </strong>
                     </span>
                     <span>
-                      {role === 'tenant' ? 'Ký quỹ: ' : 'Nhận ký quỹ: '}
+                      {role === 'tenant' ? 'Ký quỹ: ' : 'Cọc đã nhận: '}
                       <strong className="text-primary">
                         {escrowBalance.toLocaleString()} VND
                       </strong>

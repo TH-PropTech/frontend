@@ -16,25 +16,71 @@ import { UseProfileReturn } from '../model/use-profile'
 import { toast } from 'sonner'
 import { TrendingUp, Download, FileText, Copy } from 'lucide-react'
 
-import { LandlordEscrow } from './landlord-escrow'
 import { LandlordPayoutHistory } from './landlord-payout-history'
 import { LandlordWallet } from './landlord-wallet'
 import { TenantBillsChart } from './components/tenant-bills-chart'
 import { LandlordBillsChart } from './components/landlord-bills-chart'
+import { LandlordRevenueChart } from './components/landlord-revenue-chart'
+import { CASHFLOW_STATUS, LandlordCashflowRows } from './landlord-cashflow-rows'
+import { useLandlordCashflow } from '../model/use-landlord-cashflow'
+import {
+  cashflowCsv,
+  countCashflow,
+  filterCashflow,
+  paginate,
+  type CashflowFilter,
+} from '../model/landlord-cashflow'
+import { CashflowFilterChips, CashflowPager } from './landlord-cashflow-pager'
 
 interface TabBillsProps {
   profile: UseProfileReturn
 }
 
 export function TabBills({ profile }: TabBillsProps): React.ReactElement {
-  const { role, bills, firstMonthPaid, handleCopyText } = profile
+  const { role, bills, firstMonthPaid, handleCopyText, portfolio } = profile
+  // Chủ nhà đã đăng nhập: biểu đồ, bảng dòng tiền và xuất file lấy từ backend; còn lại giữ dữ liệu demo
+  const live = role === 'landlord' && portfolio.isLive
+  const cashflow = useLandlordCashflow(portfolio)
+  const [filter, setFilter] = React.useState<CashflowFilter>('all')
+  const [page, setPage] = React.useState(1)
+  const filtered = React.useMemo(
+    () => filterCashflow(cashflow.rows, filter),
+    [cashflow.rows, filter]
+  )
+  const counts = React.useMemo(
+    () => countCashflow(cashflow.rows),
+    [cashflow.rows]
+  )
+  const current = paginate(filtered, page)
+
+  const handleExport = (): void => {
+    if (!live) {
+      toast.success('Báo cáo tài chính đã được xuất tải xuống!', {
+        description: 'Tệp PDF hóa đơn tháng này đã được lưu vào thiết bị.',
+      })
+      return
+    }
+    if (cashflow.rows.length === 0) {
+      toast.info('Chưa có khoản thu nào để xuất.')
+      return
+    }
+    const csv = cashflowCsv(cashflow.rows, st => CASHFLOW_STATUS[st].label)
+    const url = URL.createObjectURL(
+      new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    )
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `dong-tien-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('Đã xuất dòng tiền ra tệp CSV.')
+  }
 
   return (
     <div className="space-y-6 mt-0 outline-none">
       {/* Landlord Financial Overviews */}
       {role === 'landlord' && (
         <>
-          <LandlordEscrow />
           <LandlordWallet />
           <LandlordPayoutHistory />
         </>
@@ -58,23 +104,24 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
           </div>
           <Button
             type="button"
-            onClick={() => {
-              toast.success('Báo cáo tài chính đã được xuất tải xuống!', {
-                description:
-                  'Tệp PDF hóa đơn tháng này đã được lưu vào thiết bị.',
-              })
-            }}
+            onClick={handleExport}
             variant="secondary"
             className="h-9 text-xs rounded-full px-4 border border-border flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
           >
             <Download className="h-3.5 w-3.5" />
-            Xuất biên lai PDF
+            {live ? 'Xuất CSV dòng tiền' : 'Xuất biên lai PDF'}
           </Button>
         </div>
 
         {/* SVG Chart Section */}
         <div className="h-64 border border-border/60 bg-surface-muted/10 rounded-2xl flex items-center justify-center p-4">
-          {role === 'tenant' ? <TenantBillsChart /> : <LandlordBillsChart />}
+          {role === 'tenant' ? (
+            <TenantBillsChart />
+          ) : live ? (
+            <LandlordRevenueChart series={cashflow.series} />
+          ) : (
+            <LandlordBillsChart />
+          )}
         </div>
       </Card>
 
@@ -92,11 +139,24 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
               Cập nhật theo Smart Contract • Giao dịch được xử lý tự động qua
               cổng ngân hàng liên kết Techcombank
             </p>
-            <Badge variant="outline" className="mt-2 w-fit">
-              Demo
-            </Badge>
+            {!live && (
+              <Badge variant="outline" className="mt-2 w-fit">
+                Demo
+              </Badge>
+            )}
           </div>
         </div>
+
+        {live && (
+          <CashflowFilterChips
+            value={filter}
+            counts={counts}
+            onChange={next => {
+              setFilter(next)
+              setPage(1)
+            }}
+          />
+        )}
 
         <div className="overflow-x-auto -mx-2 px-2 scrollbar-thin">
           <Table className="w-full text-left border-collapse text-xs min-w-[650px]">
@@ -170,13 +230,20 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                     </TableCell>
                   </TableRow>
                 ))
+              ) : live ? (
+                <LandlordCashflowRows
+                  rows={current.items}
+                  isLoading={cashflow.isLoading}
+                  isError={cashflow.isError}
+                  onCopy={handleCopyText}
+                />
               ) : (
                 /* Landlord Bills/Income View */
                 <>
                   <TableRow className="hover:bg-surface-muted/10 transition-colors">
                     <TableCell className="p-4 font-semibold text-fg flex items-center gap-1.5 border-none h-12">
                       <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse shrink-0" />
-                      Tiền nhận ký quỹ đặt cọc (Smart Contract)
+                      Tiền đặt cọc nhận từ khách thuê
                     </TableCell>
                     <TableCell className="p-4 text-muted border-none">
                       10/06/2026
@@ -190,7 +257,7 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                         className="gap-1 py-0.5 bg-success-soft text-success border-success/20"
                       >
                         <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                        Đã ký quỹ (Khóa)
+                        Đã nhận cọc
                       </Badge>
                     </TableCell>
                     <TableCell className="p-4 border-none">
@@ -268,6 +335,13 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
             </TableBody>
           </Table>
         </div>
+        {live && (
+          <CashflowPager
+            page={current.page}
+            total={filtered.length}
+            onPage={setPage}
+          />
+        )}
       </Card>
     </div>
   )

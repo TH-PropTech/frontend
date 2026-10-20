@@ -61,7 +61,27 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
     handleCancelAppointment,
     handleCompleteAppointment,
     handleViewSignedContract,
+    portfolio,
   } = profile
+
+  // Chủ nhà đã đăng nhập: chờ tải / lỗi / chưa có căn hộ thì chỉ hiện trạng thái, không hiện số liệu demo
+  if (role === 'landlord' && portfolio.isLive) {
+    const message = portfolio.isLoading
+      ? 'Đang tải danh sách căn hộ và hợp đồng của bạn...'
+      : portfolio.isError
+        ? 'Không tải được dữ liệu căn hộ. Vui lòng tải lại trang sau ít phút.'
+        : properties.length === 0
+          ? 'Bạn chưa có căn hộ nào đang quản lý. Hãy đăng tin ở tab "Tin đăng của tôi" để bắt đầu.'
+          : null
+    if (message)
+      return (
+        <Card className="bg-white border border-border rounded-3xl p-8 shadow-sm text-center text-sm text-muted">
+          {message}
+        </Card>
+      )
+  }
+  const liveContract = portfolio.contractByProperty[activeProperty.id]
+  const depositLabel = `${(liveContract?.deposit ?? 18_000_000).toLocaleString('vi-VN')}đ`
 
   return (
     <div className="space-y-6 mt-0 outline-none">
@@ -97,10 +117,16 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
           </Card>
 
           {/* Landlord KPI cards */}
-          <LandlordKpis />
+          <LandlordKpis
+            stats={portfolio.isLive ? portfolio.stats : undefined}
+            pendingIssues={portfolio.isLive ? null : undefined}
+          />
 
           {/* Landlord alert notifications */}
-          <LandlordAlerts appointments={appointments} />
+          <LandlordAlerts
+            appointments={appointments}
+            alerts={portfolio.isLive ? portfolio.alerts : undefined}
+          />
         </>
       )}
 
@@ -144,12 +170,12 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 {role === 'tenant'
                   ? 'Yêu cầu thanh toán đặt cọc'
-                  : 'Chờ khách thuê đặt cọc ký quỹ'}
+                  : 'Chờ khách thuê đặt cọc'}
               </h4>
               <p className="font-body text-xs text-muted">
                 {role === 'tenant'
                   ? 'Vui lòng thanh toán khoản tiền đặt cọc để khóa giữ chỗ căn hộ và bắt đầu ký kết hợp đồng.'
-                  : 'Khách thuê đang tiến hành thanh toán khoản tiền cọc 18.000.000đ để khóa giữ chỗ căn hộ trên Smart Contract.'}
+                  : `Khách thuê đang tiến hành thanh toán khoản tiền cọc ${depositLabel} để khóa giữ chỗ căn hộ trên Smart Contract.`}
               </p>
             </div>
             {role === 'tenant' ? (
@@ -182,7 +208,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               <p className="font-body text-xs text-muted">
                 {role === 'tenant'
                   ? 'Tiền cọc đã được khóa ký quỹ trên Blockchain. Vui lòng đọc kỹ điều khoản và ký số hợp đồng điện tử.'
-                  : 'Khách thuê đã nộp tiền cọc ký quỹ thành công. Vui lòng ký số duyệt hợp đồng điện tử để phê duyệt giao dịch.'}
+                  : 'Khách thuê đã nộp tiền cọc thành công. Vui lòng ký số duyệt hợp đồng điện tử để phê duyệt giao dịch.'}
               </p>
             </div>
             <Button
@@ -289,7 +315,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               >
                 {role === 'tenant'
                   ? 'Yêu cầu thanh lý hợp đồng & Rút cọc'
-                  : 'Xác nhận thanh lý & Hoàn cọc ký quỹ'}
+                  : 'Xác nhận thanh lý & hoàn cọc'}
               </Button>
             </div>
           </div>
@@ -305,7 +331,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               <p className="font-body text-xs text-muted leading-relaxed">
                 {role === 'tenant'
                   ? `Số tiền đặt cọc ký quỹ (sau khi khấu trừ thiệt hại hao mòn ${damageDeductions.toLocaleString()}đ nếu có) đã được hoàn trả tự động từ Smart Contract về ví của bạn.`
-                  : `Tiền cọc ký quỹ đặt cọc (có khấu trừ thiệt hại hao mòn ${damageDeductions.toLocaleString()}đ nếu có) đã giải tỏa tự động từ Smart Contract và gửi trả ví của khách thuê.`}
+                  : `Tiền cọc (có khấu trừ thiệt hại hao mòn ${damageDeductions.toLocaleString()}đ nếu có) đã được hoàn trả cho khách thuê.`}
               </p>
             </div>
           </div>
@@ -332,7 +358,9 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
                   : 'Xác nhận lịch hẹn xem nhà'}
               </h4>
               <p className="font-body text-xs text-muted">
-                Lịch hẹn đã được xác nhận vào ngày 09/06/2026 lúc 14:00.
+                {portfolio.isLive
+                  ? 'Lịch hẹn xem nhà đã hoàn tất.'
+                  : 'Lịch hẹn đã được xác nhận vào ngày 09/06/2026 lúc 14:00.'}
               </p>
             </div>
           </div>
@@ -352,12 +380,12 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               <h4 className="font-marketing text-sm font-bold text-fg">
                 {role === 'tenant'
                   ? 'Thanh toán tiền đặt cọc giữ chỗ'
-                  : 'Nhận tiền đặt cọc giữ chỗ ký quỹ'}
+                  : 'Nhận tiền đặt cọc giữ chỗ'}
               </h4>
               <p className="font-body text-xs text-muted">
                 {depositPaid
                   ? 'Đã chuyển tiền ký quỹ cọc và băm mật mã an toàn trên Smart Contract.'
-                  : 'Chờ khách thuê chuyển khoản đặt cọc ký quỹ lên Smart Contract.'}
+                  : 'Chờ khách thuê chuyển khoản tiền đặt cọc.'}
               </p>
             </div>
           </div>
@@ -425,8 +453,20 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
             propertyId={activePropertyId}
             status={activeProperty.status}
             price={activeProperty.price}
+            live={portfolio.isLive}
+            liveInfo={portfolio.tenantInfo[activePropertyId]}
           />
-          {activeProperty.status === 'Đang thuê' && <LandlordContractSummary />}
+          {activeProperty.status === 'Đang thuê' &&
+            (!portfolio.isLive ||
+              portfolio.contractSummary[activePropertyId]) && (
+              <LandlordContractSummary
+                summary={
+                  portfolio.isLive
+                    ? portfolio.contractSummary[activePropertyId]
+                    : undefined
+                }
+              />
+            )}
           <LandlordAppointments
             appointments={appointments}
             onApprove={handleApproveAppointment}

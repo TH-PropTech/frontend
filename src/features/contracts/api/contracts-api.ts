@@ -35,6 +35,8 @@ export interface ContractItem {
   propertyId: string
   propertyTitle: string
   tenantId: string
+  tenantName?: string | null
+  tenantPhone?: string | null
   landlordId: string
   startDate: string
   endDate: string

@@ -4,20 +4,36 @@ import * as React from 'react'
 import { Card } from '@/shared/ui/card'
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react'
 import { DEMO_LANDLORD_ALERTS } from '../model/mock-data'
-import { Appointment } from '../model/types'
+import { Appointment, LandlordAlert } from '../model/types'
 
 interface LandlordAlertsProps {
   appointments?: Appointment[]
+  /** Cảnh báo thật từ hợp đồng; bỏ trống = cảnh báo demo. */
+  alerts?: LandlordAlert[] | undefined
 }
 
 export function LandlordAlerts({
   appointments = [],
+  alerts,
 }: LandlordAlertsProps): React.ReactElement {
   // Count actual pending appointments
   const pendingCount = appointments.filter(a => a.status === 'pending').length
 
   // Construct dynamic alerts list based on DEMO_LANDLORD_ALERTS
   const activeAlerts = React.useMemo(() => {
+    if (alerts) {
+      return pendingCount === 0
+        ? alerts
+        : [
+            ...alerts,
+            {
+              id: 'appointments-pending',
+              type: 'info' as const,
+              message: `${pendingCount} lịch hẹn xem nhà mới chờ xác nhận`,
+              propertyName: '',
+            },
+          ]
+    }
     return DEMO_LANDLORD_ALERTS.map(alert => {
       if (alert.id === 'alert-3') {
         // Adjust third alert dynamically
@@ -29,7 +45,7 @@ export function LandlordAlerts({
       }
       return alert
     }).filter(Boolean) as typeof DEMO_LANDLORD_ALERTS
-  }, [pendingCount])
+  }, [pendingCount, alerts])
 
   if (activeAlerts.length === 0) return <></>
 

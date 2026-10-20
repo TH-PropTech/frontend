@@ -1,4 +1,5 @@
 import * as React from 'react'
+import type { ContractItem } from '@/features/contracts'
 
 export interface Property {
   id: string
@@ -6,7 +7,7 @@ export interface Property {
   status: 'Đang thuê' | 'Đang chờ cọc' | 'Trống'
   code: string
   price: number
-  contractId?: string
+  contractId?: string | undefined
 }
 
 export interface BlockchainLog {
@@ -142,6 +143,7 @@ export interface UseProfileReturn {
     }>
   >
   maintenanceTickets: MaintenanceTicket[]
+  portfolio: LandlordPortfolio
   newTicketTitle: string
   setNewTicketTitle: React.Dispatch<React.SetStateAction<string>>
   newTicketDesc: string
@@ -238,12 +240,6 @@ export interface Appointment {
   status: 'pending' | 'confirmed' | 'rejected' | 'cancelled' | 'completed'
 }
 
-export interface EscrowItem {
-  propertyName: string
-  amount: number
-  status: 'locked' | 'pending' | 'empty'
-}
-
 export interface ContractSummary {
   code: string
   duration: string
@@ -274,4 +270,25 @@ export interface LandlordAlert {
   type: 'danger' | 'warning' | 'info'
   message: string
   propertyName: string
+}
+
+/** Số liệu tổng hợp của chủ nhà, tính từ tin đăng + hợp đồng thật. */
+export interface LandlordStats {
+  total: number
+  occupied: number
+  occupancyPct: number
+  monthlyRevenue: number
+}
+
+/** Danh mục căn hộ của chủ nhà. isLive = đang dùng dữ liệu backend (đã đăng nhập); ngược lại giao diện dùng dữ liệu demo. */
+export interface LandlordPortfolio {
+  isLive: boolean
+  isLoading: boolean
+  isError: boolean
+  properties: Property[]
+  stats: LandlordStats
+  tenantInfo: Record<string, TenantInfo>
+  contractSummary: Record<string, ContractSummary>
+  contractByProperty: Record<string, ContractItem>
+  alerts: LandlordAlert[]
 }

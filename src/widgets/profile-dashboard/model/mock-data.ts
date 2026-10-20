@@ -5,7 +5,6 @@ import type {
   MaintenanceTicket,
   TenantInfo,
   Appointment,
-  EscrowItem,
   ContractSummary,
   TenantReview,
   LandlordAlert,
@@ -306,12 +305,6 @@ export const DEMO_APPOINTMENTS: Appointment[] = [
     time: '14:30',
     status: 'pending',
   },
-]
-
-export const DEMO_ESCROW_ITEMS: EscrowItem[] = [
-  { propertyName: 'Căn hộ #102', amount: 18000000, status: 'locked' },
-  { propertyName: 'Studio #204', amount: 12000000, status: 'pending' },
-  { propertyName: 'Căn hộ #403', amount: 0, status: 'empty' },
 ]
 
 export const DEMO_CONTRACT_SUMMARY: ContractSummary = {

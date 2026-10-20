@@ -18,6 +18,8 @@ import {
 } from './mock-data'
 import { useProfileMaintenance } from './use-profile-maintenance'
 import { useProfileAppointments } from './use-profile-appointments'
+import { useLandlordPortfolio } from './use-landlord-portfolio'
+import { progressFlags } from './landlord-portfolio'
 import { uploadAndProcessCccd } from './ocr-utils'
 import { getMyKyc } from '../api/kyc-api'
 
@@ -29,6 +31,14 @@ export type {
   MaintenanceTicket,
   UseProfileReturn,
 } from './types'
+
+const EMPTY_PROPERTY: Property = {
+  id: '',
+  name: 'Chưa có căn hộ nào',
+  status: 'Trống',
+  code: '—',
+  price: 0,
+}
 
 const EMPTY_KYC = {
   fullName: '',
@@ -97,7 +107,12 @@ export function useProfile(): UseProfileReturn {
     [router, role]
   )
   const [activePropertyId, setActivePropertyId] = React.useState('prop-1')
-  const properties = React.useMemo(() => DEMO_PROPERTIES, [])
+  // Chủ nhà đã đăng nhập: danh mục lấy từ backend; còn lại giữ dữ liệu demo
+  const portfolio = useLandlordPortfolio(role === 'landlord')
+  const properties = React.useMemo(
+    () => (portfolio.isLive ? portfolio.properties : DEMO_PROPERTIES),
+    [portfolio.isLive, portfolio.properties]
+  )
 
   // Modals
   const [showContractModal, setShowContractModal] = React.useState(false)
@@ -296,9 +311,20 @@ export function useProfile(): UseProfileReturn {
   const activeProperty = React.useMemo(
     () =>
       (properties.find(p => p.id === activePropertyId) ||
-        properties[0]) as Property,
+        properties[0] ||
+        EMPTY_PROPERTY) as Property,
     [properties, activePropertyId]
   )
+
+  // Tiến độ của căn đang chọn: chủ nhà đăng nhập thì suy ra từ hợp đồng thật, còn lại là trạng thái demo cục bộ
+  const live = portfolio.isLive
+    ? progressFlags(portfolio.contractByProperty[activeProperty.id])
+    : null
+  const effDepositPaid = live ? live.depositPaid : depositPaid
+  const effContractSigned = live ? live.contractSigned : contractSigned
+  const effFirstMonthPaid = live ? live.firstMonthPaid : firstMonthPaid
+  const effHandoverSigned = live ? live.handoverSigned : handoverSigned
+  const effLeaseTerminated = live ? live.leaseTerminated : leaseTerminated
 
   const handleConnectWallet = (): void => {
     if (isWalletConnected) {
@@ -433,10 +459,10 @@ export function useProfile(): UseProfileReturn {
   }
 
   const progressPercent = (): number => {
-    if (leaseTerminated || handoverSigned) return 100
-    if (firstMonthPaid) return 80
-    if (contractSigned) return 60
-    if (depositPaid) return 40
+    if (effLeaseTerminated || effHandoverSigned) return 100
+    if (effFirstMonthPaid) return 80
+    if (effContractSigned) return 60
+    if (effDepositPaid) return 40
     return 20
   }
 
@@ -468,7 +494,9 @@ export function useProfile(): UseProfileReturn {
 
   const handlePropertyChange = (propertyId: string): void => {
     setActivePropertyId(propertyId)
-    if (propertyId === 'prop-1') {
+    if (portfolio.isLive) {
+      // dữ liệu thật: tiến độ đã suy ra từ hợp đồng của căn được chọn
+    } else if (propertyId === 'prop-1') {
       setDepositPaid(true)
       setContractSigned(true)
       setFirstMonthPaid(true)
@@ -538,8 +566,9 @@ export function useProfile(): UseProfileReturn {
     role,
     activeTab,
     setActiveTab,
-    activePropertyId,
+    activePropertyId: activeProperty.id || activePropertyId,
     properties,
+    portfolio,
     showContractModal,
     setShowContractModal,
     contractViewOnly,
@@ -567,7 +596,7 @@ export function useProfile(): UseProfileReturn {
     setCccdUploaded,
     showHandoverModal,
     setShowHandoverModal,
-    handoverSigned,
+    handoverSigned: effHandoverSigned,
     setHandoverSigned,
     handoverChecks,
     setHandoverChecks,
@@ -576,11 +605,11 @@ export function useProfile(): UseProfileReturn {
     setNewTicketTitle,
     newTicketDesc,
     setNewTicketDesc,
-    leaseTerminated,
+    leaseTerminated: effLeaseTerminated,
     damageDeductions,
-    depositPaid,
-    contractSigned,
-    firstMonthPaid,
+    depositPaid: effDepositPaid,
+    contractSigned: effContractSigned,
+    firstMonthPaid: effFirstMonthPaid,
     blockchainLogs,
     bills,
     activeProperty,

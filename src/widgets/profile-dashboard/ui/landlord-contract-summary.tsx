@@ -11,10 +11,16 @@ import {
   ShieldAlert,
 } from 'lucide-react'
 import { DEMO_CONTRACT_SUMMARY } from '../model/mock-data'
+import type { ContractSummary } from '../model/types'
 
-export function LandlordContractSummary(): React.ReactElement {
-  const summary = DEMO_CONTRACT_SUMMARY
+interface LandlordContractSummaryProps {
+  /** Hợp đồng thật; bỏ trống = hợp đồng demo. */
+  summary?: ContractSummary | undefined
+}
 
+export function LandlordContractSummary({
+  summary = DEMO_CONTRACT_SUMMARY,
+}: LandlordContractSummaryProps): React.ReactElement {
   return (
     <Card className="bg-white border border-border rounded-3xl p-6 shadow-sm text-left space-y-4">
       <div className="flex items-center justify-between border-b border-border/50 pb-3">
@@ -64,7 +70,7 @@ export function LandlordContractSummary(): React.ReactElement {
         <div className="flex items-center justify-between border-b border-border/40 pb-2">
           <span className="text-muted flex items-center gap-1.5 font-medium">
             <DollarSign className="h-3.5 w-3.5 text-subtle" />
-            Tiền ký quỹ (Đặt cọc)
+            Tiền đặt cọc
           </span>
           <span className="text-fg font-bold">
             {summary.deposit.toLocaleString()}đ
