@@ -7,7 +7,6 @@ import { ShieldCheck, ChevronLeft } from 'lucide-react'
 import { KycRecommendations } from './components/kyc-recommendations'
 import { KycStep1 } from './components/kyc-step1'
 import { KycStep2 } from './components/kyc-step2'
-import { KycStep3 } from './components/kyc-step3'
 import { useKycFlow } from './hooks/use-kyc-flow'
 
 interface ModalKycProps {
@@ -34,13 +33,6 @@ export function ModalKyc({
     backPreview,
     isWebcamActive1,
     isWebcamActive2,
-    selfiePreview,
-    isWebcamActiveSelfie,
-    fileInputRefSelfie,
-    videoRefSelfie,
-    canvasRefSelfie,
-    verifyResults,
-    skipSelfie,
     showResults,
     preferredDistrict,
     setPreferredDistrict,
@@ -52,11 +44,8 @@ export function ModalKyc({
     feedbackGiven,
     startWebcam,
     takePicture,
-    startSelfieWebcam,
-    takeSelfie,
     handleFileChange,
     handleExtractOcr,
-    handleVerifyFace,
     handleConfirmAndSubmitKyc,
     handleFeedback,
     handleCloseAll,
@@ -90,8 +79,7 @@ export function ModalKyc({
               tính eKYC Tự động
             </h1>
             <p className="text-[11px] text-muted mt-0.5 font-sans">
-              Công nghệ AI OCR, Liveness Detection & Ký CA neo trên Hyperledger
-              Fabric.
+              Công nghệ AI OCR & Ký CA neo trên Hyperledger Fabric.
             </p>
           </div>
         </div>
@@ -104,8 +92,7 @@ export function ModalKyc({
             </Badge>
           ) : (
             <Badge className="bg-slate-100 text-slate-800 border-slate-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-              BƯỚC {skipSelfie && currentStep === 3 ? 2 : currentStep} /{' '}
-              {skipSelfie ? 2 : 3}
+              BƯỚC {currentStep} / 2
             </Badge>
           )}
         </div>
@@ -119,17 +106,7 @@ export function ModalKyc({
 
             <div
               className="absolute left-0 top-1/2 h-[2px] bg-[#9F3F2A] -translate-y-1/2 transition-all duration-300 z-0"
-              style={{
-                width: skipSelfie
-                  ? currentStep === 1
-                    ? '0%'
-                    : '100%'
-                  : currentStep === 1
-                    ? '0%'
-                    : currentStep === 2
-                      ? '50%'
-                      : '100%',
-              }}
+              style={{ width: currentStep === 1 ? '0%' : '100%' }}
             />
 
             {/* Step 1 */}
@@ -151,38 +128,18 @@ export function ModalKyc({
             </div>
 
             {/* Step 2 */}
-            {!skipSelfie && (
-              <div className="flex flex-col items-center relative z-10">
-                <div
-                  className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all duration-300 ${
-                    currentStep >= 2
-                      ? 'bg-[#9F3F2A] border-[#9F3F2A] text-white shadow-md'
-                      : 'bg-white border-slate-300 text-slate-500'
-                  }`}
-                >
-                  2
-                </div>
-                <span
-                  className={`text-[10px] mt-1.5 font-bold transition-colors ${currentStep >= 2 ? 'text-[#9F3F2A]' : 'text-slate-500'}`}
-                >
-                  Chụp Selfie
-                </span>
-              </div>
-            )}
-
-            {/* Step 3 */}
             <div className="flex flex-col items-center relative z-10">
               <div
                 className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all duration-300 ${
-                  currentStep >= 3
+                  currentStep >= 2
                     ? 'bg-[#9F3F2A] border-[#9F3F2A] text-white shadow-md'
                     : 'bg-white border-slate-300 text-slate-500'
                 }`}
               >
-                {skipSelfie ? 2 : 3}
+                2
               </div>
               <span
-                className={`text-[10px] mt-1.5 font-bold transition-colors ${currentStep >= 3 ? 'text-[#9F3F2A]' : 'text-slate-500'}`}
+                className={`text-[10px] mt-1.5 font-bold transition-colors ${currentStep >= 2 ? 'text-[#9F3F2A]' : 'text-slate-500'}`}
               >
                 Nộp Hồ Sơ
               </span>
@@ -224,25 +181,8 @@ export function ModalKyc({
 
             {currentStep === 2 && (
               <KycStep2
-                isWebcamActiveSelfie={isWebcamActiveSelfie}
-                selfiePreview={selfiePreview}
-                videoRefSelfie={videoRefSelfie}
-                fileInputRefSelfie={fileInputRefSelfie}
-                takeSelfie={takeSelfie}
-                startSelfieWebcam={startSelfieWebcam}
-                handleFileChange={handleFileChange}
-                handleVerifyFace={handleVerifyFace}
-                isProcessing={isProcessing}
-                setCurrentStep={setCurrentStep}
-              />
-            )}
-
-            {currentStep === 3 && (
-              <KycStep3
-                skipSelfie={skipSelfie}
                 kycForm={kycForm}
                 setKycForm={setKycForm}
-                verifyResults={verifyResults}
                 preferredDistrict={preferredDistrict}
                 setPreferredDistrict={setPreferredDistrict}
                 rooms={rooms}
@@ -262,7 +202,6 @@ export function ModalKyc({
       {/* Hidden canvases for capturing webcam frames */}
       <canvas ref={canvasRef1} className="hidden" />
       <canvas ref={canvasRef2} className="hidden" />
-      <canvas ref={canvasRefSelfie} className="hidden" />
     </div>
   )
 }

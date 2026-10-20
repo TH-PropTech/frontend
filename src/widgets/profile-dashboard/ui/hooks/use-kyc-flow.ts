@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { env } from '@/shared/config/env'
 import { KYC_MAINTENANCE_MESSAGE } from '@/shared/config/kyc-maintenance'
 import { UseProfileReturn } from '../../model/use-profile'
-import { extractKycCards, submitKyc, verifyKycFace } from '../../api/kyc-api'
+import { extractKycCards, submitKyc } from '../../api/kyc-api'
 
 export interface Recommendation {
   id: number
@@ -56,10 +56,9 @@ export function attachMediaStream(
 export function useKycFlow(profile: UseProfileReturn) {
   const { setShowKycModal, kycForm, setKycForm, refreshKycStatus } = profile
 
-  const [currentStep, setCurrentStep] = React.useState<1 | 2 | 3>(1)
+  const [currentStep, setCurrentStep] = React.useState<1 | 2>(1)
   const [isProcessing, setIsProcessing] = React.useState(false)
   const kycDemoMaintenanceMode = env.kycDemoMaintenanceMode
-  const skipSelfie = env.kycSkipSelfie
 
   // Step 1 Refs & Previews
   const fileInputRef1 = React.useRef<HTMLInputElement>(null)
@@ -76,16 +75,6 @@ export function useKycFlow(profile: UseProfileReturn) {
   const [stream1, setStream1] = React.useState<MediaStream | null>(null)
   const [stream2, setStream2] = React.useState<MediaStream | null>(null)
 
-  // Step 2 Refs & Previews
-  const fileInputRefSelfie = React.useRef<HTMLInputElement>(null)
-  const videoRefSelfie = React.useRef<HTMLVideoElement>(null)
-  const canvasRefSelfie = React.useRef<HTMLCanvasElement>(null)
-  const [selfiePreview, setSelfiePreview] = React.useState('')
-  const [isWebcamActiveSelfie, setIsWebcamActiveSelfie] = React.useState(false)
-  const [streamSelfie, setStreamSelfie] = React.useState<MediaStream | null>(
-    null
-  )
-
   React.useEffect(() => {
     attachMediaStream(videoRef1.current, stream1)
   }, [stream1])
@@ -93,18 +82,6 @@ export function useKycFlow(profile: UseProfileReturn) {
   React.useEffect(() => {
     attachMediaStream(videoRef2.current, stream2)
   }, [stream2])
-
-  React.useEffect(() => {
-    attachMediaStream(videoRefSelfie.current, streamSelfie)
-  }, [streamSelfie])
-
-  // Verification results
-  const [verifyResults, setVerifyResults] = React.useState({
-    verified: false,
-    faceMatch: false,
-    liveness: false,
-    realConfidence: null as number | null,
-  })
 
   // Recommendations
   const [showResults, setShowResults] = React.useState(false)
@@ -178,41 +155,10 @@ export function useKycFlow(profile: UseProfileReturn) {
     }
   }
 
-  // Selfie handlers
-  const startSelfieWebcam = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 640, height: 480 },
-      })
-      setStreamSelfie(mediaStream)
-      setIsWebcamActiveSelfie(true)
-      if (videoRefSelfie.current) videoRefSelfie.current.srcObject = mediaStream
-    } catch {
-      toast.error('Không thể truy cập camera trước. Vui lòng cấp quyền.')
-    }
-  }
-
-  const takeSelfie = () => {
-    if (videoRefSelfie.current && canvasRefSelfie.current) {
-      const canvas = canvasRefSelfie.current
-      const video = videoRefSelfie.current
-      const ctx = canvas.getContext('2d')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      ctx?.drawImage(video, 0, 0, canvas.width, canvas.height)
-      const dataUrl = canvas.toDataURL('image/jpeg')
-
-      setSelfiePreview(dataUrl)
-      setIsWebcamActiveSelfie(false)
-      stopStream(streamSelfie)
-      setStreamSelfie(null)
-    }
-  }
-
   // Upload fallback
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: 1 | 2 | 3
+    type: 1 | 2
   ) => {
     if (kycDemoMaintenanceMode) {
       toast.error(KYC_MAINTENANCE_MESSAGE)
@@ -225,8 +171,7 @@ export function useKycFlow(profile: UseProfileReturn) {
       reader.onloadend = () => {
         const resultStr = reader.result as string
         if (type === 1) setFrontPreview(resultStr)
-        else if (type === 2) setBackPreview(resultStr)
-        else setSelfiePreview(resultStr)
+        else setBackPreview(resultStr)
       }
       reader.readAsDataURL(file)
     }
@@ -289,8 +234,7 @@ export function useKycFlow(profile: UseProfileReturn) {
 
       detectDistrict(extractedAddress)
       toast.success('Trích xuất thông tin OCR thành công!')
-      // Bỏ selfie thì nhảy thẳng sang bước xác nhận và nộp hồ sơ.
-      setCurrentStep(skipSelfie ? 3 : 2)
+      setCurrentStep(2)
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : 'Không thể trích xuất CCCD'
@@ -300,63 +244,15 @@ export function useKycFlow(profile: UseProfileReturn) {
     }
   }
 
-  // API Call: Step 2 Selfie & Face Match
-  const handleVerifyFace = async () => {
-    if (kycDemoMaintenanceMode) {
-      toast.error(KYC_MAINTENANCE_MESSAGE)
-      return
-    }
-
-    if (!selfiePreview) {
-      toast.error('Vui lòng chụp ảnh selfie của bạn!')
-      return
-    }
-
-    setIsProcessing(true)
-    try {
-      const selfieBlob = base64ToBlob(selfiePreview)
-      const frontBlob = base64ToBlob(frontPreview)
-      const result = await verifyKycFace(selfieBlob, frontBlob)
-      setVerifyResults(result)
-
-      if (!result.verified) {
-        toast.error(
-          'Xác thực sinh trắc học không khớp CCCD hoặc phát hiện spoofing!'
-        )
-      } else {
-        toast.success('So khớp sinh trắc học thành công!')
-        setCurrentStep(3)
-      }
-    } catch (error) {
-      setVerifyResults({
-        verified: false,
-        faceMatch: false,
-        liveness: false,
-        realConfidence: null,
-      })
-      toast.error(
-        error instanceof Error ? error.message : 'Không thể xác thực khuôn mặt'
-      )
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  // API Call: Step 3 Submit
+  // API Call: Step 2 Submit
   const handleConfirmAndSubmitKyc = async () => {
     if (kycDemoMaintenanceMode) {
       toast.error(KYC_MAINTENANCE_MESSAGE)
       return
     }
 
-    const missingBiometric =
-      !skipSelfie && (!verifyResults.verified || !selfiePreview)
-    if (missingBiometric || !frontPreview || !backPreview) {
-      toast.error(
-        skipSelfie
-          ? 'Hồ sơ chưa đủ ảnh CCCD'
-          : 'Hồ sơ chưa đủ ảnh hoặc chưa qua xác thực sinh trắc học'
-      )
+    if (!frontPreview || !backPreview) {
+      toast.error('Hồ sơ chưa đủ ảnh CCCD')
       return
     }
     setIsProcessing(true)
@@ -373,7 +269,6 @@ export function useKycFlow(profile: UseProfileReturn) {
         placeOfIssue: kycForm.placeOfIssue,
         frontCard: base64ToBlob(frontPreview),
         backCard: base64ToBlob(backPreview),
-        ...(skipSelfie ? {} : { selfie: base64ToBlob(selfiePreview) }),
       })
 
       await refreshKycStatus()
@@ -501,13 +396,6 @@ export function useKycFlow(profile: UseProfileReturn) {
     backPreview,
     isWebcamActive1,
     isWebcamActive2,
-    skipSelfie,
-    selfiePreview,
-    isWebcamActiveSelfie,
-    fileInputRefSelfie,
-    videoRefSelfie,
-    canvasRefSelfie,
-    verifyResults,
     showResults,
     preferredDistrict,
     setPreferredDistrict,
@@ -523,11 +411,8 @@ export function useKycFlow(profile: UseProfileReturn) {
     feedbackGiven,
     startWebcam,
     takePicture,
-    startSelfieWebcam,
-    takeSelfie,
     handleFileChange,
     handleExtractOcr,
-    handleVerifyFace,
     handleConfirmAndSubmitKyc,
     handleFeedback,
     handleCloseAll,

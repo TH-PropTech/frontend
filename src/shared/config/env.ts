@@ -12,7 +12,6 @@ const envSchema = z.object({
     .default('local'),
   NEXT_PUBLIC_ENABLE_MOCKS: booleanStringSchema,
   NEXT_PUBLIC_KYC_DEMO_MAINTENANCE_MODE: booleanStringSchema,
-  NEXT_PUBLIC_KYC_SKIP_SELFIE: booleanStringSchema,
 })
 
 const parsedEnv = envSchema.parse({
@@ -21,7 +20,6 @@ const parsedEnv = envSchema.parse({
   NEXT_PUBLIC_ENABLE_MOCKS: process.env.NEXT_PUBLIC_ENABLE_MOCKS,
   NEXT_PUBLIC_KYC_DEMO_MAINTENANCE_MODE:
     process.env.NEXT_PUBLIC_KYC_DEMO_MAINTENANCE_MODE,
-  NEXT_PUBLIC_KYC_SKIP_SELFIE: process.env.NEXT_PUBLIC_KYC_SKIP_SELFIE,
 })
 
 export const env = {
@@ -29,8 +27,4 @@ export const env = {
   appEnv: parsedEnv.NEXT_PUBLIC_APP_ENV,
   enableMocks: parsedEnv.NEXT_PUBLIC_ENABLE_MOCKS,
   kycDemoMaintenanceMode: parsedEnv.NEXT_PUBLIC_KYC_DEMO_MAINTENANCE_MODE,
-  /** Bỏ bước selfie/liveness của KYC (chỉ ngoài production; backend cũng chỉ chấp nhận ngoài production). */
-  kycSkipSelfie:
-    parsedEnv.NEXT_PUBLIC_KYC_SKIP_SELFIE &&
-    parsedEnv.NEXT_PUBLIC_APP_ENV !== 'production',
 } as const

@@ -22,13 +22,6 @@ export interface KycOcrBackResult {
   }
 }
 
-export interface KycBiometricResult {
-  verified: boolean
-  faceMatch: boolean
-  liveness: boolean
-  realConfidence: number | null
-}
-
 export interface KycSubmission {
   idCardNumber: string
   fullName: string
@@ -41,8 +34,6 @@ export interface KycSubmission {
   placeOfIssue: string
   frontCard: Blob
   backCard: Blob
-  /** Vắng mặt khi bỏ bước selfie (env.kycSkipSelfie). */
-  selfie?: Blob
 }
 
 export interface MyKycRecord {
@@ -87,26 +78,14 @@ export async function extractKycCards(
   return [frontResult, backResult]
 }
 
-export function verifyKycFace(
-  selfie: Blob,
-  frontCard: Blob
-): Promise<KycBiometricResult> {
-  assertKycAvailable(env.kycDemoMaintenanceMode)
-  const formData = new FormData()
-  formData.append('portraitImages', selfie, 'selfie.jpg')
-  formData.append('frontID', frontCard, 'front.jpg')
-  return apiClient.post('/kyc/verify-face', formData)
-}
-
 export function submitKyc(
   input: KycSubmission
 ): Promise<{ status: 'pending' }> {
   assertKycAvailable(env.kycDemoMaintenanceMode)
   const formData = new FormData()
-  const { frontCard, backCard, selfie, ...fields } = input
+  const { frontCard, backCard, ...fields } = input
   Object.entries(fields).forEach(([key, value]) => formData.append(key, value))
   formData.append('frontCard', frontCard, 'front.jpg')
   formData.append('backCard', backCard, 'back.jpg')
-  if (selfie) formData.append('selfie', selfie, 'selfie.jpg')
   return apiClient.post('/kyc/submit', formData)
 }

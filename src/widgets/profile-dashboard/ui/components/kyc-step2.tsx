@@ -1,129 +1,295 @@
 'use client'
 
 import * as React from 'react'
-import { Camera, Upload, Loader2, UserCheck } from 'lucide-react'
+import { FileText, BadgeCheck, Brain, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 
 interface KycStep2Props {
-  isWebcamActiveSelfie: boolean
-  selfiePreview: string
-  videoRefSelfie: React.RefObject<HTMLVideoElement | null>
-  fileInputRefSelfie: React.RefObject<HTMLInputElement | null>
-  takeSelfie: () => void
-  startSelfieWebcam: () => void
-  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>, card: 3) => void
-  handleVerifyFace: () => void
+  kycForm: {
+    fullName: string
+    cccdNumber: string
+    dob: string
+    address: string
+    gender: string
+    nationality: string
+    placeOfOrigin: string
+    issueDate: string
+    placeOfIssue: string
+  }
+  setKycForm: React.Dispatch<
+    React.SetStateAction<{
+      fullName: string
+      cccdNumber: string
+      dob: string
+      address: string
+      gender: string
+      nationality: string
+      placeOfOrigin: string
+      issueDate: string
+      placeOfIssue: string
+    }>
+  >
+  preferredDistrict: string
+  setPreferredDistrict: (val: string) => void
+  rooms: number
+  setRooms: (val: number) => void
+  income: number
+  setIncome: (val: number) => void
+  formatCurrency: (v: number) => string
   isProcessing: boolean
-  setCurrentStep: (step: 1 | 2 | 3) => void
+  setCurrentStep: (step: 1 | 2) => void
+  handleConfirmAndSubmitKyc: () => void
 }
 
 export function KycStep2({
-  isWebcamActiveSelfie,
-  selfiePreview,
-  videoRefSelfie,
-  fileInputRefSelfie,
-  takeSelfie,
-  startSelfieWebcam,
-  handleFileChange,
-  handleVerifyFace,
+  kycForm,
+  setKycForm,
+  preferredDistrict,
+  setPreferredDistrict,
+  rooms,
+  setRooms,
+  income,
+  setIncome,
+  formatCurrency,
   isProcessing,
   setCurrentStep,
+  handleConfirmAndSubmitKyc,
 }: KycStep2Props): React.ReactElement {
   return (
-    <div className="border border-slate-200 rounded-2xl p-6 bg-white shadow-sm flex flex-col items-center justify-center space-y-6 max-w-md mx-auto w-full">
-      <h3 className="font-display text-sm font-bold text-fg text-center uppercase tracking-wide">
-        Xác thực thực thể sống (Liveness Detection)
-      </h3>
-      <p className="text-xs text-slate-500 text-center -mt-3">
-        Nhìn thẳng vào camera và nhấn chụp chân dung để so khớp khuôn mặt với
-        ảnh thẻ.
-      </p>
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch flex-1 overflow-y-auto pr-1">
+      {/* Form fields editor */}
+      <div className="md:col-span-8 border border-slate-200 rounded-2xl p-5 bg-white shadow-sm space-y-4">
+        <h4 className="text-xs font-bold text-[#9F3F2A] uppercase pb-2 border-b border-slate-100 flex items-center gap-1.5">
+          <FileText className="h-4.5 w-4.5" /> Kiểm tra thông tin trích xuất
+        </h4>
 
-      <div className="relative h-56 w-56 rounded-full overflow-hidden border-4 border-[#9F3F2A]/30 bg-slate-50 flex items-center justify-center shadow-inner">
-        {isWebcamActiveSelfie ? (
-          <video
-            ref={videoRefSelfie}
-            className="w-full h-full object-cover"
-            autoPlay
-            playsInline
-            muted
-          />
-        ) : selfiePreview ? (
-          <img
-            src={selfiePreview}
-            className="w-full h-full object-cover"
-            alt="Chân dung selfie"
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center p-4 text-center">
-            <Camera className="h-8 w-8 text-slate-400 mb-2" />
-            <p className="text-[11px] text-slate-500">Camera sẵn sàng</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+              Số CCCD
+            </label>
+            <input
+              type="text"
+              value={kycForm.cccdNumber || ''}
+              onChange={e =>
+                setKycForm(prev => ({ ...prev, cccdNumber: e.target.value }))
+              }
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+            />
           </div>
-        )}
-        {/* Face overlay target guide */}
-        {isWebcamActiveSelfie && (
-          <div className="absolute inset-4 rounded-full border-2 border-dashed border-[#9F3F2A]/60 pointer-events-none animate-pulse" />
-        )}
-      </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+              Họ và tên
+            </label>
+            <input
+              type="text"
+              value={kycForm.fullName || ''}
+              onChange={e =>
+                setKycForm(prev => ({ ...prev, fullName: e.target.value }))
+              }
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+            />
+          </div>
 
-      <div className="w-full flex gap-3">
-        {isWebcamActiveSelfie ? (
-          <Button
-            onClick={takeSelfie}
-            className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold border-none"
-          >
-            <Camera className="h-4.5 w-4.5 mr-2" /> Chụp chân dung
-          </Button>
-        ) : (
-          <Button
-            onClick={startSelfieWebcam}
-            variant="outline"
-            className="flex-1 h-10 border-slate-200 hover:bg-slate-50"
-          >
-            <Camera className="h-4.5 w-4.5 mr-2" />{' '}
-            {selfiePreview ? 'Chụp lại ảnh' : 'Bật camera'}
-          </Button>
-        )}
-        <Button
-          onClick={() => fileInputRefSelfie.current?.click()}
-          variant="outline"
-          className="flex-1 h-10 border-slate-200 hover:bg-slate-50"
-        >
-          <Upload className="h-4.5 w-4.5 mr-2" /> Tải ảnh lên
-        </Button>
-        <input
-          type="file"
-          ref={fileInputRefSelfie}
-          className="hidden"
-          accept="image/*"
-          onChange={e => handleFileChange(e, 3)}
-        />
-      </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                Ngày sinh
+              </label>
+              <input
+                type="text"
+                value={kycForm.dob || ''}
+                onChange={e =>
+                  setKycForm(prev => ({ ...prev, dob: e.target.value }))
+                }
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                Giới tính
+              </label>
+              <input
+                type="text"
+                value={kycForm.gender || ''}
+                onChange={e =>
+                  setKycForm(prev => ({ ...prev, gender: e.target.value }))
+                }
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+              />
+            </div>
+          </div>
 
-      {isProcessing ? (
-        <div className="w-full flex flex-col items-center justify-center pt-2">
-          <Loader2 className="h-7 w-7 text-[#9F3F2A] animate-spin mb-1.5" />
-          <span className="text-xs font-bold text-fg">
-            Đang so khớp khuôn mặt & Liveness...
-          </span>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                Quốc tịch
+              </label>
+              <input
+                type="text"
+                value={kycForm.nationality || ''}
+                onChange={e =>
+                  setKycForm(prev => ({ ...prev, nationality: e.target.value }))
+                }
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                Quê quán
+              </label>
+              <input
+                type="text"
+                value={kycForm.placeOfOrigin || ''}
+                onChange={e =>
+                  setKycForm(prev => ({
+                    ...prev,
+                    placeOfOrigin: e.target.value,
+                  }))
+                }
+                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+              Nơi thường trú
+            </label>
+            <input
+              type="text"
+              value={kycForm.address || ''}
+              onChange={e =>
+                setKycForm(prev => ({ ...prev, address: e.target.value }))
+              }
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+              Ngày cấp
+            </label>
+            <input
+              type="text"
+              value={kycForm.issueDate || ''}
+              onChange={e =>
+                setKycForm(prev => ({ ...prev, issueDate: e.target.value }))
+              }
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+              Nơi cấp
+            </label>
+            <input
+              type="text"
+              value={kycForm.placeOfIssue || ''}
+              onChange={e =>
+                setKycForm(prev => ({ ...prev, placeOfIssue: e.target.value }))
+              }
+              className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+            />
+          </div>
         </div>
-      ) : (
-        <Button
-          onClick={handleVerifyFace}
-          disabled={!selfiePreview}
-          className="w-full h-11 text-sm font-bold text-white rounded-xl shadow-md border-none flex items-center justify-center gap-2 cursor-pointer"
-          style={{ backgroundColor: selfiePreview ? '#9F3F2A' : '#e2e8f0' }}
-        >
-          <UserCheck className="h-5 w-5" /> Xác minh thực thể sống (Liveness)
-        </Button>
-      )}
+      </div>
 
-      <button
-        onClick={() => setCurrentStep(1)}
-        className="text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors cursor-pointer bg-transparent border-none outline-none"
-      >
-        Quay lại bước trước
-      </button>
+      {/* AI Preferences & Match Results Card */}
+      <div className="md:col-span-4 border border-slate-200 rounded-2xl p-5 bg-white shadow-sm flex flex-col justify-between">
+        <div className="space-y-4">
+          <h4 className="text-xs font-bold text-[#9F3F2A] uppercase pb-2 border-b border-slate-100 flex items-center gap-1.5">
+            <BadgeCheck className="h-4.5 w-4.5" /> Kết quả kiểm tra AI
+          </h4>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+            Thông tin được AI OCR trích xuất từ ảnh CCCD. Hồ sơ chờ nhân viên
+            duyệt sau khi nộp.
+          </div>
+
+          <div className="border-t border-slate-100 pt-3 space-y-3">
+            <h4 className="text-[11px] font-bold text-[#9F3F2A] uppercase flex items-center gap-1">
+              <Brain className="h-3.5 w-3.5" /> AI Preferences (Gợi ý)
+            </h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold text-slate-500 block">
+                  Khu vực thuê
+                </label>
+                <select
+                  value={preferredDistrict}
+                  onChange={e => setPreferredDistrict(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs text-fg focus:outline-none bg-white font-semibold"
+                >
+                  <option value="Bình Thạnh">Bình Thạnh</option>
+                  <option value="Quận 1">Quận 1</option>
+                  <option value="Quận 2">Quận 2</option>
+                  <option value="Quận 7">Quận 7</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold text-slate-500 block">
+                  Số phòng ngủ
+                </label>
+                <select
+                  value={rooms}
+                  onChange={e => setRooms(Number(e.target.value))}
+                  className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs text-fg focus:outline-none bg-white font-semibold"
+                >
+                  <option value={1}>1 PN</option>
+                  <option value={2}>2 PN</option>
+                  <option value={3}>3 PN</option>
+                </select>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-slate-500 block">
+                Thu nhập hàng tháng:{' '}
+                <span className="text-[#9F3F2A] font-bold">
+                  {formatCurrency(income)}
+                </span>
+              </label>
+              <input
+                type="range"
+                min={8000000}
+                max={150000000}
+                step={1000000}
+                value={income}
+                onChange={e => setIncome(Number(e.target.value))}
+                className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#9F3F2A]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-4 space-y-2.5">
+          {isProcessing ? (
+            <div className="flex items-center justify-center gap-2 py-2">
+              <Loader2 className="h-5 w-5 text-[#9F3F2A] animate-spin" />
+              <span className="text-xs font-bold text-slate-500">
+                Đang đẩy giao dịch CA lên Ledger...
+              </span>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setCurrentStep(1)}
+                variant="outline"
+                className="flex-1 h-10 text-xs border-slate-200 text-slate-600 rounded-full font-bold"
+              >
+                Quay lại
+              </Button>
+              <Button
+                onClick={handleConfirmAndSubmitKyc}
+                className="flex-1 h-10 text-xs text-white rounded-full font-bold shadow-md border-none flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                style={{ backgroundColor: '#9F3F2A' }}
+              >
+                <ShieldCheck className="h-4 w-4" /> Xác nhận & Nộp
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

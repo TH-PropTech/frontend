@@ -7,7 +7,6 @@ import {
   extractKycFront,
   getMyKyc,
   submitKyc,
-  verifyKycFace,
 } from './kyc-api'
 
 vi.mock('@/shared/api/api-client', () => ({
@@ -29,7 +28,6 @@ describe('KYC API', () => {
 
     await extractKycFront(image)
     await extractKycBack(image)
-    await verifyKycFace(image, image)
 
     expect(apiClient.post).toHaveBeenNthCalledWith(
       1,
@@ -41,12 +39,6 @@ describe('KYC API', () => {
       '/kyc/ocr-back',
       expect.any(FormData)
     )
-    const biometricBody = vi.mocked(apiClient.post).mock.calls[2]?.[1]
-    expect(biometricBody).toBeInstanceOf(FormData)
-    expect(Array.from((biometricBody as FormData).keys())).toEqual([
-      'portraitImages',
-      'frontID',
-    ])
   })
 
   it('runs both card OCR requests with the required multipart fields', async () => {
@@ -88,7 +80,6 @@ describe('KYC API', () => {
       placeOfIssue: '',
       frontCard: image,
       backCard: image,
-      selfie: image,
     })
 
     const body = vi.mocked(apiClient.post).mock.calls[0]?.[1] as FormData
