@@ -18,7 +18,10 @@ export interface UpdateEngineConfigDto {
 
 export interface StrategyInfo {
   id: EngineStrategy
+  /** Tên dễ hiểu hiển thị chính. */
   name: string
+  /** Tên kỹ thuật (hiển thị nhỏ, cho người cần tra cứu). */
+  technicalName: string
   badge: string
   description: string
   details: string
@@ -27,38 +30,42 @@ export interface StrategyInfo {
 export const STRATEGY_DEFINITIONS: readonly StrategyInfo[] = [
   {
     id: 'hybrid',
-    name: 'Hybrid NB + Rule-based',
-    badge: 'Mặc định (Laplace)',
+    name: 'Cân bằng',
+    technicalName: 'Hybrid NB + Rule-based',
+    badge: 'Mặc định',
     description:
-      'Kết hợp Naive Bayes cổ điển với Laplace smoothing và bộ tiêu chuẩn quy tắc 4 trụ cột.',
+      'Gợi ý căn hộ dựa trên lịch sử "người giống bạn đã thuê căn nào", cộng với bộ quy tắc nghiệp vụ (giá vừa túi tiền, đúng khu vực, đủ tiện ích).',
     details:
-      'Phù hợp trong hầu hết trường hợp, cân bằng ổn định giữa xác suất tiên nghiệm và quy tắc nghiệp vụ.',
+      'Nên dùng mặc định. Cân bằng giữa dữ liệu thực tế và kinh nghiệm nghiệp vụ.',
   },
   {
     id: 'map',
-    name: 'MAP Bayesian (Dirichlet Prior)',
-    badge: 'Bayesian MAP',
+    name: 'Thận trọng khi ít dữ liệu',
+    technicalName: 'MAP Bayesian (Dirichlet Prior)',
+    badge: 'Dữ liệu ít',
     description:
-      'Dùng Dirichlet prior cho phân phối phân loại và ước lượng hậu nghiệm cực đại.',
+      'Giống mặc định nhưng cho phép chỉnh mức "thận trọng" (α) khi dữ liệu lịch sử còn ít.',
     details:
-      'Tối ưu khi dữ liệu thuê lịch sử còn thưa (sparse data), cho phép điều chỉnh siêu tham số alpha.',
+      'Nên dùng khi hệ thống mới chạy, nhiều căn hộ mới có rất ít lượt thuê.',
   },
   {
     id: 'weighted',
-    name: 'Feature Weighted Naive Bayes',
-    badge: 'Mutual Info',
+    name: 'Ưu tiên tiêu chí quan trọng',
+    technicalName: 'Feature Weighted Naive Bayes',
+    badge: 'Tự đo mức quan trọng',
     description:
-      'Trọng số hóa đặc trưng dựa trên Thông tin tương hỗ (Mutual Information - MI).',
+      'Tự đo từ dữ liệu xem tiêu chí nào (quận, số phòng, gym, bãi xe) quan trọng hơn, rồi cho tiêu chí đó nặng ký hơn.',
     details:
-      'Đo lường mức độ quan trọng thực tế của từng đặc trưng (quận, phòng, gym, bãi xe) thay vì coi ngang hàng.',
+      'Nên dùng khi đã có khá nhiều lịch sử thuê để đo được mức quan trọng.',
   },
   {
     id: 'map-weighted',
-    name: 'MAP + Feature Weighting (Kết hợp)',
-    badge: 'Tối tân nhất',
+    name: 'Nâng cao (gộp cả hai)',
+    technicalName: 'MAP + Feature Weighting',
+    badge: 'Nâng cao',
     description:
-      'Kết hợp cả Dirichlet prior alpha và trọng số thông tin tương hỗ MI cho từng đặc trưng.',
+      'Gộp cả hai: vừa thận trọng với dữ liệu ít (α), vừa ưu tiên tiêu chí quan trọng.',
     details:
-      'Chiến lược toàn diện nhất, vừa xử lý làm mịn dữ liệu thưa vừa tối ưu hóa độ đóng góp của từng đặc trưng.',
+      'Đầy đủ nhất, nhưng cần đủ dữ liệu để phần trọng số tiêu chí có ý nghĩa.',
   },
 ]

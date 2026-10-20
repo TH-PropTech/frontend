@@ -40,7 +40,7 @@ describe('EngineConfigForm', () => {
     )
     render(<EngineConfigForm />)
     expect(
-      screen.getByText('Đang tải cấu hình AI Recommendation Engine...')
+      screen.getByText('Đang tải cấu hình gợi ý căn hộ...')
     ).toBeInTheDocument()
   })
 
@@ -49,19 +49,18 @@ describe('EngineConfigForm', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('Chọn Chiến Lược Học Máy (Strategy Selection)')
+        screen.getByText('Chọn cách hệ thống gợi ý căn hộ')
       ).toBeInTheDocument()
     })
 
-    expect(screen.getAllByText('Hybrid NB + Rule-based')).toHaveLength(2)
+    // Tên "Cân bằng" xuất hiện ở thanh trạng thái và ở thẻ chiến lược
+    expect(screen.getAllByText(/^Cân bằng$/)).toHaveLength(2)
+    expect(screen.getByText(/Thận trọng khi ít dữ liệu$/)).toBeInTheDocument()
+    expect(screen.getByText(/Ưu tiên tiêu chí quan trọng$/)).toBeInTheDocument()
+    expect(screen.getByText(/Nâng cao \(gộp cả hai\)$/)).toBeInTheDocument()
     expect(
-      screen.getByText('MAP Bayesian (Dirichlet Prior)')
+      screen.getByText('Mức thận trọng khi ít dữ liệu (α)')
     ).toBeInTheDocument()
-    expect(screen.getByText('Feature Weighted Naive Bayes')).toBeInTheDocument()
-    expect(
-      screen.getByText('MAP + Feature Weighting (Kết hợp)')
-    ).toBeInTheDocument()
-    expect(screen.getByText('Dirichlet Prior Alpha (α)')).toBeInTheDocument()
   })
 
   it('allows switching strategies and submitting updated config', async () => {
@@ -79,7 +78,7 @@ describe('EngineConfigForm', () => {
 
     // Click submit
     const submitBtn = screen.getByRole('button', {
-      name: /Lưu & Áp dụng Chiến Lược/i,
+      name: /Lưu & áp dụng/i,
     })
     fireEvent.click(submitBtn)
 
@@ -92,17 +91,42 @@ describe('EngineConfigForm', () => {
     })
   })
 
+  it('opens the explainer dialog without changing the selected strategy', async () => {
+    render(<EngineConfigForm />)
+
+    const infoBtn = await screen.findByRole('button', {
+      name: 'Giải thích cách gợi ý Thận trọng khi ít dữ liệu',
+    })
+    fireEvent.click(infoBtn)
+
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveTextContent('Nói đơn giản')
+    expect(dialog).toHaveTextContent('Nguồn tham khảo')
+    expect(dialog).toHaveTextContent('Murphy, K. P. (2012)')
+
+    // Click bên trong hộp thoại không được chọn chiến lược MAP
+    fireEvent.click(dialog)
+    expect(
+      (
+        screen.getByRole('radio', {
+          name: /Cân bằng/,
+          hidden: true,
+        }) as HTMLInputElement
+      ).checked
+    ).toBe(true)
+  })
+
   it('handles reset to default configuration', async () => {
     render(<EngineConfigForm />)
 
     await waitFor(() => {
       expect(
-        screen.getByRole('button', { name: /Khôi phục mặc định/i })
+        screen.getByRole('button', { name: /Về mặc định/i })
       ).toBeInTheDocument()
     })
 
     const resetBtn = screen.getByRole('button', {
-      name: /Khôi phục mặc định/i,
+      name: /Về mặc định/i,
     })
     fireEvent.click(resetBtn)
 
