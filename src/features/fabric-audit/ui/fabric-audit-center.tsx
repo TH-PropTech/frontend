@@ -27,6 +27,7 @@ import { AuditOverviewPanel } from './audit-overview-panel'
 import { GovernancePanel } from './governance-panel'
 import { PanelLoading } from './panel-states'
 import { ReconciliationPanel } from './reconciliation-panel'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 const TAB_LABELS: Record<AuditTab, string> = {
   overview: 'Tổng quan',
@@ -170,12 +171,9 @@ export function FabricAuditCenter(): React.ReactElement {
   const capability = resolveFabricAuditCapability(readStoredRoles(storedUser))
   if (!capability.canRead) {
     return (
-      <div
-        role="alert"
-        className="rounded-xl border border-border bg-surface p-5 text-sm text-muted"
-      >
+      <AdminCard role="alert" className="p-5 text-sm text-muted">
         Bạn không có quyền xem Fabric Audit Center.
-      </div>
+      </AdminCard>
     )
   }
 

@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { normalizeKeywords } from '../lib/format'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 export interface LegalKeywordInputProps {
   id: string
@@ -37,7 +38,7 @@ export function LegalKeywordInput({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border bg-surface px-2 py-1.5 focus-within:ring-2 focus-within:ring-primary/30">
+    <AdminCard className="flex flex-wrap items-center gap-1.5 px-2 py-1.5 focus-within:ring-2 focus-within:ring-primary/30">
       {value.map(keyword => (
         <span
           key={keyword}
@@ -65,6 +66,6 @@ export function LegalKeywordInput({
         }}
         className="min-w-[120px] flex-1 bg-transparent px-1 py-0.5 text-sm text-fg placeholder:text-muted focus:outline-none"
       />
-    </div>
+    </AdminCard>
   )
 }

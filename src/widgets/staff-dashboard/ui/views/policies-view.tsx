@@ -6,6 +6,7 @@ import { LegalTermsAdminTab } from './components/policies/legal-terms-admin-tab'
 import { OperationalPoliciesAdminTab } from './components/policies/operational-policies-admin-tab'
 import { PublicServicesAdminTab } from './components/policies/public-services-admin-tab'
 import { LegalSourcesAdminTab } from './components/policies/legal-sources-admin-tab'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 type SubTab = 'terms' | 'policies' | 'governance'
 type GovernanceSection = 'services' | 'sources'
@@ -30,7 +31,7 @@ export function PoliciesView(): React.ReactElement {
         </div>
 
         {/* Tab Switcher Pills */}
-        <div className="inline-flex p-1 rounded-xl border border-border bg-surface shadow-2xs self-start sm:self-auto">
+        <AdminCard className="inline-flex p-1 shadow-2xs self-start sm:self-auto">
           <button
             type="button"
             onClick={() => setActiveTab('terms')}
@@ -70,7 +71,7 @@ export function PoliciesView(): React.ReactElement {
             <Scale className="h-4 w-4" />
             Quy định & Dịch vụ công
           </button>
-        </div>
+        </AdminCard>
       </div>
 
       {/* ═══ ACTIVE SUB-TAB VIEW ═══ */}

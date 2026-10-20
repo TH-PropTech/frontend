@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 export interface BarChartDataPoint {
   label: string
@@ -26,7 +27,7 @@ export function BookingBarChart({
   )
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between h-full">
+    <AdminCard className="p-5 sm:p-6 flex flex-col justify-between h-full">
       <div className="flex items-center justify-between mb-1">
         <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
           {title}
@@ -128,6 +129,6 @@ export function BookingBarChart({
           })}
         </div>
       )}
-    </div>
+    </AdminCard>
   )
 }

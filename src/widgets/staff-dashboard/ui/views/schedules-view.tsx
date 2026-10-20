@@ -10,6 +10,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { apiClient } from '@/shared/api/api-client'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 export type FilterStatus =
   | 'all'
@@ -243,9 +244,9 @@ export function SchedulesView(): React.ReactElement {
       {/* Appointment Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {appointments.map(app => (
-          <div
+          <AdminCard
             key={app.id}
-            className="bg-surface border border-line rounded-xl p-5 shadow-sm space-y-4 flex flex-col justify-between hover:translate-y-[-2px] hover:shadow-md transition-all duration-300"
+            className="p-5 space-y-4 flex flex-col justify-between hover:translate-y-[-2px] hover:shadow-md transition-all duration-300"
           >
             <div>
               <div className="flex justify-between items-center">
@@ -355,13 +356,13 @@ export function SchedulesView(): React.ReactElement {
                 {app.status === 'completed' && 'Đã thực hiện cuộc gặp'}
               </span>
             </div>
-          </div>
+          </AdminCard>
         ))}
 
         {appointments.length === 0 && (
-          <div className="col-span-2 bg-surface border border-line rounded-xl p-10 text-center text-subtle font-body">
+          <AdminCard className="col-span-2 p-10 text-center text-subtle font-body">
             Không có lịch xem nhà nào trong danh sách.
-          </div>
+          </AdminCard>
         )}
       </div>
 

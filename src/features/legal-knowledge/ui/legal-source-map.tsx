@@ -24,6 +24,7 @@ import {
   type LegalDocDetail,
   type LegalDocItem,
 } from '../model/legal-knowledge.types'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 const OUTLINE_LIMIT = 40
 const PREVIEW_CHARS = 1200
@@ -75,12 +76,12 @@ export function LegalSourceMap({
 
   if (docs.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-surface px-5 py-10 text-center">
+      <AdminCard className="px-5 py-10 text-center">
         <p className="text-sm font-bold text-fg">Chưa có nội dung nào</p>
         <p className="mt-1 text-xs text-muted">
           Thêm tài liệu từ liên kết để xem nội dung nào lấy từ trang nào.
         </p>
-      </div>
+      </AdminCard>
     )
   }
 
@@ -255,10 +256,10 @@ function Stat({
   value: number
 }): React.ReactElement {
   return (
-    <div className="rounded-xl border border-border bg-surface px-4 py-3">
+    <AdminCard className="px-4 py-3">
       <p className="text-xs text-muted">{label}</p>
       <p className="mt-1 text-xl font-bold text-fg">{formatCount(value)}</p>
-    </div>
+    </AdminCard>
   )
 }
 

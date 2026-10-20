@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 export interface TrendDataPoint {
   label: string
@@ -53,7 +54,7 @@ export function BookingTrendLineChart({
   const yTicks = [0, Math.round(maxVal / 2), maxVal]
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col h-full">
+    <AdminCard className="p-5 sm:p-6 flex flex-col h-full">
       <div className="flex items-center justify-between mb-1">
         <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
           {title}
@@ -273,6 +274,6 @@ export function BookingTrendLineChart({
           </svg>
         </div>
       )}
-    </div>
+    </AdminCard>
   )
 }
