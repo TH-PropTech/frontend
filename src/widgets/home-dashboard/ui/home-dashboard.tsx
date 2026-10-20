@@ -202,60 +202,6 @@ export function HomeDashboard(): React.ReactElement {
         )}
         <PlatformOverview />
 
-        {/* AI Recommendation Banner */}
-        <section className="mx-auto max-w-6xl px-6 pt-12 md:px-10 relative z-20">
-          <div className="relative overflow-hidden rounded-3xl border border-[#e3d8d0] bg-gradient-to-br from-[#faf7f2] via-[#fffdf9] to-[#faf7f2] p-8 md:p-12 shadow-sm">
-            {/* Background elements */}
-            <div className="absolute right-0 top-0 -mr-16 -mt-16 w-64 h-64 bg-[#c65a3a]/5 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute left-1/3 bottom-0 -ml-16 -mb-16 w-64 h-64 bg-[#6b8e4e]/5 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-8">
-              <div className="space-y-4 max-w-xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#6b8e4e]/20 bg-[#6b8e4e]/5 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#6b8e4e]">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#6b8e4e] opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#6b8e4e]"></span>
-                  </span>
-                  Đề xuất thông minh bằng AI
-                </div>
-                <h2 className="font-marketing text-2xl md:text-3xl font-bold text-fg leading-tight">
-                  Tìm căn hộ phù hợp nhất với bạn bằng Trợ lý ảo TH Proptech
-                </h2>
-                <p className="text-sm text-[#7a6a61] font-body leading-relaxed">
-                  Trải nghiệm công cụ khảo sát thông minh giúp AI phân tích tài
-                  chính, nhu cầu tiện ích và nhân khẩu học để đề xuất căn hộ
-                  khớp đến 99%. Hoàn toàn miễn phí.
-                </p>
-              </div>
-
-              <div className="shrink-0">
-                <Link href={'/ai-visual' as Route}>
-                  <button
-                    type="button"
-                    className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-[#9f3f2a] hover:bg-[#833221] px-8 py-4 font-display text-sm font-bold text-white shadow-lg transition-all active:scale-95 cursor-pointer"
-                  >
-                    <svg
-                      className="w-4 h-4 text-[#e9a23b] fill-[#e9a23b]/20 group-hover:rotate-12 transition-transform"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z" />
-                      <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5Z" />
-                      <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1.5Z" />
-                    </svg>
-                    Tham khảo Trợ lý ảo TH Proptech
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <FeaturedApartments
           results={recommendation.results}
           isLoading={recommendation.isLoading}
