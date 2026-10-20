@@ -6,6 +6,8 @@ import { Footer } from '@/shared/ui/footer'
 import { categories } from '../model/articles-data'
 import { AiGuideBot } from './components/ai-guide-bot'
 
+const ALL_ARTICLES = categories.flatMap(c => c.articles)
+
 export function ProcessTimeline(): React.ReactElement {
   const [viewMode, setViewMode] = React.useState<'dashboard' | 'detail'>(
     'dashboard'
@@ -13,9 +15,6 @@ export function ProcessTimeline(): React.ReactElement {
   const [searchQuery, setSearchQuery] = React.useState('')
   const [activeArticleId, setActiveArticleId] = React.useState('post-desktop')
   const [showAiGuide, setShowAiGuide] = React.useState(true)
-  const [userRole, setUserRole] = React.useState<
-    'tenant' | 'staff' | 'admin' | 'guest'
-  >('tenant')
 
   const [expandedCats, setExpandedCats] = React.useState<
     Record<string, boolean>
@@ -58,24 +57,26 @@ export function ProcessTimeline(): React.ReactElement {
   }
 
   // Get active article safely
-  const allArticles = categories.flatMap(c => c.articles)
-  const activeArticle = allArticles.find(a => a.id === activeArticleId) ||
-    allArticles[0] || {
+  const activeArticle = ALL_ARTICLES.find(a => a.id === activeArticleId) ||
+    ALL_ARTICLES[0] || {
       id: 'fallback',
       title: 'Cẩm nang',
       breadcrumbs: ['Cẩm nang'],
       content: <p>Nội dung đang được cập nhật.</p>,
     }
 
-  // Filter categories and articles based on search query or selected category
-  const filteredCategories = categories
-    .map(cat => {
-      const matchingArticles = cat.articles.filter(art =>
-        art.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      return { ...cat, articles: matchingArticles }
-    })
-    .filter(cat => cat.articles.length > 0)
+  // Lọc theo ô tìm kiếm: chỉ tính lại khi từ khoá đổi, không phải mỗi lần render
+  const filteredCategories = React.useMemo(() => {
+    const q = searchQuery.toLowerCase()
+    return categories
+      .map(cat => ({
+        ...cat,
+        articles: cat.articles.filter(art =>
+          art.title.toLowerCase().includes(q)
+        ),
+      }))
+      .filter(cat => cat.articles.length > 0)
+  }, [searchQuery])
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-bg text-fg selection:bg-primary/20 selection:text-primary">
@@ -270,11 +271,6 @@ export function ProcessTimeline(): React.ReactElement {
                     placeholder="Mời bạn nhập câu hỏi..."
                     className="w-full rounded-full border border-border bg-[#faf6f1]/40 py-2.5 pl-9 pr-14 text-[11px] text-fg outline-none focus:border-primary focus:bg-white transition-all duration-300"
                   />
-                  <div className="absolute inset-y-0 right-3 flex items-center">
-                    <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[8px] font-bold text-muted border border-border/80">
-                      Ctrl+K
-                    </span>
-                  </div>
                 </form>
               </div>
             </section>
@@ -289,7 +285,7 @@ export function ProcessTimeline(): React.ReactElement {
                       type="text"
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Filter by name"
+                      placeholder="Lọc theo tên"
                       className="w-full rounded-xl border border-border bg-[#faf6f1]/20 py-2 px-3 pl-8 text-xs text-fg outline-none focus:border-primary focus:bg-white transition-all duration-200"
                     />
                     <svg
@@ -406,22 +402,6 @@ export function ProcessTimeline(): React.ReactElement {
 
                     {/* Actions row */}
                     <div className="flex items-center gap-3 self-start md:self-center flex-wrap">
-                      <select
-                        value={userRole}
-                        onChange={e =>
-                          setUserRole(
-                            e.target.value as 'tenant' | 'staff' | 'admin'
-                          )
-                        }
-                        className="bg-surface border border-border rounded-xl py-2 px-3 text-[11px] font-bold text-fg cursor-pointer outline-none focus:border-primary"
-                        title="Đổi vai trò người dùng"
-                      >
-                        <option value="tenant">Khách Thuê (Tenant)</option>
-                        <option value="staff">Nhân Viên (Staff)</option>
-                        <option value="admin">Quản Trị (Admin)</option>
-                        <option value="guest">Khách Vãng Lai (Guest)</option>
-                      </select>
-
                       <button
                         onClick={handleToggleAiGuide}
                         className={`py-2 px-4 rounded-xl text-[11px] font-bold flex items-center gap-1.5 cursor-pointer border transition-all duration-300 ${
@@ -431,7 +411,7 @@ export function ProcessTimeline(): React.ReactElement {
                         }`}
                       >
                         <svg
-                          className={`h-3.5 w-3.5 ${showAiGuide ? 'animate-pulse' : ''}`}
+                          className="h-3.5 w-3.5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -443,38 +423,7 @@ export function ProcessTimeline(): React.ReactElement {
                             d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                           />
                         </svg>
-                        Trợ lý AI: {showAiGuide ? 'Bật' : 'Tắt'}
-                      </button>
-                      <button className="bg-surface border border-border hover:bg-surface-muted py-2 px-4 rounded-xl text-[11px] font-bold text-fg flex items-center gap-1.5 cursor-pointer">
-                        <svg
-                          className="h-3.5 w-3.5 text-muted"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        Theo dõi
-                      </button>
-                      <button className="h-9 w-9 bg-surface border border-border hover:bg-surface-muted flex items-center justify-center rounded-xl cursor-pointer">
-                        <svg
-                          className="h-4 w-4 text-muted"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M8.684 10.742l4.636-2.318m0 7.152l-4.636-2.318M21 12a3 3 0 11-6 0 3 3 0 016 0zm-6-9a3 3 0 11-6 0 3 3 0 016 0zm0 18a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
+                        Hướng dẫn: {showAiGuide ? 'Bật' : 'Tắt'}
                       </button>
                     </div>
                   </div>
@@ -484,7 +433,6 @@ export function ProcessTimeline(): React.ReactElement {
                     <AiGuideBot
                       articleId={activeArticle.id}
                       isVisible={showAiGuide}
-                      userRole={userRole}
                     />
                     {activeArticle.content}
                   </div>

@@ -21,7 +21,7 @@ export interface AiMascotProps {
   className?: string
 }
 
-export function AiMascot({
+function AiMascotImpl({
   isHappy = false,
   armState = 'idle',
   pointDirection = 'left',
@@ -61,10 +61,10 @@ export function AiMascot({
         } else {
           const angle = Math.atan2(deltaY, deltaX)
           const displacement = Math.min(maxDistance, distance / 50)
-          setEyeOffset({
-            x: Math.cos(angle) * displacement,
-            y: Math.sin(angle) * displacement,
-          })
+          // làm tròn 0,5px và bỏ qua khi không đổi: tránh render lại ~60 lần/giây khi rê chuột
+          const x = Math.round(Math.cos(angle) * displacement * 2) / 2
+          const y = Math.round(Math.sin(angle) * displacement * 2) / 2
+          setEyeOffset(prev => (prev.x === x && prev.y === y ? prev : { x, y }))
         }
       })
     }
@@ -617,3 +617,5 @@ export function AiMascot({
     </div>
   )
 }
+
+export const AiMascot = React.memo(AiMascotImpl)

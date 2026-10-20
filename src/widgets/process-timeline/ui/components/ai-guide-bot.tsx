@@ -4,7 +4,6 @@
 import * as React from 'react'
 import { AI_GUIDES } from '../../model/ai-guide-data'
 import { useMascotEmotion } from '../../model/use-mascot-emotion'
-import { useTypingEffect } from '../../model/use-typing-effect'
 import { useScrollProgress } from '../../model/use-scroll-progress'
 import { useGuideBookmark } from '../../model/use-guide-bookmark'
 import { useVoiceCommand } from '../../model/use-voice-command'
@@ -15,6 +14,7 @@ import { usePlatform } from '../../model/use-platform'
 
 import { AiMascot } from './ai-mascot'
 import { MiniUiPreview } from './mini-ui-preview'
+import { SpeechSubtitle } from './speech-subtitle'
 
 /* ─── Time-Aware Greeting ─── */
 const getGreeting = (): string => {
@@ -31,13 +31,11 @@ const getGreeting = (): string => {
 export interface AiGuideBotProps {
   articleId: string
   isVisible: boolean
-  userRole?: 'tenant' | 'staff' | 'admin' | 'guest'
 }
 
-export function AiGuideBot({
+function AiGuideBotImpl({
   articleId,
   isVisible,
-  userRole = 'guest',
 }: AiGuideBotProps): React.ReactElement | null {
   const guide = AI_GUIDES[articleId]
   const [checkedSteps, setCheckedSteps] = React.useState<
@@ -79,22 +77,13 @@ export function AiGuideBot({
   // Emotion system hook
   const mascotEmotion = useMascotEmotion()
 
-  // Typing effect on the active tip text
+  // Lời hướng dẫn của bước đang chọn. Giọng đọc luôn đọc đúng chữ này (không đọc lời chào).
   const currentTip = guide ? getTip(guide, activeStepIndex) : ''
-  const displayTipText = greetingText ?? currentTip
-  const { displayed: typedTipText, isTyping } = useTypingEffect(
-    displayTipText,
-    25
-  )
 
-  // Speech fallback (TTS + Subtitles)
+  // Giọng đọc tiếng Việt thật (Web Speech API)
   const speechRateValue =
-    speechRate === 'slow' ? 0.75 : speechRate === 'fast' ? 1.5 : 1.1
-  const speechHelper = useSpeechFallback(
-    displayTipText,
-    lang === 'vi' ? 'vi-VN' : 'en-US',
-    speechRateValue
-  )
+    speechRate === 'slow' ? 0.8 : speechRate === 'fast' ? 1.25 : 1
+  const speechHelper = useSpeechFallback(currentTip, speechRateValue)
 
   // Voice Command control
   const voiceHelper = useVoiceCommand(cmd => {
@@ -207,7 +196,7 @@ export function AiGuideBot({
     const triggerRandom = (): void => {
       const delay = 30_000 + Math.random() * 30_000
       timeout = setTimeout(() => {
-        if (mascotEmotion.armState !== 'idle' || isTyping) {
+        if (mascotEmotion.armState !== 'idle') {
           triggerRandom()
           return
         }
@@ -235,7 +224,7 @@ export function AiGuideBot({
       clearTimeout(timeout)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [isVisible, isTyping])
+  }, [isVisible])
 
   /* ─── Reset states when active article changes ─── */
   React.useEffect(() => {
@@ -246,6 +235,11 @@ export function AiGuideBot({
     setFeedbackSubmitted(null)
     speechHelper.stop()
   }, [articleId])
+
+  /* ─── Tắt hướng dẫn thì dừng đọc ─── */
+  React.useEffect(() => {
+    if (!isVisible) speechHelper.stop()
+  }, [isVisible])
 
   /* ─── Stop speaking on step change ─── */
   React.useEffect(() => {
@@ -361,12 +355,7 @@ export function AiGuideBot({
 
   return (
     <div
-      className="transition-all duration-500 ease-in-out overflow-hidden"
-      style={{
-        maxHeight: isVisible ? '1500px' : '0px',
-        opacity: isVisible ? 1 : 0,
-        marginBottom: isVisible ? '24px' : '0px',
-      }}
+      className={isVisible ? 'mb-6 animate-in fade-in duration-300' : 'hidden'}
     >
       {/* CSS Confetti Celebration */}
       {progressPercent === 100 && (
@@ -506,32 +495,6 @@ export function AiGuideBot({
         </div>
       )}
 
-      {/* Subtitles Overlay (for Speech Fallback) */}
-      {speechHelper.showSubtitle && (
-        <div className="bg-primary-soft border border-primary/20 rounded-xl p-3 mb-3 text-center transition-all animate-in slide-in-from-top duration-300">
-          <div className="text-[10px] font-bold text-primary/70 uppercase tracking-wide mb-1">
-            Đang phát hướng dẫn:
-          </div>
-          <div className="flex flex-wrap gap-1 justify-center max-w-xl mx-auto">
-            {speechHelper.words.map((w, idx) => {
-              const isActive = speechHelper.highlightIndex === idx
-              return (
-                <span
-                  key={idx}
-                  className={`text-sm px-1.5 py-0.5 rounded transition-all duration-200 ${
-                    isActive
-                      ? 'bg-primary text-white font-bold scale-105 shadow-sm'
-                      : 'text-fg font-medium opacity-70'
-                  }`}
-                >
-                  {w}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
       {/* Main Bot Card Container */}
       <div
         className={`relative rounded-2xl border border-primary/20 bg-gradient-to-br from-white/95 via-primary/[0.01] to-primary/[0.03] shadow-md backdrop-blur-md overflow-hidden group transition-all duration-300 ${
@@ -579,7 +542,7 @@ export function AiGuideBot({
               <h4 className="font-marketing text-base font-extrabold text-fg flex items-center gap-1.5">
                 {guide.title}
                 <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary tracking-wide">
-                  TRỢ LÝ AI
+                  HƯỚNG DẪN
                 </span>
               </h4>
               <p className="text-xs text-muted font-medium">
@@ -721,7 +684,7 @@ export function AiGuideBot({
                 }
                 className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all cursor-pointer ${
                   voiceHelper.isListening
-                    ? 'bg-amber-500 border-amber-500 text-white animate-pulse shadow-md'
+                    ? 'bg-amber-500 border-amber-500 text-white shadow-md'
                     : 'bg-primary/10 border-primary/20 text-primary hover:bg-primary/20'
                 }`}
                 title={
@@ -751,7 +714,7 @@ export function AiGuideBot({
               onClick={handleToggleSpeech}
               className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all cursor-pointer ${
                 speechHelper.isSpeaking
-                  ? 'bg-red-500 border-red-500 text-white animate-pulse shadow-md'
+                  ? 'bg-red-500 border-red-500 text-white shadow-md'
                   : 'bg-primary/10 border-primary/20 text-primary hover:bg-primary/20'
               }`}
               title={
@@ -970,9 +933,16 @@ export function AiGuideBot({
                           {/* Step Tip text - shown inline on ALL screens */}
                           <div className="text-xs text-primary bg-primary/5 p-3 rounded-lg leading-relaxed border border-primary/10">
                             <span className="font-bold uppercase tracking-wider text-[10px] block mb-1">
-                              Trợ lý AI hướng dẫn:
+                              Hướng dẫn:
                             </span>
-                            {greetingText ?? currentTip}
+                            {speechHelper.isSpeaking ? (
+                              <SpeechSubtitle
+                                words={speechHelper.words}
+                                subscribeWord={speechHelper.subscribeWord}
+                              />
+                            ) : (
+                              (greetingText ?? currentTip)
+                            )}
                           </div>
 
                           {/* Miniature Graphic UI Mockup — collapsed by default */}
@@ -1014,24 +984,26 @@ export function AiGuideBot({
               className="relative w-28 self-stretch hidden md:block shrink-0 border-l border-primary/10 pl-4"
             >
               <div
-                className={`absolute left-4 transition-all duration-1000 ease-in-out ${
-                  isMascotCrawling ? 'anim-mascot-wiggle' : ''
-                } ${isVisible ? 'animate-slide-down-bounce' : ''}`}
-                style={{
-                  top: `${mascotTop}px`,
-                }}
+                className="absolute left-4 top-0 transition-transform duration-700 ease-in-out will-change-transform"
+                style={{ transform: `translate3d(0, ${mascotTop}px, 0)` }}
               >
-                <AiMascot
-                  isHappy={isMascotHappy}
-                  armState={mascotEmotion.armState}
-                  emotion={mascotEmotion.emotion}
-                  mouthShape={mascotEmotion.mouthShape}
-                  isTalking={speechHelper.isSpeaking}
-                  isProgressAura={isProgressAura}
-                  scrollProgress={scrollProgress}
-                  pointDirection="left"
-                  onClick={handleMascotClick}
-                />
+                <div
+                  className={`${isMascotCrawling ? 'anim-mascot-wiggle' : ''} ${
+                    isVisible ? 'animate-slide-down-bounce' : ''
+                  }`}
+                >
+                  <AiMascot
+                    isHappy={isMascotHappy}
+                    armState={mascotEmotion.armState}
+                    emotion={mascotEmotion.emotion}
+                    mouthShape={mascotEmotion.mouthShape}
+                    isTalking={speechHelper.isSpeaking}
+                    isProgressAura={isProgressAura}
+                    scrollProgress={scrollProgress}
+                    pointDirection="left"
+                    onClick={handleMascotClick}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1075,7 +1047,7 @@ export function AiGuideBot({
                       : 'text-[15px]'
                 }`}
               >
-                Lưu ý quan trọng từ trợ lý AI:
+                Lưu ý quan trọng:
               </span>
               <span
                 className={`${getBodyTextClass()} text-amber-900/90 leading-relaxed`}
@@ -1089,3 +1061,5 @@ export function AiGuideBot({
     </div>
   )
 }
+
+export const AiGuideBot = React.memo(AiGuideBotImpl)
