@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { apiClient } from '@/shared/api/api-client'
 import type { CommunityPost } from '../community-view'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 interface Comment {
   id: string
@@ -177,7 +178,7 @@ export function CommunityPostDetailModal({
         className="absolute inset-0 bg-fg/50 backdrop-blur-xs"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-2xl bg-surface border border-line rounded-xl shadow-lg overflow-hidden flex flex-col max-h-[85vh]">
+      <AdminCard className="relative z-10 w-full max-w-2xl shadow-lg overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
         <div className="p-5 border-b border-line flex items-center justify-between">
           <div>
@@ -270,7 +271,7 @@ export function CommunityPostDetailModal({
             )}
           </div>
         </div>
-      </div>
+      </AdminCard>
     </div>
   )
 }

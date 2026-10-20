@@ -21,10 +21,8 @@ import type { DateRange } from '@/shared/ui/date-range-picker'
 import { BookingBarChart } from './components/booking-bar-chart'
 import { BookingStatusDoughnut } from './components/booking-status-doughnut'
 import { BookingTrendLineChart } from './components/booking-trend-line-chart'
-import { EscrowLineChart } from './components/escrow-line-chart'
-import { SystemLoadBarChart } from './components/system-load-bar-chart'
-import { TaskDoughnutChart } from './components/task-doughnut-chart'
 import { apiClient } from '@/shared/api/api-client'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 // ─── Backend types ─────────────────────────────────────────────────────────────
 
@@ -102,7 +100,7 @@ function StatCard({
   }
   const c = colorMap[color]
   return (
-    <div className="bg-surface border border-border rounded-xl p-4 shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex flex-col gap-2">
+    <AdminCard className="p-4 hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex flex-col gap-2">
       <div className="flex items-start justify-between">
         <span className="text-[10px] font-bold text-muted tracking-widest uppercase font-body leading-tight">
           {title}
@@ -130,7 +128,7 @@ function StatCard({
       <p className="text-[11px] text-muted font-body leading-relaxed">
         {subtext}
       </p>
-    </div>
+    </AdminCard>
   )
 }
 
@@ -142,7 +140,7 @@ function Skeleton(): React.ReactElement {
 
 function BlockchainBanner(): React.ReactElement {
   return (
-    <div className="bg-surface border border-border rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden shadow-sm">
+    <AdminCard className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
       <div className="flex items-center gap-4 relative z-10">
         {/* Blockchain sticker */}
         <svg
@@ -237,7 +235,7 @@ function BlockchainBanner(): React.ReactElement {
           />
         </svg>
       </div>
-    </div>
+    </AdminCard>
   )
 }
 
@@ -342,6 +340,8 @@ export function OverviewView(): React.ReactElement {
     [chartData]
   )
 
+  const hasChartData = filteredTrend.some(p => p.bookings > 0)
+
   const completionRate =
     stats && stats.bookings.total > 0
       ? Math.round(
@@ -409,7 +409,7 @@ export function OverviewView(): React.ReactElement {
         </div>
 
         {/* Filter bar */}
-        <div className="bg-surface border border-border rounded-xl p-4 shadow-sm">
+        <AdminCard className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-[10px] font-bold text-muted uppercase tracking-widest">
               Bộ lọc
@@ -445,7 +445,7 @@ export function OverviewView(): React.ReactElement {
               onChange={setDateRange}
             />
           </div>
-        </div>
+        </AdminCard>
 
         {/* Stats — row 1: Bookings */}
         <div>
@@ -576,14 +576,18 @@ export function OverviewView(): React.ReactElement {
                 Thử lại
               </button>
             </div>
+          ) : !loadingChart && !hasChartData ? (
+            <AdminCard className="text-xs text-muted px-4 py-6 text-center">
+              Chưa có lịch hẹn trong khoảng thời gian này.
+            </AdminCard>
           ) : (
             <div className="space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2 min-h-[240px]">
                   {loadingChart ? (
-                    <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex items-center justify-center min-h-[240px]">
+                    <AdminCard className="p-5 flex items-center justify-center min-h-[240px]">
                       <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                    </div>
+                    </AdminCard>
                   ) : (
                     <BookingBarChart
                       data={barChartData}
@@ -593,9 +597,9 @@ export function OverviewView(): React.ReactElement {
                 </div>
                 <div className="min-h-[240px]">
                   {loadingChart ? (
-                    <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex items-center justify-center min-h-[240px]">
+                    <AdminCard className="p-5 flex items-center justify-center min-h-[240px]">
                       <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                    </div>
+                    </AdminCard>
                   ) : (
                     <BookingStatusDoughnut
                       data={doughnutData}
@@ -606,9 +610,9 @@ export function OverviewView(): React.ReactElement {
               </div>
               <div className="min-h-[220px]">
                 {loadingChart ? (
-                  <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex items-center justify-center min-h-[220px]">
+                  <AdminCard className="p-5 flex items-center justify-center min-h-[220px]">
                     <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                  </div>
+                  </AdminCard>
                 ) : (
                   <BookingTrendLineChart
                     data={trendData}
@@ -618,41 +622,6 @@ export function OverviewView(): React.ReactElement {
               </div>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* ── Divider ───────────────────────────────────────────────────────── */}
-      <div className="relative flex items-center gap-3">
-        <div className="flex-1 h-px bg-border" />
-        <span className="text-[10px] font-bold text-muted uppercase tracking-widest bg-bg px-2">
-          Blockchain & Hệ thống
-        </span>
-        <div className="flex-1 h-px bg-border" />
-      </div>
-
-      {/* ── Section 2: Blockchain / Smart Contract (charts cũ) ───────────── */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-1">
-          <Cpu className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-bold text-fg font-marketing">
-            Blockchain & Smart Contract
-          </h3>
-          <span className="text-[10px] font-bold text-success bg-success/10 border border-success/20 px-2 py-0.5 rounded-full ml-1">
-            Live
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
-            <EscrowLineChart />
-          </div>
-          <div>
-            <TaskDoughnutChart />
-          </div>
-        </div>
-
-        <div>
-          <SystemLoadBarChart />
         </div>
       </div>
     </div>

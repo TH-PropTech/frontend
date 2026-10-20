@@ -19,19 +19,19 @@ export function RecommendationEngineView(): React.ReactElement {
                   <Cpu className="w-5 h-5" />
                 </div>
                 <CardTitle className="text-base sm:text-lg font-bold text-fg font-marketing">
-                  Cấu Hình AI Recommendation Engine
+                  Cấu hình gợi ý căn hộ bằng AI
                 </CardTitle>
                 <Badge
                   variant="outline"
                   className="text-[10px] text-accent border-accent/30 bg-accent-soft/30 uppercase tracking-wider font-bold"
                 >
-                  Admin Control
+                  Quản trị viên
                 </Badge>
               </div>
               <CardDescription className="text-xs text-muted max-w-2xl leading-relaxed">
-                Kiểm soát chiến lược mô hình học máy (Naive Bayes / MAP Bayesian
-                / Feature Weighting) và tinh chỉnh trọng số đề xuất căn hộ toàn
-                hệ thống mà không cần deploy lại ứng dụng.
+                Chọn cách hệ thống chấm điểm và gợi ý căn hộ cho khách thuê, và
+                chỉnh mức độ tin vào dữ liệu hay quy tắc. Đổi xong áp dụng ngay,
+                không cần cập nhật lại ứng dụng.
               </CardDescription>
             </div>
 
@@ -41,14 +41,14 @@ export function RecommendationEngineView(): React.ReactElement {
                 className="gap-1.5 py-1 px-2.5 text-xs font-normal"
               >
                 <BookOpen className="w-3.5 h-3.5 text-primary" />
-                <span>Nghiệp vụ KLTN</span>
+                <span>Đề tài KLTN</span>
               </Badge>
               <Badge
                 variant="outline"
                 className="gap-1.5 py-1 px-2.5 text-xs text-primary border-primary/30 bg-primary-soft/40 font-semibold"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Online Retrain</span>
+                <span>Tự học lại ngay</span>
               </Badge>
             </div>
           </div>

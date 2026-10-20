@@ -17,7 +17,6 @@ import { StaffDesignRequestsView } from './staff-design-requests-view'
 vi.mock('../api/design-requests-api', () => ({
   listDesignRequestQueue: vi.fn(),
   getDesignRequest: vi.fn(),
-  escalateDesignRequest: vi.fn(),
   requestInfoDesignRequest: vi.fn(),
   rejectDesignRequest: vi.fn(),
   startDesignRequest: vi.fn(),
@@ -59,6 +58,7 @@ function summary(
     revision: 1,
     deliveredDesignId: null,
     assignedAdminId: null,
+    assignee: null,
     createdAt: '2026-01-10T00:00:00.000Z',
     updatedAt: '2026-01-11T00:00:00.000Z',
     ...extra,
@@ -89,21 +89,20 @@ function detail(
   }
 }
 
-function renderView(role: 'staff' | 'admin') {
+function renderView() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   const user = userEvent.setup()
   render(
     <QueryClientProvider client={client}>
-      <StaffDesignRequestsView role={role} />
+      <StaffDesignRequestsView />
     </QueryClientProvider>
   )
   return user
 }
 
 function setup(
-  role: 'staff' | 'admin',
   status: DesignRequestStatus,
   extra: Partial<DesignRequest> = {}
 ) {
@@ -114,7 +113,7 @@ function setup(
     limit: 20,
   })
   vi.mocked(api.getDesignRequest).mockResolvedValue(detail('r1', status, extra))
-  return renderView(role)
+  return renderView()
 }
 
 async function openDetail(user: ReturnType<typeof userEvent.setup>) {
@@ -136,29 +135,25 @@ beforeEach(() => {
 
 describe('queue', () => {
   it('renders rows with Vietnamese labels', async () => {
-    setup('staff', 'submitted')
+    setup('submitted')
     const row = await screen.findByTestId('design-request-r1')
     expect(within(row).getByText('Căn hộ Sunrise')).toBeInTheDocument()
     expect(within(row).getByText('Trần Thị B')).toBeInTheDocument()
     expect(within(row).getByText('Thiết kế mới')).toBeInTheDocument()
-    expect(within(row).getByText('Chờ tiếp nhận')).toBeInTheDocument()
+    expect(within(row).getByText('Chờ nhân viên nhận')).toBeInTheDocument()
   })
 
-  it('applies the staff default status filter', async () => {
-    setup('staff', 'submitted')
+  it('applies the default status filter and toggles chips', async () => {
+    const user = setup('submitted')
     await screen.findByTestId('design-request-r1')
     expect(api.listDesignRequestQueue).toHaveBeenCalledWith({
-      statuses: ['submitted', 'needs_info', 'escalated'],
-      page: 1,
-      limit: 20,
-    })
-  })
-
-  it('applies the admin default status filter and toggles chips', async () => {
-    const user = setup('admin', 'escalated')
-    await screen.findByTestId('design-request-r1')
-    expect(api.listDesignRequestQueue).toHaveBeenCalledWith({
-      statuses: ['escalated', 'in_progress', 'changes_requested', 'delivered'],
+      statuses: [
+        'submitted',
+        'escalated',
+        'in_progress',
+        'changes_requested',
+        'needs_info',
+      ],
       page: 1,
       limit: 20,
     })
@@ -166,16 +161,46 @@ describe('queue', () => {
     await waitFor(() =>
       expect(api.listDesignRequestQueue).toHaveBeenLastCalledWith({
         statuses: [
+          'submitted',
           'escalated',
           'in_progress',
           'changes_requested',
-          'delivered',
+          'needs_info',
           'approved',
         ],
         page: 1,
         limit: 20,
       })
     )
+  })
+
+  it('flags a request waiting for staff longer than 48h as overdue', async () => {
+    vi.mocked(api.listDesignRequestQueue).mockResolvedValue({
+      items: [
+        summary('r-old', 'submitted', {
+          updatedAt: new Date(Date.now() - 72 * 3_600_000).toISOString(),
+        }),
+        summary('r-new', 'submitted', {
+          updatedAt: new Date().toISOString(),
+        }),
+        summary('r-wait', 'delivered', {
+          updatedAt: new Date(Date.now() - 72 * 3_600_000).toISOString(),
+        }),
+      ],
+      total: 3,
+      page: 1,
+      limit: 20,
+    })
+    renderView()
+    const old = await screen.findByTestId('design-request-r-old')
+    expect(within(old).getByText('Quá hạn')).toBeInTheDocument()
+    expect(
+      within(screen.getByTestId('design-request-r-new')).queryByText('Quá hạn')
+    ).toBeNull()
+    // delivered đang chờ chủ nhà, không tính là quá hạn của nhân viên
+    expect(
+      within(screen.getByTestId('design-request-r-wait')).queryByText('Quá hạn')
+    ).toBeNull()
   })
 
   it('paginates', async () => {
@@ -185,7 +210,7 @@ describe('queue', () => {
       page: 1,
       limit: 20,
     })
-    const user = renderView('staff')
+    const user = renderView()
     expect(await screen.findByText(/Trang 1\/3/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Sau' }))
     await waitFor(() =>
@@ -196,9 +221,9 @@ describe('queue', () => {
   })
 })
 
-describe('detail actions by status and role', () => {
+describe('detail actions by status', () => {
   it('shows brief, attachments and the timeline', async () => {
-    const user = setup('staff', 'submitted')
+    const user = setup('submitted')
     const dialog = await openDetail(user)
     expect(await within(dialog).findByText('Phong cách hiện đại')).toBeVisible()
     expect(within(dialog).getByText('Cần phòng khách rộng')).toBeVisible()
@@ -209,13 +234,11 @@ describe('detail actions by status and role', () => {
     )
   })
 
-  it('submitted: staff can triage but not start or deliver', async () => {
-    const user = setup('staff', 'submitted')
+  it('submitted: staff can claim, ask for info or reject (no escalate)', async () => {
+    const user = setup('submitted')
     const dialog = await openDetail(user)
     expect(
-      await within(dialog).findByRole('button', {
-        name: 'Chuyển quản trị viên',
-      })
+      await within(dialog).findByRole('button', { name: 'Nhận thiết kế' })
     ).toBeVisible()
     expect(
       within(dialog).getByRole('button', { name: 'Yêu cầu bổ sung' })
@@ -224,30 +247,22 @@ describe('detail actions by status and role', () => {
       within(dialog).getByRole('button', { name: 'Từ chối' })
     ).toBeVisible()
     expect(
-      within(dialog).queryByRole('button', { name: 'Nhận thiết kế' })
+      within(dialog).queryByRole('button', { name: 'Chuyển quản trị viên' })
     ).toBeNull()
   })
 
-  it('escalates with an optional note and refetches', async () => {
-    vi.mocked(api.escalateDesignRequest).mockResolvedValue(
-      detail('r1', 'escalated')
+  it('submitted: claiming starts the request and refetches', async () => {
+    vi.mocked(api.startDesignRequest).mockResolvedValue(
+      detail('r1', 'in_progress')
     )
-    const user = setup('staff', 'submitted')
+    const user = setup('submitted')
     const dialog = await openDetail(user)
-    await user.click(
-      await within(dialog).findByRole('button', {
-        name: 'Chuyển quản trị viên',
-      })
-    )
-    await user.type(within(dialog).getByLabelText('Ghi chú'), 'Cần dựng gấp')
     const queueCalls = vi.mocked(api.listDesignRequestQueue).mock.calls.length
     await user.click(
-      within(dialog).getByRole('button', { name: 'Xác nhận chuyển' })
+      await within(dialog).findByRole('button', { name: 'Nhận thiết kế' })
     )
     await waitFor(() =>
-      expect(api.escalateDesignRequest).toHaveBeenCalledWith('r1', {
-        note: 'Cần dựng gấp',
-      })
+      expect(api.startDesignRequest).toHaveBeenCalledWith('r1')
     )
     await waitFor(() =>
       expect(
@@ -261,7 +276,7 @@ describe('detail actions by status and role', () => {
     vi.mocked(api.requestInfoDesignRequest).mockResolvedValue(
       detail('r1', 'needs_info')
     )
-    const user = setup('staff', 'submitted')
+    const user = setup('submitted')
     const dialog = await openDetail(user)
     await user.click(
       await within(dialog).findByRole('button', { name: 'Yêu cầu bổ sung' })
@@ -283,7 +298,7 @@ describe('detail actions by status and role', () => {
     vi.mocked(api.rejectDesignRequest).mockResolvedValue(
       detail('r1', 'rejected')
     )
-    const user = setup('staff', 'submitted')
+    const user = setup('submitted')
     const dialog = await openDetail(user)
     await user.click(
       await within(dialog).findByRole('button', { name: 'Từ chối' })
@@ -302,7 +317,7 @@ describe('detail actions by status and role', () => {
   })
 
   it('needs_info is read-only', async () => {
-    const user = setup('admin', 'needs_info')
+    const user = setup('needs_info')
     const dialog = await openDetail(user)
     expect(
       await within(dialog).findByText('Đang chờ chủ nhà bổ sung')
@@ -310,20 +325,25 @@ describe('detail actions by status and role', () => {
     expect(within(dialog).queryByRole('button', { name: 'Từ chối' })).toBeNull()
   })
 
-  it('escalated: staff is read-only', async () => {
-    const user = setup('staff', 'escalated')
+  it('legacy escalated: staff can claim or reject but not ask for info', async () => {
+    const user = setup('escalated')
     const dialog = await openDetail(user)
-    await within(dialog).findByText('Đang chờ quản trị viên nhận thiết kế.')
     expect(
-      within(dialog).queryByRole('button', { name: 'Nhận thiết kế' })
+      await within(dialog).findByRole('button', { name: 'Nhận thiết kế' })
+    ).toBeVisible()
+    expect(
+      within(dialog).getByRole('button', { name: 'Từ chối' })
+    ).toBeVisible()
+    expect(
+      within(dialog).queryByRole('button', { name: 'Yêu cầu bổ sung' })
     ).toBeNull()
   })
 
-  it('escalated: admin starts the request', async () => {
+  it('legacy escalated: staff starts the request', async () => {
     vi.mocked(api.startDesignRequest).mockResolvedValue(
       detail('r1', 'in_progress')
     )
-    const user = setup('admin', 'escalated')
+    const user = setup('escalated')
     const dialog = await openDetail(user)
     await user.click(
       await within(dialog).findByRole('button', { name: 'Nhận thiết kế' })
@@ -333,9 +353,9 @@ describe('detail actions by status and role', () => {
     )
   })
 
-  it('changes_requested: shows latest feedback; admin can start again', async () => {
+  it('changes_requested: shows latest feedback; staff can start again', async () => {
     const base = detail('r1', 'changes_requested')
-    const user = setup('admin', 'changes_requested', {
+    const user = setup('changes_requested', {
       events: [
         ...base.events,
         {
@@ -358,25 +378,59 @@ describe('detail actions by status and role', () => {
     ).toBeVisible()
   })
 
-  it('in_progress: staff sees no designer or deliver controls', async () => {
-    const user = setup('staff', 'in_progress')
+  it('in_progress: shows who is designing together with the designer and deliver controls', async () => {
+    vi.mocked(listAdminDesigns).mockResolvedValue([])
+    const user = setup('in_progress', {
+      assignedAdminId: 's1',
+      assignee: { id: 's1', name: 'Lê Văn C' },
+    })
     const dialog = await openDetail(user)
-    await within(dialog).findByText('Quản trị viên đang thiết kế.')
+    await within(dialog).findByText(
+      'Đang do Lê Văn C thiết kế. Chỉ người nhận mới giao được.'
+    )
     expect(
-      within(dialog).queryByRole('button', { name: 'Mở trình thiết kế 3D' })
-    ).toBeNull()
+      within(dialog).getByRole('button', { name: 'Mở trình thiết kế 3D' })
+    ).toBeVisible()
     expect(
-      within(dialog).queryByRole('button', {
+      within(dialog).getByRole('button', {
         name: 'Giao thiết kế cho chủ nhà',
       })
-    ).toBeNull()
+    ).toBeVisible()
+  })
+
+  it('maps DESIGN_REQUEST_NOT_ASSIGNEE to a message and refetches', async () => {
+    vi.mocked(listAdminDesigns).mockResolvedValue([
+      {
+        id: 'd-new',
+        name: 'Bản mới ẩn',
+        visible: false,
+        updatedAt: '2026-01-10T00:00:00.000Z',
+      },
+    ] as never)
+    vi.mocked(api.deliverDesignRequest).mockRejectedValue(
+      apiError(403, 'DESIGN_REQUEST_NOT_ASSIGNEE')
+    )
+    const user = setup('in_progress')
+    const dialog = await openDetail(user)
+    const select = await within(dialog).findByLabelText(
+      'Thiết kế giao cho chủ nhà'
+    )
+    await waitFor(() => expect(select).toHaveValue('d-new'))
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Giao thiết kế cho chủ nhà' })
+    )
+    await waitFor(() =>
+      expect(appToast.error).toHaveBeenCalledWith(
+        'Yêu cầu này do đồng nghiệp khác nhận. Chỉ người nhận mới giao được thiết kế.'
+      )
+    )
   })
 
   it('maps a 403 to a permission message', async () => {
     vi.mocked(api.startDesignRequest).mockRejectedValue(
       new ApiClientError('forbidden', 403, null)
     )
-    const user = setup('admin', 'escalated')
+    const user = setup('escalated')
     const dialog = await openDetail(user)
     await user.click(
       await within(dialog).findByRole('button', { name: 'Nhận thiết kế' })
@@ -389,7 +443,7 @@ describe('detail actions by status and role', () => {
   })
 
   it('delivered is read-only', async () => {
-    const user = setup('admin', 'delivered')
+    const user = setup('delivered')
     const dialog = await openDetail(user)
     expect(
       await within(dialog).findByText(
@@ -404,7 +458,7 @@ describe('detail actions by status and role', () => {
   })
 })
 
-describe('in_progress admin deliver', () => {
+describe('in_progress deliver', () => {
   const designs = [
     {
       id: 'd-old',
@@ -443,7 +497,7 @@ describe('in_progress admin deliver', () => {
     vi.mocked(api.deliverDesignRequest).mockResolvedValue(
       detail('r1', 'delivered')
     )
-    const user = setup('admin', 'in_progress')
+    const user = setup('in_progress')
     const dialog = await ready(user)
     await user.type(
       within(dialog).getByLabelText('Ghi chú giao thiết kế'),
@@ -462,7 +516,7 @@ describe('in_progress admin deliver', () => {
 
   it('requires a selected design', async () => {
     vi.mocked(listAdminDesigns).mockResolvedValue([])
-    const user = setup('admin', 'in_progress')
+    const user = setup('in_progress')
     const dialog = await openDetail(user)
     expect(
       await within(dialog).findByRole('button', {
@@ -482,7 +536,7 @@ describe('in_progress admin deliver', () => {
         area: 60,
       },
     ])
-    const user = setup('admin', 'in_progress')
+    const user = setup('in_progress')
     const dialog = await openDetail(user)
     await user.click(
       await within(dialog).findByRole('button', {
@@ -497,7 +551,7 @@ describe('in_progress admin deliver', () => {
     vi.mocked(api.deliverDesignRequest).mockRejectedValue(
       apiError(404, 'DESIGN_NOT_FOUND')
     )
-    const user = setup('admin', 'in_progress')
+    const user = setup('in_progress')
     const dialog = await ready(user)
     await user.click(
       within(dialog).getByRole('button', { name: 'Giao thiết kế cho chủ nhà' })
@@ -513,7 +567,7 @@ describe('in_progress admin deliver', () => {
     vi.mocked(api.deliverDesignRequest).mockRejectedValue(
       apiError(409, 'DESIGN_REQUEST_INVALID_STATE')
     )
-    const user = setup('admin', 'in_progress')
+    const user = setup('in_progress')
     const dialog = await ready(user)
     const before = vi.mocked(api.getDesignRequest).mock.calls.length
     await user.click(

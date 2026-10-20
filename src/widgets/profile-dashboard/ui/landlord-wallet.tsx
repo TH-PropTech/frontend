@@ -10,6 +10,7 @@ import { Card } from '@/shared/ui/card'
 import { WalletLinkForm } from './wallet-link-form'
 import { ReceivingStatusPanel } from './receiving-status-panel'
 import { WalletInvoices, WalletStatement } from './wallet-statement'
+import { useCan } from '@/shared/lib/permissions'
 
 const BRAND_LABELS: Record<WalletBrand, string> = {
   mocbank: 'Ví Mộc',
@@ -18,6 +19,8 @@ const BRAND_LABELS: Record<WalletBrand, string> = {
 }
 
 export function LandlordWallet(): React.ReactElement {
+  const can = useCan()
+  const canLink = can('create', 'Wallet')
   const wallet = useWallet()
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
@@ -60,7 +63,13 @@ export function LandlordWallet(): React.ReactElement {
       ) : null}
 
       {data && (!linked || editing) ? (
-        <WalletLinkForm onLinked={() => setEditing(false)} />
+        canLink ? (
+          <WalletLinkForm onLinked={() => setEditing(false)} />
+        ) : (
+          <p role="status" className="text-sm text-muted">
+            Bạn chưa được cấp quyền liên kết ví. Vui lòng liên hệ quản trị viên.
+          </p>
+        )
       ) : null}
 
       {data && linked ? (
@@ -71,7 +80,7 @@ export function LandlordWallet(): React.ReactElement {
               {data.bank?.name} · {data.accountNumberMasked} ·{' '}
               {data.accountHolder}
             </p>
-            {!editing ? (
+            {!editing && canLink ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -133,11 +142,11 @@ export function LandlordWallet(): React.ReactElement {
                 Hủy
               </Button>
             </div>
-          ) : (
+          ) : canLink ? (
             <Button variant="outline" size="sm" onClick={() => setAdding(true)}>
               Thêm ví khác
             </Button>
-          )}
+          ) : null}
           <ReceivingStatusPanel />
           <WalletInvoices />
           <WalletStatement />

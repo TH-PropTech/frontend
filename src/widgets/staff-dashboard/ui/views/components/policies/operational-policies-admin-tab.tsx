@@ -18,6 +18,7 @@ import {
   updatePolicyStatus,
   type AdminPolicyItem,
 } from '@/features/legal-terms/api/legal-terms-api'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 export function OperationalPoliciesAdminTab(): React.ReactElement {
   const [policies, setPolicies] = React.useState<AdminPolicyItem[]>([])
@@ -184,7 +185,7 @@ export function OperationalPoliciesAdminTab(): React.ReactElement {
 
       {/* ═══ METRICS SUMMARY ═══ */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-border bg-surface p-4 flex items-center gap-3">
+        <AdminCard className="p-4 flex items-center gap-3">
           <div className="p-3 rounded-xl bg-primary-soft text-primary">
             <Sliders className="h-5 w-5" />
           </div>
@@ -194,9 +195,9 @@ export function OperationalPoliciesAdminTab(): React.ReactElement {
               {totalCount}
             </span>
           </div>
-        </div>
+        </AdminCard>
 
-        <div className="rounded-2xl border border-border bg-surface p-4 flex items-center gap-3">
+        <AdminCard className="p-4 flex items-center gap-3">
           <div className="p-3 rounded-xl bg-success/10 text-success">
             <CheckCircle2 className="h-5 w-5" />
           </div>
@@ -208,9 +209,9 @@ export function OperationalPoliciesAdminTab(): React.ReactElement {
               {activeCount}
             </span>
           </div>
-        </div>
+        </AdminCard>
 
-        <div className="rounded-2xl border border-border bg-surface p-4 flex items-center gap-3">
+        <AdminCard className="p-4 flex items-center gap-3">
           <div className="p-3 rounded-xl bg-surface-muted text-muted">
             <AlertCircle className="h-5 w-5" />
           </div>
@@ -222,11 +223,11 @@ export function OperationalPoliciesAdminTab(): React.ReactElement {
               {inactiveCount}
             </span>
           </div>
-        </div>
+        </AdminCard>
       </div>
 
       {/* ═══ POLICIES TABLE CARD ═══ */}
-      <div className="rounded-2xl border border-border bg-surface p-6 shadow-xs space-y-4">
+      <AdminCard className="p-6 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
           <div>
             <h3 className="text-base font-bold text-fg">
@@ -383,7 +384,7 @@ export function OperationalPoliciesAdminTab(): React.ReactElement {
             </tbody>
           </table>
         </div>
-      </div>
+      </AdminCard>
     </div>
   )
 }

@@ -14,6 +14,7 @@ import {
   type ContractCommercialDraft,
   type ContractCommercialValidation,
 } from '../api/contracts-api'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 export interface AdminContractCommercialEditorProps {
   contractId: string
@@ -184,9 +185,9 @@ export function AdminContractCommercialEditor({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-border bg-surface p-5 text-sm text-muted">
+      <AdminCard className="p-5 text-sm text-muted">
         Đang tải dữ liệu thương mại…
-      </div>
+      </AdminCard>
     )
   }
 

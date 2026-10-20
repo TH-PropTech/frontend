@@ -11,6 +11,7 @@ import {
   Layers,
   Activity,
   Info,
+  Scale,
 } from 'lucide-react'
 import {
   Card,
@@ -26,6 +27,12 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { useEngineConfig, DEFAULT_CONFIG } from '../model/use-engine-config'
 import { STRATEGY_DEFINITIONS } from '../model/types'
 import type { EngineStrategy } from '../model/types'
+import {
+  STRATEGY_EXPLAINERS,
+  RULE_SCORE_EXPLAINER,
+} from '../model/strategy-explainers'
+import { StrategyExplainerDialog } from './strategy-explainer-dialog'
+import { NaiveBayesIntro } from './naive-bayes-intro'
 
 export function EngineConfigForm(): React.ReactElement {
   const {
@@ -107,7 +114,7 @@ export function EngineConfigForm(): React.ReactElement {
       <Card className="p-10 flex flex-col items-center justify-center text-center space-y-3">
         <Cpu className="w-8 h-8 text-primary animate-pulse" />
         <p className="text-sm font-medium text-muted">
-          Đang tải cấu hình AI Recommendation Engine...
+          Đang tải cấu hình gợi ý căn hộ...
         </p>
       </Card>
     )
@@ -125,20 +132,20 @@ export function EngineConfigForm(): React.ReactElement {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  Trạng thái hoạt động
+                  Đang hoạt động
                 </span>
                 <Badge
                   variant="outline"
                   className="text-success border-success/30 bg-success/10 gap-1.5 py-0 px-2 text-[11px]"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                  Active
+                  Bật
                 </Badge>
               </div>
               <p className="text-sm font-bold text-fg mt-0.5">
-                Chiến lược đang chạy:{' '}
+                Cách gợi ý đang dùng:{' '}
                 <span className="text-primary font-medium">
-                  {activeStrategyDef?.name ?? 'Hybrid NB + Rule-based'}
+                  {activeStrategyDef?.name ?? 'Cân bằng'}
                 </span>
               </p>
             </div>
@@ -178,19 +185,22 @@ export function EngineConfigForm(): React.ReactElement {
         </Alert>
       )}
 
+      {/* ═══ SECTION 0: NAIVE BAYES INTRO ═══ */}
+      <NaiveBayesIntro />
+
       {/* ═══ SECTION 1: STRATEGY SELECTOR ═══ */}
       <Card className="border-border bg-surface shadow-xs">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-primary" />
             <CardTitle className="text-sm sm:text-base font-bold text-fg">
-              Chọn Chiến Lược Học Máy (Strategy Selection)
+              Chọn cách hệ thống gợi ý căn hộ
             </CardTitle>
           </div>
           <CardDescription className="text-xs text-muted leading-relaxed">
-            Hệ thống hỗ trợ 4 biến thể thuật toán gợi ý căn hộ. Khi thay đổi
-            chiến lược, hệ thống sẽ tự động retrain mô hình và áp dụng ngay lập
-            tức cho toàn bộ người dùng.
+            Có 4 cách tính. Khi bạn đổi, hệ thống tự học lại từ dữ liệu thuê và
+            áp dụng ngay cho mọi người dùng. Không chắc thì giữ &quot;Cân
+            bằng&quot;. Bấm nút ⓘ để xem giải thích chi tiết.
           </CardDescription>
         </CardHeader>
 
@@ -201,7 +211,11 @@ export function EngineConfigForm(): React.ReactElement {
               return (
                 <div
                   key={strategy.id}
-                  onClick={() => handleStrategyChange(strategy.id)}
+                  onClick={e => {
+                    // Click trong hộp thoại "i" (render qua portal) vẫn nổi bọt qua cây React — bỏ qua.
+                    if (!e.currentTarget.contains(e.target as Node)) return
+                    handleStrategyChange(strategy.id)
+                  }}
                   className={`cursor-pointer rounded-xl border p-4 transition-all duration-150 flex flex-col justify-between ${
                     isSelected
                       ? 'border-primary bg-primary-soft/40 shadow-xs ring-1 ring-primary'
@@ -225,14 +239,23 @@ export function EngineConfigForm(): React.ReactElement {
                           className="text-sm font-semibold text-fg cursor-pointer"
                         >
                           {strategy.name}
+                          <span className="block text-[10px] font-normal text-muted">
+                            {strategy.technicalName}
+                          </span>
                         </label>
                       </div>
-                      <Badge
-                        variant={isSelected ? 'default' : 'secondary'}
-                        className="text-[10px] uppercase font-bold shrink-0 tracking-wider"
-                      >
-                        {strategy.badge}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Badge
+                          variant={isSelected ? 'default' : 'secondary'}
+                          className="text-[10px] uppercase font-bold shrink-0 tracking-wider"
+                        >
+                          {strategy.badge}
+                        </Badge>
+                        <StrategyExplainerDialog
+                          explainer={STRATEGY_EXPLAINERS[strategy.id]}
+                          triggerLabel={`Giải thích cách gợi ý ${strategy.name}`}
+                        />
+                      </div>
                     </div>
 
                     <p className="text-xs text-muted mt-2 leading-relaxed pl-6.5">
@@ -251,18 +274,44 @@ export function EngineConfigForm(): React.ReactElement {
         </CardContent>
       </Card>
 
+      {/* ═══ SECTION 1b: RULE SCORE ═══ */}
+      <Card className="border-border bg-surface shadow-xs">
+        <CardContent className="p-4 sm:p-5 flex items-start gap-3">
+          <div className="p-2 rounded-lg bg-primary-soft text-primary shrink-0">
+            <Scale className="w-4 h-4" />
+          </div>
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-bold text-fg">
+                Bảng kiểm quy tắc (dùng cho cả 4 cách gợi ý)
+              </p>
+              <StrategyExplainerDialog
+                explainer={RULE_SCORE_EXPLAINER}
+                triggerLabel="Giải thích bảng kiểm quy tắc"
+              />
+            </div>
+            <p className="text-xs text-muted leading-relaxed">
+              Ngoài việc học từ dữ liệu thuê, mỗi căn còn được chấm theo bảng
+              kiểm như một nhân viên tư vấn: giá có vừa túi tiền, đúng quận, đủ
+              phòng, có tiện ích cần thiết, hợp độ tuổi. Hai phần điểm được trộn
+              theo thanh trượt ở mục bên dưới.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* ═══ SECTION 2: HYPERPARAMETER TUNING ═══ */}
       <Card className="border-border bg-surface shadow-xs">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <Sliders className="w-4 h-4 text-primary" />
             <CardTitle className="text-sm sm:text-base font-bold text-fg">
-              Tinh Chỉnh Siêu Tham Số (Hyperparameters)
+              Tinh chỉnh nâng cao
             </CardTitle>
           </div>
           <CardDescription className="text-xs text-muted leading-relaxed">
-            Điều chỉnh trọng số tiên nghiệm và tỷ lệ kết hợp giữa học máy thống
-            kê và quy tắc nghiệp vụ.
+            Hai núm chỉnh ảnh hưởng đến cách chấm điểm. Không rành thì cứ để mặc
+            định.
           </CardDescription>
         </CardHeader>
 
@@ -275,7 +324,7 @@ export function EngineConfigForm(): React.ReactElement {
                   htmlFor="param-alpha"
                   className="text-xs font-semibold text-fg"
                 >
-                  Dirichlet Prior Alpha (α)
+                  Mức thận trọng khi ít dữ liệu (α)
                 </label>
                 <Badge
                   variant="outline"
@@ -285,8 +334,11 @@ export function EngineConfigForm(): React.ReactElement {
                 </Badge>
               </div>
               <p className="text-[11px] text-muted leading-relaxed">
-                Hệ số làm mịn Dirichlet prior cho MAP Bayesian. Khi α = 1.0
-                tương đương phép làm mịn Laplace chuẩn.
+                Số lượt thuê &quot;ảo&quot; cộng thêm cho mọi lựa chọn, để hệ
+                thống không kết luận vội khi một căn mới có vài lượt thuê. Số
+                càng lớn càng thận trọng; 1,0 là mức chuẩn. Chỉ có tác dụng với
+                2 cách &quot;Thận trọng khi ít dữ liệu&quot; và &quot;Nâng
+                cao&quot;.
               </p>
               <div className="pt-1">
                 <input
@@ -308,21 +360,23 @@ export function EngineConfigForm(): React.ReactElement {
                   htmlFor="param-nb-weight"
                   className="text-xs font-semibold text-fg"
                 >
-                  Tỷ lệ trọng số NB vs Rule-based
+                  Tin dữ liệu hay tin quy tắc?
                 </label>
                 <span className="text-xs font-mono font-medium text-fg">
                   <span className="text-primary">
-                    {Math.round(nbWeight * 100)}% NB
+                    {Math.round(nbWeight * 100)}% dữ liệu
                   </span>{' '}
                   /{' '}
                   <span className="text-accent">
-                    {Math.round(ruleWeight * 100)}% Rule
+                    {Math.round(ruleWeight * 100)}% quy tắc
                   </span>
                 </span>
               </div>
               <p className="text-[11px] text-muted leading-relaxed">
-                Cân bằng giữa xác suất thống kê Naive Bayes và bộ 4 trụ cột quy
-                tắc nghiệp vụ (Tài chính, Vị trí, Nhân khẩu học, Tiện ích).
+                &quot;Dữ liệu&quot; là học từ những người đã thuê trước đây.
+                &quot;Quy tắc&quot; là bảng kiểm nghiệp vụ (giá, khu vực, số
+                phòng, tiện ích, độ tuổi). Kéo sang trái để tin quy tắc hơn,
+                sang phải để tin dữ liệu hơn.
               </p>
               <div className="pt-2 space-y-2">
                 <Slider
@@ -335,9 +389,9 @@ export function EngineConfigForm(): React.ReactElement {
                   className="py-1"
                 />
                 <div className="flex justify-between text-[10px] text-muted font-mono">
-                  <span>0% NB (100% Rule)</span>
+                  <span>Chỉ quy tắc</span>
                   <span>50 / 50</span>
-                  <span>100% NB (0% Rule)</span>
+                  <span>Chỉ dữ liệu</span>
                 </div>
               </div>
             </div>
@@ -355,7 +409,7 @@ export function EngineConfigForm(): React.ReactElement {
           className="w-full sm:w-auto"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          Khôi phục mặc định (Hybrid 50/50)
+          Về mặc định (Cân bằng 50/50)
         </Button>
 
         <Button
@@ -366,7 +420,7 @@ export function EngineConfigForm(): React.ReactElement {
           className="w-full sm:w-auto"
         >
           <Save className="w-3.5 h-3.5" />
-          Lưu & Áp dụng Chiến Lược
+          Lưu & áp dụng
         </Button>
       </div>
     </form>

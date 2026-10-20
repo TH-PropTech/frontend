@@ -72,4 +72,21 @@ describe('KycComparisonModal', () => {
     expect(onShowReject).toHaveBeenCalledOnce()
     expect(onVerify).toHaveBeenCalledWith(record.id)
   })
+
+  it('hides the confirm / retake actions when the user may only view', () => {
+    render(
+      <KycComparisonModal
+        selectedRecord={record}
+        onClose={vi.fn()}
+        onVerify={vi.fn().mockResolvedValue(undefined)}
+        onShowReject={vi.fn()}
+        canReview={false}
+      />
+    )
+    expect(screen.getByText('Mặt trước CCCD')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Xác nhận KYC' })).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: 'Yêu cầu chụp lại' })
+    ).toBeNull()
+  })
 })

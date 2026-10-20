@@ -322,7 +322,7 @@ export function DesignRequestActiveView({
                 ...(urls.length > 0 ? { attachmentUrls: urls } : {}),
               },
             })
-            appToast.success('Đã gửi phản hồi cho quản trị viên.')
+            appToast.success('Đã gửi phản hồi cho nhân viên thiết kế.')
             setMode('idle')
           }}
         />

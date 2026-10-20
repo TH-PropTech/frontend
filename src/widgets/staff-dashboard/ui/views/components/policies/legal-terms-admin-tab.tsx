@@ -31,6 +31,7 @@ import {
 } from '@/features/legal-terms/api/legal-terms-api'
 import { getAdminLegalSources } from '@/features/contracts/api/legal-sources-api'
 import type { LegalSource } from '@/features/contracts/model/legal-governance-data'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 const REVIEW_STEPS: {
   status: TermsReviewStatus | 'published'
@@ -429,7 +430,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
       )}
 
       {/* ═══ CURRENT PUBLISHED BANNER ═══ */}
-      <div className="rounded-2xl border border-border bg-surface p-6 shadow-xs">
+      <AdminCard className="p-6 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -505,7 +506,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
             </div>
           </div>
         ) : null}
-      </div>
+      </AdminCard>
 
       {scheduled ? (
         <div className="flex items-start gap-3 p-4 rounded-xl border border-primary/30 bg-primary/10 text-primary text-sm">
@@ -527,7 +528,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
       ) : null}
 
       {/* ═══ DRAFT EDITOR / PREVIEW ═══ */}
-      <div className="rounded-2xl border border-border bg-surface p-6 shadow-xs space-y-6">
+      <AdminCard className="p-6 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
           <div>
             <div className="flex items-center gap-2">
@@ -708,10 +709,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
             </div>
             <div className="space-y-4">
               {draftSections.map(sec => (
-                <div
-                  key={sec.id}
-                  className="p-4 rounded-xl border border-border bg-surface space-y-2"
-                >
+                <AdminCard key={sec.id} className="p-4 space-y-2">
                   <h4 className="text-sm font-bold text-fg">{sec.heading}</h4>
                   <p className="text-xs text-muted leading-relaxed whitespace-pre-wrap">
                     {sec.body}
@@ -728,7 +726,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
                       ))}
                     </div>
                   ) : null}
-                </div>
+                </AdminCard>
               ))}
             </div>
           </div>
@@ -862,12 +860,12 @@ export function LegalTermsAdminTab(): React.ReactElement {
             </div>
           </div>
         )}
-      </div>
+      </AdminCard>
 
       {/* ═══ PUBLISH CONFIRMATION MODAL ═══ */}
       {showPublishModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="max-w-md w-full rounded-2xl bg-surface border border-border p-6 shadow-xl space-y-4">
+          <AdminCard className="max-w-md w-full p-6 shadow-xl space-y-4">
             <div className="flex items-center gap-3 text-accent">
               <div className="p-2.5 rounded-full bg-accent/10">
                 <FileText className="h-6 w-6" />
@@ -968,16 +966,16 @@ export function LegalTermsAdminTab(): React.ReactElement {
                   : 'Xác nhận hẹn công bố'}
               </button>
             </div>
-          </div>
+          </AdminCard>
         </div>
       )}
 
       {showChangesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div
+          <AdminCard
             role="dialog"
             aria-label="Yêu cầu sửa bản nháp"
-            className="max-w-md w-full rounded-2xl bg-surface border border-border p-6 shadow-xl space-y-4"
+            className="max-w-md w-full p-6 shadow-xl space-y-4"
           >
             <h3 className="text-base font-bold text-fg">
               Yêu cầu sửa bản nháp
@@ -1021,7 +1019,7 @@ export function LegalTermsAdminTab(): React.ReactElement {
                 Gửi yêu cầu sửa
               </button>
             </div>
-          </div>
+          </AdminCard>
         </div>
       )}
     </div>

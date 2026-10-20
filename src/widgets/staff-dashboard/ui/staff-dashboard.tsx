@@ -1,8 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { AdminDashboard } from './admin-dashboard'
-import { StaffOperationsDashboard } from './staff-operations-dashboard'
+import { ConsoleDashboard } from './console-dashboard'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 interface LocalStorageUser {
   name: string
@@ -55,7 +55,7 @@ export function StaffDashboard(): React.ReactElement {
   if (!user) {
     return (
       <div className="min-h-screen bg-bg text-fg flex items-center justify-center font-body">
-        <div className="text-center p-6 bg-surface border border-line rounded-2xl max-w-sm shadow-sm">
+        <AdminCard className="text-center p-6 max-w-sm">
           <h2 className="text-sm font-bold text-danger font-display">
             Yêu cầu đăng nhập
           </h2>
@@ -63,14 +63,10 @@ export function StaffDashboard(): React.ReactElement {
             Vui lòng đăng nhập bằng tài khoản Quản trị viên hoặc Nhân viên vận
             hành để truy cập trang này.
           </p>
-        </div>
+        </AdminCard>
       </div>
     )
   }
 
-  if (user.roles.includes('admin')) {
-    return <AdminDashboard initialUser={user} />
-  }
-
-  return <StaffOperationsDashboard initialUser={user} />
+  return <ConsoleDashboard initialUser={user} />
 }

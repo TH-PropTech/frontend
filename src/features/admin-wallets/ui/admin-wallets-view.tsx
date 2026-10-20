@@ -5,6 +5,7 @@ import {
   getLandlordWallets,
   type LandlordWalletItem,
 } from '../api/admin-wallets-api'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 export function AdminWalletsView(): React.ReactElement {
   return (
@@ -64,7 +65,7 @@ function LandlordWalletsTab(): React.ReactElement {
       <p className="text-xs text-subtle">
         {linkedCount}/{items.length} chủ nhà đã liên kết ví
       </p>
-      <div className="bg-surface border border-line rounded-xl divide-y divide-line/60">
+      <AdminCard className="divide-y divide-line/60">
         {items.map(item => (
           <div
             key={item.userId}
@@ -92,7 +93,7 @@ function LandlordWalletsTab(): React.ReactElement {
             </div>
           </div>
         ))}
-      </div>
+      </AdminCard>
     </div>
   )
 }

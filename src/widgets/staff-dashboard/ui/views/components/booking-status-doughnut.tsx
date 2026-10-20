@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 export interface StatusSlice {
   label: string
@@ -48,7 +49,7 @@ export function BookingStatusDoughnut({
   }
 
   return (
-    <div className="bg-surface border border-border rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col justify-between h-full">
+    <AdminCard className="p-5 sm:p-6 flex flex-col justify-between h-full">
       <div>
         <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider mb-1">
           {title}
@@ -151,7 +152,7 @@ export function BookingStatusDoughnut({
           </div>
         </div>
       )}
-    </div>
+    </AdminCard>
   )
 }
 

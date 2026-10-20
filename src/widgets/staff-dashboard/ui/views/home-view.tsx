@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { IsometricBuilding } from './components/isometric-building'
+import { AdminCard } from '@/shared/ui/admin-card'
 
 interface HomeViewProps {
   onNavigateTab: (tab: 'properties' | 'kyc' | 'schedules' | 'community') => void
@@ -73,7 +74,7 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
       {/* Main Grid: Interactive Isometric Building and Tasks */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Left: Futuristic Architectural Isometric Building */}
-        <div className="lg:col-span-7 bg-surface border border-line rounded-2xl p-6 shadow-sm flex flex-col justify-between overflow-hidden relative min-h-[440px]">
+        <AdminCard className="lg:col-span-7 p-6 flex flex-col justify-between overflow-hidden relative min-h-[440px]">
           <div className="relative z-10">
             <h3 className="text-sm font-bold text-fg font-marketing">
               Mô hình Số hóa Tòa nhà TH-PropTech
@@ -93,12 +94,12 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
             <span>Server status: Online</span>
             <span>Blockchain Sync: 100%</span>
           </div>
-        </div>
+        </AdminCard>
 
         {/* Right: Operations Tasks lists */}
         <div className="lg:col-span-5 flex flex-col gap-4">
           {/* Quick status progress */}
-          <div className="bg-surface border border-line rounded-2xl p-5 shadow-sm space-y-4">
+          <AdminCard className="p-5 space-y-4">
             <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
               Tiến độ hôm nay
             </h4>
@@ -117,10 +118,10 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
                 Hoàn thành thêm 6 hồ sơ để đạt chỉ tiêu ngày.
               </p>
             </div>
-          </div>
+          </AdminCard>
 
           {/* Action Tasks Card */}
-          <div className="bg-surface border border-line rounded-2xl p-5 shadow-sm space-y-4 flex-1">
+          <AdminCard className="p-5 space-y-4 flex-1">
             <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
               Lối tắt tác vụ nhanh
             </h4>
@@ -207,7 +208,7 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
                 </div>
               </button>
             </div>
-          </div>
+          </AdminCard>
         </div>
       </div>
     </div>

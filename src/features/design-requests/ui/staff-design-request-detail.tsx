@@ -27,13 +27,11 @@ import {
 import {
   useDeliverDesignRequest,
   useDesignRequestDetail,
-  useEscalateDesignRequest,
   useRejectDesignRequest,
   useRequestInfoDesignRequest,
   useStartDesignRequest,
 } from '../model/staff-design-requests'
 
-type Role = 'staff' | 'admin'
 type OnDone = (error: unknown, success?: string) => void
 
 const dateTime = (iso: string): string => new Date(iso).toLocaleString('vi-VN')
@@ -42,6 +40,13 @@ function describeError(error: unknown): { message: string; stale: boolean } {
   const code = readApiErrorCode(error)
   if (code === 'DESIGN_REQUEST_INVALID_STATE') {
     return { message: 'Yêu cầu đã đổi trạng thái, đang tải lại…', stale: true }
+  }
+  if (code === 'DESIGN_REQUEST_NOT_ASSIGNEE') {
+    return {
+      message:
+        'Yêu cầu này do đồng nghiệp khác nhận. Chỉ người nhận mới giao được thiết kế.',
+      stale: true,
+    }
   }
   if (code === 'DESIGN_NOT_FOUND') {
     return {
@@ -120,27 +125,24 @@ function Timeline({
   )
 }
 
-type NoteMode = 'escalate' | 'info' | 'reject' | null
+type NoteMode = 'info' | 'reject' | null
 
 function TriageActions({
   request,
-  role,
   onDone,
 }: {
   request: DesignRequest
-  role: Role
   onDone: OnDone
 }): React.ReactElement {
   const [mode, setMode] = React.useState<NoteMode>(null)
   const [note, setNote] = React.useState('')
-  const escalate = useEscalateDesignRequest()
   const requestInfo = useRequestInfoDesignRequest()
   const reject = useRejectDesignRequest()
-  const busy = escalate.isPending || requestInfo.isPending || reject.isPending
+  const busy = requestInfo.isPending || reject.isPending
   const trimmed = note.trim()
   const isSubmitted = request.status === 'submitted'
-  const canReject =
-    isSubmitted || (role === 'admin' && request.status === 'escalated')
+  // 'escalated' chỉ còn ở dữ liệu cũ: vẫn cho từ chối.
+  const canReject = isSubmitted || request.status === 'escalated'
 
   const open = (next: NoteMode): void => {
     setMode(next)
@@ -149,13 +151,7 @@ function TriageActions({
 
   const submit = async (): Promise<void> => {
     try {
-      if (mode === 'escalate') {
-        await escalate.mutateAsync({
-          id: request.id,
-          input: trimmed ? { note: trimmed } : {},
-        })
-        onDone(null, 'Đã chuyển yêu cầu cho quản trị viên.')
-      } else if (mode === 'info') {
+      if (mode === 'info') {
         await requestInfo.mutateAsync({
           id: request.id,
           input: { note: trimmed },
@@ -172,36 +168,21 @@ function TriageActions({
     }
   }
 
-  const needsNote = mode === 'info' || mode === 'reject'
   const submitLabel =
-    mode === 'escalate'
-      ? 'Xác nhận chuyển'
-      : mode === 'info'
-        ? 'Gửi yêu cầu bổ sung'
-        : 'Xác nhận từ chối'
+    mode === 'info' ? 'Gửi yêu cầu bổ sung' : 'Xác nhận từ chối'
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         {isSubmitted ? (
-          <>
-            <Button
-              type="button"
-              size="sm"
-              variant={mode === 'escalate' ? 'default' : 'secondary'}
-              onClick={() => open('escalate')}
-            >
-              Chuyển quản trị viên
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={mode === 'info' ? 'default' : 'secondary'}
-              onClick={() => open('info')}
-            >
-              Yêu cầu bổ sung
-            </Button>
-          </>
+          <Button
+            type="button"
+            size="sm"
+            variant={mode === 'info' ? 'default' : 'secondary'}
+            onClick={() => open('info')}
+          >
+            Yêu cầu bổ sung
+          </Button>
         ) : null}
         {canReject ? (
           <Button
@@ -217,7 +198,7 @@ function TriageActions({
       {mode ? (
         <div className="space-y-2">
           <label className="block text-xs font-semibold text-fg">
-            {needsNote ? 'Ghi chú (bắt buộc)' : 'Ghi chú (không bắt buộc)'}
+            Ghi chú (bắt buộc)
             <Textarea
               className="mt-1"
               value={note}
@@ -232,7 +213,7 @@ function TriageActions({
               size="sm"
               variant={mode === 'reject' ? 'danger' : 'default'}
               loading={busy}
-              disabled={needsNote && !trimmed}
+              disabled={!trimmed}
               onClick={() => void submit()}
             >
               {submitLabel}
@@ -425,11 +406,9 @@ function ReadOnlyNote({
 
 function ActionArea({
   request,
-  role,
   onDone,
 }: {
   request: DesignRequest
-  role: Role
   onDone: OnDone
 }): React.ReactElement {
   const start = useStartDesignRequest()
@@ -449,11 +428,8 @@ function ActionArea({
 
   switch (request.status) {
     case 'submitted':
-      return <TriageActions request={request} role={role} onDone={onDone} />
-    case 'needs_info':
-      return <ReadOnlyNote>Đang chờ chủ nhà bổ sung</ReadOnlyNote>
     case 'escalated':
-      return role === 'admin' ? (
+      return (
         <div className="space-y-3">
           <Button
             type="button"
@@ -463,13 +439,13 @@ function ActionArea({
           >
             Nhận thiết kế
           </Button>
-          <TriageActions request={request} role={role} onDone={onDone} />
+          <TriageActions request={request} onDone={onDone} />
         </div>
-      ) : (
-        <ReadOnlyNote>Đang chờ quản trị viên nhận thiết kế.</ReadOnlyNote>
       )
+    case 'needs_info':
+      return <ReadOnlyNote>Đang chờ chủ nhà bổ sung</ReadOnlyNote>
     case 'changes_requested':
-      return role === 'admin' ? (
+      return (
         <Button
           type="button"
           size="sm"
@@ -478,14 +454,17 @@ function ActionArea({
         >
           Nhận chỉnh sửa
         </Button>
-      ) : (
-        <ReadOnlyNote>Đang chờ quản trị viên nhận chỉnh sửa.</ReadOnlyNote>
       )
     case 'in_progress':
-      return role === 'admin' ? (
-        <DeliverForm request={request} onDone={onDone} />
-      ) : (
-        <ReadOnlyNote>Quản trị viên đang thiết kế.</ReadOnlyNote>
+      return (
+        <div className="space-y-3">
+          <ReadOnlyNote>
+            {request.assignee
+              ? `Đang do ${request.assignee.name} thiết kế. Chỉ người nhận mới giao được.`
+              : 'Đang có người thiết kế.'}
+          </ReadOnlyNote>
+          <DeliverForm request={request} onDone={onDone} />
+        </div>
       )
     case 'delivered':
       return (
@@ -508,12 +487,10 @@ function ActionArea({
 
 export interface StaffDesignRequestDetailProps {
   requestId: string
-  role: Role
 }
 
 export function StaffDesignRequestDetail({
   requestId,
-  role,
 }: StaffDesignRequestDetailProps): React.ReactElement {
   const detail = useDesignRequestDetail(requestId)
   const refetch = detail.refetch
@@ -619,7 +596,6 @@ export function StaffDesignRequestDetail({
         <ActionArea
           key={request.status}
           request={request}
-          role={role}
           onDone={handleDone}
         />
       </section>

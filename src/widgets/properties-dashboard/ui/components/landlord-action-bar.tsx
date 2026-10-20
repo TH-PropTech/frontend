@@ -13,6 +13,7 @@ import {
   DialogDescription,
 } from '@/shared/ui/dialog'
 import { ApartmentPostingForm } from '@/features/apartment-posting'
+import { useCan } from '@/shared/lib/permissions'
 
 interface UserStored {
   name: string
@@ -54,6 +55,9 @@ export function LandlordActionBar(): React.ReactElement | null {
   const pendingCount = React.useMemo(() => {
     return myListings.filter(item => item.status === 'pending').length
   }, [myListings])
+
+  const can = useCan()
+  const canPost = can('create', 'Apartment')
 
   if (!isLandlord) return null
 
@@ -109,26 +113,28 @@ export function LandlordActionBar(): React.ReactElement | null {
             </button>
           </Link>
 
-          <button
-            type="button"
-            onClick={() => setShowPostingModal(true)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-control text-on-control rounded-xl text-xs font-bold hover:bg-primary-hover shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
+          {canPost ? (
+            <button
+              type="button"
+              onClick={() => setShowPostingModal(true)}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-control text-on-control rounded-xl text-xs font-bold hover:bg-primary-hover shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Đăng tin cho thuê
-          </button>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Đăng tin cho thuê
+            </button>
+          ) : null}
         </div>
       </div>
 
