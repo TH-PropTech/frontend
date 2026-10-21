@@ -102,11 +102,10 @@ export function LoginForm(): React.ReactElement {
         }
 
         setTimeout(() => {
-          if (
-            successResp.user.roles.includes('staff') ||
-            successResp.user.roles.includes('admin')
-          ) {
+          if (successResp.user.roles.includes('admin')) {
             router.push('/admin' as Route)
+          } else if (successResp.user.roles.includes('staff')) {
+            router.push('/staff' as Route)
           } else {
             router.push('/' as Route)
           }
@@ -180,11 +179,10 @@ export function LoginForm(): React.ReactElement {
         }
 
         setTimeout(() => {
-          if (
-            response.user.roles.includes('staff') ||
-            response.user.roles.includes('admin')
-          ) {
+          if (response.user.roles.includes('admin')) {
             router.push('/admin' as Route)
+          } else if (response.user.roles.includes('staff')) {
+            router.push('/staff' as Route)
           } else {
             router.push('/' as Route)
           }

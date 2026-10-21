@@ -5,6 +5,7 @@ import { RefreshCw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import {
   getStuckRentalTransactions,
+  isRecoveryAction,
   type RecoveryAction,
   type StuckRentalTransaction,
 } from '../api/rental-transactions-api'
@@ -91,11 +92,13 @@ export function StuckTransactionsView({
         </p>
       ) : null}
       <div className="space-y-3">
-        {rows.map(row => {
-          const action = row.suggestedActions[0] as RecoveryAction | undefined
+        {rows.map((row, index) => {
+          const action = isRecoveryAction(row.suggestedAction)
+            ? row.suggestedAction
+            : null
           return (
             <article
-              key={row.id}
+              key={`${row.reasonCode}-${row.aggregateRef ?? index}`}
               className="rounded-lg border border-line bg-surface-muted/30 p-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -107,15 +110,19 @@ export function StuckTransactionsView({
                 </span>
               </div>
               <p className="mt-1 text-xs text-muted">
-                Contract: {row.contractId}
+                Contract: {row.contractId ?? 'Chưa có hợp đồng'}
+                {!action ? ` · Gợi ý: ${row.suggestedAction}` : ''}
               </p>
-              {action ? (
+              {action && row.contractId ? (
                 <Button
                   type="button"
                   size="sm"
                   className="mt-3"
                   onClick={() =>
-                    setSelected({ contractId: row.contractId, action })
+                    setSelected({
+                      contractId: row.contractId as string,
+                      action,
+                    })
                   }
                 >
                   Mở recovery

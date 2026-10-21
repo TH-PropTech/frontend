@@ -9,9 +9,7 @@ import { AdminCard } from '@/shared/ui/admin-card'
 import { OwnershipTransferPanel } from '@/features/property-ownership-transfer'
 import { LayoutProfileEditor } from '@/features/contract-layouts'
 import { FeeRevenueReport, FeeScheduleEditor } from '@/features/platform-fees'
-import { StuckTransactionsView } from '@/features/rental-transactions'
 import { AdminWalletsView } from '@/features/admin-wallets'
-import { PaymentHistoryView } from '@/features/payment-history'
 import { StaffDesignRequestsView } from '@/features/design-requests'
 import { HomeView } from './views/home-view'
 import { OverviewView } from './views/overview-view'
@@ -29,8 +27,10 @@ import { RentalFlowControlView } from './views/rental-flow-control-view'
 import { AiConfigView } from './views/ai-config-view'
 import { ApartmentDesignsView } from './views/apartment-designs-view'
 import { LegalKnowledgeView } from './views/legal-knowledge-view'
+import { PaymentOperationsView } from './views/payment-operations-view'
 import {
   NAV_GROUP_LABELS,
+  NAV_TAB_IDS,
   resolveConsoleTab,
   visibleNavItems,
   type NavGroup,
@@ -100,9 +100,7 @@ function renderView(
     case 'wallets':
       return <AdminWalletsView />
     case 'payment-history':
-      return <PaymentHistoryView />
-    case 'rental-ops':
-      return <StuckTransactionsView />
+      return <PaymentOperationsView />
     case 'apartment-designs':
       return <ApartmentDesignsView />
     case 'legal-knowledge':
@@ -111,7 +109,7 @@ function renderView(
 }
 
 /**
- * Bảng điều khiển /admin dùng chung cho quản trị viên và nhân viên: cùng một menu trái, nhân viên
+ * Bảng điều khiển dùng chung cho quản trị viên (`/admin`) và nhân viên (`/staff`): cùng một menu trái, nhân viên
  * chỉ thấy các mục vận hành chưa bị admin ẩn.
  */
 export function ConsoleDashboard({
@@ -120,6 +118,7 @@ export function ConsoleDashboard({
   const pathname = usePathname()
   const router = useRouter()
   const isAdmin = initialUser.roles.includes('admin')
+  const basePath = pathname.startsWith('/staff') ? '/staff' : '/admin'
   const navConfig = useNavConfig()
   const myPermissions = useMyPermissions()
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false)
@@ -142,6 +141,14 @@ export function ConsoleDashboard({
     [isAdmin, waitingForConfig, navConfig.data, permissionMap]
   )
   const activeTab = resolveConsoleTab(pathname, items)
+
+  // Nhân viên làm việc ở /staff: link /admin/<mục> cũ chuyển sang /staff/<mục> tương ứng.
+  React.useEffect(() => {
+    if (isAdmin || !pathname.startsWith('/admin')) return
+    const section = pathname.split('/')[2]
+    if (section && !(NAV_TAB_IDS as readonly string[]).includes(section)) return
+    router.replace(`/staff/${section ?? 'overview'}` as Route)
+  }, [isAdmin, pathname, router])
   const activeItem = items.find(item => item.id === activeTab)
 
   const groups = GROUP_ORDER.map(group => ({
@@ -150,7 +157,7 @@ export function ConsoleDashboard({
   })).filter(entry => entry.items.length > 0)
 
   const navigate = (tab: NavTabId): void => {
-    router.push(`/admin/${tab}` as Route)
+    router.push(`${basePath}/${tab}` as Route)
     setIsSidebarOpen(false)
   }
 

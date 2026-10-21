@@ -15,11 +15,12 @@ import {
 const navigation = vi.hoisted(() => ({
   pathname: '/admin/fabric-audit',
   push: vi.fn(),
+  replace: vi.fn(),
 }))
 
 vi.mock('next/navigation', () => ({
   usePathname: () => navigation.pathname,
-  useRouter: () => ({ push: navigation.push }),
+  useRouter: () => ({ push: navigation.push, replace: navigation.replace }),
 }))
 vi.mock('next/link', () => ({
   default: ({
@@ -288,6 +289,40 @@ describe('staff view', () => {
     expect(
       await screen.findByTestId('design-requests-view')
     ).toBeInTheDocument()
+  })
+})
+
+describe('staff routes', () => {
+  it('moves staff from /admin/<section> to /staff/<section>', async () => {
+    navigation.pathname = '/admin/community'
+    renderConsole(STAFF)
+    await waitFor(() =>
+      expect(navigation.replace).toHaveBeenCalledWith('/staff/community')
+    )
+  })
+
+  it('leaves non-section admin routes such as contracts alone', async () => {
+    navigation.pathname = '/admin/contracts'
+    renderConsole(STAFF)
+    await within(nav()).findByRole('button', { name: 'Fabric Audit Center' })
+    expect(navigation.replace).not.toHaveBeenCalled()
+  })
+
+  it('keeps navigation inside /staff for staff', async () => {
+    navigation.pathname = '/staff/overview'
+    const session = renderConsole(STAFF)
+    await session.click(
+      await within(nav()).findByRole('button', { name: 'Fabric Audit Center' })
+    )
+    expect(navigation.push).toHaveBeenCalledWith('/staff/fabric-audit')
+    expect(navigation.replace).not.toHaveBeenCalled()
+  })
+
+  it('does not redirect admin away from /admin', async () => {
+    navigation.pathname = '/admin/overview'
+    renderConsole(ADMIN)
+    await within(nav()).findByRole('button', { name: 'Fabric Audit Center' })
+    expect(navigation.replace).not.toHaveBeenCalled()
   })
 })
 

@@ -1,7 +1,6 @@
 import * as React from 'react'
 import type { PermissionSubject } from '@/shared/lib/permissions'
 import {
-  Activity,
   ArrowRightLeft,
   BookOpen,
   Blocks,
@@ -53,7 +52,6 @@ export const NAV_TAB_IDS = [
   'fees',
   'wallets',
   'payment-history',
-  'rental-ops',
   'apartment-designs',
   'legal-knowledge',
 ] as const
@@ -162,6 +160,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     readSubject: 'DesignRequest',
   },
   {
+    id: 'apartment-designs',
+    label: 'Thiết kế 3D căn hộ',
+    icon: icon(Box),
+    group: 'operations',
+    audience: 'staff',
+  },
+  {
     id: 'fabric-audit',
     label: 'Fabric Audit Center',
     icon: icon(Blocks),
@@ -227,22 +232,8 @@ export const NAV_ITEMS: readonly NavItem[] = [
   },
   {
     id: 'payment-history',
-    label: 'Lịch sử thanh toán & đối soát',
+    label: 'Thanh toán & đối soát',
     icon: icon(History),
-    group: 'system',
-    audience: 'admin',
-  },
-  {
-    id: 'rental-ops',
-    label: 'Vận hành giao dịch thuê',
-    icon: icon(Activity),
-    group: 'system',
-    audience: 'admin',
-  },
-  {
-    id: 'apartment-designs',
-    label: 'Thiết kế 3D căn hộ',
-    icon: icon(Box),
     group: 'system',
     audience: 'admin',
   },
@@ -279,6 +270,11 @@ export function visibleNavItems(
   )
 }
 
+/** Mục đã gộp vào mục khác: link cũ vẫn mở đúng màn. */
+const LEGACY_SECTIONS: Record<string, NavTabId> = {
+  'rental-ops': 'payment-history',
+}
+
 /**
  * Tab đang mở theo URL `/admin/<section>`. Section lạ hoặc không được phép thì rơi về mục đầu tiên
  * được thấy (`null` nếu không có mục nào).
@@ -287,7 +283,8 @@ export function resolveConsoleTab(
   pathname: string,
   items: readonly NavItem[]
 ): NavTabId | null {
-  const section = pathname.split('/')[2]
+  const section =
+    LEGACY_SECTIONS[pathname.split('/')[2] ?? ''] ?? pathname.split('/')[2]
   const matched = items.find(item => item.id === section)
   if (matched) return matched.id
   const fallback = items.find(item => item.id === 'overview') ?? items[0]
