@@ -1,12 +1,18 @@
 'use client'
 
 import * as React from 'react'
+import type { ApartmentItem } from '@/entities/properties'
+import {
+  buildEstimatedCost,
+  buildPackageCost,
+  type CostSegment,
+  type InitialCost,
+} from '../../lib/initial-cost'
 
 interface CostBreakdownPanelProps {
-  bookingDeposit: number
-  escrowDeposit: number
-  firstMonthRent: number
-  totalInitial: number
+  property: ApartmentItem
+  /** Giá thuê/tháng (VND) từ tin đăng, dùng khi tin không có gói thuê. */
+  monthlyRent: number
   formatCurrency: (val: number) => string
   onExplain: (data: {
     title: string
@@ -17,14 +23,49 @@ interface CostBreakdownPanelProps {
   }) => void
 }
 
+const SEGMENT_COLOR: Record<CostSegment['key'], string> = {
+  holding: 'bg-warning',
+  security: 'bg-primary',
+  deposit: 'bg-primary',
+  prepaid: 'bg-success',
+}
+
 export function CostBreakdownPanel({
-  bookingDeposit,
-  escrowDeposit,
-  firstMonthRent,
-  totalInitial,
+  property,
+  monthlyRent,
   formatCurrency,
   onExplain,
 }: CostBreakdownPanelProps): React.ReactElement {
+  const packages = React.useMemo(
+    () =>
+      (property.rentalPackages ?? [])
+        .filter(pkg => pkg.status === 'active')
+        .sort((a, b) => a.durationMonths - b.durationMonths),
+    [property.rentalPackages]
+  )
+  const [selectedId, setSelectedId] = React.useState<string | null>(null)
+  const selected =
+    packages.find(pkg => pkg.packageId === selectedId) ?? packages[0] ?? null
+
+  const cost: InitialCost = selected
+    ? buildPackageCost(selected)
+    : buildEstimatedCost(monthlyRent)
+
+  const explain = (): void =>
+    onExplain({
+      title: 'Cách tính chi phí ban đầu',
+      description: cost.estimated
+        ? 'Tin này chưa có gói thuê nên hệ thống ước tính từ giá niêm yết: cọc 2 tháng và tiền thuê tháng đầu. Số thật sẽ chốt khi chọn gói và ký hợp đồng.'
+        : 'Số tiền lấy trực tiếp từ gói thuê chủ nhà thiết lập: cọc (gồm cọc giữ chỗ và phần ký quỹ còn lại) cộng tiền thuê trả trước theo chính sách của gói. Khoản cọc được hoàn trả khi chấm dứt hợp đồng theo điều khoản.',
+      visualExample: cost.segments
+        .map(segment => `${segment.label}: ${formatCurrency(segment.amount)}`)
+        .join(' · ')
+        .concat(` → Tổng: ${formatCurrency(cost.total)}`),
+      steps: cost.segments.map(
+        segment => `${segment.label}: ${formatCurrency(segment.amount)}`
+      ),
+    })
+
   return (
     <div className="bg-white border border-border rounded-3xl p-4 md:p-5 shadow-sm space-y-4">
       <h3 className="font-marketing text-xl font-bold text-fg flex items-center justify-between gap-2">
@@ -33,22 +74,9 @@ export function CostBreakdownPanel({
           Phân bổ chi phí ban đầu khi ký hợp đồng
         </div>
         <button
-          onClick={() =>
-            onExplain({
-              title: 'Cơ chế ký quỹ chi phí ban đầu (Escrow Logic)',
-              description:
-                'Khoản tiền ký quỹ và đặt cọc được đảm bảo an toàn bằng Smart Contract tự động, giảm thiểu rủi ro bùng cọc hoặc tranh chấp.',
-              visualExample:
-                'Ví dụ: Với căn hộ giá thuê 18.000.000 đ/tháng: Cọc giữ chỗ (Booking - 25% = 18Tr) chuyển trước để khóa tin; Cọc ký quỹ (Escrow - 50% = 36Tr) giữ trên Smart Contract hoàn trả khi hết hợp đồng; Thuê tháng đầu (25% = 18Tr) chuyển cho chủ nhà khi nhận bàn giao nhà. Tổng thanh toán ban đầu: 72.000.000 đ.',
-              steps: [
-                'Cọc giữ chỗ (Booking - 25%): Chuyển vào Smart Contract để khóa căn hộ, tránh chủ nhà cho thuê bên thứ ba.',
-                'Ký quỹ (Escrow - 50%): Khoản tiền bảo đảm (tương đương 2 tháng tiền thuê) được khóa trên ví Multisig của Smart Contract, tự động hoàn trả khi thanh lý hợp đồng.',
-                'Tiền thuê tháng đầu (25%): Tự động mở khóa giải ngân cho chủ nhà khi khách ký biên bản nhận bàn giao nhà thành công.',
-              ],
-            })
-          }
+          onClick={explain}
           className="text-muted-foreground hover:text-primary transition-colors cursor-pointer p-1"
-          title="Xem giải thích cơ chế ký quỹ"
+          title="Xem giải thích cách tính"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <circle
@@ -73,54 +101,70 @@ export function CostBreakdownPanel({
         </button>
       </h3>
       <p className="font-body text-sm text-muted-foreground font-medium leading-relaxed text-left">
-        Biểu đồ phân bổ nguồn tiền cần chuẩn bị ban đầu bao gồm các khoản cọc ký
-        quỹ (Escrow) được hoàn trả khi chấm dứt hợp đồng.
+        {cost.estimated
+          ? 'Ước tính từ giá niêm yết vì tin chưa có gói thuê.'
+          : 'Nguồn tiền cần chuẩn bị ban đầu theo gói thuê đã chọn; khoản cọc được hoàn trả khi chấm dứt hợp đồng.'}
       </p>
+
+      {packages.length > 1 && (
+        <div
+          role="radiogroup"
+          aria-label="Chọn gói thuê"
+          className="flex flex-wrap gap-2"
+        >
+          {packages.map(pkg => {
+            const active = pkg.packageId === selected?.packageId
+            return (
+              <button
+                key={pkg.packageId}
+                role="radio"
+                aria-checked={active}
+                onClick={() => setSelectedId(pkg.packageId)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-bold cursor-pointer transition-colors ${
+                  active
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-border bg-white text-fg hover:border-primary/50'
+                }`}
+              >
+                {pkg.durationMonths} tháng
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       <div className="border border-border rounded-2xl p-6 bg-surface-muted/20 gap-6 flex flex-col lg:flex-row items-center">
         <div className="w-full lg:flex-1 gap-5 flex flex-col">
           <div className="h-6 w-full rounded-full border border-border bg-white overflow-hidden flex shadow-inner">
-            <div style={{ width: '25%' }} className="h-full bg-warning" />
-            <div style={{ width: '50%' }} className="h-full bg-primary" />
-            <div style={{ width: '25%' }} className="h-full bg-success" />
+            {cost.segments.map(segment => (
+              <div
+                key={segment.key}
+                style={{ width: `${(segment.amount / cost.total) * 100}%` }}
+                className={`h-full ${SEGMENT_COLOR[segment.key]}`}
+              />
+            ))}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-2 text-left">
-            <div className="flex items-center gap-3 bg-white border border-border/60 rounded-2xl p-3.5 shadow-sm">
-              <span className="h-3.5 w-3.5 rounded-full bg-warning shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="font-body text-[11px] font-bold text-muted-foreground block uppercase truncate">
-                  Cọc giữ chỗ (Booking)
-                </span>
-                <span className="font-mono text-sm text-fg font-extrabold block mt-0.5">
-                  {formatCurrency(bookingDeposit)} (25%)
-                </span>
+            {cost.segments.map(segment => (
+              <div
+                key={segment.key}
+                className="flex items-center gap-3 bg-white border border-border/60 rounded-2xl p-3.5 shadow-sm"
+              >
+                <span
+                  className={`h-3.5 w-3.5 rounded-full shrink-0 ${SEGMENT_COLOR[segment.key]}`}
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="font-body text-[11px] font-bold text-muted-foreground block uppercase">
+                    {segment.label}
+                  </span>
+                  <span className="font-mono text-sm text-fg font-extrabold block mt-0.5">
+                    {formatCurrency(segment.amount)} (
+                    {Math.round((segment.amount / cost.total) * 100)}%)
+                  </span>
+                </div>
               </div>
-            </div>
-
-            <div className="flex items-center gap-3 bg-white border border-border/60 rounded-2xl p-3.5 shadow-sm">
-              <span className="h-3.5 w-3.5 rounded-full bg-primary shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="font-body text-[11px] font-bold text-muted-foreground block uppercase truncate">
-                  Ký quỹ (Escrow)
-                </span>
-                <span className="font-mono text-sm text-fg font-extrabold block mt-0.5">
-                  {formatCurrency(escrowDeposit)} (50%)
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 bg-white border border-border/60 rounded-2xl p-3.5 shadow-sm">
-              <span className="h-3.5 w-3.5 rounded-full bg-success shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="font-body text-[11px] font-bold text-muted-foreground block uppercase truncate">
-                  Thuê tháng đầu
-                </span>
-                <span className="font-mono text-sm text-fg font-extrabold block mt-0.5">
-                  {formatCurrency(firstMonthRent)} (25%)
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -129,7 +173,7 @@ export function CostBreakdownPanel({
             Tổng chi phí thanh toán ban đầu
           </span>
           <span className="text-3xl font-display font-black text-primary mt-1.5">
-            {formatCurrency(totalInitial)}
+            {formatCurrency(cost.total)}
           </span>
         </div>
       </div>

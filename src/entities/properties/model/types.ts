@@ -17,6 +17,10 @@ export interface RentalPackageItem {
     | { type: 'MONTHS_OF_RENT'; months: number }
     | { type: 'FIXED_AMOUNT'; amount: number }
   resolvedDepositAmount: number
+  /** Phần cọc giữ chỗ trả khi đặt; phần còn lại của cọc là `resolvedSecurityTopUpAmount`. */
+  resolvedHoldingDepositAmount?: number
+  resolvedSecurityTopUpAmount?: number
+  settlementPolicy?: { defaultPaymentCycle: 1 | 3 | 6 }
   /** Tiền thuê trả trước ngoài tiền cọc; vắng mặt = gói cũ (kỳ thanh toán đầu thu khi nhận nhà). */
   prepaidRent?: PrepaidRentPolicy
   resolvedPrepaidRentMonths?: number

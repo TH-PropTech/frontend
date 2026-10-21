@@ -262,11 +262,7 @@ export function PropertyDetail(): React.ReactElement {
 
   const apartmentResourceId = propertyId || property.id
   const availability = getRentalAvailabilityPresentation(property)
-  const price = property.priceNum ? property.priceNum * 1_000_000 : 18_000_000
-  const bookingDeposit = price
-  const escrowDeposit = price * 2
-  const firstMonthRent = price
-  const totalInitial = bookingDeposit + escrowDeposit + firstMonthRent
+  const price = property.priceNum ? property.priceNum * 1_000_000 : 0
 
   return (
     <div className="min-h-screen bg-bg text-fg selection:bg-primary/20 selection:text-primary relative">
@@ -651,15 +647,17 @@ export function PropertyDetail(): React.ReactElement {
               }}
             />
             <PriceTrendPanel property={property} onExplain={setExplainData} />
-            <CostBreakdownPanel
-              bookingDeposit={bookingDeposit}
-              escrowDeposit={escrowDeposit}
-              firstMonthRent={firstMonthRent}
-              totalInitial={totalInitial}
-              formatCurrency={formatCurrency}
-              onExplain={setExplainData}
-            />
-            <RentCalculator price={price} />
+            {price > 0 && (
+              <>
+                <CostBreakdownPanel
+                  property={property}
+                  monthlyRent={price}
+                  formatCurrency={formatCurrency}
+                  onExplain={setExplainData}
+                />
+                <RentCalculator price={price} />
+              </>
+            )}
           </div>
 
           {/* Tab 2: Reviews Panel */}

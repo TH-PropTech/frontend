@@ -175,11 +175,10 @@ export function RentCalculator({
                     Ví dụ trực quan:
                   </span>
                   <p className="text-xs text-success/90 font-medium leading-relaxed font-body">
-                    Ví dụ: Thu nhập của bạn là 50.000.000 đ/tháng. Giá thuê căn
-                    hộ này là 18.000.000 đ/tháng, chiếm 36% thu nhập. Tỷ lệ này
-                    nằm trong vùng CẢNH BÁO (31% - 45%), do đó hệ thống đề xuất
-                    bạn nên cân đối cắt giảm bớt chi tiêu ăn uống hay giải trí
-                    ngoài để đảm bảo an toàn tài chính.
+                    Với thu nhập {(income * 1_000_000).toLocaleString('vi-VN')}{' '}
+                    đ/tháng và giá thuê căn hộ này{' '}
+                    {price.toLocaleString('vi-VN')} đ/tháng, tiền thuê chiếm{' '}
+                    {rentRatio}% thu nhập. {safetyText}
                   </p>
                 </div>
 
