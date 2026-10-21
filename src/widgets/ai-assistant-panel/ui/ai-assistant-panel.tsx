@@ -21,11 +21,19 @@ import {
 import { env } from '@/shared/config/env'
 
 import { AiMascot } from './ai-mascot'
+import { ChatMarkdown } from './chat-markdown'
+import {
+  chatErrorFromCode,
+  chatErrorFromStatus,
+  type ChatErrorInfo,
+} from './chat-errors'
 
 interface ChatMessage {
   id: string
   sender: 'user' | 'assistant'
   text: string
+  /** Set on an error bubble: the message to send again, when retrying can help. */
+  retryText?: string
   propertyCard?: {
     id: string
     title: string
@@ -147,20 +155,15 @@ export function AiAssistantPanel(): React.ReactElement {
     }
   }, [messages, isTyping, isOpen])
 
-  // Get active user ID if logged in
-  const getUserId = (): string | undefined => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('user')
-        if (stored) {
-          const u = JSON.parse(stored) as { id?: string; _id?: string }
-          return u.id || u._id
-        }
-      } catch {
-        // Ignore JSON error
-      }
+  // The backend takes the signed-in user from the JWT; a guest is identified by deviceId alone.
+  const authHeaders = (): Record<string, string> => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const token = localStorage.getItem('accessToken')
+      return token ? { Authorization: `Bearer ${token}` } : {}
+    } catch {
+      return {}
     }
-    return undefined
   }
 
   // Load chat history over HTTP when the panel is first opened
@@ -170,8 +173,6 @@ export function AiAssistantPanel(): React.ReactElement {
     historyLoadedRef.current = true
 
     const params = new URLSearchParams({ deviceId })
-    const userId = getUserId()
-    if (userId) params.append('userId', userId)
 
     const greeting: ChatMessage = {
       id: generateMessageId('greeting'),
@@ -179,7 +180,9 @@ export function AiAssistantPanel(): React.ReactElement {
       text: GREETING,
     }
 
-    fetch(`${env.apiUrl}/ai-chats/history?${params.toString()}`)
+    fetch(`${env.apiUrl}/ai-chats/history?${params.toString()}`, {
+      headers: authHeaders(),
+    })
       .then(res => (res.ok ? res.json() : null))
       .then(body => (body as { data?: HistoryChat } | null)?.data ?? null)
       .then((chat: HistoryChat | null) => {
@@ -198,6 +201,23 @@ export function AiAssistantPanel(): React.ReactElement {
       .catch(() => setMessages(prev => (prev.length > 0 ? prev : [greeting])))
   }, [isOpen, deviceId])
 
+  const showChatError = (error: ChatErrorInfo, sentText: string): void => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: generateMessageId('err'),
+        sender: 'assistant',
+        text: error.message,
+        ...(error.retryable ? { retryText: sentText } : {}),
+      },
+    ])
+  }
+
+  const handleRetry = (messageId: string, retryText: string): void => {
+    setMessages(prev => prev.filter(m => m.id !== messageId))
+    void handleSend(retryText)
+  }
+
   const handleSend = async (text: string) => {
     if (!text.trim() || isTyping) return
 
@@ -209,15 +229,22 @@ export function AiAssistantPanel(): React.ReactElement {
     setIsTyping(true)
 
     try {
-      const userId = getUserId()
       const res = await fetch(`${env.apiUrl}/ai-chats/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, deviceId, ...(userId ? { userId } : {}) }),
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify({ text, deviceId }),
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      if (!res.ok) {
+        showChatError(chatErrorFromStatus(res.status), text)
+        return
+      }
       const { data } = (await res.json()) as {
-        data: { text: string; metadata?: ChatMetadata }
+        data: { text: string; metadata?: ChatMetadata; errorCode?: string }
+      }
+      const failure = chatErrorFromCode(data.errorCode)
+      if (failure) {
+        showChatError(failure, text)
+        return
       }
       setMessages(prev => [
         ...prev,
@@ -229,28 +256,20 @@ export function AiAssistantPanel(): React.ReactElement {
         },
       ])
     } catch {
-      setMessages(prev => [
-        ...prev,
-        {
-          id: generateMessageId('err'),
-          sender: 'assistant',
-          text: 'Không thể kết nối đến Trợ lý AI. Vui lòng kiểm tra lại kết nối mạng.',
-        },
-      ])
+      showChatError(chatErrorFromStatus(undefined), text)
     } finally {
       setIsTyping(false)
     }
   }
 
   const executeClearHistory = async () => {
-    const userId = getUserId()
     try {
       const queryParams = new URLSearchParams()
-      if (userId) queryParams.append('userId', userId)
       if (deviceId) queryParams.append('deviceId', deviceId)
 
       await fetch(`${env.apiUrl}/ai-chats/history?${queryParams.toString()}`, {
         method: 'DELETE',
+        headers: authHeaders(),
       })
       setMessages([
         {
@@ -261,6 +280,14 @@ export function AiAssistantPanel(): React.ReactElement {
       ])
     } catch (err) {
       console.error('Failed to clear chat history:', err)
+      setMessages(prev => [
+        ...prev,
+        {
+          id: generateMessageId('err'),
+          sender: 'assistant',
+          text: 'Chưa xóa được lịch sử trò chuyện. Bạn thử lại sau nhé.',
+        },
+      ])
     }
   }
 
@@ -274,7 +301,7 @@ export function AiAssistantPanel(): React.ReactElement {
     if (price >= 1000000) {
       return (price / 1000000).toLocaleString('vi-VN') + ' triệu/tháng'
     }
-    return price.toLocaleString('vi-VN') + ' triệu/tháng'
+    return price.toLocaleString('vi-VN') + ' đồng/tháng'
   }
 
   return (
@@ -356,9 +383,23 @@ export function AiAssistantPanel(): React.ReactElement {
                         : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-bl-none border border-zinc-200/20'
                     }`}
                   >
-                    <div className="whitespace-pre-line leading-relaxed">
-                      {msg.text}
-                    </div>
+                    {isUser ? (
+                      <div className="whitespace-pre-line leading-relaxed">
+                        {msg.text}
+                      </div>
+                    ) : (
+                      <ChatMarkdown text={msg.text} />
+                    )}
+                    {msg.retryText && (
+                      <button
+                        type="button"
+                        onClick={() => handleRetry(msg.id, msg.retryText ?? '')}
+                        disabled={isTyping}
+                        className="mt-2 rounded-full border border-[#C65A3A] px-3 py-1 text-xs font-medium text-[#C65A3A] transition-colors hover:bg-[#C65A3A] hover:text-white disabled:opacity-50"
+                      >
+                        Thử lại
+                      </button>
+                    )}
 
                     {msg.legalCitations && msg.legalCitations.length > 0 && (
                       <div className="mt-2 space-y-1.5 border-t border-zinc-200/70 pt-2 dark:border-zinc-700">
