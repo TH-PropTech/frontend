@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { STATUS_CONFIG } from './types'
+import { getStatusConfig } from './types'
 import type { ApartmentStatus } from './types'
 
 interface StatusBadgeProps {
@@ -11,7 +11,7 @@ export function StatusBadge({
   status,
   size = 'xs',
 }: StatusBadgeProps): React.ReactElement {
-  const cfg = STATUS_CONFIG[status]
+  const cfg = getStatusConfig(status)
   const sizeClass =
     size === 'sm' ? 'text-xs px-2.5 py-1' : 'text-[10px] px-2 py-0.5'
   return (

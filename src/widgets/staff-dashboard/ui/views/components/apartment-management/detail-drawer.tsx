@@ -23,7 +23,7 @@ import { ApartmentDesignsManager } from '@/features/apartment-floorplan'
 import { ApartmentEditDialog } from './apartment-edit-dialog'
 import { ImageGallery } from './image-gallery'
 import { StatusBadge } from './status-badge'
-import { STATUS_CONFIG, formatPrice } from './types'
+import { getStatusConfig, formatPrice } from './types'
 import type { StaffApartment, ApartmentStatus } from './types'
 
 interface DetailDrawerProps {
@@ -55,7 +55,7 @@ export function DetailDrawer({
   const [vrUrl, setVrUrl] = React.useState(apartment.vrUrl ?? '')
   const [isSavingVr, setIsSavingVr] = React.useState(false)
 
-  const cfg = STATUS_CONFIG[apartment.status]
+  const cfg = getStatusConfig(apartment.status)
   const trimmedVrUrl = vrUrl.trim()
   const isVrUnchanged = trimmedVrUrl === (apartment.vrUrl ?? '')
 

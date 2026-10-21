@@ -9,6 +9,7 @@ export type ApartmentStatus =
   | 'expired'
   | 'updating'
   | 'unavailable'
+  | 'rented'
 
 export type FilterStatus = 'all' | ApartmentStatus
 
@@ -120,12 +121,28 @@ export const STATUS_CONFIG: Record<ApartmentStatus, StatusConfig> = {
     bgClass: 'bg-[color:var(--info-soft)]',
     borderClass: 'border-[color:var(--info)]/20',
   },
+  rented: {
+    label: 'Đã cho thuê',
+    textClass: 'text-[color:var(--primary)]',
+    bgClass: 'bg-[color:var(--surface-muted)]',
+    borderClass: 'border-[color:var(--primary)]/20',
+  },
   unavailable: {
     label: 'Đang ẩn',
     textClass: 'text-[color:var(--muted)]',
     bgClass: 'bg-[color:var(--surface-muted)]',
     borderClass: 'border-[color:var(--border-strong)]/30',
   },
+}
+
+/** Trạng thái lạ từ backend không được làm sập giao diện: rơi về cấu hình trung tính. */
+export function getStatusConfig(status: string): StatusConfig {
+  return (
+    STATUS_CONFIG[status as ApartmentStatus] ?? {
+      ...STATUS_CONFIG.unavailable,
+      label: status,
+    }
+  )
 }
 
 export const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
