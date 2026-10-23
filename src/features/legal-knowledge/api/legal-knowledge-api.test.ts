@@ -6,12 +6,26 @@ import {
   fetchLegalLink,
   listLegalDocs,
   publishLegalDoc,
+  publishLegalDocs,
   searchLegalKnowledge,
   unpublishLegalDoc,
   updateLegalDoc,
 } from './legal-knowledge-api'
 
 describe('legal knowledge API', () => {
+  it('publishes several documents with one batch request', async () => {
+    const post = vi
+      .spyOn(apiClient, 'post')
+      .mockResolvedValueOnce({ published: [], failed: [] })
+
+    await publishLegalDocs(['a', 'b'])
+
+    expect(post).toHaveBeenCalledWith('/legal-knowledge/admin/publish-batch', {
+      ids: ['a', 'b'],
+    })
+    post.mockRestore()
+  })
+
   it('lists docs without a query string when no filter is set', async () => {
     const get = vi.spyOn(apiClient, 'get').mockResolvedValueOnce([])
 
