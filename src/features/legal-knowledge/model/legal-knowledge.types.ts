@@ -134,3 +134,14 @@ export interface LegalDocFormValues {
   effectiveDate: string
   summary: string
 }
+
+export interface PublishLegalDocFailure {
+  id: string
+  message: string
+}
+
+/** Result of POST /legal-knowledge/admin/publish-batch. */
+export interface PublishLegalDocsResult {
+  published: LegalDocItem[]
+  failed: PublishLegalDocFailure[]
+}

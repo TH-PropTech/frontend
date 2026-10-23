@@ -7,6 +7,7 @@ import type {
   LegalDocPatch,
   LegalFetchResult,
   LegalSearchHit,
+  PublishLegalDocsResult,
 } from '../model/legal-knowledge.types'
 
 const BASE = '/legal-knowledge/admin'
@@ -57,6 +58,15 @@ export function unpublishLegalDoc(id: string): Promise<LegalDocDetail> {
     `${BASE}/${encodeURIComponent(id)}/unpublish`,
     {}
   )
+}
+
+/** Publishes several drafts in one call; ids that cannot be published come back in `failed`. */
+export function publishLegalDocs(
+  ids: readonly string[]
+): Promise<PublishLegalDocsResult> {
+  return apiClient.post<PublishLegalDocsResult>(`${BASE}/publish-batch`, {
+    ids,
+  })
 }
 
 /** Soft delete: the backend archives the document. */

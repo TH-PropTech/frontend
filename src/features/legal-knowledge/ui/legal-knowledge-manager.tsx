@@ -23,6 +23,7 @@ import {
   getLegalDoc,
   listLegalDocs,
   publishLegalDoc,
+  publishLegalDocs,
   unpublishLegalDoc,
   updateLegalDoc,
 } from '../api/legal-knowledge-api'
@@ -38,6 +39,7 @@ import {
   type LegalDocStatus,
 } from '../model/legal-knowledge.types'
 import { LegalDocForm, type LegalDocDraft } from './legal-doc-form'
+import { LegalBrainPanel } from './legal-brain-panel'
 import { LegalDocList } from './legal-doc-list'
 import { LegalSearchTester } from './legal-search-tester'
 import { LegalSourceMap } from './legal-source-map'
@@ -46,7 +48,7 @@ type EditorState =
   | { mode: 'new'; seq: number }
   | { mode: 'edit'; seq: number; doc: LegalDocDetail }
 
-type LegalTab = 'docs' | 'sources' | 'archive'
+type LegalTab = 'docs' | 'sources' | 'brain' | 'archive'
 
 /** Archived docs have their own tab, so the status filter only offers the other states. */
 const LISTED_STATUSES = LEGAL_DOC_STATUSES.filter(item => item !== 'archived')
@@ -144,6 +146,28 @@ export function LegalKnowledgeManager(): React.ReactElement {
         const message = await action()
         await reload()
         toast.success(message)
+      } catch (cause: unknown) {
+        toast.error(describeError(cause))
+      }
+    })
+
+  // Publishes the picked drafts together; a partial failure is reported but never rolls back the rest.
+  const ingestMany = (ids: readonly string[]): Promise<void> =>
+    track(async () => {
+      try {
+        const result = await publishLegalDocs(ids)
+        await reload()
+        const done = result.published.length
+        const firstError = result.failed[0]?.message
+        if (result.failed.length > 0) {
+          toast.warning(
+            `Đã nạp ${done} tài liệu, ${result.failed.length} lỗi: ${firstError ?? 'không rõ nguyên nhân'}`
+          )
+        } else {
+          toast.success(
+            `Đã nạp ${done} tài liệu vào não, chatbot có thể tra cứu`
+          )
+        }
       } catch (cause: unknown) {
         toast.error(describeError(cause))
       }
@@ -304,6 +328,9 @@ export function LegalKnowledgeManager(): React.ReactElement {
           <TabsTrigger value="sources" className={TAB_TRIGGER}>
             Kho tri thức (nguồn nội dung)
           </TabsTrigger>
+          <TabsTrigger value="brain" className={TAB_TRIGGER}>
+            Bộ não 3D
+          </TabsTrigger>
           <TabsTrigger value="archive" className={TAB_TRIGGER}>
             {archivedCount > 0 ? `Lưu trữ (${archivedCount})` : 'Lưu trữ'}
           </TabsTrigger>
@@ -340,6 +367,18 @@ export function LegalKnowledgeManager(): React.ReactElement {
 
         <TabsContent value="sources" className="mt-0">
           <LegalSourceMap docs={activeDocs} />
+        </TabsContent>
+
+        <TabsContent value="brain" className="mt-0">
+          <LegalBrainPanel
+            docs={activeDocs}
+            busy={listBusy}
+            onAdd={openNew}
+            onIngest={ingestMany}
+            onEdit={item => void openEdit(item)}
+            onTogglePublish={togglePublish}
+            onArchive={setArchiveTarget}
+          />
         </TabsContent>
 
         <TabsContent value="archive" className="mt-0">
