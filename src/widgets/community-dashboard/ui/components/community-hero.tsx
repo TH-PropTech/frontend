@@ -1,93 +1,48 @@
-import { UserAvatar } from './user-avatar'
+import * as React from 'react'
+import { TopographyBackdrop } from './topography-backdrop'
+
+const HERO_PATHS = [
+  'M-100 80 C 300 10, 600 150, 1000 60 C 1200 30, 1500 100, 1600 80',
+  'M-100 110 C 300 40, 600 180, 1000 90 C 1200 60, 1500 130, 1600 110',
+  'M-100 140 C 300 70, 600 210, 1000 120 C 1200 90, 1500 160, 1600 140',
+  'M-100 170 C 300 100, 600 240, 1000 150 C 1200 120, 1500 190, 1600 170',
+  'M-100 200 C 300 130, 600 270, 1000 180 C 1200 150, 1500 220, 1600 200',
+  'M 100 250 C 400 150, 700 290, 1100 210 C 1300 180, 1500 250, 1600 230',
+  'M 100 280 C 400 180, 700 320, 1100 240 C 1300 210, 1500 280, 1600 260',
+] as const
 
 interface CommunityHeroProps {
-  memberCount?: number
-  projectCount?: number
+  /** Số người đã có bài được duyệt; chưa có số liệu thì không hiển thị. */
+  contributorCount?: number | undefined
+  projectCount?: number | undefined
 }
 
 export function CommunityHero({
-  memberCount = 0,
+  contributorCount = 0,
   projectCount = 0,
 }: CommunityHeroProps): React.ReactElement {
+  const highlights = [
+    contributorCount > 0 && `${contributorCount} người đã đóng góp bài viết`,
+    projectCount > 0 && `${projectCount} dự án đang thảo luận`,
+  ].filter((text): text is string => Boolean(text))
+
   return (
-    <section className="relative flex flex-col items-center justify-center bg-gradient-to-b from-[#f5ece2] via-[#faf6f1] to-bg pb-24 pt-32 text-center rounded-b-[40px] border-b border-border overflow-hidden">
-      {/* Topography SVG Background — same pattern as PropertiesHero */}
-      <div
-        className="absolute inset-0 opacity-[0.08] pointer-events-none select-none overflow-hidden"
-        style={{
-          willChange: 'transform',
-          transform: 'translate3d(0,0,0)',
-          backfaceVisibility: 'hidden',
-        }}
-      >
-        <svg
-          className="w-full h-full min-w-[1440px] min-h-[300px]"
-          viewBox="0 0 1440 300"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M-100 80 C 300 10, 600 150, 1000 60 C 1200 30, 1500 100, 1600 80"
-            stroke="currentColor"
-            className="text-primary/25"
-            strokeWidth="1.5"
-            fill="none"
-          />
-          <path
-            d="M-100 110 C 300 40, 600 180, 1000 90 C 1200 60, 1500 130, 1600 110"
-            stroke="currentColor"
-            className="text-primary/25"
-            strokeWidth="1.5"
-            fill="none"
-          />
-          <path
-            d="M-100 140 C 300 70, 600 210, 1000 120 C 1200 90, 1500 160, 1600 140"
-            stroke="currentColor"
-            className="text-primary/25"
-            strokeWidth="1.5"
-            fill="none"
-          />
-          <path
-            d="M-100 170 C 300 100, 600 240, 1000 150 C 1200 120, 1500 190, 1600 170"
-            stroke="currentColor"
-            className="text-primary/25"
-            strokeWidth="1.5"
-            fill="none"
-          />
-          <path
-            d="M-100 200 C 300 130, 600 270, 1000 180 C 1200 150, 1500 220, 1600 200"
-            stroke="currentColor"
-            className="text-primary/25"
-            strokeWidth="1.5"
-            fill="none"
-          />
-          <path
-            d="M 100 250 C 400 150, 700 290, 1100 210 C 1300 180, 1500 250, 1600 230"
-            stroke="currentColor"
-            className="text-primary/25"
-            strokeWidth="1.5"
-            fill="none"
-          />
-          <path
-            d="M 100 280 C 400 180, 700 320, 1100 240 C 1300 210, 1500 280, 1600 260"
-            stroke="currentColor"
-            className="text-primary/25"
-            strokeWidth="1.5"
-            fill="none"
-          />
-        </svg>
-      </div>
+    <section className="relative flex flex-col items-center justify-center overflow-hidden rounded-b-[40px] border-b border-border bg-gradient-to-b from-primary-soft via-surface-muted to-bg pb-24 pt-32 text-center">
+      <TopographyBackdrop
+        paths={HERO_PATHS}
+        viewBox="0 0 1440 300"
+        className="absolute inset-0 opacity-[0.08]"
+        strokeClassName="text-primary/25"
+      />
 
-      {/* Decorative blurred circles */}
-      <div className="absolute -left-32 -top-32 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute -right-32 -bottom-32 w-96 h-96 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary/5 blur-[100px]" />
+      <div className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-accent/5 blur-[100px]" />
 
-      <div className="mx-auto w-full max-w-6xl px-6 md:px-10 z-10 relative">
-        <span className="font-mono text-xs font-bold uppercase tracking-widest text-primary mb-2 block">
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 md:px-10">
+        <span className="mb-2 block font-mono text-xs font-bold uppercase tracking-widest text-primary">
           Cộng đồng cư dân
         </span>
-        <h1 className="font-marketing text-3xl font-bold leading-tight sm:text-4xl text-fg">
+        <h1 className="font-marketing text-3xl font-bold leading-tight text-fg sm:text-4xl">
           Hỏi đáp & Đánh giá căn hộ
         </h1>
         <p className="mx-auto mt-2 max-w-xl font-body text-sm text-muted">
@@ -95,39 +50,13 @@ export function CommunityHero({
           ghép — tất cả được kiểm duyệt bởi đội ngũ TH PropTech.
         </p>
 
-        {/* Stats row */}
-        <div className="flex items-center justify-center gap-8 mt-6">
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              <UserAvatar
-                name="Thạch"
-                size="sm"
-                className="border-2 border-[#f5ece2] shadow-sm"
-              />
-              <UserAvatar
-                name="Huy"
-                size="sm"
-                className="border-2 border-[#f5ece2] shadow-sm"
-              />
-              <UserAvatar
-                name="Minh"
-                size="sm"
-                className="border-2 border-[#f5ece2] shadow-sm"
-              />
-            </div>
-            <span className="text-[11px] text-muted font-semibold">
-              {memberCount > 0
-                ? `${memberCount} thành viên tham gia`
-                : 'Cộng đồng cư dân năng động'}
-            </span>
-          </div>
-          <div className="h-4 w-px bg-border" />
-          <span className="text-[11px] text-muted font-semibold">
-            {projectCount > 0
-              ? `${projectCount} dự án đang thảo luận`
-              : 'Đa dạng dự án & khu căn hộ'}
-          </span>
-        </div>
+        {highlights.length > 0 && (
+          <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[11px] font-semibold text-muted">
+            {highlights.map(text => (
+              <li key={text}>{text}</li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   )

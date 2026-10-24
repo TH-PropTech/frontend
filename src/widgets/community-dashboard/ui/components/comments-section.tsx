@@ -1,24 +1,40 @@
 'use client'
 
 import * as React from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Lock } from 'lucide-react'
 import { apiClient } from '@/shared/api/api-client'
+import { appToast } from '@/shared/ui/app-toast'
+import {
+  formatTimeAgo,
+  getUserId,
+  hasModeratorRole,
+  ROLE_BADGE_CLASSES,
+  ROLE_LABELS,
+  type CommunityAuthorRole,
+  type StoredUser,
+} from '../../lib/community-types'
+import { toErrorMessage } from '../../lib/use-community-actions'
+import { ConfirmDeleteDialog } from './confirm-delete-dialog'
 import { UserAvatar } from './user-avatar'
 
 interface BackendCommentResponse {
   _id?: string
   id?: string
+  authorId?: string
   parentId?: string | null
   authorName: string
-  authorRole: 'tenant' | 'landlord' | 'staff'
+  authorRole?: CommunityAuthorRole
   content: string
   createdAt: string
 }
 
 interface FrontendComment {
   id: string
+  authorId: string
   parentId: string | null
   authorName: string
-  authorRole: 'tenant' | 'landlord' | 'staff'
+  authorRole: CommunityAuthorRole
   content: string
   createdAt: string
 }
@@ -26,41 +42,52 @@ interface FrontendComment {
 interface CommentsSectionProps {
   postId: string
   onCommentAdded: () => void
-  onCommentRemoved?: () => void
-  currentUser?: { roles?: string[] } | null | undefined
+  /** Số bình luận đã bị xóa (gồm cả các trả lời con). */
+  onCommentRemoved?: (removedCount: number) => void
+  currentUser?: StoredUser | null | undefined
   isAuthenticated?: boolean
   onAuthRequired?: (() => void) | undefined
 }
 
-const ROLE_LABELS = {
-  tenant: 'Khách thuê',
-  landlord: 'Chủ nhà',
-  staff: 'Đội ngũ TH',
-} as const
-
-const ROLE_CLASSES = {
-  tenant: 'bg-primary/10 text-primary',
-  landlord: 'bg-accent/10 text-accent-DEFAULT',
-  staff: 'bg-danger/10 text-danger',
-} as const
-
-function formatCommentTime(dateStr: string): string {
-  try {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    if (diffMs < 0) return 'Vừa xong'
-    const diffMins = Math.floor(diffMs / (1000 * 60))
-    if (diffMins < 1) return 'Vừa xong'
-    if (diffMins < 60) return `${diffMins} phút trước`
-    const diffHours = Math.floor(diffMins / 60)
-    if (diffHours < 24) return `${diffHours} giờ trước`
-    const diffDays = Math.floor(diffHours / 24)
-    return `${diffDays} ngày trước`
-  } catch {
-    return 'Vừa xong'
+function mapComment(comment: BackendCommentResponse): FrontendComment {
+  return {
+    id: comment._id ?? comment.id ?? '',
+    authorId: comment.authorId ?? '',
+    parentId: comment.parentId ?? null,
+    authorName: comment.authorName,
+    authorRole: comment.authorRole ?? 'tenant',
+    content: comment.content,
+    createdAt: formatTimeAgo(comment.createdAt) || 'Vừa xong',
   }
 }
+
+/** Id của bình luận và mọi trả lời con cháu của nó. */
+function collectThreadIds(
+  comments: readonly FrontendComment[],
+  rootId: string
+): Set<string> {
+  const ids = new Set([rootId])
+  let grew = true
+  while (grew) {
+    grew = false
+    for (const comment of comments) {
+      if (
+        comment.parentId &&
+        ids.has(comment.parentId) &&
+        !ids.has(comment.id)
+      ) {
+        ids.add(comment.id)
+        grew = true
+      }
+    }
+  }
+  return ids
+}
+
+const INPUT_CLASSES =
+  'min-h-11 flex-1 rounded-xl border border-border bg-surface px-4 py-2.5 text-xs focus:border-primary/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20'
+const PRIMARY_BUTTON_CLASSES =
+  'min-h-11 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50'
 
 export function CommentsSection({
   postId,
@@ -70,214 +97,196 @@ export function CommentsSection({
   isAuthenticated = true,
   onAuthRequired,
 }: CommentsSectionProps): React.ReactElement {
-  const [comments, setComments] = React.useState<FrontendComment[]>([])
-  const [loading, setLoading] = React.useState(true)
+  const queryClient = useQueryClient()
+  const commentsKey = React.useMemo(
+    () => ['community-comments', postId] as const,
+    [postId]
+  )
+  const userId = getUserId(currentUser ?? null)
+  const isModerator = hasModeratorRole(currentUser)
+
   const [newCommentText, setNewCommentText] = React.useState('')
   const [replyToId, setReplyToId] = React.useState<string | null>(null)
   const [replyText, setReplyText] = React.useState('')
-  const [submitting, setSubmitting] = React.useState(false)
+  const [pendingDelete, setPendingDelete] =
+    React.useState<FrontendComment | null>(null)
 
-  const isStaffOrAdmin = React.useMemo(() => {
-    if (!currentUser?.roles) return false
-    return currentUser.roles.some(
-      r => r.toLowerCase() === 'staff' || r.toLowerCase() === 'admin'
-    )
-  }, [currentUser])
-
-  const handleDeleteComment = async (commentId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn gỡ bình luận này?')) return
-    try {
-      await apiClient.delete(`/community/comments/${commentId}`)
-      setComments(prev =>
-        prev.filter(c => c.id !== commentId && c.parentId !== commentId)
-      )
-      onCommentRemoved?.()
-    } catch (err) {
-      console.error('Failed to delete comment:', err)
-      // Fallback
-      setComments(prev =>
-        prev.filter(c => c.id !== commentId && c.parentId !== commentId)
-      )
-      onCommentRemoved?.()
-    }
-  }
-
-  const loadComments = React.useCallback(async () => {
-    try {
-      setLoading(true)
-      const data = await apiClient.get<BackendCommentResponse[]>(
+  const commentsQuery = useQuery({
+    queryKey: commentsKey,
+    queryFn: () =>
+      apiClient.get<BackendCommentResponse[]>(
         `/community/posts/${postId}/comments`
-      )
-      const mapped = data.map(c => ({
-        id: c._id || c.id || '',
-        parentId: c.parentId || null,
-        authorName: c.authorName,
-        authorRole: c.authorRole || 'tenant',
-        content: c.content,
-        createdAt: formatCommentTime(c.createdAt),
-      }))
-      setComments(mapped)
-    } catch (err) {
-      console.error('Failed to load comments:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [postId])
+      ),
+    select: data => data.map(mapComment),
+  })
+  const comments = React.useMemo(
+    () => commentsQuery.data ?? [],
+    [commentsQuery.data]
+  )
 
-  React.useEffect(() => {
-    let active = true
-    const fetchComments = async () => {
-      await Promise.resolve()
-      if (active) {
-        loadComments()
-      }
-    }
-    fetchComments()
-    return () => {
-      active = false
-    }
-  }, [loadComments])
-
-  const handleSubmitComment = async (
-    e: React.FormEvent,
-    parentId: string | null = null
-  ) => {
-    e.preventDefault()
-    const text = parentId ? replyText : newCommentText
-    if (!text.trim() || submitting) return
-
-    try {
-      setSubmitting(true)
-      const newComment = await apiClient.post<BackendCommentResponse>(
+  const addMutation = useMutation({
+    mutationFn: ({
+      content,
+      parentId,
+    }: {
+      content: string
+      parentId: string | null
+    }) =>
+      apiClient.post<BackendCommentResponse>(
         `/community/posts/${postId}/comments`,
-        {
-          content: text.trim(),
-          parentId,
-        }
-      )
-
-      const mappedComment: FrontendComment = {
-        id: newComment._id || newComment.id || '',
-        parentId: newComment.parentId || null,
-        authorName: newComment.authorName,
-        authorRole: newComment.authorRole || 'tenant',
-        content: newComment.content,
-        createdAt: 'Vừa xong',
-      }
-
-      setComments(prev => [...prev, mappedComment])
+        { content, parentId }
+      ),
+    onSuccess: created => {
+      queryClient.setQueryData<BackendCommentResponse[]>(commentsKey, prev => [
+        ...(prev ?? []),
+        { ...created, createdAt: new Date().toISOString() },
+      ])
       onCommentAdded()
+    },
+    onError: error =>
+      appToast.error(toErrorMessage(error, 'Không thể gửi bình luận.')),
+  })
 
-      if (parentId) {
-        setReplyText('')
-        setReplyToId(null)
-      } else {
-        setNewCommentText('')
+  const deleteMutation = useMutation({
+    mutationFn: (comment: FrontendComment) =>
+      apiClient.delete<{ success: boolean }>(
+        isModerator
+          ? `/community/comments/${comment.id}`
+          : `/community/comments/${comment.id}/mine`
+      ),
+    onSuccess: (_result, comment) => {
+      const removedIds = collectThreadIds(comments, comment.id)
+      queryClient.setQueryData<BackendCommentResponse[]>(commentsKey, prev =>
+        (prev ?? []).filter(item => !removedIds.has(item._id ?? item.id ?? ''))
+      )
+      onCommentRemoved?.(removedIds.size)
+      setPendingDelete(null)
+    },
+    onError: error => {
+      appToast.error(toErrorMessage(error, 'Không thể xóa bình luận.'))
+      setPendingDelete(null)
+    },
+  })
+
+  const submitComment = (
+    event: React.FormEvent,
+    parentId: string | null
+  ): void => {
+    event.preventDefault()
+    const text = (parentId ? replyText : newCommentText).trim()
+    if (!text || addMutation.isPending) return
+
+    addMutation.mutate(
+      { content: text, parentId },
+      {
+        onSuccess: () => {
+          if (parentId) {
+            setReplyText('')
+            setReplyToId(null)
+          } else {
+            setNewCommentText('')
+          }
+        },
       }
-    } catch (err) {
-      console.error('Failed to submit comment:', err)
-    } finally {
-      setSubmitting(false)
-    }
+    )
   }
 
-  // Recursive renderer for nested comments
-  const renderCommentTree = (
-    parentId: string | null = null,
-    depth = 0
+  const renderThread = (
+    parentId: string | null,
+    depth: number
   ): React.ReactNode => {
-    const levelComments = comments.filter(c => c.parentId === parentId)
-    if (levelComments.length === 0) return null
+    const level = comments.filter(comment => comment.parentId === parentId)
+    if (level.length === 0) return null
 
     return (
       <div
-        className={`space-y-4 ${depth > 0 ? 'mt-3 pl-4 border-l-2 border-border/40 ml-2' : ''}`}
+        className={`space-y-4 ${depth > 0 ? 'ml-2 mt-3 border-l-2 border-border/40 pl-4' : ''}`}
       >
-        {levelComments.map(comment => {
+        {level.map(comment => {
           const isReplying = replyToId === comment.id
+          const canDelete =
+            isModerator || (userId !== '' && comment.authorId === userId)
           return (
-            <div key={comment.id} className="group/comment space-y-2">
-              <div className="bg-surface-muted/30 hover:bg-surface-muted/50 transition-colors p-3.5 rounded-2xl border border-border/40">
+            <div key={comment.id} className="space-y-2">
+              <div className="rounded-2xl border border-border/40 bg-surface-muted/40 p-3.5 transition-colors hover:bg-surface-muted/60">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <UserAvatar
                       name={comment.authorName}
                       size="sm"
-                      className="h-6 w-6 text-[10px]"
+                      className="h-6 w-6"
                     />
-                    <span className="text-xs font-bold text-fg">
+                    <span className="truncate text-xs font-bold text-fg">
                       {comment.authorName}
                     </span>
                     <span
-                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${ROLE_CLASSES[comment.authorRole] || ROLE_CLASSES.tenant}`}
+                      className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] font-bold ${ROLE_BADGE_CLASSES[comment.authorRole]}`}
                     >
-                      {ROLE_LABELS[comment.authorRole] || ROLE_LABELS.tenant}
+                      {ROLE_LABELS[comment.authorRole]}
                     </span>
                   </div>
-                  <span className="text-[11px] text-muted shrink-0">
+                  <span className="shrink-0 text-[11px] text-muted">
                     {comment.createdAt}
                   </span>
                 </div>
-                <p className="text-xs text-muted mt-2 leading-relaxed">
+                <p className="mt-2 whitespace-pre-line break-words text-xs leading-relaxed text-muted">
                   {comment.content}
                 </p>
 
-                {/* Comment Actions */}
-                <div className="mt-2.5 flex items-center gap-4">
+                <div className="mt-1.5 flex items-center gap-2">
                   {isAuthenticated && (
                     <button
                       type="button"
                       onClick={() => {
-                        if (isReplying) {
-                          setReplyToId(null)
-                        } else {
-                          setReplyToId(comment.id)
-                          setReplyText('')
-                        }
+                        setReplyToId(isReplying ? null : comment.id)
+                        setReplyText('')
                       }}
-                      className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                      className="min-h-10 px-1 text-[11px] font-bold text-primary hover:underline"
                     >
                       Trả lời
                     </button>
                   )}
-                  {isStaffOrAdmin && (
+                  {canDelete && (
                     <button
                       type="button"
-                      onClick={() => handleDeleteComment(comment.id)}
-                      className="text-[11px] font-bold text-danger hover:underline flex items-center gap-1 cursor-pointer"
+                      onClick={() => setPendingDelete(comment)}
+                      className="min-h-10 px-1 text-[11px] font-bold text-danger hover:underline"
                     >
-                      Gỡ
+                      {isModerator && comment.authorId !== userId
+                        ? 'Gỡ'
+                        : 'Xóa'}
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Reply Form */}
               {isReplying && (
                 <form
-                  onSubmit={e => handleSubmitComment(e, comment.id)}
-                  className="pl-4 mt-2 flex items-start gap-2"
+                  onSubmit={event => submitComment(event, comment.id)}
+                  className="mt-2 flex items-start gap-2 pl-4"
                 >
                   <input
                     type="text"
+                    aria-label={`Trả lời ${comment.authorName}`}
                     placeholder={`Trả lời ${comment.authorName}...`}
                     value={replyText}
-                    onChange={e => setReplyText(e.target.value)}
-                    className="flex-1 text-xs rounded-xl border border-border px-3 py-2 bg-white focus:outline-none focus:border-primary/50"
+                    maxLength={1000}
+                    onChange={event => setReplyText(event.target.value)}
+                    className={INPUT_CLASSES}
                     autoFocus
                   />
                   <div className="flex gap-1.5">
                     <button
                       type="submit"
-                      disabled={!replyText.trim() || submitting}
-                      className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-white hover:bg-primary-hover disabled:opacity-50 transition-colors cursor-pointer shadow-sm"
+                      disabled={!replyText.trim() || addMutation.isPending}
+                      className={PRIMARY_BUTTON_CLASSES}
                     >
                       Gửi
                     </button>
                     <button
                       type="button"
                       onClick={() => setReplyToId(null)}
-                      className="rounded-xl border border-border px-3 py-2 text-xs font-bold text-muted hover:bg-surface-muted transition-colors cursor-pointer"
+                      className="min-h-11 rounded-xl border border-border px-3 py-2 text-xs font-bold text-muted transition-colors hover:bg-surface-muted"
                     >
                       Hủy
                     </button>
@@ -285,8 +294,7 @@ export function CommentsSection({
                 </form>
               )}
 
-              {/* Render children comments (max depth 3 to avoid layout breaking) */}
-              {renderCommentTree(comment.id, depth + 1)}
+              {renderThread(comment.id, depth + 1)}
             </div>
           )
         })}
@@ -295,53 +303,42 @@ export function CommentsSection({
   }
 
   return (
-    <div className="mt-5 border-t border-border/40 pt-4 space-y-4">
-      <h4 className="text-xs font-bold text-fg uppercase tracking-wider">
+    <div className="mt-5 space-y-4 border-t border-border/40 pt-4">
+      <h4 className="text-xs font-bold uppercase tracking-wider text-fg">
         Bình luận ({comments.length})
       </h4>
 
-      {/* Main Comment Input */}
       {isAuthenticated ? (
         <form
-          onSubmit={e => handleSubmitComment(e, null)}
+          onSubmit={event => submitComment(event, null)}
           className="flex gap-2"
         >
           <input
             type="text"
+            aria-label="Viết bình luận"
             placeholder="Viết bình luận công khai..."
             value={newCommentText}
-            onChange={e => setNewCommentText(e.target.value)}
-            className="flex-1 text-xs rounded-xl border border-border px-4 py-2.5 bg-white focus:outline-none focus:border-primary/50"
+            maxLength={1000}
+            onChange={event => setNewCommentText(event.target.value)}
+            className={INPUT_CLASSES}
           />
           <button
             type="submit"
-            disabled={!newCommentText.trim() || submitting}
-            className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white hover:bg-primary-hover disabled:opacity-50 transition-colors cursor-pointer shadow-sm"
+            disabled={!newCommentText.trim() || addMutation.isPending}
+            className={PRIMARY_BUTTON_CLASSES}
           >
             Bình luận
           </button>
         </form>
       ) : (
-        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-surface-muted/30 px-4 py-3">
-          <svg
-            className="h-4 w-4 text-muted"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-            />
-          </svg>
+        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-surface-muted/40 px-4 py-3">
+          <Lock className="h-4 w-4 text-muted" aria-hidden />
           <span className="text-xs text-muted">
             Vui lòng{' '}
             <button
               type="button"
               onClick={onAuthRequired}
-              className="text-primary font-bold hover:underline bg-transparent border-none p-0 cursor-pointer"
+              className="border-none bg-transparent p-0 font-bold text-primary hover:underline"
             >
               đăng nhập
             </button>{' '}
@@ -350,18 +347,46 @@ export function CommentsSection({
         </div>
       )}
 
-      {/* Comments List */}
-      {loading ? (
-        <div className="py-6 text-center text-xs text-muted">
+      {commentsQuery.isLoading ? (
+        <div className="py-6 text-center text-xs text-muted" role="status">
           Đang tải bình luận...
+        </div>
+      ) : commentsQuery.isError ? (
+        <div className="py-6 text-center text-xs text-muted" role="alert">
+          Không thể tải bình luận.{' '}
+          <button
+            type="button"
+            onClick={() => void commentsQuery.refetch()}
+            className="font-bold text-primary hover:underline"
+          >
+            Thử lại
+          </button>
         </div>
       ) : comments.length === 0 ? (
         <div className="py-6 text-center text-xs text-muted">
           Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ ý kiến!
         </div>
       ) : (
-        renderCommentTree(null, 0)
+        renderThread(null, 0)
       )}
+
+      <ConfirmDeleteDialog
+        open={pendingDelete !== null}
+        onOpenChange={open => {
+          if (!open) setPendingDelete(null)
+        }}
+        title={
+          isModerator && pendingDelete?.authorId !== userId
+            ? 'Gỡ bình luận này?'
+            : 'Xóa bình luận này?'
+        }
+        description="Các trả lời bên dưới bình luận này cũng sẽ bị xóa."
+        confirmLabel="Xóa"
+        isPending={deleteMutation.isPending}
+        onConfirm={() => {
+          if (pendingDelete) deleteMutation.mutate(pendingDelete)
+        }}
+      />
     </div>
   )
 }
