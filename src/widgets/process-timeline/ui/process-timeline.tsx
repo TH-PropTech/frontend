@@ -4,6 +4,7 @@ import * as React from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
+import type { Article } from '../model/articles-data'
 import { categories } from '../model/articles-data'
 import { AiGuideBot } from './components/ai-guide-bot'
 
@@ -70,6 +71,7 @@ export function ProcessTimeline(): React.ReactElement {
 
   const handleArticleSelect = (artId: string): void => {
     setActiveArticleId(artId)
+    setViewMode('detail')
     router.push(`/process?article=${encodeURIComponent(artId)}`, {
       scroll: false,
     })
@@ -79,7 +81,8 @@ export function ProcessTimeline(): React.ReactElement {
     if (e) e.preventDefault()
     if (searchQuery.trim()) {
       setViewMode('detail')
-      const firstMatch = filteredCategories[0]?.articles[0]
+      const firstMatch =
+        suggestedArticles[0] || filteredCategories[0]?.articles[0]
       if (firstMatch) {
         handleArticleSelect(firstMatch.id)
       }
@@ -97,29 +100,41 @@ export function ProcessTimeline(): React.ReactElement {
   }
 
   // Get active article safely
-  const activeArticle = ALL_ARTICLES.find(a => a.id === activeArticleId) ||
+  const activeArticle: Article = ALL_ARTICLES.find(
+    a => a.id === activeArticleId
+  ) ||
     ALL_ARTICLES[0] || {
       id: 'fallback',
       title: 'Cẩm nang',
       breadcrumbs: ['Cẩm nang'],
+      updatedAt: '24/10/2026',
       content: <p>Nội dung đang được cập nhật.</p>,
     }
 
+  const searchQueryClean = searchQuery.toLowerCase().trim()
+
+  // Live suggestions for hero search
+  const suggestedArticles = searchQueryClean
+    ? ALL_ARTICLES.filter(
+        art =>
+          art.title.toLowerCase().includes(searchQueryClean) ||
+          art.breadcrumbs.some(b => b.toLowerCase().includes(searchQueryClean))
+      ).slice(0, 5)
+    : []
+
   // Lọc theo ô tìm kiếm
-  const filteredCategories = React.useMemo(() => {
-    const q = searchQuery.toLowerCase().trim()
-    if (!q) return categories
-    return categories
-      .map(cat => ({
-        ...cat,
-        articles: cat.articles.filter(
-          art =>
-            art.title.toLowerCase().includes(q) ||
-            cat.title.toLowerCase().includes(q)
-        ),
-      }))
-      .filter(cat => cat.articles.length > 0)
-  }, [searchQuery, categories])
+  const filteredCategories = !searchQueryClean
+    ? categories
+    : categories
+        .map(cat => ({
+          ...cat,
+          articles: cat.articles.filter(
+            art =>
+              art.title.toLowerCase().includes(searchQueryClean) ||
+              cat.title.toLowerCase().includes(searchQueryClean)
+          ),
+        }))
+        .filter(cat => cat.articles.length > 0)
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-bg text-fg selection:bg-primary/20 selection:text-primary">
@@ -200,6 +215,59 @@ export function ProcessTimeline(): React.ReactElement {
                       Tìm kiếm
                     </span>
                   </button>
+
+                  {/* Auto-suggest dropdown when typing */}
+                  {searchQuery.trim().length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-2 z-30 bg-white border border-border rounded-2xl shadow-xl overflow-hidden text-left divide-y divide-border/50 animate-in fade-in-50 zoom-in-95 duration-150">
+                      {suggestedArticles.length > 0 ? (
+                        <>
+                          <div className="px-4 py-2.5 bg-surface-muted/60 text-[11px] font-bold text-muted uppercase tracking-wider flex items-center justify-between">
+                            <span>
+                              Gợi ý bài viết ({suggestedArticles.length})
+                            </span>
+                            <span className="text-[10px] lowercase font-normal">
+                              Nhấn để xem ngay
+                            </span>
+                          </div>
+                          {suggestedArticles.map(art => (
+                            <button
+                              key={art.id}
+                              type="button"
+                              onClick={() => handleArticleSelect(art.id)}
+                              className="w-full px-4 py-3 text-left hover:bg-primary/5 transition-colors flex items-center justify-between gap-3 group cursor-pointer"
+                            >
+                              <div className="min-w-0">
+                                <div className="text-xs font-semibold text-fg group-hover:text-primary transition-colors truncate">
+                                  {art.title}
+                                </div>
+                                <div className="text-[11px] text-muted truncate">
+                                  {art.breadcrumbs.join(' › ')}
+                                </div>
+                              </div>
+                              <svg
+                                className="w-4 h-4 text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M9 5l7 7-7 7"
+                                />
+                              </svg>
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="p-4 text-center text-xs text-muted">
+                          Không tìm thấy bài viết phù hợp với từ khóa &ldquo;
+                          {searchQuery}&rdquo;.
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </form>
               </div>
             </section>
@@ -260,7 +328,7 @@ export function ProcessTimeline(): React.ReactElement {
                       d="M9 5l7 7-7 7"
                     />
                   </svg>
-                  {activeArticle.breadcrumbs.map((b, idx) => (
+                  {activeArticle.breadcrumbs.map((b: string, idx: number) => (
                     <React.Fragment key={idx}>
                       <span
                         className={`shrink-0 ${
@@ -507,7 +575,8 @@ export function ProcessTimeline(): React.ReactElement {
                         {activeArticle.title}
                       </h1>
                       <p className="text-[11px] text-muted">
-                        Cập nhật lần cuối: 20/10/2026
+                        Cập nhật lần cuối:{' '}
+                        {activeArticle.updatedAt || '24/10/2026'}
                       </p>
                     </div>
 

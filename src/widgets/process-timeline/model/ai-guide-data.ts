@@ -168,7 +168,7 @@ export const AI_GUIDES: Record<string, AiGuide> = {
       'Bước 1: Hoàn tất ký hợp đồng. Thứ tự là ký trước, cọc sau, nên sau khi đủ chữ ký bạn vào bước Đặt cọc.',
       'Bước 2: Chọn phương thức thanh toán và quét mã QR hoặc làm theo hướng dẫn trên màn hình. Mỗi lần thanh toán có thời hạn khoảng 15 phút, hết hạn bạn tạo lượt mới.',
       'Bước 3: Hóa đơn tiền thuê được tạo theo chu kỳ trong hợp đồng và đến hạn vào ngày thanh toán quy định. Hệ thống nhắc bạn trước hạn bảy ngày.',
-      'Bước 4: Với hợp đồng có quyết toán nhận nhà, hãy thanh toán các khoản đến hạn, thường là ba ngày trước ngày bắt đầu thuê. Lưu ý hệ thống hiện chạy với ví giả lập, không phải tiền thật.',
+      'Bước 4: Với hợp đồng có quyết toán nhận nhà, hãy thanh toán các khoản đến hạn, thường là ba ngày trước ngày bắt đầu thuê. Tiền thanh toán được xử lý an toàn qua cổng thanh toán liên kết của hệ thống.',
     ],
   },
   'blockchain-invoice': {
