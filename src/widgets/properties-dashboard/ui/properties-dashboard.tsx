@@ -73,6 +73,7 @@ export function PropertiesDashboard(): React.ReactElement {
     filteredApiProjects,
     filteredApartments: matchedApartments,
     apartmentsError,
+    isLoadingApartments,
     locationLabel,
     priceLabel,
     areaLabel,
@@ -268,7 +269,11 @@ export function PropertiesDashboard(): React.ReactElement {
               </span>
               <h2 className="font-marketing text-3xl font-bold text-fg sm:text-4xl">
                 {activeTab === 'single'
-                  ? `${onlyAvailable ? 'Căn hộ còn trống' : 'Căn hộ cho thuê'} (${filteredApartments.length})`
+                  ? isLoadingApartments
+                    ? onlyAvailable
+                      ? 'Căn hộ còn trống'
+                      : 'Căn hộ cho thuê'
+                    : `${onlyAvailable ? 'Căn hộ còn trống' : 'Căn hộ cho thuê'} (${filteredApartments.length})`
                   : `Dự án từ Chủ đầu tư (${apiProjects.length > 0 ? apiProjects.length : filteredProjects.length})`}
               </h2>
             </div>
@@ -337,7 +342,29 @@ export function PropertiesDashboard(): React.ReactElement {
               setSelectedMapApt={setSelectedMapApt}
             />
           ) : activeTab === 'single' ? (
-            filteredApartments.length === 0 ? (
+            isLoadingApartments ? (
+              <div
+                data-testid="apartments-loading-grid"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5"
+              >
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-xl border border-border bg-white p-4 shadow-sm space-y-3 animate-pulse"
+                  >
+                    <div className="h-32 w-full rounded-lg bg-surface-muted" />
+                    <div className="h-5 w-3/4 rounded bg-surface-muted" />
+                    <div className="h-4 w-1/3 rounded bg-primary/20" />
+                    <div className="h-3 w-1/2 rounded bg-surface-muted" />
+                    <div className="flex items-center gap-3 pt-2 border-t border-border/50">
+                      <div className="h-3 w-16 rounded bg-surface-muted" />
+                      <div className="h-3 w-20 rounded bg-surface-muted" />
+                    </div>
+                    <div className="h-9 w-full rounded-xl bg-surface-muted mt-2" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredApartments.length === 0 ? (
               <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
                 <p className="font-body text-sm text-muted">
                   Không tìm thấy căn hộ phù hợp với bộ lọc hiện tại.
