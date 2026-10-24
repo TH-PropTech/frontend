@@ -13,13 +13,7 @@ import {
   resolveProvinceFromCity,
 } from '../use-properties-filters'
 import { apiClient } from '@/shared/api/api-client'
-import { mockApartments } from '@/entities/properties'
-
-vi.mock('@/shared/config/env', () => ({
-  env: {
-    enableMocks: true,
-  },
-}))
+import { makeApartment } from './apartment-fixture'
 
 let mockSearchParams = new URLSearchParams()
 
@@ -37,7 +31,7 @@ describe('usePropertiesFilters - Query Parameters & Normalization Suite (5 Dimen
   beforeEach(() => {
     mockSearchParams = new URLSearchParams()
     vi.clearAllMocks()
-    vi.mocked(apiClient.get).mockResolvedValue(mockApartments)
+    vi.mocked(apiClient.get).mockResolvedValue([makeApartment()])
   })
 
   // Dimension 1: Happy Path
@@ -69,14 +63,11 @@ describe('usePropertiesFilters - Query Parameters & Normalization Suite (5 Dimen
         'Thành phố Hồ Chí Minh • Bình Thạnh'
       )
 
-      // All returned mock apartments must match the filters
-      expect(result.current.filteredApartments.length).toBeGreaterThan(0)
-      for (const apt of result.current.filteredApartments) {
-        expect(apt.district).toBe('Bình Thạnh')
-        expect(apt.priceNum).toBeGreaterThanOrEqual(10)
-        expect(apt.priceNum).toBeLessThanOrEqual(20)
-        expect(apt.bedrooms).toBe(2)
-      }
+      // Server-side filters are forwarded to the backend query string
+      const requestedPath = String(vi.mocked(apiClient.get).mock.calls[0]?.[0])
+      expect(requestedPath).toContain('minPrice=10')
+      expect(requestedPath).toContain('maxPrice=20')
+      expect(requestedPath).toContain('bedrooms=2')
     })
   })
 
@@ -231,31 +222,43 @@ describe('usePropertiesFilters - Query Parameters & Normalization Suite (5 Dimen
       expect(parsePriceParam('0')).toBe('')
     })
 
-    it('falls back to mock apartments when backend API request fails', async () => {
-      vi.mocked(apiClient.get).mockRejectedValueOnce(
-        new Error('Network fallback')
+    it('keeps the list empty and exposes the error when backend API request fails', async () => {
+      const errorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined)
+      vi.mocked(apiClient.get).mockRejectedValue(new Error('Network down'))
+      const { result } = renderHook(() => usePropertiesFilters())
+
+      await waitFor(() => {
+        expect(result.current.apartmentsError?.message).toBe('Network down')
+      })
+      expect(result.current.filteredApartments).toEqual([])
+      expect(result.current.apiProjects).toEqual([])
+      expect(result.current.projectsError?.message).toBe('Network down')
+      errorSpy.mockRestore()
+    })
+
+    it('returns projects from the backend and clears the project error', async () => {
+      vi.mocked(apiClient.get).mockImplementation((path: string) =>
+        Promise.resolve(
+          path.startsWith('/projects')
+            ? [{ id: 'p1', name: 'Dự án A' }]
+            : [makeApartment()]
+        )
       )
       const { result } = renderHook(() => usePropertiesFilters())
 
-      // Wait for catch block to settle fallback
-      await act(async () => {
-        await new Promise(r => setTimeout(r, 50))
+      await waitFor(() => {
+        expect(result.current.apiProjects).toHaveLength(1)
       })
-
-      expect(result.current.filteredApartments.length).toBeGreaterThan(0)
-      expect(result.current.filteredApartments.length).toBe(
-        mockApartments.length
-      )
+      expect(result.current.projectsError).toBeNull()
     })
   })
 
   // Dimension 4: Full Branch Coverage
   describe('Dimension 4: Full Branch Coverage', () => {
     it('matches apartment keyword across project name, project name, and district', () => {
-      const sampleApt = mockApartments[0]
-      if (!sampleApt) {
-        throw new Error('No mock apartment found')
-      }
+      const sampleApt = makeApartment()
 
       // Match by title
       expect(matchApartmentKeyword(sampleApt, sampleApt.title)).toBe(true)

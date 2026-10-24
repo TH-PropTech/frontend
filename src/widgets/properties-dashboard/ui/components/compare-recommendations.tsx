@@ -7,13 +7,11 @@ import { Crown, Maximize2, Scale, Shield, Sparkles } from 'lucide-react'
 interface CompareRecommendationsProps {
   compareApartments: ApartmentItem[]
   getUnitPrice: (apt: ApartmentItem) => number
-  getTrustScore: (apt: ApartmentItem) => number
 }
 
 export function CompareRecommendations({
   compareApartments,
   getUnitPrice,
-  getTrustScore,
 }: CompareRecommendationsProps): React.ReactElement | null {
   const recommendations = React.useMemo(() => {
     if (compareApartments.length < 2) return null
@@ -32,20 +30,17 @@ export function CompareRecommendations({
     )
     const bestValue = sortedBestValue[0]
 
-    const sortedMostTrusted = [...compareApartments].sort(
-      (a, b) => getTrustScore(b) - getTrustScore(a)
-    )
-    const mostTrusted = sortedMostTrusted[0]
+    const verified = compareApartments.find(apt => apt.isVerified)
 
-    if (!cheapest || !largest || !bestValue || !mostTrusted) return null
+    if (!cheapest || !largest || !bestValue) return null
 
     return {
       cheapest: cheapest as ApartmentItem,
       largest: largest as ApartmentItem,
       bestValue: bestValue as ApartmentItem,
-      mostTrusted: mostTrusted as ApartmentItem,
+      verified,
     }
-  }, [compareApartments, getUnitPrice, getTrustScore])
+  }, [compareApartments, getUnitPrice])
 
   if (!recommendations) return null
 
@@ -79,9 +74,9 @@ export function CompareRecommendations({
           </p>
           <p className="text-[11px] text-muted leading-relaxed">
             Căn hộ có giá thuê hợp lý nhất trong danh sách so sánh hiện tại ở
-            mức **{recommendations.cheapest.priceNum} Tr/tháng**. Lựa chọn này
-            giúp giảm bớt gánh nặng tài chính hàng tháng, lý tưởng cho những ai
-            muốn tích lũy thêm ngân sách dự phòng.
+            mức <strong>{recommendations.cheapest.priceNum} Tr/tháng</strong>.
+            Lựa chọn này giúp giảm bớt gánh nặng tài chính hàng tháng, lý tưởng
+            cho những ai muốn tích lũy thêm ngân sách dự phòng.
           </p>
         </div>
 
@@ -94,11 +89,11 @@ export function CompareRecommendations({
             {recommendations.largest.title}
           </p>
           <p className="text-[11px] text-muted leading-relaxed">
-            Với diện tích sử dụng lên tới **
-            {recommendations.largest.areaNum} m²**, căn hộ này mang đến không
-            gian sinh hoạt vô cùng thoải mái và rộng rãi. Rất thích hợp cho
-            những hộ gia đình có con nhỏ hoặc những ai mong muốn thiết lập phòng
-            làm việc tại nhà.
+            Với diện tích sử dụng lên tới{' '}
+            <strong>{recommendations.largest.areaNum} m²</strong>, căn hộ này
+            mang đến không gian sinh hoạt vô cùng thoải mái và rộng rãi. Rất
+            thích hợp cho những hộ gia đình có con nhỏ hoặc những ai mong muốn
+            thiết lập phòng làm việc tại nhà.
           </p>
         </div>
 
@@ -111,30 +106,32 @@ export function CompareRecommendations({
             {recommendations.bestValue.title}
           </p>
           <p className="text-[11px] text-muted leading-relaxed">
-            Căn hộ đạt đơn giá thuê tốt nhất ở mức **
-            {new Intl.NumberFormat('vi-VN').format(
-              Math.round(getUnitPrice(recommendations.bestValue))
-            )}{' '}
-            đ/m²**. Đây là lựa chọn mang lại hiệu năng sử dụng cao nhất trên
-            từng đồng chi trả cho không gian thực tế.
+            Căn hộ đạt đơn giá thuê tốt nhất ở mức{' '}
+            <strong>
+              {new Intl.NumberFormat('vi-VN').format(
+                Math.round(getUnitPrice(recommendations.bestValue))
+              )}{' '}
+              đ/m²
+            </strong>
+            . Đây là lựa chọn mang lại hiệu năng sử dụng cao nhất trên từng đồng
+            chi trả cho không gian thực tế.
           </p>
         </div>
 
-        <div className="bg-surface rounded-xl p-4 border border-border space-y-2">
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary uppercase">
-            <Shield className="h-3.5 w-3.5" />
-            Độ tin cậy & an toàn pháp lý
-          </span>
-          <p className="font-semibold text-fg leading-snug">
-            {recommendations.mostTrusted.title}
-          </p>
-          <p className="text-[11px] text-muted leading-relaxed">
-            Nổi bật với điểm số xác minh Blockchain cao nhất ở mức **
-            {getTrustScore(recommendations.mostTrusted)}%**. Mọi thông tin hợp
-            đồng, pháp lý của chủ nhà đều đã được mã hóa và lưu trữ an toàn, hạn
-            chế tối đa rủi ro tin ảo.
-          </p>
-        </div>
+        {recommendations.verified ? (
+          <div className="bg-surface rounded-xl p-4 border border-border space-y-2">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary uppercase">
+              <Shield className="h-3.5 w-3.5" />
+              Tin đã kiểm duyệt
+            </span>
+            <p className="font-semibold text-fg leading-snug">
+              {recommendations.verified.title}
+            </p>
+            <p className="text-[11px] text-muted leading-relaxed">
+              Tin đăng này đã được nhân viên hệ thống kiểm duyệt thông tin.
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <div className="bg-surface/60 rounded-xl p-4 border border-border text-xs leading-relaxed text-fg space-y-3">
@@ -150,7 +147,7 @@ export function CompareRecommendations({
             {`Tuy nhiên, nếu xét về diện tích rộng lớn thì căn hộ "${recommendations.largest.title}" là điểm nhấn với ${recommendations.largest.areaNum} m² sàn sử dụng. Khi quy đổi về giá trị kinh tế trên từng mét vuông, căn hộ "${recommendations.bestValue.title}" chứng minh độ hiệu quả sử dụng dòng tiền lý tưởng nhất nhờ đơn giá thuê thấp nhất.`}
           </p>
           <p>
-            {`Khuyến nghị tổng hợp: Nếu ngân sách của bạn được đặt lên hàng đầu, căn hộ tại ${recommendations.cheapest.projectName || recommendations.cheapest.location} là quyết định sáng suốt nhất. Nếu không gian sống rộng rãi để phục vụ gia đình đông người là ưu tiên, hãy lựa chọn căn hộ ${recommendations.largest.title}. Để hạn chế rủi ro pháp lý và có giao dịch minh bạch tuyệt đối, hãy lựa chọn ${recommendations.mostTrusted.title} vì đã được xác minh toàn diện thông qua Blockchain.`}
+            {`Khuyến nghị tổng hợp: Nếu ngân sách của bạn được đặt lên hàng đầu, căn hộ tại ${recommendations.cheapest.projectName || recommendations.cheapest.location} là quyết định sáng suốt nhất. Nếu không gian sống rộng rãi để phục vụ gia đình đông người là ưu tiên, hãy lựa chọn căn hộ ${recommendations.largest.title}. ${recommendations.verified ? `Căn hộ ${recommendations.verified.title} đã được nhân viên hệ thống kiểm duyệt thông tin.` : ''}`}
           </p>
         </div>
       </div>

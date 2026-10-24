@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
-import { mockApartments, ApartmentItem } from '@/entities/properties'
+import type { ApartmentItem } from '@/entities/properties'
 import { apiClient } from '@/shared/api/api-client'
 import { ApartmentCard } from '@/widgets/properties-dashboard/ui/components/apartment-card'
 import { useFavorites } from '@/shared/lib/use-favorites'
@@ -12,8 +12,9 @@ import { toast } from 'sonner'
 
 export function FavoritesDashboard(): React.ReactElement {
   const { favorites } = useFavorites()
-  const [apartments, setApartments] =
-    React.useState<ApartmentItem[]>(mockApartments)
+  const [apartments, setApartments] = React.useState<ApartmentItem[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [loadError, setLoadError] = React.useState<Error | null>(null)
 
   // Compare states
   const [compareIds, setCompareIds] = React.useState<string[]>([])
@@ -46,12 +47,18 @@ export function FavoritesDashboard(): React.ReactElement {
     apiClient
       .get<ApartmentItem[]>('/apartments?format=web')
       .then(data => {
-        if (active && data && Array.isArray(data) && data.length > 0) {
+        if (active && data && Array.isArray(data)) {
           setApartments(data)
         }
       })
       .catch(err => {
         console.error('Failed to fetch apartments on favorites page:', err)
+        if (active) {
+          setLoadError(err instanceof Error ? err : new Error('Fetch failed'))
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
       })
     return () => {
       active = false
@@ -77,8 +84,8 @@ export function FavoritesDashboard(): React.ReactElement {
               Danh Sách Căn Hộ Yêu Thích
             </h1>
             <p className="font-body text-xs text-muted max-w-xl leading-relaxed">
-              Lưu trữ những căn hộ bạn quan tâm từ sổ cái Blockchain và tìm ra
-              nơi an cư lý tưởng nhất.
+              Lưu trữ những căn hộ bạn quan tâm và tìm ra nơi an cư lý tưởng
+              nhất.
             </p>
           </div>
         </section>
@@ -86,7 +93,22 @@ export function FavoritesDashboard(): React.ReactElement {
         {/* Content list */}
         <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8 pb-20">
           <section className="space-y-6">
-            {favoriteApartments.length === 0 ? (
+            {isLoading ? (
+              <div
+                data-testid="favorites-loading"
+                className="text-center py-20 text-sm font-semibold text-muted"
+              >
+                Đang tải căn hộ yêu thích...
+              </div>
+            ) : loadError ? (
+              <div
+                role="alert"
+                className="rounded-2xl border border-danger/30 bg-danger/10 p-4 text-sm text-danger"
+              >
+                Không thể tải danh sách căn hộ từ máy chủ. Vui lòng kiểm tra kết
+                nối và thử lại.
+              </div>
+            ) : favoriteApartments.length === 0 ? (
               <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40 max-w-lg mx-auto shadow-sm">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto text-primary mb-4">
                   <svg

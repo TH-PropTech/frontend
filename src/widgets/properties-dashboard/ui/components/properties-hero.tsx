@@ -4,7 +4,7 @@ import * as React from 'react'
 
 export function PropertiesHero(): React.ReactElement {
   return (
-    <section className="relative flex flex-col items-center justify-center bg-gradient-to-b from-[#f5ece2] via-[#faf6f1] to-bg pb-24 pt-32 text-center overflow-hidden rounded-b-[40px] border-b border-border">
+    <section className="relative flex flex-col items-center justify-center bg-gradient-to-b from-primary-soft via-surface to-bg pb-24 pt-32 text-center overflow-hidden rounded-b-[40px] border-b border-border">
       {/* Topography SVG Background (extremely lightweight, vector-rendered) */}
       <div
         className="absolute inset-0 opacity-[0.08] pointer-events-none select-none overflow-hidden"

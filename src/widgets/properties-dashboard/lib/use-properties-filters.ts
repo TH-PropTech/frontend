@@ -2,14 +2,8 @@
 
 import * as React from 'react'
 import { useSearchParams } from 'next/navigation'
-import {
-  mockProjects,
-  mockApartments,
-  ApartmentItem,
-  type ApiProjectItem,
-} from '@/entities/properties'
+import { ApartmentItem, type ApiProjectItem } from '@/entities/properties'
 import { apiClient } from '@/shared/api/api-client'
-import { env } from '@/shared/config/env'
 export function removeVietnameseTones(str: string): string {
   return str
     .normalize('NFD')
@@ -969,7 +963,6 @@ export function usePropertiesFilters() {
   }
 
   const [debouncedKeyword, setDebouncedKeyword] = React.useState(searchKeyword)
-  const [useMockFallback, setUseMockFallback] = React.useState(env.enableMocks)
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -981,12 +974,9 @@ export function usePropertiesFilters() {
   }, [searchKeyword])
 
   // State for fetched apartments
-  const [apartments, setApartments] = React.useState<ApartmentItem[]>(() =>
-    env.enableMocks ? mockApartments : []
-  )
-  const [isLoadingApartments, setIsLoadingApartments] = React.useState<boolean>(
-    () => !env.enableMocks
-  )
+  const [apartments, setApartments] = React.useState<ApartmentItem[]>([])
+  const [isLoadingApartments, setIsLoadingApartments] =
+    React.useState<boolean>(true)
   const [apartmentsError, setApartmentsError] = React.useState<Error | null>(
     null
   )
@@ -1041,7 +1031,6 @@ export function usePropertiesFilters() {
         if (active) {
           if (data && Array.isArray(data)) {
             setApartments(data)
-            setUseMockFallback(false)
             setApartmentsError(null)
           } else {
             throw new Error('Apartment API returned an invalid response')
@@ -1057,8 +1046,7 @@ export function usePropertiesFilters() {
         )
         if (active) {
           setApartmentsError(normalizedError)
-          setUseMockFallback(env.enableMocks)
-          setApartments(env.enableMocks ? mockApartments : [])
+          setApartments([])
         }
       })
       .finally(() => {
@@ -1097,6 +1085,7 @@ export function usePropertiesFilters() {
   // ── State for fetched projects from backend ──
   const [apiProjects, setApiProjects] = React.useState<ApiProjectItem[]>([])
   const [isLoadingProjects, setIsLoadingProjects] = React.useState(false)
+  const [projectsError, setProjectsError] = React.useState<Error | null>(null)
 
   React.useEffect(() => {
     let active = true
@@ -1130,16 +1119,16 @@ export function usePropertiesFilters() {
             id: item.id || item._id?.toString() || item._id,
           }))
           setApiProjects(mapped)
-          setUseMockFallback(false)
+          setProjectsError(null)
         }
       })
       .catch(err => {
-        console.error(
-          'Failed to fetch projects from backend, falling back to mock data:',
-          err
-        )
+        const normalizedError =
+          err instanceof Error ? err : new Error('Failed to fetch projects')
+        console.error('Failed to fetch projects from backend:', normalizedError)
         if (active) {
-          setUseMockFallback(env.enableMocks)
+          setApiProjects([])
+          setProjectsError(normalizedError)
         }
       })
       .finally(() => {
@@ -1159,192 +1148,9 @@ export function usePropertiesFilters() {
     appliedAmenities,
   ])
 
-  // Filter projects
-  const filteredProjects = React.useMemo(() => {
-    return mockProjects.filter(proj => {
-      if (searchKeyword.trim()) {
-        const kw = removeVietnameseTones(searchKeyword)
-        const matchTitle = removeVietnameseTones(proj.title).includes(kw)
-        const matchDev = removeVietnameseTones(proj.developer).includes(kw)
-        const matchLoc = removeVietnameseTones(proj.location).includes(kw)
-        if (!matchTitle && !matchDev && !matchLoc) return false
-      }
-
-      if (
-        appliedCity &&
-        normalizeCity(proj.city) !== normalizeCity(appliedCity)
-      )
-        return false
-      if (
-        appliedDistrict &&
-        !isAllDistrict(appliedDistrict) &&
-        !matchDistrict(proj.district, appliedDistrict)
-      )
-        return false
-      if (appliedWard && proj.ward !== appliedWard) return false
-      if (appliedStreet && proj.street !== appliedStreet) return false
-
-      if (minPrice !== '' && proj.maxPrice < Number(minPrice)) return false
-      if (maxPrice !== '' && proj.minPrice > Number(maxPrice)) return false
-      if (appliedIsVerifiedOnly && !proj.isVerified) return false
-      if (appliedHasMediaOnly && !proj.hasMedia) return false
-
-      if (appliedBedroomsFilter !== 'all') {
-        const hasMatchingUnit = proj.units?.some(unit =>
-          matchBedrooms(unit.bedrooms, appliedBedroomsFilter)
-        )
-        if (!hasMatchingUnit) return false
-      }
-
-      if (appliedAmenities.length > 0) {
-        const hasAll = appliedAmenities.every(amenity =>
-          proj.amenities.includes(amenity)
-        )
-        if (!hasAll) return false
-      }
-
-      return true
-    })
-  }, [
-    searchKeyword,
-    appliedCity,
-    appliedDistrict,
-    appliedWard,
-    appliedStreet,
-    minPrice,
-    maxPrice,
-    appliedIsVerifiedOnly,
-    appliedHasMediaOnly,
-    appliedAmenities,
-    appliedBedroomsFilter,
-  ])
-
-  // Filter API projects
-  const filteredApiProjects = React.useMemo(() => {
-    const shouldFilterLocally = useMockFallback || apiProjects.length === 0
-    return apiProjects.filter(proj => {
-      if (shouldFilterLocally) {
-        if (searchKeyword.trim()) {
-          const kw = removeVietnameseTones(searchKeyword)
-          const nameToMatch =
-            proj.name || (proj as unknown as { title?: string }).title || ''
-          const devToMatch =
-            proj.investor ||
-            (proj as unknown as { developer?: string }).developer ||
-            ''
-          const matchName = removeVietnameseTones(nameToMatch).includes(kw)
-          const matchDesc = removeVietnameseTones(
-            proj.description || ''
-          ).includes(kw)
-          const matchLoc = removeVietnameseTones(proj.location).includes(kw)
-          const matchInvestor = removeVietnameseTones(devToMatch).includes(kw)
-          const matchDistrict = removeVietnameseTones(
-            proj.district || ''
-          ).includes(kw)
-          if (
-            !matchName &&
-            !matchDesc &&
-            !matchLoc &&
-            !matchInvestor &&
-            !matchDistrict
-          )
-            return false
-        }
-
-        if (
-          appliedCity &&
-          normalizeCity(proj.city) !== normalizeCity(appliedCity)
-        )
-          return false
-        if (
-          appliedDistrict &&
-          !isAllDistrict(appliedDistrict) &&
-          !matchDistrict(proj.district, appliedDistrict)
-        )
-          return false
-      }
-
-      // Calculate price range from apartments belonging to this project
-      const projectApartments = apartments.filter(
-        apt => apt.projectName === proj.name
-      )
-      if (shouldFilterLocally && projectApartments.length > 0) {
-        const prices = projectApartments.map(apt => apt.priceNum)
-        const projectMinPrice = Math.min(...prices)
-        const projectMaxPrice = Math.max(...prices)
-
-        if (minPrice !== '' && projectMaxPrice < Number(minPrice)) return false
-        if (maxPrice !== '' && projectMinPrice > Number(maxPrice)) return false
-      }
-
-      // Filter by bedrooms and bathrooms in apartments belonging to this project
-      if (appliedBedroomsFilter !== 'all') {
-        const hasMatchingApt = projectApartments.some(apt =>
-          matchBedrooms(apt.bedrooms, appliedBedroomsFilter)
-        )
-        if (!hasMatchingApt) return false
-      }
-      if (appliedBathroomsFilter !== 'all') {
-        const hasMatchingApt = projectApartments.some(
-          apt => apt.bathrooms === Number(appliedBathroomsFilter)
-        )
-        if (!hasMatchingApt) return false
-      }
-
-      if (appliedAmenities.length > 0) {
-        const hasAll = appliedAmenities.every(amenity =>
-          proj.amenities.some(a => amenityMatchesKey(a, amenity))
-        )
-        if (!hasAll) return false
-      }
-
-      return true
-    })
-  }, [
-    useMockFallback,
-    apiProjects,
-    searchKeyword,
-    appliedCity,
-    appliedDistrict,
-    minPrice,
-    maxPrice,
-    appliedAmenities,
-    apartments,
-    appliedBedroomsFilter,
-    appliedBathroomsFilter,
-  ])
-
   // Filter apartments
   const filteredApartments = React.useMemo(() => {
-    const shouldFilterLocally = useMockFallback || apartments === mockApartments
     return apartments.filter(apt => {
-      if (shouldFilterLocally) {
-        if (searchKeyword.trim()) {
-          if (!matchApartmentKeyword(apt, searchKeyword)) return false
-        }
-
-        if (
-          appliedCity &&
-          normalizeCity(apt.city) !== normalizeCity(appliedCity)
-        )
-          return false
-        if (
-          appliedDistrict &&
-          !isAllDistrict(appliedDistrict) &&
-          !matchDistrict(apt.district, appliedDistrict)
-        )
-          return false
-        if (appliedWard && apt.ward !== appliedWard) return false
-        if (appliedStreet && apt.street !== appliedStreet) return false
-        if (appliedProject && apt.projectName !== appliedProject) return false
-
-        if (minPrice !== '' && apt.priceNum < Number(minPrice)) return false
-        if (maxPrice !== '' && apt.priceNum > Number(maxPrice)) return false
-
-        if (minArea !== '' && apt.areaNum < Number(minArea)) return false
-        if (maxArea !== '' && apt.areaNum > Number(maxArea)) return false
-      }
-
       if (
         appliedBedroomsFilter !== 'all' &&
         !matchBedrooms(apt.bedrooms, appliedBedroomsFilter)
@@ -1411,17 +1217,6 @@ export function usePropertiesFilters() {
       return true
     })
   }, [
-    useMockFallback,
-    searchKeyword,
-    appliedCity,
-    appliedDistrict,
-    appliedWard,
-    appliedStreet,
-    appliedProject,
-    minPrice,
-    maxPrice,
-    minArea,
-    maxArea,
     appliedBedroomsFilter,
     appliedBathroomsFilter,
     appliedDirectionFilter,
@@ -1822,8 +1617,6 @@ export function usePropertiesFilters() {
     setHasMediaOnly,
     resetFilters,
     activeFiltersCount,
-    filteredProjects,
-    filteredApiProjects,
     filteredApartments,
     apartmentsError,
     isLoadingApartments,
@@ -1833,6 +1626,7 @@ export function usePropertiesFilters() {
     // Backend API data for projects
     apiProjects,
     isLoadingProjects,
+    projectsError,
     // Applied states and Apply function
     applyAdvancedFilters,
     revertAdvancedFilters,
