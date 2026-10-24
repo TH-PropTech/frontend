@@ -1,6 +1,8 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
+import type { Route } from 'next'
 import { FileText, Eye, ShieldCheck, Clock, ArrowRight } from 'lucide-react'
 
 export function BlogKnowledgeSection(): React.ReactElement {
@@ -28,6 +30,7 @@ export function BlogKnowledgeSection(): React.ReactElement {
             author: 'BTV TH-PropTech',
             category: 'Pháp lý thuê nhà',
             readTime: '4 phút đọc',
+            href: '/process',
             icon: FileText,
             accentColor: 'text-amber-700 bg-amber-100/80 border-amber-300/60',
             bg: 'from-amber-50 to-orange-100/70',
@@ -39,6 +42,7 @@ export function BlogKnowledgeSection(): React.ReactElement {
             author: 'Tech Team',
             category: 'Trải nghiệm số',
             readTime: '3 phút đọc',
+            href: '/process',
             icon: Eye,
             accentColor:
               'text-orange-700 bg-orange-100/80 border-orange-300/60',
@@ -51,6 +55,7 @@ export function BlogKnowledgeSection(): React.ReactElement {
             author: 'Chuyên gia bảo mật',
             category: 'Công nghệ bảo mật',
             readTime: '5 phút đọc',
+            href: '/process',
             icon: ShieldCheck,
             accentColor:
               'text-emerald-700 bg-emerald-100/80 border-emerald-300/60',
@@ -59,8 +64,9 @@ export function BlogKnowledgeSection(): React.ReactElement {
         ].map((blog, idx) => {
           const Icon = blog.icon
           return (
-            <div
+            <Link
               key={idx}
+              href={blog.href as Route}
               className="snap-start shrink-0 w-[84vw] max-w-[320px] sm:w-auto group flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/30"
             >
               {/* Graphic Banner */}
@@ -81,7 +87,7 @@ export function BlogKnowledgeSection(): React.ReactElement {
                 </div>
 
                 <div className="z-10 flex items-center justify-center py-2">
-                  <div className="p-3 rounded-2xl bg-white/80 shadow-sm border border-white/60">
+                  <div className="p-3 rounded-2xl bg-white/80 shadow-sm border border-white/60 group-hover:scale-105 transition-transform">
                     <Icon className="w-8 h-8 text-primary/80" />
                   </div>
                 </div>
@@ -113,7 +119,7 @@ export function BlogKnowledgeSection(): React.ReactElement {
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           )
         })}
       </div>

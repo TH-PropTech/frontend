@@ -101,10 +101,10 @@ export function PlatformOverview(): React.ReactElement {
           </div>
           <div className="pt-6">
             <Link
-              href={'/vr' as Route}
+              href={'/properties' as Route}
               className="inline-flex items-center gap-2 text-xs font-bold text-primary group-hover:translate-x-1 transition-transform"
             >
-              Trải nghiệm VR ngay
+              Khám phá căn hộ
               <svg
                 className="h-4 w-4"
                 fill="none"
