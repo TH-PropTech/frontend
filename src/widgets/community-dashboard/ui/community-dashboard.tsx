@@ -9,6 +9,7 @@ import { PostCard } from './components/post-card'
 import { CreatePostModal } from './components/create-post-modal'
 import { CommunitySidebar } from './components/community-sidebar'
 import { AuthRequiredModal } from './components/auth-required-modal'
+import { StaffModerationPanel } from './components/staff-moderation-panel'
 import { useCan } from '@/shared/lib/permissions'
 
 const TOPIC_TABS = [
@@ -23,9 +24,9 @@ export function CommunityDashboard(): React.ReactElement {
   const canPost = can('create', 'CommunityPost')
   const state = useWebCommunity()
   const isAuthenticated = !!state.currentUser
-  const [activeTab, setActiveTab] = React.useState<'public' | 'my-posts'>(
-    'public'
-  )
+  const [activeTab, setActiveTab] = React.useState<
+    'public' | 'my-posts' | 'moderation'
+  >('public')
   const [showAuthModal, setShowAuthModal] = React.useState(false)
 
   React.useEffect(() => {
@@ -89,7 +90,10 @@ export function CommunityDashboard(): React.ReactElement {
       <HomeHeader />
 
       <main className="w-full relative z-[2] pb-10">
-        <CommunityHero />
+        <CommunityHero
+          memberCount={state.totalMembersCount}
+          projectCount={state.totalProjectsCount}
+        />
 
         {/* Action Header & Tabs */}
         <section className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 mt-8 sm:mt-12 relative z-30">
@@ -316,10 +320,50 @@ export function CommunityDashboard(): React.ReactElement {
                     )}
                   </button>
                 )}
+                {state.isStaffOrAdmin && (
+                  <button
+                    onClick={() => {
+                      setActiveTab('moderation')
+                      state.setShowMyPosts(false)
+                    }}
+                    className={`pb-3 text-sm font-bold transition-all relative cursor-pointer flex items-center gap-1.5 ${
+                      activeTab === 'moderation'
+                        ? 'text-danger'
+                        : 'text-muted hover:text-fg'
+                    }`}
+                  >
+                    Kiểm duyệt
+                    {state.pendingPosts.length > 0 && (
+                      <span className="rounded-full bg-danger text-white text-[10px] px-1.5 py-0.2 font-bold">
+                        {state.pendingPosts.length}
+                      </span>
+                    )}
+                    {activeTab === 'moderation' && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-danger rounded-full" />
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Feed Content rendering */}
-              {state.approvedPosts.length === 0 ? (
+              {activeTab === 'moderation' ? (
+                state.pendingPosts.length === 0 ? (
+                  <div className="text-center py-16 sm:py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40 p-6">
+                    <p className="font-body text-sm font-semibold text-fg">
+                      Không có bài viết nào đang chờ kiểm duyệt
+                    </p>
+                    <p className="font-body text-xs text-muted mt-1">
+                      Tất cả bài viết cộng đồng đã được xử lý xong.
+                    </p>
+                  </div>
+                ) : (
+                  <StaffModerationPanel
+                    posts={state.pendingPosts}
+                    onApprove={state.handleApprovePost}
+                    onReject={state.handleRejectPost}
+                  />
+                )
+              ) : state.approvedPosts.length === 0 ? (
                 <div className="text-center py-16 sm:py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40 p-6">
                   <svg
                     className="mx-auto h-10 w-10 text-muted/60 mb-3"
@@ -385,6 +429,8 @@ export function CommunityDashboard(): React.ReactElement {
                 myApprovedCount={state.myApprovedCount}
                 projectStats={state.projectStats}
                 selectedProject={state.selectedProject}
+                isAuthenticated={isAuthenticated}
+                onAuthRequired={() => setShowAuthModal(true)}
                 onSelectProject={proj => {
                   if (state.selectedProject === proj) {
                     state.setSelectedProject(null)

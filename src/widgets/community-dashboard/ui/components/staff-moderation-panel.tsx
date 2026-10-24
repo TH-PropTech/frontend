@@ -1,4 +1,5 @@
 import type { WebCommunityPost } from '../../lib/use-web-community'
+import { UserAvatar } from './user-avatar'
 
 interface StaffModerationPanelProps {
   posts: WebCommunityPost[]
@@ -31,10 +32,10 @@ export function StaffModerationPanel({
         </div>
         <div>
           <h3 className="font-display text-sm font-bold text-danger">
-            Kiểm duyệt nội dung
+            Kiểm duyệt bài viết cộng đồng
           </h3>
           <p className="text-[11px] text-muted">
-            {posts.length} bài viết đang chờ phê duyệt (chế độ demo Nhân viên)
+            {posts.length} bài viết đang chờ phê duyệt
           </p>
         </div>
       </div>
@@ -43,19 +44,19 @@ export function StaffModerationPanel({
         {posts.map(post => (
           <div
             key={post.id}
-            className="rounded-xl bg-white border border-border p-4 space-y-3"
+            className="rounded-xl bg-white border border-border p-4 space-y-3 shadow-sm"
           >
             <div className="flex items-center gap-2.5">
-              <img
+              <UserAvatar
                 src={post.authorAvatar}
-                alt=""
-                className="h-7 w-7 rounded-full object-cover"
+                name={post.authorName}
+                size="sm"
               />
               <div>
                 <span className="text-xs font-bold text-fg">
                   {post.authorName}
                 </span>
-                <span className="text-[10px] text-muted ml-2">
+                <span className="text-[11px] text-muted ml-2">
                   {post.createdAt}
                 </span>
               </div>
@@ -73,12 +74,14 @@ export function StaffModerationPanel({
 
             <div className="flex gap-2.5 pt-1">
               <button
+                type="button"
                 onClick={() => onReject(post.id)}
                 className="flex-1 rounded-lg border border-border bg-white py-2 text-[11px] font-bold text-muted hover:bg-surface-muted hover:text-fg transition-all cursor-pointer"
               >
                 Từ chối
               </button>
               <button
+                type="button"
                 onClick={() => onApprove(post.id)}
                 className="flex-1 rounded-lg bg-success py-2 text-[11px] font-bold text-white hover:bg-success/90 transition-all cursor-pointer"
               >

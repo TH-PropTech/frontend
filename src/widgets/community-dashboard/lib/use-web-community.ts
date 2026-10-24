@@ -40,68 +40,6 @@ interface BackendPostResponse {
   createdAt?: string
 }
 
-const SEED_POSTS: WebCommunityPost[] = [
-  {
-    id: 'wpost-1',
-    authorName: 'Phạm Thành Long',
-    authorRole: 'tenant',
-    authorAvatar:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-    title: 'Hỏi về độ ổn định Internet tại Masteri An Phú?',
-    content:
-      'Em chuẩn bị dọn qua block B của Masteri An Phú. Không biết ở đây có hay bị mất mạng hay chập chờn không ạ? Nhà em làm việc remote nên cần đường truyền ổn định.',
-    projectName: 'Masteri An Phú',
-    topic: 'qa',
-    upvotes: 7,
-    hasUpvoted: false,
-    commentsCount: 3,
-    images: [],
-    status: 'approved',
-    createdAt: '3 giờ trước',
-    isOwn: false,
-  },
-  {
-    id: 'wpost-2',
-    authorName: 'Nguyễn Thị Minh',
-    authorRole: 'landlord',
-    authorAvatar:
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80',
-    title: 'Đánh giá ban quản lý tòa nhà Sunrise City Quận 7',
-    content:
-      'Sunrise City vận hành khá ổn, phí dịch vụ 16.500đ/m2 hợp lý so với các tiện ích nhận được. Đội ngũ vệ sinh làm sạch liên tục, an ninh 3 lớp tốt.',
-    projectName: 'Sunrise City',
-    topic: 'review',
-    upvotes: 18,
-    hasUpvoted: false,
-    commentsCount: 5,
-    images: [
-      'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=550&auto=format&fit=crop&q=80',
-    ],
-    status: 'approved',
-    createdAt: '12 giờ trước',
-    isOwn: false,
-  },
-  {
-    id: 'wpost-3',
-    authorName: 'Đỗ Hoàng Anh',
-    authorRole: 'tenant',
-    authorAvatar:
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80',
-    title: 'Cần tìm 1 bạn nam ở ghép căn hộ Vinhomes Grand Park S9',
-    content:
-      'Căn hộ full nội thất đã có tủ lạnh, máy giặt, máy lạnh, bếp từ. Mình cần tìm 1 bạn nam ở ghép văn minh, lịch sự, không hút thuốc. Giá share 2.5tr/tháng.',
-    projectName: 'Vinhomes Grand Park',
-    topic: 'roommate',
-    upvotes: 4,
-    hasUpvoted: false,
-    commentsCount: 1,
-    images: [],
-    status: 'approved',
-    createdAt: '2 ngày trước',
-    isOwn: false,
-  },
-]
-
 function formatTimeAgo(dateStr: string): string {
   try {
     const date = new Date(dateStr)
@@ -153,6 +91,13 @@ export function useWebCommunity() {
 
   const userId = currentUser?._id || currentUser?.id || ''
 
+  const isStaffOrAdmin = useMemo(() => {
+    if (!currentUser?.roles) return false
+    return currentUser.roles.some(
+      (r: string) => r.toLowerCase() === 'staff' || r.toLowerCase() === 'admin'
+    )
+  }, [currentUser])
+
   const mapPost = useCallback(
     (p: BackendPostResponse): WebCommunityPost => {
       const authorRoleVal = p.authorRole || 'tenant'
@@ -199,45 +144,37 @@ export function useWebCommunity() {
             '/community/posts/my'
           )
           const mappedOwn = own.map(mapPost)
-          // Add own posts that are not approved yet to feed
           mapped = [
             ...mappedOwn.filter(p => p.status !== 'approved'),
-            ...mapped,
+            ...mapped.filter(p => !mappedOwn.some(o => o.id === p.id)),
           ]
         } catch (e) {
           console.warn('Failed to fetch own posts from API:', e)
         }
       }
 
+      // If staff/admin, fetch pending posts to moderate
+      if (isStaffOrAdmin) {
+        try {
+          const pending: BackendPostResponse[] = await apiClient.get(
+            '/community/posts/pending'
+          )
+          const mappedPending = pending.map(mapPost)
+          mapped = [
+            ...mappedPending.filter(p => !mapped.some(m => m.id === p.id)),
+            ...mapped,
+          ]
+        } catch (e) {
+          console.warn('Failed to fetch pending posts for staff:', e)
+        }
+      }
+
       setPosts(mapped)
     } catch (error) {
-      console.warn(
-        'Failed to fetch community posts from API, falling back to mock state:',
-        error
-      )
-      // Fallback to seeds
-      const initialOwnPost: WebCommunityPost = {
-        id: 'wpost-own-pending',
-        authorName: currentUser?.fullName || 'Nguyễn Thạch (Bạn)',
-        authorRole: currentUser?.role || 'tenant',
-        authorAvatar:
-          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
-        title: 'Có ai biết giá điện nước ở The Sun Avenue không?',
-        content:
-          'Mình mới ký hợp đồng thuê ở The Sun Avenue Q2. Giá điện nước BQL tính theo giá nhà nước hay riêng ạ?',
-        projectName: 'The Sun Avenue',
-        topic: 'qa',
-        upvotes: 0,
-        hasUpvoted: false,
-        commentsCount: 0,
-        images: [],
-        status: 'pending',
-        createdAt: 'Vừa xong',
-        isOwn: true,
-      }
-      setPosts([initialOwnPost, ...SEED_POSTS])
+      console.warn('Failed to fetch community posts from API:', error)
+      setPosts([])
     }
-  }, [topicFilter, userId, currentUser, mapPost])
+  }, [topicFilter, userId, isStaffOrAdmin, mapPost])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -287,13 +224,19 @@ export function useWebCommunity() {
       posts: count,
     }))
     entries.sort((a, b) => b.posts - a.posts)
-    if (entries.length > 0) return entries
-    return [
-      { name: 'Vinhomes Central Park', posts: 34 },
-      { name: 'Masteri Thảo Điền', posts: 21 },
-      { name: 'Sunrise City', posts: 18 },
-      { name: 'The Sun Avenue', posts: 12 },
-    ]
+    return entries
+  }, [posts])
+
+  const totalMembersCount = useMemo(() => {
+    const approved = posts.filter(p => p.status === 'approved')
+    const unique = new Set(approved.map(p => p.authorName).filter(Boolean))
+    return unique.size
+  }, [posts])
+
+  const totalProjectsCount = useMemo(() => {
+    const approved = posts.filter(p => p.status === 'approved')
+    const unique = new Set(approved.map(p => p.projectName).filter(Boolean))
+    return unique.size
   }, [posts])
 
   const pendingPosts = useMemo(
@@ -369,45 +312,45 @@ export function useWebCommunity() {
         const mapped = mapPost(createdPost)
         setPosts(prev => [mapped, ...prev])
         setSuccessMsg('Bài viết đã gửi thành công! Đang chờ kiểm duyệt.')
+        setTitle('')
+        setContent('')
+        setProjectName('')
+        setImages([])
+        setShowCreateModal(false)
+        setTimeout(() => setSuccessMsg(''), 5000)
       } catch (error) {
-        console.warn(
-          'API submission failed, using local state fallback:',
-          error
-        )
-        // Fallback
-        const newPost: WebCommunityPost = {
-          id: `wpost-${Date.now()}`,
-          authorName: currentUser?.fullName || 'Nguyễn Thạch (Bạn)',
-          authorRole: currentUser?.role || 'tenant',
-          authorAvatar:
-            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80',
-          title,
-          content,
-          projectName: projectName.trim(),
-          topic,
-          upvotes: 0,
-          hasUpvoted: false,
-          commentsCount: 0,
-          images,
-          status: 'pending',
-          createdAt: 'Vừa xong',
-          isOwn: true,
-        }
-        setPosts(prev => [newPost, ...prev])
-        setSuccessMsg(
-          'Bài viết đã gửi thành công! Đang chờ kiểm duyệt (Fallback).'
-        )
+        console.warn('API submission failed:', error)
+        setErrorMsg('Không thể đăng bài viết lúc này. Vui lòng thử lại sau.')
       }
-
-      setTitle('')
-      setContent('')
-      setProjectName('')
-      setImages([])
-      setShowCreateModal(false)
-      setTimeout(() => setSuccessMsg(''), 5000)
     },
-    [title, content, topic, projectName, images, currentUser, mapPost]
+    [title, content, topic, projectName, images, mapPost]
   )
+
+  const handleApprovePost = useCallback(async (postId: string) => {
+    try {
+      await apiClient.patch(`/community/posts/${postId}/status`, {
+        status: 'approved',
+      })
+      setPosts(prev =>
+        prev.map(p => (p.id === postId ? { ...p, status: 'approved' } : p))
+      )
+    } catch (error) {
+      console.error('Failed to approve post:', error)
+    }
+  }, [])
+
+  const handleRejectPost = useCallback(async (postId: string) => {
+    try {
+      await apiClient.patch(`/community/posts/${postId}/status`, {
+        status: 'rejected',
+      })
+      setPosts(prev =>
+        prev.map(p => (p.id === postId ? { ...p, status: 'rejected' } : p))
+      )
+    } catch (error) {
+      console.error('Failed to reject post:', error)
+    }
+  }, [])
 
   const handleUpvote = useCallback(
     async (id: string) => {
@@ -498,6 +441,11 @@ export function useWebCommunity() {
     handleCommentAdded,
     handleDeletePost,
     handleCommentRemoved,
+    handleApprovePost,
+    handleRejectPost,
+    totalMembersCount,
+    totalProjectsCount,
+    isStaffOrAdmin,
     currentUser,
   }
 }
