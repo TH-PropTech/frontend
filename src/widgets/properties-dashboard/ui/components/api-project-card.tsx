@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Image from 'next/image'
 import type { ApiProjectItem } from '@/entities/properties'
 
 export interface ApiProjectCardProps {
@@ -22,10 +23,13 @@ export function ApiProjectCard({
       {/* Image Section */}
       <div className="relative h-44 bg-gradient-to-br from-primary/10 to-accent/10 overflow-hidden">
         {imageUrl ? (
-          <img
+          <Image
             src={imageUrl}
             alt={project.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            unoptimized
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">

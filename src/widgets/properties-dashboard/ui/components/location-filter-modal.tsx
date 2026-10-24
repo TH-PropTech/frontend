@@ -27,6 +27,8 @@ interface LocationFilterModalProps {
   setSelectedProvinceCode: (val: number | null) => void
   selectedDistrictCode: number | null
   setSelectedDistrictCode: (val: number | null) => void
+  /** Ẩn ô Phường/Xã khi API không hỗ trợ lọc theo phường (tab Dự án). */
+  showWard?: boolean
 }
 
 const POPULAR_PROVINCES = [
@@ -51,6 +53,7 @@ export function LocationFilterModal({
   setSelectedProvinceCode,
   selectedDistrictCode,
   setSelectedDistrictCode,
+  showWard = true,
 }: LocationFilterModalProps): React.ReactElement {
   const { provinces, wards, isLoadingWards } =
     useVietnamLocations(selectedProvinceCode)
@@ -172,35 +175,37 @@ export function LocationFilterModal({
         </div>
 
         {/* Ward */}
-        <div>
-          <label className="text-[10px] font-bold text-muted uppercase">
-            Phường / Xã
-          </label>
-          <Select
-            value={selectedWard || 'all'}
-            disabled={!selectedCity}
-            onValueChange={val => {
-              setSelectedWard(val === 'all' ? '' : val)
-            }}
-          >
-            <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="max-h-60 overflow-y-auto">
-              <SelectItem value="all">
-                {isLoadingWards ? 'Đang tải phường/xã...' : 'Chọn Phường/Xã'}
-              </SelectItem>
-              {selectedWard && !wards.some(w => w.name === selectedWard) && (
-                <SelectItem value={selectedWard}>{selectedWard}</SelectItem>
-              )}
-              {wards.map(ward => (
-                <SelectItem key={ward.code} value={ward.name}>
-                  {ward.name}
+        {showWard ? (
+          <div>
+            <label className="text-[10px] font-bold text-muted uppercase">
+              Phường / Xã
+            </label>
+            <Select
+              value={selectedWard || 'all'}
+              disabled={!selectedCity}
+              onValueChange={val => {
+                setSelectedWard(val === 'all' ? '' : val)
+              }}
+            >
+              <SelectTrigger className="w-full mt-1 px-3 py-2 text-xs font-semibold rounded-xl border border-border bg-surface-muted focus:outline-none focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer h-9 shadow-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-60 overflow-y-auto">
+                <SelectItem value="all">
+                  {isLoadingWards ? 'Đang tải phường/xã...' : 'Chọn Phường/Xã'}
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+                {selectedWard && !wards.some(w => w.name === selectedWard) && (
+                  <SelectItem value={selectedWard}>{selectedWard}</SelectItem>
+                )}
+                {wards.map(ward => (
+                  <SelectItem key={ward.code} value={ward.name}>
+                    {ward.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
       </div>
 
       <button

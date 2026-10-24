@@ -8,7 +8,6 @@ import { PropertiesHero } from './components/properties-hero'
 import { ApartmentCard } from './components/apartment-card'
 import { PropertiesSearchConsole } from './components/properties-search-console'
 import { AdvancedDrawer } from './components/advanced-drawer'
-import { PropertiesMap } from './components/properties-map'
 import { CompareModal } from './components/compare-modal'
 import { ProjectGridView } from './components/project-grid-view'
 import { LandlordActionBar } from './components/landlord-action-bar'
@@ -69,8 +68,6 @@ export function PropertiesDashboard(): React.ReactElement {
     setHasMediaOnly,
     resetFilters,
     activeFiltersCount,
-    filteredProjects,
-    filteredApiProjects,
     filteredApartments: matchedApartments,
     apartmentsError,
     isLoadingApartments,
@@ -79,6 +76,7 @@ export function PropertiesDashboard(): React.ReactElement {
     areaLabel,
     apiProjects,
     isLoadingProjects,
+    projectsError,
     applyAdvancedFilters,
     revertAdvancedFilters,
     draftCount,
@@ -102,9 +100,6 @@ export function PropertiesDashboard(): React.ReactElement {
   const [isPriceModalOpen, setIsPriceModalOpen] = React.useState(false)
   const [isAreaModalOpen, setIsAreaOpen] = React.useState(false)
   const [isAdvancedDrawerOpen, setIsAdvancedDrawerOpen] = React.useState(false)
-  const [viewMode, setViewMode] = React.useState<'list' | 'map'>('list')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedMapApt, setSelectedMapApt] = React.useState<any>(null)
 
   // Compare states
   const [compareIds, setCompareIds] = React.useState<string[]>([])
@@ -274,7 +269,7 @@ export function PropertiesDashboard(): React.ReactElement {
                       ? 'Căn hộ còn trống'
                       : 'Căn hộ cho thuê'
                     : `${onlyAvailable ? 'Căn hộ còn trống' : 'Căn hộ cho thuê'} (${filteredApartments.length})`
-                  : `Dự án từ Chủ đầu tư (${apiProjects.length > 0 ? apiProjects.length : filteredProjects.length})`}
+                  : `Dự án từ Chủ đầu tư (${apiProjects.length})`}
               </h2>
             </div>
             <div className="flex items-center gap-3">
@@ -294,30 +289,6 @@ export function PropertiesDashboard(): React.ReactElement {
                   Chỉ căn còn trống
                 </label>
               )}
-              <div className="flex rounded-lg bg-surface-muted p-1 border border-border">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('list')}
-                  className={`min-h-10 px-3 py-1.5 sm:min-h-0 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                    viewMode === 'list'
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-muted hover:text-fg'
-                  }`}
-                >
-                  Danh sách
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('map')}
-                  className={`min-h-10 px-3 py-1.5 sm:min-h-0 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                    viewMode === 'map'
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-muted hover:text-fg'
-                  }`}
-                >
-                  Bản đồ
-                </button>
-              </div>
             </div>
           </div>
 
@@ -333,15 +304,7 @@ export function PropertiesDashboard(): React.ReactElement {
             </div>
           ) : null}
 
-          {viewMode === 'map' ? (
-            <PropertiesMap
-              activeTab={activeTab}
-              filteredApartments={filteredApartments}
-              filteredProjects={filteredProjects}
-              selectedMapApt={selectedMapApt}
-              setSelectedMapApt={setSelectedMapApt}
-            />
-          ) : activeTab === 'single' ? (
+          {activeTab === 'single' ? (
             isLoadingApartments ? (
               <div
                 data-testid="apartments-loading-grid"
@@ -387,11 +350,10 @@ export function PropertiesDashboard(): React.ReactElement {
           ) : (
             <ProjectGridView
               apiProjects={apiProjects}
-              filteredApiProjects={filteredApiProjects}
               isLoadingProjects={isLoadingProjects}
+              hasError={Boolean(projectsError)}
               setActiveTab={setActiveTab}
               setSearchKeyword={setSearchKeyword}
-              filteredProjects={filteredProjects}
             />
           )}
         </section>

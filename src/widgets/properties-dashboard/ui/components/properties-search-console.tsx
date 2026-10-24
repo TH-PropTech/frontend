@@ -184,6 +184,7 @@ export function PropertiesSearchConsole({
                 setSelectedProvinceCode={setSelectedProvinceCode}
                 selectedDistrictCode={selectedDistrictCode}
                 setSelectedDistrictCode={setSelectedDistrictCode}
+                showWard={activeTab === 'single'}
               />
             </PopoverContent>
           </Popover>

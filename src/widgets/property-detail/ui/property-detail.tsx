@@ -8,10 +8,8 @@ import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
 import {
   getRentalAvailabilityPresentation,
-  mockApartments,
   type ApartmentItem,
 } from '@/entities/properties'
-import { env } from '@/shared/config/env'
 import { PropertyDetailHero } from './components/property-detail-hero'
 import { BookingWidget } from './components/booking-widget'
 import { PropertyGallery } from './components/property-gallery'
@@ -177,15 +175,6 @@ export function PropertyDetail(): React.ReactElement {
       setPropertyError(null)
       if (!propertyId) {
         setPropertyError(new Error('Missing property resource id'))
-        setLoading(false)
-        return
-      }
-
-      const demoProperty = env.enableMocks
-        ? mockApartments.find(apt => apt.id === propertyId)
-        : undefined
-      if (demoProperty) {
-        setProperty(demoProperty)
         setLoading(false)
         return
       }

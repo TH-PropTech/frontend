@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { ApartmentItem } from '@/entities/properties'
 import { Crown, Maximize2, Scale, Shield, Info } from 'lucide-react'
-import { getColor } from './compare-config'
+import { getColor, getVerifiedScore } from './compare-config'
 import { CompareRecommendations } from './compare-recommendations'
 
 export interface CompareChartsProps {
@@ -13,19 +13,8 @@ export interface CompareChartsProps {
 export function CompareCharts({
   compareApartments,
 }: CompareChartsProps): React.ReactElement | null {
-  const getRentPrice = React.useCallback((apt: ApartmentItem) => {
-    return apt.priceNum ? apt.priceNum * 1000000 : 15000000
-  }, [])
-
-  const getUnitPrice = React.useCallback(
-    (apt: ApartmentItem) => {
-      return getRentPrice(apt) / (apt.areaNum || 1)
-    },
-    [getRentPrice]
-  )
-
-  const getTrustScore = React.useCallback((apt: ApartmentItem) => {
-    return apt.isVerified ? 98 : 75
+  const getUnitPrice = React.useCallback((apt: ApartmentItem) => {
+    return (apt.priceNum * 1000000) / (apt.areaNum || 1)
   }, [])
 
   // Donut chart data calculations
@@ -105,7 +94,7 @@ export function CompareCharts({
       const pScore = getPriceScore(apt.priceNum ?? 10)
       const aScore = getAreaScore(apt.areaNum ?? 40)
       const vScore = getValueScore(getUnitPrice(apt))
-      const tScore = getTrustScore(apt)
+      const tScore = getVerifiedScore(apt)
 
       const y0 = getScoreY(pScore)
       const y1 = getScoreY(aScore)
@@ -123,11 +112,11 @@ export function CompareCharts({
           { x: 45, y: y0, val: `${apt.priceNum} Tr` },
           { x: 125, y: y1, val: `${apt.areaNum} m²` },
           { x: 205, y: y2, val: `${Math.round(getUnitPrice(apt) / 1000)}k/m²` },
-          { x: 285, y: y3, val: `${tScore}%` },
+          { x: 285, y: y3, val: apt.isVerified ? 'Đã duyệt' : 'Chưa duyệt' },
         ],
       }
     })
-  }, [compareApartments, getUnitPrice, getTrustScore])
+  }, [compareApartments, getUnitPrice])
 
   if (compareApartments.length < 2) return null
 
@@ -356,7 +345,7 @@ export function CompareCharts({
         <h4 className="font-display text-xs font-bold text-fg flex items-center gap-1.5 uppercase tracking-wide">
           <Scale className="h-4 w-4 text-primary" />
           Biểu đồ miền: Tương quan so sánh chỉ số tổng hợp (Giá - Diện tích -
-          Đơn giá - Độ tin cậy)
+          Đơn giá - Kiểm duyệt)
         </h4>
         <p className="text-[11px] text-muted leading-relaxed -mt-2">
           Biểu đồ bên dưới chuẩn hoá 4 tiêu chí đánh giá quan trọng thành thang
@@ -462,7 +451,7 @@ export function CompareCharts({
               textAnchor="middle"
               className="text-[8px] font-bold fill-muted uppercase"
             >
-              Tin cậy
+              Kiểm duyệt
             </text>
           </svg>
 
@@ -508,11 +497,11 @@ export function CompareCharts({
             </div>
             <div className="space-y-0.5">
               <span className="text-[10px] font-bold text-fg uppercase tracking-wide flex items-center gap-1">
-                <Shield className="h-3 w-3 text-primary" /> Tin cậy
+                <Shield className="h-3 w-3 text-primary" /> Kiểm duyệt
               </span>
               <p className="text-[10px] text-muted leading-snug">
-                Điểm xác minh Blockchain (%). Cao = pháp lý minh bạch, rủi ro
-                thấp.
+                Tin đăng đã được nhân viên hệ thống kiểm duyệt (cao) hoặc chưa
+                (thấp).
               </p>
             </div>
           </div>
@@ -523,7 +512,6 @@ export function CompareCharts({
       <CompareRecommendations
         compareApartments={compareApartments}
         getUnitPrice={getUnitPrice}
-        getTrustScore={getTrustScore}
       />
     </div>
   )

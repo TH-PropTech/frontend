@@ -80,52 +80,6 @@ export interface ApartmentItem {
   rentalAvailabilityLabel?: string
 }
 
-export interface ProjectUnit {
-  id: string
-  name: string
-  type: string
-  bedrooms: number
-  area: string
-  price: string
-  floor: string
-  block: string
-  view: string
-}
-
-export interface ProjectFeature {
-  label: string
-  value: string
-}
-
-export interface ProjectItem {
-  id: string
-  title: string
-  developer: string
-  location: string
-  scale: string
-  priceRange: string
-  minPrice: number // min rent in million VND
-  maxPrice: number // max rent in million VND
-  tagText: string
-  tag: 'open' | 'handover'
-  description: string
-
-  // Detailed Location
-  city: string
-  district: string
-  ward: string
-  street: string
-
-  // Advanced features
-  isVerified: boolean
-  hasMedia: boolean
-  amenities: string[]
-
-  // Rich details for premium view
-  features?: ProjectFeature[]
-  units?: ProjectUnit[]
-}
-
 /** Backend API response shape for a Project */
 export interface ApiProjectItem {
   id: string

@@ -29,11 +29,10 @@ corepack pnpm dev
 
 Copy `.env.example` to `.env.local`.
 
-| Variable                   | Purpose                                                                         |
-| -------------------------- | ------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_URL`      | Backend API base URL, default `http://localhost:3001/api/v1`                    |
-| `NEXT_PUBLIC_APP_ENV`      | Public app environment: `local`, `development`, `staging`, `production`, `test` |
-| `NEXT_PUBLIC_ENABLE_MOCKS` | Enables frontend mock behavior when supported                                   |
+| Variable              | Purpose                                                                         |
+| --------------------- | ------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL` | Backend API base URL, default `http://localhost:3001/api/v1`                    |
+| `NEXT_PUBLIC_APP_ENV` | Public app environment: `local`, `development`, `staging`, `production`, `test` |
 
 ## Scripts
 

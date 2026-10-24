@@ -2,29 +2,24 @@
 
 import * as React from 'react'
 import { ApiProjectCard } from './api-project-card'
-import { ProjectCard } from './project-card'
+import type { ApiProjectItem } from '@/entities/properties'
 
 interface ProjectGridViewProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  apiProjects: any[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  filteredApiProjects: any[]
+  apiProjects: ApiProjectItem[]
   isLoadingProjects: boolean
+  hasError: boolean
   setActiveTab: (tab: 'single' | 'project') => void
   setSearchKeyword: (keyword: string) => void
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  filteredProjects: any[]
 }
 
 export function ProjectGridView({
   apiProjects,
-  filteredApiProjects,
   isLoadingProjects,
+  hasError,
   setActiveTab,
   setSearchKeyword,
-  filteredProjects,
 }: ProjectGridViewProps): React.ReactElement {
-  /* ── Show project list (API first, fallback to mock) ── */
+  /* ── Loading / error / empty / list ── */
   if (isLoadingProjects) {
     return (
       <div className="text-center py-20">
@@ -52,33 +47,19 @@ export function ProjectGridView({
     )
   }
 
-  if (apiProjects.length > 0) {
-    if (filteredApiProjects.length === 0) {
-      return (
-        <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
-          <p className="font-body text-sm text-muted">
-            Không tìm thấy dự án phù hợp với bộ lọc hiện tại.
-          </p>
-        </div>
-      )
-    }
+  if (hasError) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredApiProjects.map(proj => (
-          <ApiProjectCard
-            key={proj.id}
-            project={proj}
-            onSelect={() => {
-              setSearchKeyword(proj.name)
-              setActiveTab('single')
-            }}
-          />
-        ))}
+      <div
+        role="alert"
+        className="rounded-2xl border border-danger/30 bg-danger/10 p-4 text-sm text-danger"
+      >
+        Không thể tải danh sách dự án từ máy chủ. Vui lòng kiểm tra kết nối và
+        thử lại.
       </div>
     )
   }
 
-  if (filteredProjects.length === 0) {
+  if (apiProjects.length === 0) {
     return (
       <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
         <p className="font-body text-sm text-muted">
@@ -89,9 +70,16 @@ export function ProjectGridView({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      {filteredProjects.map(proj => (
-        <ProjectCard key={proj.id} proj={proj} />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {apiProjects.map(proj => (
+        <ApiProjectCard
+          key={proj.id}
+          project={proj}
+          onSelect={() => {
+            setSearchKeyword(proj.name)
+            setActiveTab('single')
+          }}
+        />
       ))}
     </div>
   )

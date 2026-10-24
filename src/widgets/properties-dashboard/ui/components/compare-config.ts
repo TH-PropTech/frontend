@@ -54,17 +54,21 @@ export interface CompareCriterion {
   getAnalysis?: (apartments: ApartmentItem[]) => string
 }
 
+/** Điểm kiểm duyệt: 100 nếu tin đã được nhân viên hệ thống kiểm duyệt, 0 nếu chưa. */
+export function getVerifiedScore(apt: ApartmentItem): number {
+  return apt.isVerified ? 100 : 0
+}
+
 export function buildCriteria(
   compareApartments: ApartmentItem[],
-  getUnitPrice: (apt: ApartmentItem) => number,
-  getTrustScore: (apt: ApartmentItem) => number
+  getUnitPrice: (apt: ApartmentItem) => number
 ): CompareCriterion[] {
   return [
     {
       key: 'price',
       label: 'Giá thuê',
       explain:
-        'Giá thuê hàng tháng cố định chưa bao gồm điện nước và phí dịch vụ. Căn hộ có giá thuê thấp nhất sẽ được gắn vương miện 👑.',
+        'Giá thuê hàng tháng cố định chưa bao gồm điện nước và phí dịch vụ. Căn hộ có giá thuê thấp nhất sẽ được đánh dấu là tốt nhất.',
       getValue: (apt: ApartmentItem) => apt.price,
       isWinner: (apt: ApartmentItem) => {
         const val = apt.priceNum ?? 999
@@ -174,26 +178,26 @@ export function buildCriteria(
       },
     },
     {
-      key: 'blockchain',
-      label: 'Điểm Blockchain',
+      key: 'verified',
+      label: 'Kiểm duyệt tin',
       explain:
-        'Mức độ xác thực thông tin căn hộ, danh tính KYC chủ nhà và hợp đồng số hóa trên sổ cái Blockchain. Càng cao càng an toàn.',
+        'Tin đăng đã được nhân viên hệ thống kiểm duyệt thông tin hay chưa.',
       getValue: (apt: ApartmentItem) =>
-        apt.isVerified ? '98% (Đã xác minh)' : '75% (Cơ bản)',
+        apt.isVerified ? 'Đã kiểm duyệt' : 'Chưa kiểm duyệt',
       isWinner: (apt: ApartmentItem) => {
-        const maxT = Math.max(...compareApartments.map(getTrustScore))
-        return getTrustScore(apt) === maxT
+        const maxT = Math.max(...compareApartments.map(getVerifiedScore))
+        return getVerifiedScore(apt) === maxT
       },
-      winnerText: 'Uy tín nhất',
+      winnerText: 'Đã kiểm duyệt',
       getAnalysis: (apts: ApartmentItem[]) => {
         if (apts.length < 2) return ''
         const verified = apts.filter(a => a.isVerified)
         if (verified.length === apts.length)
-          return 'Tuyệt vời! Tất cả các căn hộ này đều đã được xác thực mã hóa Blockchain an tâm tuyệt đối.'
+          return 'Tất cả các căn hộ này đều đã được nhân viên hệ thống kiểm duyệt.'
         if (verified.length > 0) {
-          return `Căn "${verified.map(v => v.title).join(', ')}" có ưu thế pháp lý tuyệt đối vì đã được ký số Blockchain, chống lừa đảo đặt cọc.`
+          return `Căn "${verified.map(v => v.title).join(', ')}" đã được nhân viên hệ thống kiểm duyệt, các căn còn lại chưa được kiểm duyệt.`
         }
-        return 'Cảnh báo: Chưa có căn hộ nào trong danh sách được xác thực Blockchain đầy đủ. Cần cẩn trọng khi thực hiện giao dịch cọc trực tuyến.'
+        return 'Chưa có căn hộ nào trong danh sách được kiểm duyệt. Hãy kiểm tra kỹ thông tin trước khi đặt cọc.'
       },
     },
     {

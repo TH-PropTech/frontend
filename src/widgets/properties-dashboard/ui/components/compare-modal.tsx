@@ -42,17 +42,12 @@ export function CompareModal({
   }, [])
 
   const getUnitPrice = React.useCallback((apt: ApartmentItem) => {
-    const rent = apt.priceNum ? apt.priceNum * 1000000 : 15000000
-    return rent / (apt.areaNum || 1)
-  }, [])
-
-  const getTrustScore = React.useCallback((apt: ApartmentItem) => {
-    return apt.isVerified ? 98 : 75
+    return (apt.priceNum * 1000000) / (apt.areaNum || 1)
   }, [])
 
   const criteria = React.useMemo(() => {
-    return buildCriteria(compareApartments, getUnitPrice, getTrustScore)
-  }, [compareApartments, getUnitPrice, getTrustScore])
+    return buildCriteria(compareApartments, getUnitPrice)
+  }, [compareApartments, getUnitPrice])
 
   if (!mounted || !show) return null
 
