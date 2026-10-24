@@ -70,42 +70,29 @@ export function useProfile(): UseProfileReturn {
   >('progress')
 
   const setActiveTab = React.useCallback(
-    (
-      action: React.SetStateAction<
-        | 'progress'
-        | 'bills'
-        | 'blockchain'
-        | 'maintenance'
-        | 'security'
-        | 'listings'
-        | 'saved-searches'
-        | 'safety-reports'
-        | 'support-tickets'
-        | 'rental-applications'
-      >
-    ) => {
-      setActiveTabState(prev => {
-        const next = typeof action === 'function' ? action(prev) : action
-        try {
-          if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search)
-            if (params.get('tab') !== next) {
-              params.set('tab', next)
-              if (!params.has('role') && role) {
-                params.set('role', role)
-              }
-              const search = params.toString()
-              const query = search ? `?${search}` : ''
-              router.replace(`/profile${query}` as Route, { scroll: false })
+    (action: React.SetStateAction<typeof activeTab>) => {
+      // Tính next ngoài updater của setState: router.replace là side effect,
+      // gọi trong updater sẽ chạy lúc render và báo lỗi setState-in-render.
+      const next = typeof action === 'function' ? action(activeTab) : action
+      setActiveTabState(next)
+      try {
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search)
+          if (params.get('tab') !== next) {
+            params.set('tab', next)
+            if (!params.has('role') && role) {
+              params.set('role', role)
             }
+            const search = params.toString()
+            const query = search ? `?${search}` : ''
+            router.replace(`/profile${query}` as Route, { scroll: false })
           }
-        } catch (e) {
-          console.error(e)
         }
-        return next
-      })
+      } catch (e) {
+        console.error(e)
+      }
     },
-    [router, role]
+    [router, role, activeTab]
   )
   const [activePropertyId, setActivePropertyId] = React.useState('prop-1')
   // Chủ nhà hoặc khách thuê đã đăng nhập: danh mục lấy từ backend; chưa đăng nhập giữ dữ liệu demo

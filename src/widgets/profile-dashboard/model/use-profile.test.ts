@@ -64,6 +64,50 @@ describe('useProfile', () => {
     )
   })
 
+  it('resolves functional updater and calls router once', () => {
+    const { result } = renderHook(() => useProfile())
+
+    act(() => {
+      result.current.setActiveTab(prev =>
+        prev === 'progress' ? 'security' : prev
+      )
+    })
+
+    expect(result.current.activeTab).toBe('security')
+    expect(replaceMock).toHaveBeenCalledTimes(1)
+    expect(replaceMock).toHaveBeenCalledWith(
+      expect.stringContaining('tab=security'),
+      { scroll: false }
+    )
+  })
+
+  it('does not update URL when selected tab already matches', () => {
+    window.history.replaceState({}, '', '/profile?tab=bills')
+    const { result } = renderHook(() => useProfile())
+    replaceMock.mockClear()
+
+    act(() => {
+      result.current.setActiveTab('bills')
+    })
+
+    expect(replaceMock).not.toHaveBeenCalled()
+  })
+
+  it('does not emit setState-in-render warning when switching tab', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { result } = renderHook(() => useProfile())
+
+    act(() => {
+      result.current.setActiveTab('bills')
+    })
+
+    const messages = errorSpy.mock.calls.map(c => String(c[0]))
+    expect(
+      messages.some(m => m.includes('while rendering a different component'))
+    ).toBe(false)
+    errorSpy.mockRestore()
+  })
+
   it('updates role and URL when handleRoleChange is called', () => {
     const { result } = renderHook(() => useProfile())
 
