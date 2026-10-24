@@ -172,7 +172,7 @@ function IconFacebook(
 
 const NAV_PRODUCT = [
   { label: 'Tìm căn hộ', href: '/properties' },
-  { label: 'Không gian VR 3D', href: '/vr' },
+  { label: 'Cộng đồng cư dân', href: '/community' },
   { label: 'Quy trình thuê', href: '/process' },
 ] as const
 
@@ -180,7 +180,7 @@ const NAV_ABOUT = [
   { label: 'Giới thiệu hệ thống', href: '/process' },
   { label: 'Cơ chế AI gợi ý', href: '/process' },
   { label: 'Blockchain minh bạch', href: '/process' },
-  { label: 'Điều khoản sử dụng', href: '/process' },
+  { label: 'Điều khoản sử dụng', href: '/terms' },
 ] as const
 
 const TECH_BADGES = [

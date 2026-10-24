@@ -5,6 +5,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Route } from 'next'
 import { Button } from '@/shared/ui/button'
+import { apiClient } from '@/shared/api'
+import type { ApartmentItem } from '@/entities/properties'
 import {
   ThumbsUp,
   ThumbsDown,
@@ -108,6 +110,74 @@ export function FeaturedApartments({
   onOpenSurvey,
   isAuthenticated,
 }: FeaturedApartmentsProps): React.ReactElement {
+  const [realApartments, setRealApartments] = React.useState<
+    RecommendationResult[]
+  >([])
+
+  React.useEffect(() => {
+    if (hasSubmitted && results.length > 0) return
+
+    let isMounted = true
+    const loadRealApartments = async (): Promise<void> => {
+      try {
+        const data = await apiClient.get<ApartmentItem[]>(
+          '/apartments?format=web'
+        )
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const mapped: RecommendationResult[] = data.slice(0, 4).map(item => {
+            const img =
+              item.image ||
+              (item.gallery && item.gallery.length > 0
+                ? item.gallery[0]
+                : undefined)
+
+            const mappedItem: RecommendationResult = {
+              id: item.id,
+              name: item.title,
+              district: item.district || item.location || 'TP. Hồ Chí Minh',
+              rent_price:
+                typeof item.priceNum === 'number' && item.priceNum > 0
+                  ? item.priceNum * 1_000_000
+                  : 15_000_000,
+              rooms: typeof item.bedrooms === 'number' ? item.bedrooms : 2,
+              has_gym: true,
+              has_parking: true,
+              match_score: 95,
+              reasons: [
+                item.projectName
+                  ? `Dự án ${item.projectName}`
+                  : 'Căn hộ xác thực',
+                'Đầy đủ tiện ích & hợp đồng minh bạch',
+              ],
+              confidence: 'Cao',
+              contributions: {
+                finance: 0.95,
+                location: 0.95,
+                demographics: 0.9,
+                amenities: 0.92,
+              },
+            }
+
+            if (img) {
+              mappedItem.image_url = img
+            }
+
+            return mappedItem
+          })
+          setRealApartments(mapped)
+        }
+      } catch (err) {
+        // Silently use DEFAULT_FEATURED_APARTMENTS fallback
+        console.debug('Failed to fetch real apartments, using fallback:', err)
+      }
+    }
+
+    void loadRealApartments()
+    return (): void => {
+      isMounted = false
+    }
+  }, [hasSubmitted, results])
+
   const formatVnd = (num: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -125,7 +195,9 @@ export function FeaturedApartments({
   const displayedResults =
     hasSubmitted && results.length > 0
       ? results.slice(0, 3)
-      : DEFAULT_FEATURED_APARTMENTS
+      : realApartments.length > 0
+        ? realApartments.slice(0, 3)
+        : DEFAULT_FEATURED_APARTMENTS
 
   const isAiRecommended = hasSubmitted && results.length > 0
 
