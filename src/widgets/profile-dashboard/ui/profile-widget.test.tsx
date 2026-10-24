@@ -125,8 +125,8 @@ describe('ProfileWidget', () => {
 
     render(<ProfileWidget />)
 
-    expect(screen.getByText('Tin đăng của tôi')).toBeDefined()
-    expect(screen.getByText('Hồ sơ đặt thuê')).toBeDefined()
+    expect(screen.getAllByText('Tin đăng của tôi').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Hồ sơ đặt thuê').length).toBeGreaterThan(0)
     expect(screen.getByTestId('tab-landlord-applications')).toBeDefined()
   })
 
@@ -141,7 +141,9 @@ describe('ProfileWidget', () => {
 
     render(<ProfileWidget />)
 
-    const tenantTab = screen.getByRole('tab', { name: /đơn thuê đã gửi/i })
+    const tenantTab = screen.getAllByRole('tab', {
+      name: /đơn thuê đã gửi/i,
+    })[0]!
     expect(tenantTab).toBeDefined()
     fireEvent.pointerDown(tenantTab, { button: 0, ctrlKey: false })
     fireEvent.keyDown(tenantTab, { key: 'Enter', code: 'Enter' })

@@ -61,13 +61,16 @@ export function ProfileHeader({
 
   return (
     <>
-      {/* Role Switcher */}
-      <div className="flex justify-end mb-6">
-        <div className="bg-white/80 backdrop-blur-md border border-border p-1 rounded-full flex gap-1 shadow-sm">
+      {/* Top Bar: Title & Role Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <h1 className="font-marketing text-xl md:text-2xl font-bold text-fg text-left">
+          Tài khoản cá nhân
+        </h1>
+        <div className="bg-white/80 backdrop-blur-md border border-border p-1 rounded-full flex gap-1 shadow-sm self-start sm:self-auto shrink-0">
           <button
             type="button"
             onClick={() => handleRoleChange('tenant')}
-            className={`min-h-11 px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`min-h-10 px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               role === 'tenant'
                 ? 'bg-primary text-white shadow-sm'
                 : 'text-muted hover:text-fg'
@@ -79,7 +82,7 @@ export function ProfileHeader({
           <button
             type="button"
             onClick={() => handleRoleChange('landlord')}
-            className={`min-h-11 px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`min-h-10 px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               role === 'landlord'
                 ? 'bg-primary text-white shadow-sm'
                 : 'text-muted hover:text-fg'
@@ -92,7 +95,7 @@ export function ProfileHeader({
       </div>
 
       {/* User Profile Card */}
-      <Card className="relative bg-white border border-border rounded-3xl p-6 md:p-8 mb-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden">
+      <Card className="relative bg-white border border-border rounded-3xl p-5 md:p-6 mb-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden">
         {/* Background accent soft decoration */}
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 

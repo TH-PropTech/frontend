@@ -21,8 +21,8 @@ export default function ProfilePage() {
       <div>
         <HomeHeader />
 
-        <main className="w-full pt-36 pb-20">
-          <div className="mx-auto max-w-6xl px-6 md:px-10">
+        <main className="w-full pt-24 pb-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
             <React.Suspense
               fallback={
                 <div className="h-96 animate-pulse rounded-3xl bg-surface-muted" />

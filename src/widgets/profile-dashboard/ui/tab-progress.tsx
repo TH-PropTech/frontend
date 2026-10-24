@@ -75,7 +75,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
           : null
     if (message)
       return (
-        <Card className="bg-white border border-border rounded-3xl p-8 shadow-sm text-center text-sm text-muted">
+        <Card className="bg-white border border-border rounded-3xl p-6 shadow-sm text-center text-sm text-muted">
           {message}
         </Card>
       )
@@ -84,7 +84,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
   const depositLabel = `${(liveContract?.deposit ?? 18_000_000).toLocaleString('vi-VN')}đ`
 
   return (
-    <div className="space-y-6 mt-0 outline-none">
+    <div className="space-y-5 mt-0 outline-none">
       {/* Property Selector for Landlord (using generic UI Select) */}
       {role === 'landlord' && (
         <>
@@ -131,7 +131,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
       )}
 
       {/* Progress Card */}
-      <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+      <Card className="bg-white border border-border rounded-3xl p-5 md:p-6 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
           <h3 className="font-marketing text-lg font-bold text-fg flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
