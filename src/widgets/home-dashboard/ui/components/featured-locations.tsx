@@ -19,7 +19,7 @@ export function FeaturedLocations(): React.ReactElement {
           Minh.
         </p>
       </div>
-      <div className="flex overflow-x-auto pb-3 gap-3 snap-x snap-mandatory no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 md:grid-cols-6 sm:overflow-visible sm:pb-0">
+      <div className="flex overflow-x-auto pb-3 gap-3 snap-x snap-mandatory no-scrollbar -mx-6 px-6 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 sm:overflow-visible sm:pb-0">
         {[
           { name: 'Quận 1', count: 24, range: '12–25 Tr' },
           { name: 'Quận 2', count: 38, range: '10–20 Tr' },

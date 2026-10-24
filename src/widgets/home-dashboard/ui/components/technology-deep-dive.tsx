@@ -1,6 +1,16 @@
 'use client'
 
 import * as React from 'react'
+import {
+  ShieldCheck,
+  Sparkles,
+  Eye,
+  CheckCircle2,
+  Copy,
+  Sliders,
+  Compass,
+  Layers,
+} from 'lucide-react'
 
 export function TechnologyDeepDive(): React.ReactElement {
   return (
@@ -12,106 +22,97 @@ export function TechnologyDeepDive(): React.ReactElement {
         <h2 className="mt-3 font-marketing text-3xl font-bold text-fg sm:text-4xl">
           Ba trụ cột công nghệ của TH-PropTech
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl font-body text-sm text-muted">
-          Kết hợp Blockchain, AI và VR 3D để tạo nên trải nghiệm thuê nhà minh
-          bạch, thông minh và trực quan chưa từng có.
+        <p className="mx-auto mt-4 max-w-2xl font-body text-sm text-muted leading-relaxed">
+          Kết hợp công nghệ lưu vết bất biến Blockchain, thuật toán AI gợi ý cá
+          nhân hóa và trải nghiệm không gian 3D VR Tour trực quan giúp quy trình
+          thuê nhà trở nên minh bạch và an toàn tuyệt đối.
         </p>
       </div>
 
       <div className="flex flex-col gap-16">
         {/* Pillar 1: Blockchain */}
         <div className="flex flex-col items-center gap-8 md:flex-row">
-          <div className="flex h-48 w-full items-center justify-center rounded-3xl border border-border bg-gradient-to-br from-primary-soft via-surface to-accent-soft md:w-5/12">
-            <svg
-              className="h-24 w-24 text-primary/60"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={0.8}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
-              />
-            </svg>
+          {/* Visual Mockup Card */}
+          <div className="w-full md:w-5/12 rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-900 via-slate-850 to-slate-950 text-white p-5 sm:p-6 shadow-xl flex flex-col justify-between relative overflow-hidden min-h-[250px]">
+            {/* Background grid effect */}
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+
+            <div className="relative z-10 flex items-center justify-between border-b border-slate-700/60 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2.5 w-2.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                </span>
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                  Lưu vết sổ cái bất biến
+                </span>
+              </div>
+              <span className="font-mono text-[10px] text-slate-400">
+                Block #10,482,914
+              </span>
+            </div>
+
+            <div className="relative z-10 my-4 space-y-2.5 font-mono text-xs">
+              <div className="flex justify-between items-center bg-slate-800/80 rounded-xl px-3 py-2 border border-slate-700/40">
+                <span className="text-slate-400 text-[10px]">
+                  MÃ XÁC THỰC TX:
+                </span>
+                <span className="text-sky-300 font-semibold text-[11px] flex items-center gap-1.5">
+                  0x8f2a...c4e9
+                  <Copy className="w-3 h-3 text-slate-400 hover:text-white transition-colors" />
+                </span>
+              </div>
+              <div className="flex justify-between items-center px-1 text-[11px]">
+                <span className="text-slate-400">Hợp đồng điện tử:</span>
+                <span className="text-white font-medium">#HD-2026-08892</span>
+              </div>
+              <div className="flex justify-between items-center px-1 text-[11px]">
+                <span className="text-slate-400">Thời điểm ghi nhận:</span>
+                <span className="text-slate-300">24/10/2026 • 09:30:15</span>
+              </div>
+            </div>
+
+            <div className="relative z-10 pt-3 border-t border-slate-700/60 flex items-center gap-2 text-xs text-emerald-400 font-medium">
+              <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-400" />
+              <span>Chống sửa đổi • Kiểm chứng công khai 100%</span>
+            </div>
           </div>
+
           <div className="flex-1 space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-success/20 bg-success-soft px-3 py-1">
-              <svg
-                className="h-3.5 w-3.5 text-success"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h0A11.956 11.956 0 0012 2.714z"
-                />
-              </svg>
+              <ShieldCheck className="h-3.5 w-3.5 text-success" />
               <span className="font-mono text-[10px] font-bold uppercase text-success">
-                Blockchain
+                Công nghệ Chuỗi khối (Blockchain)
               </span>
             </div>
             <h3 className="font-display text-2xl font-bold text-fg">
               Giao dịch minh bạch, chống giả mạo
             </h3>
             <p className="font-body text-sm leading-relaxed text-muted">
-              Mỗi hợp đồng, đặt cọc và thanh toán đều được ghi nhận hash bất
-              biến trên Blockchain. Khách thuê và chủ nhà có thể kiểm chứng bất
-              kỳ giao dịch nào bằng mã hash — không ai có thể sửa đổi, xóa hay
-              phủ nhận.
+              Mỗi hợp đồng, đặt cọc và thanh toán đều được lưu vết xác thực bất
+              biến trên hệ thống chuỗi khối. Khách thuê và chủ nhà có thể kiểm
+              chứng bất kỳ giao dịch nào bằng mã xác thực — không bên nào có thể
+              đơn phương sửa đổi, xóa hay phủ nhận điều khoản đã ký.
             </p>
             <ul className="space-y-2 font-body text-sm text-muted">
               <li className="flex items-start gap-2">
-                <svg
-                  className="mt-0.5 h-4 w-4 shrink-0 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12.75l6 6 9-13.5"
-                  />
-                </svg>
-                Hash giao dịch có thể tra cứu công khai bất kỳ lúc nào
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <span>
+                  Mã xác thực giao dịch có thể tra cứu công khai, tức thì
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <svg
-                  className="mt-0.5 h-4 w-4 shrink-0 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12.75l6 6 9-13.5"
-                  />
-                </svg>
-                Hợp đồng thuê ghi nhận vĩnh viễn, chống sửa đổi
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <span>
+                  Hợp đồng thuê ghi nhận vĩnh viễn, chống sửa đổi gian lận
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <svg
-                  className="mt-0.5 h-4 w-4 shrink-0 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12.75l6 6 9-13.5"
-                  />
-                </svg>
-                Bảo vệ quyền lợi khách thuê lẫn chủ nhà
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <span>
+                  Bảo vệ quyền lợi pháp lý đồng đều cho cả khách thuê lẫn chủ
+                  nhà
+                </span>
               </li>
             </ul>
           </div>
@@ -119,97 +120,96 @@ export function TechnologyDeepDive(): React.ReactElement {
 
         {/* Pillar 2: AI */}
         <div className="flex flex-col items-center gap-8 md:flex-row-reverse">
-          <div className="flex h-48 w-full items-center justify-center rounded-3xl border border-border bg-gradient-to-br from-accent-soft via-surface to-primary-soft md:w-5/12">
-            <svg
-              className="h-24 w-24 text-accent/60"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={0.8}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
-              />
-            </svg>
+          {/* Visual Mockup Card */}
+          <div className="w-full md:w-5/12 rounded-3xl border border-[#E3D8D0] bg-white p-5 sm:p-6 shadow-xl flex flex-col justify-between relative overflow-hidden min-h-[250px]">
+            <div className="flex items-center justify-between border-b border-[#E3D8D0]/60 pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-primary">
+                  AI Recommendation Engine
+                </span>
+              </div>
+              <span className="rounded-full bg-[#6B8E4E] px-2.5 py-0.5 font-display text-[10px] font-bold uppercase text-white shadow-sm">
+                96% Khớp nhu cầu
+              </span>
+            </div>
+
+            <div className="my-3 space-y-2.5 font-body">
+              <div>
+                <div className="flex justify-between text-xs font-medium mb-1">
+                  <span className="text-fg">Ngân sách & Mức giá thuê</span>
+                  <span className="text-[#6B8E4E] font-bold">98%</span>
+                </div>
+                <div className="h-2 w-full bg-surface-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-[#6B8E4E] rounded-full w-[98%]" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs font-medium mb-1">
+                  <span className="text-fg">Vị trí & Bán kính di chuyển</span>
+                  <span className="text-[#E9A23B] font-bold">95%</span>
+                </div>
+                <div className="h-2 w-full bg-surface-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-[#E9A23B] rounded-full w-[95%]" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs font-medium mb-1">
+                  <span className="text-fg">Tiện ích (VR, Gym, Ban công)</span>
+                  <span className="text-primary font-bold">92%</span>
+                </div>
+                <div className="h-2 w-full bg-surface-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full w-[92%]" />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-[#E3D8D0]/60 flex items-center justify-between text-[11px] text-muted">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Sliders className="w-3.5 h-3.5 text-primary" />
+                Lọc trên 1.200+ căn hộ thực tế
+              </span>
+              <span className="font-semibold text-primary">Explainable AI</span>
+            </div>
           </div>
+
           <div className="flex-1 space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent-soft px-3 py-1">
-              <svg
-                className="h-3.5 w-3.5 text-primary"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
-                />
-              </svg>
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-soft px-3 py-1">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
               <span className="font-mono text-[10px] font-bold uppercase text-primary">
-                AI Recommendation
+                Trí tuệ nhân tạo (AI Gợi ý)
               </span>
             </div>
             <h3 className="font-display text-2xl font-bold text-fg">
-              Gợi ý thông minh, cá nhân hóa
+              Gợi ý thông minh, cá nhân hóa theo túi tiền
             </h3>
             <p className="font-body text-sm leading-relaxed text-muted">
               Hệ thống kết hợp thuật toán Naive Bayes và Content-Based Filtering
-              để phân tích hồ sơ người dùng (độ tuổi, thu nhập, khu vực ưa
-              thích, số phòng, tiện ích) và đề xuất căn hộ phù hợp nhất. Mỗi gợi
-              ý kèm điểm tin cậy và giải thích chi tiết.
+              để phân tích hồ sơ người dùng (độ tuổi, thu nhập, khu vực mong
+              muốn, số phòng, tiện ích) và đề xuất căn hộ phù hợp nhất. Mỗi gợi
+              ý đều kèm điểm tin cậy và giải thích minh bạch lý do được đề xuất.
             </p>
             <ul className="space-y-2 font-body text-sm text-muted">
               <li className="flex items-start gap-2">
-                <svg
-                  className="mt-0.5 h-4 w-4 shrink-0 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12.75l6 6 9-13.5"
-                  />
-                </svg>
-                Hybrid: Naive Bayes + Content-Based Filtering
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <span>
+                  Thuật toán Hybrid: Naive Bayes kết hợp Content-Based Filtering
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <svg
-                  className="mt-0.5 h-4 w-4 shrink-0 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12.75l6 6 9-13.5"
-                  />
-                </svg>
-                Explainable AI — giải thích lý do từng gợi ý
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <span>
+                  Explainable AI — minh bạch lý do và tiêu chí cho từng gợi ý
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <svg
-                  className="mt-0.5 h-4 w-4 shrink-0 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12.75l6 6 9-13.5"
-                  />
-                </svg>
-                Học từ phản hồi người dùng (online learning)
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <span>
+                  Học hỏi liên tục từ phản hồi của người dùng để nâng cao độ
+                  chính xác
+                </span>
               </li>
             </ul>
           </div>
@@ -217,97 +217,75 @@ export function TechnologyDeepDive(): React.ReactElement {
 
         {/* Pillar 3: VR 3D */}
         <div className="flex flex-col items-center gap-8 md:flex-row">
-          <div className="flex h-48 w-full items-center justify-center rounded-3xl border border-border bg-gradient-to-br from-surface-muted via-surface to-primary-soft md:w-5/12">
-            <svg
-              className="h-24 w-24 text-primary/40"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={0.8}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"
-              />
-            </svg>
+          {/* Visual Mockup Card */}
+          <div className="w-full md:w-5/12 rounded-3xl border border-stone-800 bg-gradient-to-br from-stone-900 via-neutral-900 to-stone-950 text-white p-5 sm:p-6 shadow-xl flex flex-col justify-between relative overflow-hidden min-h-[250px]">
+            {/* Viewport simulation */}
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-amber-400" />
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-amber-400">
+                  VR 360° Panorama Viewer
+                </span>
+              </div>
+              <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-[10px] text-stone-300">
+                1080p HD • 60 FPS
+              </span>
+            </div>
+
+            <div className="my-4 relative h-24 rounded-2xl bg-stone-800/60 border border-stone-700/50 flex items-center justify-center overflow-hidden">
+              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:12px_12px]" />
+              <div className="relative z-10 flex flex-wrap gap-2 justify-center px-2">
+                <span className="inline-flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded-full text-[10px] font-medium shadow-sm animate-pulse">
+                  <Compass className="w-3 h-3" />
+                  Điểm nhìn: Phòng khách
+                </span>
+                <span className="inline-flex items-center gap-1 bg-white/10 text-stone-300 border border-white/20 px-2.5 py-1 rounded-full text-[10px] font-medium shadow-sm">
+                  <Layers className="w-3 h-3" />
+                  Ban công view sông
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-stone-800 flex items-center justify-between text-xs text-stone-400">
+              <span>Đi bộ tự do • Đo đạc tỷ lệ 1:1</span>
+              <span className="text-amber-400 font-semibold">
+                Tương tác thực tế
+              </span>
+            </div>
           </div>
+
           <div className="flex-1 space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-soft px-3 py-1">
-              <svg
-                className="h-3.5 w-3.5 text-primary"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"
-                />
-              </svg>
+              <Eye className="h-3.5 w-3.5 text-primary" />
               <span className="font-mono text-[10px] font-bold uppercase text-primary">
-                VR 3D Tour
+                Không gian 3D tương tác (VR Tour)
               </span>
             </div>
             <h3 className="font-display text-2xl font-bold text-fg">
-              Xem nhà từ xa, trải nghiệm như thực
+              Xem nhà từ xa, trải nghiệm như thực tế
             </h3>
             <p className="font-body text-sm leading-relaxed text-muted">
-              Mô hình 3D tương tác toàn khu đô thị cho phép bạn chọn căn hộ,
-              chọn tầng và bước vào xem nội thất căn hộ qua VR Tour 360°. Bếp,
-              phòng khách, phòng ngủ, ban công — tất cả hiện lên chân thực với
-              ảnh 360° chất lượng cao.
+              Mô hình 3D tương tác toàn khu đô thị cho phép bạn chọn vị trí tòa
+              nhà, chọn tầng và bước vào xem nội thất căn hộ qua VR Tour 360°.
+              Toàn bộ chi tiết về bếp, phòng khách, phòng ngủ và góc ban công
+              được thể hiện chân thực với hình ảnh chất lượng cao.
             </p>
             <ul className="space-y-2 font-body text-sm text-muted">
               <li className="flex items-start gap-2">
-                <svg
-                  className="mt-0.5 h-4 w-4 shrink-0 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12.75l6 6 9-13.5"
-                  />
-                </svg>
-                Mô hình 3D Master Plan toàn khu đô thị
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <span>
+                  Mô hình 3D Master Plan định vị trực quan toàn khu đô thị
+                </span>
               </li>
               <li className="flex items-start gap-2">
-                <svg
-                  className="mt-0.5 h-4 w-4 shrink-0 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12.75l6 6 9-13.5"
-                  />
-                </svg>
-                VR Tour 360° nội thất thực tế từng phòng
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <span>VR Tour 360° nội thất thực tế đến từng góc phòng</span>
               </li>
               <li className="flex items-start gap-2">
-                <svg
-                  className="mt-0.5 h-4 w-4 shrink-0 text-success"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.5 12.75l6 6 9-13.5"
-                  />
-                </svg>
-                Chế độ đi bộ Avatar tham quan tự do
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <span>
+                  Chế độ đi bộ tham quan tự do như đang trực tiếp xem nhà
+                </span>
               </li>
             </ul>
           </div>
