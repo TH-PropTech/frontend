@@ -1,4 +1,5 @@
 import * as React from 'react'
+import Link from 'next/link'
 import type { Article } from '../articles-data'
 import { Bullets, H3, Lead, Note, Prose, Steps } from './article-blocks'
 
@@ -7,12 +8,20 @@ export const servicesArticles: Article[] = [
     id: 'smart-contract',
     title: 'Hợp đồng điện tử và quy trình thuê',
     breadcrumbs: ['Sản phẩm & Dịch vụ', 'Hợp đồng điện tử và quy trình thuê'],
+    updatedAt: '24/10/2026',
     content: (
       <Prose>
         <Lead>Quy trình thuê nhà diễn ra như thế nào?</Lead>
         <p>
           Sau khi hồ sơ thuê được chấp thuận, hợp đồng thuê được lập thành bản
-          điện tử và đi qua các bước cố định. Bạn xem tiến độ ở trang hợp đồng.
+          điện tử và đi qua các bước cố định. Bạn xem tiến độ ở{' '}
+          <Link
+            href="/rental-applications"
+            className="text-primary hover:underline font-semibold"
+          >
+            trang hợp đồng và đơn thuê
+          </Link>
+          .
         </p>
 
         <H3>Các bước của hợp đồng:</H3>
@@ -25,7 +34,13 @@ export const servicesArticles: Article[] = [
           <li>
             <strong>Ký số:</strong> chủ nhà và khách thuê đều ký bằng chứng thư
             số VNPT SmartCA. Mỗi bên cần đã xác minh KYC. Xem bài{' '}
-            <em>Ký hợp đồng bằng VNPT SmartCA</em>.
+            <Link
+              href="/process?article=smartca-sign"
+              className="text-primary hover:underline font-semibold"
+            >
+              Ký hợp đồng bằng VNPT SmartCA
+            </Link>
+            .
           </li>
           <li>
             <strong>Đặt cọc:</strong> khách thuê thanh toán tiền cọc. Thứ tự là
@@ -67,6 +82,7 @@ export const servicesArticles: Article[] = [
     id: 'smartca-sign',
     title: 'Ký hợp đồng bằng VNPT SmartCA',
     breadcrumbs: ['Sản phẩm & Dịch vụ', 'Ký hợp đồng bằng VNPT SmartCA'],
+    updatedAt: '22/10/2026',
     content: (
       <Prose>
         <Lead>Chữ ký số VNPT SmartCA là gì?</Lead>
@@ -145,6 +161,7 @@ export const servicesArticles: Article[] = [
     id: 'ai-recommender',
     title: 'Gợi ý căn hộ theo khảo sát',
     breadcrumbs: ['Sản phẩm & Dịch vụ', 'Gợi ý căn hộ theo khảo sát'],
+    updatedAt: '20/10/2026',
     content: (
       <Prose>
         <Lead>Hệ thống gợi ý hoạt động ra sao?</Lead>
@@ -205,6 +222,7 @@ export const paymentsArticles: Article[] = [
     id: 'payment-guide',
     title: 'Thanh toán tiền cọc và tiền thuê',
     breadcrumbs: ['Thanh toán & Giao dịch', 'Thanh toán tiền cọc và tiền thuê'],
+    updatedAt: '23/10/2026',
     content: (
       <Prose>
         <Lead>Tiền của bạn đi đâu?</Lead>
@@ -215,10 +233,10 @@ export const paymentsArticles: Article[] = [
           hộ.
         </p>
 
-        <Note title="Môi trường thử nghiệm:">
-          Hệ thống hiện chạy với ví và ngân hàng giả lập (ví dụ Ví Mộc, Mock
-          Bank), không phải tiền thật. Các phương thức hiển thị có thể thay đổi
-          theo cấu hình.
+        <Note title="Thanh toán an toàn:">
+          Hệ thống hỗ trợ thanh toán điện tử minh bạch qua các cổng thanh toán
+          liên kết nhằm bảo vệ quyền lợi và ghi nhận giao dịch tức thì cho cả
+          khách thuê và chủ nhà.
         </Note>
 
         <H3>Thanh toán tiền cọc:</H3>
@@ -276,19 +294,34 @@ export const paymentsArticles: Article[] = [
       'Thanh toán & Giao dịch',
       'Xem hóa đơn và bằng chứng giao dịch',
     ],
+    updatedAt: '21/10/2026',
     content: (
       <Prose>
         <Lead>Kiểm tra hóa đơn và dấu vết của giao dịch</Lead>
         <p>
-          Mọi hóa đơn của bạn nằm ở tab <em>Hóa đơn</em> trong trang cá nhân.
-          Với hợp đồng, bạn còn xem được bằng chứng ghi lại các bước quan trọng.
+          Mọi hóa đơn của bạn nằm ở tab{' '}
+          <Link
+            href="/profile"
+            className="text-primary hover:underline font-semibold"
+          >
+            Hóa đơn trong trang cá nhân
+          </Link>
+          . Với hợp đồng, bạn còn xem được bằng chứng ghi lại các bước quan
+          trọng.
         </p>
 
         <H3>Các bước kiểm tra:</H3>
         <Steps>
           <li>
-            Vào <em>Trang cá nhân</em> rồi tab <em>Hóa đơn</em> để xem hóa đơn,
-            hạn thanh toán, số tiền và trạng thái.
+            Vào{' '}
+            <Link
+              href="/profile"
+              className="text-primary hover:underline font-semibold"
+            >
+              Trang cá nhân
+            </Link>{' '}
+            rồi chọn tab <em>Hóa đơn</em> để xem hóa đơn, hạn thanh toán, số
+            tiền và trạng thái.
           </li>
           <li>
             Mở hợp đồng, bước <em>Kích hoạt</em>: thẻ bằng chứng hiển thị{' '}

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import Link from 'next/link'
 import type { Article } from '../articles-data'
 import { Bullets, H3, Lead, Note, Prose, Steps } from './article-blocks'
 
@@ -11,6 +12,7 @@ export const postingArticles: Article[] = [
       'Hướng dẫn đăng tin',
       'Hướng dẫn đăng tin trên máy tính',
     ],
+    updatedAt: '24/10/2026',
     content: (
       <Prose>
         <p>
@@ -26,7 +28,13 @@ export const postingArticles: Article[] = [
           </li>
           <li>
             Bấm <strong>Đăng tin</strong> ở thanh trên cùng, hoặc vào{' '}
-            <em>Trang cá nhân → Tin đăng của tôi</em>.
+            <Link
+              href="/profile"
+              className="text-primary hover:underline font-semibold"
+            >
+              Trang cá nhân → Tin đăng của tôi
+            </Link>
+            .
           </li>
           <li>
             <strong>Nhập thông tin căn hộ:</strong> loại hình, địa chỉ, số phòng
@@ -77,6 +85,7 @@ export const postingArticles: Article[] = [
       'Hướng dẫn đăng tin',
       'Hướng dẫn đăng tin trên điện thoại',
     ],
+    updatedAt: '22/10/2026',
     content: (
       <Prose>
         <p>Đăng tin ngay trên ứng dụng di động TH-PropTech.</p>
@@ -118,6 +127,7 @@ export const accountArticles: Article[] = [
     id: 'kyc-info',
     title: 'Xác minh danh tính (KYC) bằng CCCD',
     breadcrumbs: ['Tài khoản người dùng', 'Xác minh danh tính (KYC) bằng CCCD'],
+    updatedAt: '23/10/2026',
     content: (
       <Prose>
         <Lead>Vì sao cần KYC?</Lead>
@@ -129,7 +139,14 @@ export const accountArticles: Article[] = [
         <H3>Các bước thực hiện:</H3>
         <Steps>
           <li>
-            Vào <em>Trang cá nhân</em> và chọn xác minh danh tính.
+            Vào{' '}
+            <Link
+              href="/profile"
+              className="text-primary hover:underline font-semibold"
+            >
+              Trang cá nhân
+            </Link>{' '}
+            và chọn mục xác minh danh tính.
           </li>
           <li>
             <strong>Tải CCCD:</strong> chụp bằng webcam hoặc tải ảnh mặt trước
@@ -171,12 +188,19 @@ export const accountArticles: Article[] = [
     id: 'account-security',
     title: 'Bảo mật tài khoản (2FA, Smart OTP)',
     breadcrumbs: ['Tài khoản người dùng', 'Bảo mật tài khoản (2FA, Smart OTP)'],
+    updatedAt: '21/10/2026',
     content: (
       <Prose>
         <Lead>Bảo vệ tài khoản của bạn</Lead>
         <p>
           Ngoài mật khẩu, bạn có thể bật thêm các lớp bảo vệ trong{' '}
-          <em>Trang cá nhân → Bảo mật</em>.
+          <Link
+            href="/profile"
+            className="text-primary hover:underline font-semibold"
+          >
+            Trang cá nhân → Bảo mật
+          </Link>
+          .
         </p>
 
         <H3>Xác thực hai lớp (2FA):</H3>
@@ -218,6 +242,7 @@ export const vrtourArticles: Article[] = [
     id: 'vr-guide',
     title: 'Xem ảnh 360° căn hộ',
     breadcrumbs: ['Tham quan VR Tour', 'Xem ảnh 360° căn hộ'],
+    updatedAt: '20/10/2026',
     content: (
       <Prose>
         <Lead>Tham quan căn hộ bằng ảnh 360°</Lead>
@@ -258,6 +283,7 @@ export const vrtourArticles: Article[] = [
     id: 'floorplan-3d',
     title: 'Xem sơ đồ 3D căn hộ',
     breadcrumbs: ['Tham quan VR Tour', 'Xem sơ đồ 3D căn hộ'],
+    updatedAt: '24/10/2026',
     content: (
       <Prose>
         <Lead>Sơ đồ 3D minh hoạ là gì?</Lead>
@@ -323,6 +349,7 @@ export const policiesArticles: Article[] = [
     id: 'policy-report',
     title: 'Báo cáo tin đăng vi phạm',
     breadcrumbs: ['Quy định & Chính sách', 'Báo cáo tin đăng vi phạm'],
+    updatedAt: '19/10/2026',
     content: (
       <Prose>
         <Lead>Gặp tin đăng đáng ngờ thì làm gì?</Lead>
@@ -352,7 +379,13 @@ export const policiesArticles: Article[] = [
           <li>
             Nhân viên chuyển báo cáo sang <em>đang xem xét</em>, sau đó{' '}
             <em>đã xử lý</em> hoặc <em>bác bỏ</em>. Bạn theo dõi ở{' '}
-            <em>Trang cá nhân → Báo cáo an toàn</em>.
+            <Link
+              href="/profile"
+              className="text-primary hover:underline font-semibold"
+            >
+              Trang cá nhân → Báo cáo an toàn
+            </Link>
+            .
           </li>
           <li>
             Với các loại nghiêm trọng, nhân viên có thể ẩn tin đăng khỏi trang
@@ -375,6 +408,7 @@ export const policiesArticles: Article[] = [
     id: 'policy-privacy',
     title: 'Chính sách bảo mật dữ liệu',
     breadcrumbs: ['Quy định & Chính sách', 'Chính sách bảo mật dữ liệu'],
+    updatedAt: '24/10/2026',
     content: (
       <Prose>
         <Lead>Dữ liệu của bạn được bảo vệ như thế nào?</Lead>
@@ -402,8 +436,13 @@ export const policiesArticles: Article[] = [
         <H3>Quyền của bạn:</H3>
         <p>
           Cần xem, chỉnh sửa hoặc xóa dữ liệu cá nhân, hãy gửi yêu cầu qua mục{' '}
-          <em>Hỗ trợ kỹ thuật</em> trong Trang cá nhân. Hiện chưa có chức năng
-          tự xuất hoặc tự xóa dữ liệu.
+          <Link
+            href="/profile"
+            className="text-primary hover:underline font-semibold"
+          >
+            Hỗ trợ kỹ thuật trong Trang cá nhân
+          </Link>
+          . Hiện chưa có chức năng tự xuất hoặc tự xóa dữ liệu.
         </p>
 
         <Note title="Lưu ý:">
@@ -417,6 +456,7 @@ export const policiesArticles: Article[] = [
     id: 'policy-fees',
     title: 'Chính sách biểu phí dịch vụ',
     breadcrumbs: ['Quy định & Chính sách', 'Chính sách biểu phí dịch vụ'],
+    updatedAt: '22/10/2026',
     content: (
       <Prose>
         <Lead>Những khoản phí trên TH-PropTech</Lead>

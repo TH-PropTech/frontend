@@ -7,6 +7,7 @@ export interface Article {
   id: string
   title: string
   breadcrumbs: string[]
+  updatedAt?: string
   content: React.ReactNode
 }
 
