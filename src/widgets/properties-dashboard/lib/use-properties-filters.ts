@@ -984,12 +984,17 @@ export function usePropertiesFilters() {
   const [apartments, setApartments] = React.useState<ApartmentItem[]>(() =>
     env.enableMocks ? mockApartments : []
   )
+  const [isLoadingApartments, setIsLoadingApartments] = React.useState<boolean>(
+    () => !env.enableMocks
+  )
   const [apartmentsError, setApartmentsError] = React.useState<Error | null>(
     null
   )
 
   React.useEffect(() => {
     let active = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsLoadingApartments(true)
     const queryParams = new URLSearchParams()
     queryParams.append('format', 'web')
     if (debouncedKeyword) queryParams.append('search', debouncedKeyword)
@@ -1054,6 +1059,11 @@ export function usePropertiesFilters() {
           setApartmentsError(normalizedError)
           setUseMockFallback(env.enableMocks)
           setApartments(env.enableMocks ? mockApartments : [])
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoadingApartments(false)
         }
       })
     return () => {
@@ -1816,6 +1826,7 @@ export function usePropertiesFilters() {
     filteredApiProjects,
     filteredApartments,
     apartmentsError,
+    isLoadingApartments,
     locationLabel,
     priceLabel,
     areaLabel,
