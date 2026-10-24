@@ -3,40 +3,94 @@ import { describe, it, expect, vi } from 'vitest'
 import * as React from 'react'
 import { FeaturedApartments } from '../featured-apartments'
 import type { RecommendationResult } from '@/features/ai-recommendation'
+import type { FeaturedCard } from '../../../model/home-apartment-stats'
 
-describe('FeaturedApartments Component - Fallback Curation & AI Recommendations', () => {
-  const defaultProps = {
-    results: [],
-    isLoading: false,
-    likedIds: {},
-    hasSubmitted: false,
-    handleFeedback: vi.fn(),
-    onOpenSurvey: vi.fn(),
-    isAuthenticated: false,
-  }
+const CARD: FeaturedCard = {
+  id: 'apt-1',
+  name: 'Căn hộ Thật Quận 2',
+  district: 'Quận 2',
+  rent_price: 14_000_000,
+  rooms: 2,
+  reasons: ['Dự án Masteri'],
+  match_score: 0,
+  isVerified: false,
+  hasVr: false,
+}
 
-  it('renders curated fallback apartments and AI survey banner when user has not submitted survey', () => {
+const defaultProps = {
+  apartments: [CARD],
+  isApartmentsLoading: false,
+  results: [],
+  isLoading: false,
+  likedIds: {},
+  hasSubmitted: false,
+  handleFeedback: vi.fn(),
+  onOpenSurvey: vi.fn(),
+  isAuthenticated: false,
+}
+
+describe('FeaturedApartments Component - API data & AI Recommendations', () => {
+  it('renders apartments from the API and the AI survey banner before the survey', () => {
     render(<FeaturedApartments {...defaultProps} />)
 
-    // Heading
     expect(screen.getByText(/căn hộ nổi bật & minh bạch/i)).toBeInTheDocument()
-
-    // AI Callout Banner
-    expect(
-      screen.getByText(/tìm căn hộ phù hợp với nhu cầu và túi tiền của bạn/i)
-    ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: /bắt đầu khảo sát/i })
     ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: /căn hộ thật quận 2/i })
+    ).toBeInTheDocument()
+    expect(screen.getByText('Dự án Masteri')).toBeInTheDocument()
+  })
 
-    // 3 Curated apartments
-    expect(screen.getByText(/landmark 81/i)).toBeInTheDocument()
-    expect(screen.getByText(/masteri an phú/i)).toBeInTheDocument()
-    expect(screen.getByText(/the sun avenue/i)).toBeInTheDocument()
+  it('shows VR and verified badges only when the apartment really has them', () => {
+    const { rerender } = render(<FeaturedApartments {...defaultProps} />)
+    expect(screen.queryByText(/vr 360°/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/đã kiểm duyệt/i)).not.toBeInTheDocument()
 
-    // Price tags & badges
-    expect(screen.getAllByText(/vr 360°/i).length).toBeGreaterThanOrEqual(3)
-    expect(screen.getAllByText(/nổi bật/i).length).toBeGreaterThanOrEqual(3)
+    rerender(
+      <FeaturedApartments
+        {...defaultProps}
+        apartments={[{ ...CARD, hasVr: true, isVerified: true }]}
+      />
+    )
+    expect(screen.getByText(/vr 360°/i)).toBeInTheDocument()
+    expect(screen.getByText(/đã kiểm duyệt/i)).toBeInTheDocument()
+  })
+
+  it('shows at most 3 apartments', () => {
+    const many = Array.from({ length: 5 }, (_, i) => ({
+      ...CARD,
+      id: `apt-${i}`,
+      name: `Căn hộ ${i}`,
+    }))
+    render(<FeaturedApartments {...defaultProps} apartments={many} />)
+
+    expect(screen.getAllByRole('link', { name: /chi tiết/i })).toHaveLength(3)
+  })
+
+  it('shows an empty state instead of invented apartments when the API returns none', () => {
+    render(<FeaturedApartments {...defaultProps} apartments={[]} />)
+
+    expect(
+      screen.getByText(/chưa có căn hộ nào để hiển thị/i)
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/landmark 81/i)).not.toBeInTheDocument()
+  })
+
+  it('shows skeleton placeholders, not the empty state, while apartments load', () => {
+    const { container } = render(
+      <FeaturedApartments
+        {...defaultProps}
+        apartments={[]}
+        isApartmentsLoading={true}
+      />
+    )
+
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument()
+    expect(
+      screen.queryByText(/chưa có căn hộ nào để hiển thị/i)
+    ).not.toBeInTheDocument()
   })
 
   it('renders AI recommendation results when user has submitted survey', () => {

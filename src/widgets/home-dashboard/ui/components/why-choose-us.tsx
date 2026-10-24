@@ -11,7 +11,7 @@ export function WhyChooseUs(): React.ReactElement {
             TẠI SAO CHỌN CHÚNG TÔI
           </span>
           <h2 className="mt-3 font-marketing text-3xl font-bold text-fg sm:text-4xl">
-            Lý do hàng nghìn người tin dùng TH-PropTech
+            Vì sao nên chọn TH-PropTech
           </h2>
         </div>
 

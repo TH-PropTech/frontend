@@ -14,7 +14,7 @@ export function StatsSection(): React.ReactElement {
               sub: 'Xem từng phòng',
             },
             {
-              value: '7',
+              value: '4',
               label: 'Bước quy trình',
               sub: 'Số hóa hoàn toàn',
             },
