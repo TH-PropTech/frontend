@@ -52,6 +52,10 @@
   --shadow-md: 0 12px 32px rgba(43, 33, 30, 0.08);
   --shadow-lg: 0 20px 48px rgba(43, 33, 30, 0.12);
 
+  /* ── Fonts ── */
+  --font-display: var(--font-body);
+  --font-mono: var(--font-body);
+
   /* ── Spacing ── */
   --space-1: 4px;
   --space-2: 8px;
@@ -79,7 +83,6 @@ body {
   color: var(--fg);
   font-family:
     'Be Vietnam Pro',
-    'Space Grotesk',
     'Segoe UI',
     system-ui,
     -apple-system,
@@ -98,7 +101,7 @@ a {
 /* ── Utilities ── */
 @layer utilities {
   .font-display {
-    font-family: 'Space Grotesk', 'Be Vietnam Pro', 'Segoe UI', sans-serif;
+    font-family: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
   }
 
   .font-marketing {
@@ -106,7 +109,7 @@ a {
   }
 
   .font-mono {
-    font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-family: 'Be Vietnam Pro', 'SF Mono', Consolas, monospace;
   }
 
   .bg-muted {

@@ -84,10 +84,10 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['Space Grotesk', 'Be Vietnam Pro', 'Segoe UI', 'sans-serif'],
+        display: ['Be Vietnam Pro', 'Segoe UI', 'sans-serif'],
         body: ['Be Vietnam Pro', 'Segoe UI', 'system-ui', 'sans-serif'],
         marketing: ['Lora', 'Georgia', 'serif'],
-        mono: ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+        mono: ['Be Vietnam Pro', 'SF Mono', 'Consolas', 'monospace'],
       },
       borderRadius: {
         sm: 'var(--radius-sm)',

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Be_Vietnam_Pro, Space_Grotesk, Lora } from 'next/font/google'
+import { Be_Vietnam_Pro, Lora } from 'next/font/google'
 import { Suspense } from 'react'
 import { PageTransition } from '@/shared/ui/page-transition'
 import { Providers } from './providers'
@@ -10,13 +10,6 @@ const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['vietnamese', 'latin'],
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-body',
-  display: 'swap',
-})
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-display',
   display: 'swap',
 })
 
@@ -44,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${beVietnamPro.variable} ${spaceGrotesk.variable} ${lora.variable}`}
+      className={`${beVietnamPro.variable} ${lora.variable}`}
       suppressHydrationWarning
     >
       <body className={beVietnamPro.className} suppressHydrationWarning>
