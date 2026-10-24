@@ -84,10 +84,9 @@ describe('mapPost', () => {
   })
 
   it('uses id when _id is missing and maps admin authors to staff', () => {
-    const post = mapPost(
-      backendPost({ _id: undefined, id: 'p9', authorRole: 'admin' }),
-      'u1'
-    )
+    const withoutMongoId = backendPost({ id: 'p9', authorRole: 'admin' })
+    delete withoutMongoId._id
+    const post = mapPost(withoutMongoId, 'u1')
     expect(post.id).toBe('p9')
     expect(post.authorRole).toBe('staff')
   })
@@ -111,7 +110,9 @@ describe('mapPost', () => {
   it('flags only the author as owner and never matches a guest', () => {
     expect(mapPost(backendPost(), 'u1').isOwn).toBe(true)
     expect(mapPost(backendPost(), 'u2').isOwn).toBe(false)
-    expect(mapPost(backendPost({ authorId: undefined }), '').isOwn).toBe(false)
+    const anonymous = backendPost()
+    delete anonymous.authorId
+    expect(mapPost(anonymous, '').isOwn).toBe(false)
   })
 
   it('drops legacy blob:/file: image URLs that only worked on the author machine', () => {
