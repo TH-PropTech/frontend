@@ -11,6 +11,8 @@ interface CommunitySidebarProps {
   projectStats?: { name: string; posts: number }[]
   selectedProject?: string | null
   onSelectProject?: (project: string) => void
+  isAuthenticated?: boolean
+  onAuthRequired?: () => void
 }
 
 export function CommunitySidebar({
@@ -22,15 +24,11 @@ export function CommunitySidebar({
   projectStats,
   selectedProject,
   onSelectProject,
+  isAuthenticated = true,
+  onAuthRequired,
 }: CommunitySidebarProps): React.ReactElement {
   const displayProjects = React.useMemo(() => {
-    if (projectStats && projectStats.length > 0) return projectStats
-    return [
-      { name: 'Vinhomes Central Park', posts: 34 },
-      { name: 'Masteri Thảo Điền', posts: 21 },
-      { name: 'Sunrise City', posts: 18 },
-      { name: 'The Sun Avenue', posts: 12 },
-    ]
+    return projectStats || []
   }, [projectStats])
   return (
     <div className="space-y-6">
@@ -63,7 +61,14 @@ export function CommunitySidebar({
           </div>
 
           <button
-            onClick={() => setShowMyPosts(!showMyPosts)}
+            type="button"
+            onClick={() => {
+              if (!isAuthenticated) {
+                onAuthRequired?.()
+                return
+              }
+              setShowMyPosts(!showMyPosts)
+            }}
             className={`w-full mt-2 rounded-xl py-2 px-3 text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
               showMyPosts
                 ? 'bg-primary text-white border-primary shadow-sm'
@@ -117,37 +122,43 @@ export function CommunitySidebar({
             </button>
           )}
         </div>
-        <div className="space-y-1.5">
-          {displayProjects.map(proj => {
-            const isSelected =
-              selectedProject?.toLowerCase() === proj.name.toLowerCase()
-            return (
-              <button
-                key={proj.name}
-                type="button"
-                onClick={() => onSelectProject?.(proj.name)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-primary/10 border border-primary/25 text-primary font-bold'
-                    : 'hover:bg-surface-muted/60 text-fg border border-transparent'
-                }`}
-              >
-                <span className="text-xs font-medium truncate pr-2">
-                  {proj.name}
-                </span>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+        {displayProjects.length === 0 ? (
+          <p className="text-xs text-muted italic text-center py-3">
+            Chưa có dự án nào có bài viết
+          </p>
+        ) : (
+          <div className="space-y-1.5">
+            {displayProjects.map(proj => {
+              const isSelected =
+                selectedProject?.toLowerCase() === proj.name.toLowerCase()
+              return (
+                <button
+                  key={proj.name}
+                  type="button"
+                  onClick={() => onSelectProject?.(proj.name)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-primary text-white'
-                      : 'text-muted bg-surface-muted border border-border/60'
+                      ? 'bg-primary/10 border border-primary/25 text-primary font-bold'
+                      : 'hover:bg-surface-muted/60 text-fg border border-transparent'
                   }`}
                 >
-                  {proj.posts} bài
-                </span>
-              </button>
-            )
-          })}
-        </div>
+                  <span className="text-xs font-medium truncate pr-2">
+                    {proj.name}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                      isSelected
+                        ? 'bg-primary text-white'
+                        : 'text-muted bg-surface-muted border border-border/60'
+                    }`}
+                  >
+                    {proj.posts} bài
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Community Guidelines */}

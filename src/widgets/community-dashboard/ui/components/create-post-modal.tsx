@@ -65,23 +65,13 @@ export function CreatePostModal({
     }
   }, [isOpen])
 
-  const FALLBACK_PROJECTS = React.useMemo(
-    () => [
-      'Vinhomes Central Park',
-      'Masteri Thảo Điền',
-      'Sunrise City',
-      'Discovery Complex',
-      'Vinhomes Smart City',
-      'The Sun Avenue',
-    ],
-    []
-  )
-
   const filteredProjects = React.useMemo(() => {
-    const list = projectsList.length > 0 ? projectsList : FALLBACK_PROJECTS
-    if (!projectName.trim()) return list
-    return list.filter(p => p.toLowerCase().includes(projectName.toLowerCase()))
-  }, [projectName, projectsList, FALLBACK_PROJECTS])
+    if (projectsList.length === 0) return []
+    if (!projectName.trim()) return projectsList
+    return projectsList.filter(p =>
+      p.toLowerCase().includes(projectName.toLowerCase())
+    )
+  }, [projectName, projectsList])
 
   React.useEffect(() => {
     if (isOpen) {

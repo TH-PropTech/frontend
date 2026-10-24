@@ -1,6 +1,14 @@
 import { UserAvatar } from './user-avatar'
 
-export function CommunityHero(): React.ReactElement {
+interface CommunityHeroProps {
+  memberCount?: number
+  projectCount?: number
+}
+
+export function CommunityHero({
+  memberCount = 0,
+  projectCount = 0,
+}: CommunityHeroProps): React.ReactElement {
   return (
     <section className="relative flex flex-col items-center justify-center bg-gradient-to-b from-[#f5ece2] via-[#faf6f1] to-bg pb-24 pt-32 text-center rounded-b-[40px] border-b border-border overflow-hidden">
       {/* Topography SVG Background — same pattern as PropertiesHero */}
@@ -108,12 +116,16 @@ export function CommunityHero(): React.ReactElement {
               />
             </div>
             <span className="text-[11px] text-muted font-semibold">
-              124+ thành viên
+              {memberCount > 0
+                ? `${memberCount} thành viên tham gia`
+                : 'Cộng đồng cư dân năng động'}
             </span>
           </div>
           <div className="h-4 w-px bg-border" />
           <span className="text-[11px] text-muted font-semibold">
-            12 dự án đang thảo luận
+            {projectCount > 0
+              ? `${projectCount} dự án đang thảo luận`
+              : 'Đa dạng dự án & khu căn hộ'}
           </span>
         </div>
       </div>
