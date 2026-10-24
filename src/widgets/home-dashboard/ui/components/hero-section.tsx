@@ -25,8 +25,8 @@ export function HeroSection(): React.ReactElement {
       <div className="relative z-30 mx-auto w-full max-w-6xl px-6 md:px-10">
         <div className="space-y-6 text-white animate-in fade-in slide-in-from-bottom-8 duration-700">
           <div className="max-w-3xl space-y-6">
-            <span className="font-mono text-xs font-bold uppercase tracking-widest text-white/85">
-              Trustworthy PropTech SaaS
+            <span className="font-mono text-xs font-bold uppercase tracking-widest text-white/90 bg-white/10 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/20 inline-block">
+              Nền tảng thuê căn hộ minh bạch & bảo mật
             </span>
             <h1 className="font-display text-4xl font-bold leading-[1.02] tracking-tight sm:text-5xl md:text-[62px] text-white">
               Tìm căn hộ phù hợp,

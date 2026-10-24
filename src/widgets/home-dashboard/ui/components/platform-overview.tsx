@@ -6,7 +6,7 @@ import type { Route } from 'next'
 
 export function PlatformOverview(): React.ReactElement {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-24 md:px-10">
+    <section className="mx-auto max-w-6xl px-6 pt-24 pb-20 md:pt-28 md:pb-24 md:px-10 scroll-mt-20">
       <div className="mb-16 text-center">
         <span className="font-mono text-xs font-bold uppercase tracking-widest text-primary">
           HỆ SINH THÁI TH-PROPTECH

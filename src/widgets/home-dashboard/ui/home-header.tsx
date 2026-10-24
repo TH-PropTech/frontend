@@ -10,6 +10,7 @@ import { useFavorites } from '@/shared/lib/use-favorites'
 import { WelcomeModal } from '@/features/auth/ui/auth-modals'
 import { AuthRequiredModal } from '@/widgets/community-dashboard/ui/components/auth-required-modal'
 import { NotificationBell } from './components/notification-bell'
+import { Menu, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface UserStored {
@@ -21,6 +22,7 @@ interface UserStored {
 
 export function HomeHeader(): React.ReactElement {
   const [isScrolled, setIsScrolled] = React.useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const [user, setUser] = React.useState<UserStored | null>(null)
   const [showWelcome, setShowWelcome] = React.useState(false)
   const [showAuthModal, setShowAuthModal] = React.useState(false)
@@ -35,8 +37,17 @@ export function HomeHeader(): React.ReactElement {
         setIsScrolled(false)
       }
     }
+    const handleResize = (): void => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false)
+      }
+    }
     window.addEventListener('scroll', handleScroll)
-    return (): void => window.removeEventListener('scroll', handleScroll)
+    window.addEventListener('resize', handleResize)
+    return (): void => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleResize)
+    }
   }, [])
 
   React.useEffect(() => {
@@ -236,6 +247,7 @@ export function HomeHeader(): React.ReactElement {
             <Link
               href={'/login' as Route}
               onClick={() => handleTabClick('/login')}
+              className="hidden sm:inline-flex"
             >
               <Button
                 className={`h-[44px] whitespace-nowrap rounded-full px-4 sm:px-5 py-2.5 text-sm font-bold shadow-[0_12px_32px_rgba(43,33,30,0.15)] transition-all hover:-translate-y-0.5 active:translate-y-0 ${
@@ -248,8 +260,121 @@ export function HomeHeader(): React.ReactElement {
               </Button>
             </Link>
           )}
+
+          {/* Mobile & Tablet Hamburger Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 lg:hidden ${
+              isLightHeader
+                ? 'border-border bg-white text-fg hover:bg-surface-muted'
+                : 'border-white/25 bg-black/20 text-white hover:bg-black/40'
+            }`}
+            aria-label={
+              isMobileMenuOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'
+            }
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Drawer Menu */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 top-[64px] z-50 flex flex-col justify-between bg-white dark:bg-zinc-950 p-6 shadow-2xl lg:hidden overflow-y-auto animate-in fade-in slide-in-from-top-4 duration-200">
+          <nav className="flex flex-col gap-2" aria-label="Điều hướng di động">
+            {navItems.map(item => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href as Route}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    handleTabClick(item.href)
+                  }}
+                  className={`flex items-center justify-between rounded-xl px-4 py-3.5 text-base font-semibold transition-colors ${
+                    isActive
+                      ? 'bg-primary/10 text-primary font-bold'
+                      : 'text-fg hover:bg-surface-muted'
+                  }`}
+                >
+                  <span>{item.name}</span>
+                  {isActive && (
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+          <div className="mt-6 pt-6 border-t border-border flex flex-col gap-3">
+            {user ? (
+              <>
+                <Link
+                  href={'/profile' as Route}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    handleTabClick('/profile')
+                  }}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-fg hover:bg-surface-muted"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                      />
+                    </svg>
+                  </div>
+                  <span>
+                    Hồ sơ cá nhân (
+                    {user.name ? user.name.trim().split(/\s+/).pop() : ''})
+                  </span>
+                </Link>
+                <Button
+                  onClick={() => {
+                    localStorage.removeItem('accessToken')
+                    localStorage.removeItem('user')
+                    localStorage.setItem('showLogoutToast', 'true')
+                    setUser(null)
+                    setIsMobileMenuOpen(false)
+                    window.location.href = '/'
+                  }}
+                  className="h-11 w-full rounded-xl bg-surface-muted text-muted font-bold hover:bg-danger-soft hover:text-danger"
+                >
+                  Đăng xuất
+                </Button>
+              </>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <Link
+                  href={'/login' as Route}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    handleTabClick('/login')
+                  }}
+                >
+                  <Button className="h-12 w-full rounded-xl bg-primary text-white font-bold hover:bg-primary-hover shadow-md text-sm">
+                    Đăng nhập
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <WelcomeModal
         isOpen={showWelcome}

@@ -314,13 +314,17 @@ export function AiAssistantPanel(): React.ReactElement {
           title="Mở Trợ lý ảo TH-PropTech"
           aria-label="Mở Trợ lý ảo TH-PropTech"
         >
-          <AiMascot size={92} isAnimated />
+          <AiMascot
+            size={84}
+            isAnimated
+            className="w-16 sm:w-20 h-auto drop-shadow-md"
+          />
         </button>
       )}
 
       {/* Glassmorphism Chat Panel */}
       {isOpen && (
-        <div className="flex flex-col w-96 h-[550px] bg-white/90 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 shadow-2xl rounded-2xl overflow-hidden transition-all duration-300 transform scale-100 origin-bottom-right">
+        <div className="flex flex-col w-[calc(100vw-2rem)] max-w-sm sm:w-96 h-[520px] sm:h-[550px] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 shadow-2xl rounded-2xl overflow-hidden transition-all duration-300 transform scale-100 origin-bottom-right">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-[#C65A3A] text-white">
             <div className="flex items-center gap-2.5">

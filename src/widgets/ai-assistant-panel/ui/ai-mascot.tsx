@@ -36,6 +36,19 @@ export function AiMascot({
   isAnimated = false,
   headOnly = false,
 }: AiMascotProps): React.ReactElement {
+  const rawId = React.useId()
+  const uid = React.useMemo(
+    () => rawId.replace(/[^a-zA-Z0-9_-]/g, '_'),
+    [rawId]
+  )
+
+  const bodyGradId = `bodyGrad_${uid}`
+  const roofGradId = `roofGrad_${uid}`
+  const screenGradId = `screenGrad_${uid}`
+  const eyeGradId = `eyeGrad_${uid}`
+  const earGradId = `earGrad_${uid}`
+  const shadowFilterId = `shadowFilter_${uid}`
+
   const viewBox = headOnly ? HEAD_VIEWBOX : FULL_VIEWBOX
   const [, , vw, vh] = viewBox.split(' ').map(Number) as [
     number,
@@ -60,39 +73,45 @@ export function AiMascot({
       {isAnimated && <style>{MASCOT_CSS}</style>}
       <defs>
         {/* Main Body Gradient */}
-        <linearGradient id="bodyGrad" x1="20" y1="20" x2="100" y2="110">
+        <linearGradient id={bodyGradId} x1="20" y1="20" x2="100" y2="110">
           <stop offset="0%" stopColor="#FFE6DA" />
           <stop offset="50%" stopColor="#F9CDB9" />
           <stop offset="100%" stopColor="#EFA98F" />
         </linearGradient>
 
         {/* Roof Helmet Accent Gradient */}
-        <linearGradient id="roofGrad" x1="30" y1="10" x2="90" y2="45">
+        <linearGradient id={roofGradId} x1="30" y1="10" x2="90" y2="45">
           <stop offset="0%" stopColor="#E28766" />
           <stop offset="50%" stopColor="#C65A3A" />
           <stop offset="100%" stopColor="#A04024" />
         </linearGradient>
 
         {/* Screen Visor Gradient */}
-        <linearGradient id="screenGrad" x1="30" y1="40" x2="90" y2="85">
+        <linearGradient id={screenGradId} x1="30" y1="40" x2="90" y2="85">
           <stop offset="0%" stopColor="#1E293B" />
           <stop offset="100%" stopColor="#0F172A" />
         </linearGradient>
 
         {/* Eye Glow Gradient */}
-        <linearGradient id="eyeGrad" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={eyeGradId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#38BDF8" />
           <stop offset="100%" stopColor="#0284C7" />
         </linearGradient>
 
         {/* Ears Metallic Gradient */}
-        <linearGradient id="earGrad" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={earGradId} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#E28766" />
           <stop offset="100%" stopColor="#8C2D13" />
         </linearGradient>
 
         {/* Soft Shadow */}
-        <filter id="shadowFilter" x="-20%" y="-20%" width="140%" height="140%">
+        <filter
+          id={shadowFilterId}
+          x="-20%"
+          y="-20%"
+          width="140%"
+          height="140%"
+        >
           <feDropShadow
             dx="0"
             dy="4"
@@ -149,7 +168,7 @@ export function AiMascot({
               width="36"
               height="30"
               rx="13"
-              fill="url(#roofGrad)"
+              fill={`url(#${roofGradId})`}
             />
             <path d="M60 103 L65 109 L60 115 L55 109 Z" fill="#FFFFFF" />
 
@@ -200,7 +219,7 @@ export function AiMascot({
           width="10"
           height="24"
           rx="5"
-          fill="url(#earGrad)"
+          fill={`url(#${earGradId})`}
         />
         <rect
           x="96"
@@ -208,7 +227,7 @@ export function AiMascot({
           width="10"
           height="24"
           rx="5"
-          fill="url(#earGrad)"
+          fill={`url(#${earGradId})`}
         />
 
         {/* --- Main Robot Head Shell (Soft Curved Box) --- */}
@@ -218,7 +237,7 @@ export function AiMascot({
           width="76"
           height="76"
           rx="26"
-          fill="url(#bodyGrad)"
+          fill={`url(#${bodyGradId})`}
           stroke="#C65A3A"
           strokeWidth="2.5"
         />
@@ -226,11 +245,11 @@ export function AiMascot({
         {/* --- House Roof Cap / Helmet (Real Estate Identity) --- */}
         <path
           d="M 28 32 Q 60 14 92 32 L 92 38 Q 60 22 28 38 Z"
-          fill="url(#roofGrad)"
+          fill={`url(#${roofGradId})`}
         />
         <path
           d="M 60 16 L 85 32 L 35 32 Z"
-          fill="url(#roofGrad)"
+          fill={`url(#${roofGradId})`}
           opacity="0.4"
         />
 
@@ -241,7 +260,7 @@ export function AiMascot({
           width="56"
           height="42"
           rx="16"
-          fill="url(#screenGrad)"
+          fill={`url(#${screenGradId})`}
           stroke="#C65A3A"
           strokeWidth="1.5"
         />
@@ -256,12 +275,24 @@ export function AiMascot({
         {/* --- Cute Animated Expressive Eyes --- */}
         <g className={cls('aim-blink')}>
           {/* Left Eye: Happy Arc / Glowing Oval */}
-          <ellipse cx="48" cy="62" rx="5.5" ry="7.5" fill="url(#eyeGrad)" />
+          <ellipse
+            cx="48"
+            cy="62"
+            rx="5.5"
+            ry="7.5"
+            fill={`url(#${eyeGradId})`}
+          />
           <circle cx="46.5" cy="59.5" r="2.5" fill="#FFFFFF" />
           <circle cx="50" cy="64.5" r="1" fill="#FFFFFF" />
 
           {/* Right Eye: Happy Arc / Glowing Oval */}
-          <ellipse cx="72" cy="62" rx="5.5" ry="7.5" fill="url(#eyeGrad)" />
+          <ellipse
+            cx="72"
+            cy="62"
+            rx="5.5"
+            ry="7.5"
+            fill={`url(#${eyeGradId})`}
+          />
           <circle cx="70.5" cy="59.5" r="2.5" fill="#FFFFFF" />
           <circle cx="74" cy="64.5" r="1" fill="#FFFFFF" />
         </g>
