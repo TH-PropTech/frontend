@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+
 import Image from 'next/image'
 
 interface UserAvatarProps {
@@ -11,7 +12,7 @@ interface UserAvatarProps {
 }
 
 const SIZE_MAP = {
-  sm: 'h-7 w-7 text-[10px]',
+  sm: 'h-7 w-7 text-[11px]',
   md: 'h-10 w-10 text-xs',
   lg: 'h-12 w-12 text-sm',
 }
@@ -36,10 +37,10 @@ export function UserAvatar({
 
   const bgClass = React.useMemo(() => {
     const colors = [
-      'bg-primary/10 text-primary border-primary/20',
-      'bg-amber-600/10 text-amber-700 border-amber-600/20',
-      'bg-emerald-600/10 text-emerald-700 border-emerald-600/20',
-      'bg-blue-600/10 text-blue-700 border-blue-600/20',
+      'bg-primary-soft text-primary border-primary/20',
+      'bg-accent-soft text-fg border-accent/30',
+      'bg-success-soft text-success border-success/20',
+      'bg-info-soft text-info border-info/20',
     ]
     let hash = 0
     for (let i = 0; i < (name || '').length; i++) {
