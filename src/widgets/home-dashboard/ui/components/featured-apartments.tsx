@@ -5,8 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Route } from 'next'
 import { Button } from '@/shared/ui/button'
-import { apiClient } from '@/shared/api'
-import type { ApartmentItem } from '@/entities/properties'
 import {
   ThumbsUp,
   ThumbsDown,
@@ -18,8 +16,30 @@ import {
   SlidersHorizontal,
 } from 'lucide-react'
 import type { RecommendationResult } from '@/features/ai-recommendation'
+import type { FeaturedCard } from '../../model/home-apartment-stats'
+
+const MAX_FEATURED_CARDS = 3
+
+// The recommendation API does not report verification or VR availability,
+// so those badges stay hidden rather than being assumed.
+function toCardFromRecommendation(result: RecommendationResult): FeaturedCard {
+  return {
+    id: result.id,
+    name: result.name,
+    district: result.district,
+    rent_price: result.rent_price,
+    rooms: result.rooms,
+    ...(result.image_url ? { image_url: result.image_url } : {}),
+    reasons: result.reasons,
+    match_score: result.match_score,
+    isVerified: false,
+    hasVr: false,
+  }
+}
 
 interface FeaturedApartmentsProps {
+  apartments: FeaturedCard[]
+  isApartmentsLoading: boolean
   results: RecommendationResult[]
   isLoading: boolean
   likedIds: Record<string | number, 'like' | 'dislike'>
@@ -32,76 +52,9 @@ interface FeaturedApartmentsProps {
   isAuthenticated: boolean
 }
 
-const DEFAULT_FEATURED_APARTMENTS: RecommendationResult[] = [
-  {
-    id: 'apt-lm81-01',
-    name: 'Căn hộ Landmark 81 — View trực diện Sông Sài Gòn',
-    district: 'Bình Thạnh',
-    rent_price: 18500000,
-    rooms: 2,
-    has_gym: true,
-    has_parking: true,
-    image_url:
-      'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80',
-    match_score: 98,
-    reasons: ['Tích hợp VR Tour 360°', 'Hợp đồng lưu vết Blockchain minh bạch'],
-    confidence: 'Cao',
-    contributions: {
-      finance: 0.98,
-      location: 0.99,
-      demographics: 0.95,
-      amenities: 0.98,
-    },
-  },
-  {
-    id: 'apt-masteri-02',
-    name: 'Căn hộ Masteri An Phú — Full nội thất cao cấp',
-    district: 'Quận 2',
-    rent_price: 14000000,
-    rooms: 2,
-    has_gym: true,
-    has_parking: true,
-    image_url:
-      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
-    match_score: 94,
-    reasons: [
-      'Gần tuyến Metro Bến Thành - Suối Tiên',
-      'Hồ bơi vô cực & Gym miễn phí',
-    ],
-    confidence: 'Cao',
-    contributions: {
-      finance: 0.95,
-      location: 0.96,
-      demographics: 0.92,
-      amenities: 0.93,
-    },
-  },
-  {
-    id: 'apt-sunavenue-03',
-    name: 'The Sun Avenue Studio — Hiện đại, tiện nghi',
-    district: 'Quận 2',
-    rent_price: 9000000,
-    rooms: 1,
-    has_gym: false,
-    has_parking: true,
-    image_url:
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80',
-    match_score: 91,
-    reasons: [
-      'Phù hợp người đi làm & sinh viên',
-      'Khuôn viên thương mại sầm uất',
-    ],
-    confidence: 'Cao',
-    contributions: {
-      finance: 0.92,
-      location: 0.93,
-      demographics: 0.9,
-      amenities: 0.89,
-    },
-  },
-]
-
 export function FeaturedApartments({
+  apartments,
+  isApartmentsLoading,
   results,
   isLoading,
   likedIds,
@@ -110,74 +63,6 @@ export function FeaturedApartments({
   onOpenSurvey,
   isAuthenticated,
 }: FeaturedApartmentsProps): React.ReactElement {
-  const [realApartments, setRealApartments] = React.useState<
-    RecommendationResult[]
-  >([])
-
-  React.useEffect(() => {
-    if (hasSubmitted && results.length > 0) return
-
-    let isMounted = true
-    const loadRealApartments = async (): Promise<void> => {
-      try {
-        const data = await apiClient.get<ApartmentItem[]>(
-          '/apartments?format=web'
-        )
-        if (isMounted && Array.isArray(data) && data.length > 0) {
-          const mapped: RecommendationResult[] = data.slice(0, 4).map(item => {
-            const img =
-              item.image ||
-              (item.gallery && item.gallery.length > 0
-                ? item.gallery[0]
-                : undefined)
-
-            const mappedItem: RecommendationResult = {
-              id: item.id,
-              name: item.title,
-              district: item.district || item.location || 'TP. Hồ Chí Minh',
-              rent_price:
-                typeof item.priceNum === 'number' && item.priceNum > 0
-                  ? item.priceNum * 1_000_000
-                  : 15_000_000,
-              rooms: typeof item.bedrooms === 'number' ? item.bedrooms : 2,
-              has_gym: true,
-              has_parking: true,
-              match_score: 95,
-              reasons: [
-                item.projectName
-                  ? `Dự án ${item.projectName}`
-                  : 'Căn hộ xác thực',
-                'Đầy đủ tiện ích & hợp đồng minh bạch',
-              ],
-              confidence: 'Cao',
-              contributions: {
-                finance: 0.95,
-                location: 0.95,
-                demographics: 0.9,
-                amenities: 0.92,
-              },
-            }
-
-            if (img) {
-              mappedItem.image_url = img
-            }
-
-            return mappedItem
-          })
-          setRealApartments(mapped)
-        }
-      } catch (err) {
-        // Silently use DEFAULT_FEATURED_APARTMENTS fallback
-        console.debug('Failed to fetch real apartments, using fallback:', err)
-      }
-    }
-
-    void loadRealApartments()
-    return (): void => {
-      isMounted = false
-    }
-  }, [hasSubmitted, results])
-
   const formatVnd = (num: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -192,14 +77,12 @@ export function FeaturedApartments({
     return 'bg-[#9F3F2A]'
   }
 
-  const displayedResults =
-    hasSubmitted && results.length > 0
-      ? results.slice(0, 3)
-      : realApartments.length > 0
-        ? realApartments.slice(0, 3)
-        : DEFAULT_FEATURED_APARTMENTS
-
   const isAiRecommended = hasSubmitted && results.length > 0
+  const displayedResults = (
+    isAiRecommended ? results.map(toCardFromRecommendation) : apartments
+  ).slice(0, MAX_FEATURED_CARDS)
+  const isCatalogLoading = !hasSubmitted && isApartmentsLoading
+  const isCatalogEmpty = !hasSubmitted && displayedResults.length === 0
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-12 md:px-10 relative z-20">
@@ -284,7 +167,7 @@ export function FeaturedApartments({
         </div>
       )}
 
-      {isLoading ? (
+      {isLoading || isCatalogLoading ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map(i => (
             <div
@@ -302,6 +185,17 @@ export function FeaturedApartments({
               </div>
             </div>
           ))}
+        </div>
+      ) : isCatalogEmpty ? (
+        <div className="bg-[#FFFDF9] border border-[#E3D8D0] rounded-3xl p-10 text-center space-y-4 max-w-xl mx-auto shadow-sm">
+          <Building className="w-12 h-12 text-[#8A7968]/60 mx-auto stroke-[1.5]" />
+          <h3 className="text-base font-bold text-fg font-display">
+            Chưa có căn hộ nào để hiển thị
+          </h3>
+          <p className="text-xs text-[#8A7968] font-body leading-relaxed">
+            Hiện chưa có căn hộ đang cho thuê. Vui lòng quay lại sau hoặc xem
+            toàn bộ danh sách căn hộ.
+          </p>
         </div>
       ) : hasSubmitted && results.length === 0 ? (
         <div className="bg-[#FFFDF9] border border-[#E3D8D0] rounded-3xl p-10 text-center space-y-4 max-w-xl mx-auto shadow-sm">
@@ -367,19 +261,22 @@ export function FeaturedApartments({
                       Nổi bật
                     </span>
                   )}
-                  <span className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 font-mono text-[10px] font-bold text-white shadow-sm flex items-center gap-1">
-                    <Eye className="w-3 h-3 text-emerald-400" />
-                    VR 360°
-                  </span>
+                  {apt.hasVr && (
+                    <span className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 font-mono text-[10px] font-bold text-white shadow-sm flex items-center gap-1">
+                      <Eye className="w-3 h-3 text-emerald-400" />
+                      VR 360°
+                    </span>
+                  )}
                 </div>
 
-                {/* District overlay bottom-left on image */}
-                <div className="absolute bottom-3 left-3.5 right-3.5 z-10 flex items-center justify-between text-white text-xs">
-                  <span className="font-semibold drop-shadow-sm flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    Đã kiểm duyệt & Xác thực
-                  </span>
-                </div>
+                {apt.isVerified && (
+                  <div className="absolute bottom-3 left-3.5 right-3.5 z-10 flex items-center justify-between text-white text-xs">
+                    <span className="font-semibold drop-shadow-sm flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      Đã kiểm duyệt & Xác thực
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Card Content Area */}

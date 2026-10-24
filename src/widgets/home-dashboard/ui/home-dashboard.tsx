@@ -16,12 +16,15 @@ import { TechnologyDeepDive } from './components/technology-deep-dive'
 import { StatsSection } from './components/stats-section'
 import { FeaturedLocations } from './components/featured-locations'
 import { WhyChooseUs } from './components/why-choose-us'
-import { TestimonialsSection } from './components/testimonials-section'
 import { FaqSection } from './components/faq-section'
-import { BlogKnowledgeSection } from './components/blog-knowledge-section'
 import { SecurityCommitmentsSection } from './components/security-commitments-section'
-import { NewsletterSection } from './components/newsletter-section'
 import { FinalCtaBanner } from './components/final-cta-banner'
+import { useHomeApartments } from '../model/use-home-apartments'
+import {
+  buildBedroomStats,
+  buildDistrictStats,
+  toFeaturedCard,
+} from '../model/home-apartment-stats'
 import {
   RecommendationModal,
   useRecommendation,
@@ -35,6 +38,19 @@ export function HomeDashboard(): React.ReactElement {
   } | null>(null)
 
   const recommendation = useRecommendation()
+  const { apartments, isLoading: isApartmentsLoading } = useHomeApartments()
+  const featuredCards = React.useMemo(
+    () => apartments.filter(item => item.priceNum > 0).map(toFeaturedCard),
+    [apartments]
+  )
+  const districtStats = React.useMemo(
+    () => buildDistrictStats(apartments),
+    [apartments]
+  )
+  const bedroomStats = React.useMemo(
+    () => buildBedroomStats(apartments),
+    [apartments]
+  )
 
   React.useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -203,6 +219,8 @@ export function HomeDashboard(): React.ReactElement {
         <PlatformOverview />
 
         <FeaturedApartments
+          apartments={featuredCards}
+          isApartmentsLoading={isApartmentsLoading}
           results={recommendation.results}
           isLoading={recommendation.isLoading}
           likedIds={recommendation.likedIds}
@@ -212,18 +230,15 @@ export function HomeDashboard(): React.ReactElement {
           isAuthenticated={!!user}
         />
         <ComparisonSection />
-        <ApartmentTypes />
+        <ApartmentTypes types={bedroomStats} />
         <RentalProcessTimeline />
         <LandlordSection />
         <TechnologyDeepDive />
         <StatsSection />
-        <FeaturedLocations />
+        <FeaturedLocations districts={districtStats} />
         <WhyChooseUs />
-        <TestimonialsSection />
         <FaqSection />
-        <BlogKnowledgeSection />
         <SecurityCommitmentsSection />
-        <NewsletterSection />
         <FinalCtaBanner />
       </main>
 
