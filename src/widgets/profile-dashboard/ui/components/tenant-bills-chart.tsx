@@ -47,7 +47,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="60"
         textAnchor="end"
         fill="#A49389"
-        className="text-[9px] font-mono"
+        className="text-[11px] font-mono"
       >
         18M
       </text>
@@ -56,7 +56,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="95"
         textAnchor="end"
         fill="#A49389"
-        className="text-[9px] font-mono"
+        className="text-[11px] font-mono"
       >
         5M
       </text>
@@ -65,7 +65,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="130"
         textAnchor="end"
         fill="#A49389"
-        className="text-[9px] font-mono"
+        className="text-[11px] font-mono"
       >
         1M
       </text>
@@ -74,7 +74,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="165"
         textAnchor="end"
         fill="#A49389"
-        className="text-[9px] font-mono"
+        className="text-[11px] font-mono"
       >
         0
       </text>
@@ -93,7 +93,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="45"
         textAnchor="middle"
         fill="#C65A3A"
-        className="text-[10px] font-bold"
+        className="text-[11px] font-bold"
       >
         18.0M
       </text>
@@ -102,7 +102,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="180"
         textAnchor="middle"
         fill="#2E3440"
-        className="text-[9px] font-semibold"
+        className="text-[11px] font-semibold"
       >
         Tiền nhà
       </text>
@@ -121,7 +121,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="135"
         textAnchor="middle"
         fill="#D08770"
-        className="text-[10px] font-bold"
+        className="text-[11px] font-bold"
       >
         850k
       </text>
@@ -130,7 +130,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="180"
         textAnchor="middle"
         fill="#2E3440"
-        className="text-[9px] font-semibold"
+        className="text-[11px] font-semibold"
       >
         Tiền điện
       </text>
@@ -149,7 +149,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="145"
         textAnchor="middle"
         fill="#5E81AC"
-        className="text-[10px] font-bold"
+        className="text-[11px] font-bold"
       >
         250k
       </text>
@@ -158,7 +158,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="180"
         textAnchor="middle"
         fill="#2E3440"
-        className="text-[9px] font-semibold"
+        className="text-[11px] font-semibold"
       >
         Tiền nước
       </text>
@@ -177,7 +177,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="142"
         textAnchor="middle"
         fill="#5E81AC"
-        className="text-[10px] font-bold"
+        className="text-[11px] font-bold"
       >
         450k
       </text>
@@ -186,7 +186,7 @@ export function TenantBillsChart(): React.ReactElement {
         y="180"
         textAnchor="middle"
         fill="#2E3440"
-        className="text-[9px] font-semibold"
+        className="text-[11px] font-semibold"
       >
         Phí QL
       </text>

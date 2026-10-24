@@ -19,6 +19,7 @@ import {
 import { useProfileMaintenance } from './use-profile-maintenance'
 import { useProfileAppointments } from './use-profile-appointments'
 import { useLandlordPortfolio } from './use-landlord-portfolio'
+import { useTenantPortfolio } from './use-tenant-portfolio'
 import { progressFlags } from './landlord-portfolio'
 import { uploadAndProcessCccd } from './ocr-utils'
 import { getMyKyc } from '../api/kyc-api'
@@ -107,12 +108,21 @@ export function useProfile(): UseProfileReturn {
     [router, role]
   )
   const [activePropertyId, setActivePropertyId] = React.useState('prop-1')
-  // Chủ nhà đã đăng nhập: danh mục lấy từ backend; còn lại giữ dữ liệu demo
+  // Chủ nhà hoặc khách thuê đã đăng nhập: danh mục lấy từ backend; chưa đăng nhập giữ dữ liệu demo
   const portfolio = useLandlordPortfolio(role === 'landlord')
-  const properties = React.useMemo(
-    () => (portfolio.isLive ? portfolio.properties : DEMO_PROPERTIES),
-    [portfolio.isLive, portfolio.properties]
-  )
+  const tenantPortfolio = useTenantPortfolio(role === 'tenant')
+  const properties = React.useMemo(() => {
+    if (role === 'landlord') {
+      return portfolio.isLive ? portfolio.properties : DEMO_PROPERTIES
+    }
+    return tenantPortfolio.isLive ? tenantPortfolio.properties : DEMO_PROPERTIES
+  }, [
+    role,
+    portfolio.isLive,
+    portfolio.properties,
+    tenantPortfolio.isLive,
+    tenantPortfolio.properties,
+  ])
 
   // Modals
   const [showContractModal, setShowContractModal] = React.useState(false)
@@ -316,15 +326,46 @@ export function useProfile(): UseProfileReturn {
     [properties, activePropertyId]
   )
 
-  // Tiến độ của căn đang chọn: chủ nhà đăng nhập thì suy ra từ hợp đồng thật, còn lại là trạng thái demo cục bộ
-  const live = portfolio.isLive
-    ? progressFlags(portfolio.contractByProperty[activeProperty.id])
-    : null
+  const liveContract = React.useMemo(() => {
+    if (role === 'landlord' && portfolio.isLive) {
+      return portfolio.contractByProperty[activeProperty.id] || null
+    }
+    if (role === 'tenant' && tenantPortfolio.isLive) {
+      return (
+        tenantPortfolio.contracts.find(
+          c =>
+            c._id === activeProperty.contractId ||
+            c.propertyId === activeProperty.id
+        ) ||
+        tenantPortfolio.activeContract ||
+        null
+      )
+    }
+    return null
+  }, [
+    role,
+    portfolio.isLive,
+    portfolio.contractByProperty,
+    activeProperty,
+    tenantPortfolio.isLive,
+    tenantPortfolio.contracts,
+    tenantPortfolio.activeContract,
+  ])
+
+  // Tiến độ của căn đang chọn: chủ nhà/khách thuê đăng nhập thì suy ra từ hợp đồng thật, còn lại là trạng thái demo cục bộ
+  const live = liveContract ? progressFlags(liveContract) : null
   const effDepositPaid = live ? live.depositPaid : depositPaid
   const effContractSigned = live ? live.contractSigned : contractSigned
   const effFirstMonthPaid = live ? live.firstMonthPaid : firstMonthPaid
   const effHandoverSigned = live ? live.handoverSigned : handoverSigned
   const effLeaseTerminated = live ? live.leaseTerminated : leaseTerminated
+
+  const effBills = React.useMemo(() => {
+    if (role === 'tenant' && tenantPortfolio.isLive) {
+      return tenantPortfolio.bills
+    }
+    return bills
+  }, [role, tenantPortfolio.isLive, tenantPortfolio.bills, bills])
 
   const handleConnectWallet = (): void => {
     if (isWalletConnected) {
@@ -569,6 +610,8 @@ export function useProfile(): UseProfileReturn {
     activePropertyId: activeProperty.id || activePropertyId,
     properties,
     portfolio,
+    tenantPortfolio,
+    liveContract,
     showContractModal,
     setShowContractModal,
     contractViewOnly,
@@ -611,7 +654,7 @@ export function useProfile(): UseProfileReturn {
     contractSigned: effContractSigned,
     firstMonthPaid: effFirstMonthPaid,
     blockchainLogs,
-    bills,
+    bills: effBills,
     activeProperty,
     appointments,
     handleConnectWallet,

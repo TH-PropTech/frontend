@@ -1,5 +1,6 @@
 import * as React from 'react'
 import type { ContractItem } from '@/features/contracts'
+import type { TenantPortfolio } from './use-tenant-portfolio'
 
 export interface Property {
   id: string
@@ -144,6 +145,8 @@ export interface UseProfileReturn {
   >
   maintenanceTickets: MaintenanceTicket[]
   portfolio: LandlordPortfolio
+  tenantPortfolio: TenantPortfolio
+  liveContract: ContractItem | null
   newTicketTitle: string
   setNewTicketTitle: React.Dispatch<React.SetStateAction<string>>
   newTicketDesc: string

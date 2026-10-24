@@ -137,13 +137,14 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
             </h3>
             <p className="text-xs text-muted">
               Cập nhật theo Hợp đồng điện tử • Giao dịch được xử lý tự động qua
-              cổng ngân hàng liên kết Techcombank
+              đối tác thanh toán và cổng ngân hàng liên kết
             </p>
-            {!live && (
-              <Badge variant="outline" className="mt-2 w-fit">
-                Demo
-              </Badge>
-            )}
+            {!live &&
+              !(role === 'tenant' && profile.tenantPortfolio?.isLive) && (
+                <Badge variant="outline" className="mt-2 w-fit">
+                  Demo
+                </Badge>
+              )}
           </div>
         </div>
 

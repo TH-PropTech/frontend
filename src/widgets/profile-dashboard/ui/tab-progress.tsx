@@ -1,6 +1,8 @@
 'use client'
 
 import * as React from 'react'
+import { useRouter } from 'next/navigation'
+import type { Route } from 'next'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { Card } from '@/shared/ui/card'
@@ -22,6 +24,8 @@ import {
   ShieldCheck,
   Activity,
   Check,
+  Compass,
+  FileText,
 } from 'lucide-react'
 import { LandlordKpis } from './landlord-kpis'
 import { LandlordAlerts } from './landlord-alerts'
@@ -62,7 +66,10 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
     handleCompleteAppointment,
     handleViewSignedContract,
     portfolio,
+    tenantPortfolio,
+    setActiveTab,
   } = profile
+  const router = useRouter()
 
   // Chủ nhà đã đăng nhập: chờ tải / lỗi / chưa có căn hộ thì chỉ hiện trạng thái, không hiện số liệu demo
   if (role === 'landlord' && portfolio.isLive) {
@@ -80,43 +87,120 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
         </Card>
       )
   }
-  const liveContract = portfolio.contractByProperty[activeProperty.id]
-  const depositLabel = `${(liveContract?.deposit ?? 18_000_000).toLocaleString('vi-VN')}đ`
+
+  // Khách thuê đã đăng nhập: xử lý tải / lỗi / chưa có hợp đồng
+  if (role === 'tenant' && tenantPortfolio.isLive) {
+    if (tenantPortfolio.isLoading) {
+      return (
+        <Card className="bg-white border border-border rounded-3xl p-6 shadow-sm text-center text-sm text-muted">
+          Đang tải thông tin hợp đồng thuê của bạn...
+        </Card>
+      )
+    }
+    if (tenantPortfolio.isError) {
+      return (
+        <Card className="bg-white border border-border rounded-3xl p-6 shadow-sm text-center text-sm text-muted">
+          Không tải được dữ liệu hợp đồng thuê. Vui lòng tải lại trang sau ít
+          phút.
+        </Card>
+      )
+    }
+    if (properties.length === 0) {
+      return (
+        <Card className="bg-white border border-border rounded-3xl p-8 md:p-10 shadow-sm text-center space-y-4">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+            <Compass className="w-7 h-7" />
+          </div>
+          <div className="space-y-1.5 max-w-md mx-auto">
+            <h3 className="font-marketing text-lg font-bold text-fg">
+              Bạn chưa có hợp đồng thuê nào đang hoạt động
+            </h3>
+            <p className="text-xs text-muted leading-relaxed">
+              Sau khi bạn gửi đề nghị thuê và được chủ nhà chấp thuận tạo hợp
+              đồng điện tử, toàn bộ tiến trình ký kết, đặt cọc và nhận nhà sẽ
+              xuất hiện tại đây.
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
+            <Button
+              onClick={() => router.push('/properties' as Route)}
+              className="rounded-full px-6 text-xs font-bold gap-2 cursor-pointer"
+            >
+              <Compass className="w-4 h-4" />
+              Khám phá căn hộ cho thuê
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setActiveTab('rental-applications')}
+              className="rounded-full px-5 text-xs font-bold gap-2 cursor-pointer"
+            >
+              <FileText className="w-4 h-4" />
+              Xem đơn thuê đã gửi
+            </Button>
+          </div>
+        </Card>
+      )
+    }
+  }
+
+  const tenantContract =
+    role === 'tenant' && tenantPortfolio.isLive
+      ? (tenantPortfolio.contracts.find(
+          c =>
+            c._id === activeProperty.contractId ||
+            c.propertyId === activeProperty.id
+        ) ?? tenantPortfolio.activeContract)
+      : null
+
+  const liveContract =
+    role === 'landlord'
+      ? portfolio.contractByProperty[activeProperty.id]
+      : tenantContract
+
+  const depositLabel = `${(liveContract?.deposit ?? activeProperty.price ?? 18_000_000).toLocaleString('vi-VN')}đ`
+  const rentLabel = `${(liveContract?.monthlyRent ?? activeProperty.price ?? 18_000_000).toLocaleString('vi-VN')}đ`
 
   return (
     <div className="space-y-5 mt-0 outline-none">
-      {/* Property Selector for Landlord (using generic UI Select) */}
+      {/* Property Selector for Landlord or Tenant with multiple properties */}
+      {(role === 'landlord' ||
+        (role === 'tenant' && properties.length > 1)) && (
+        <Card className="bg-white border border-border rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="space-y-1 text-left">
+            <span className="text-xs text-muted font-bold uppercase tracking-wider block">
+              {role === 'landlord'
+                ? 'Chọn căn hộ quản lý'
+                : 'Chọn hợp đồng căn hộ'}
+            </span>
+            <p className="text-xs text-muted">
+              {role === 'landlord'
+                ? 'Chuyển đổi căn hộ để theo dõi tiến trình và dòng tiền tương ứng.'
+                : 'Chuyển đổi giữa các căn hộ thuê để theo dõi tiến độ tương ứng.'}
+            </p>
+          </div>
+          <div className="w-full sm:w-64">
+            <Select
+              value={activePropertyId}
+              onValueChange={handlePropertyChange}
+            >
+              <SelectTrigger className="w-full bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-semibold text-fg focus:ring-1 focus:ring-primary">
+                <SelectValue placeholder="Chọn căn hộ" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border border-border">
+                {properties.map(p => (
+                  <SelectItem key={p.id} value={p.id} className="text-xs">
+                    {p.name} ({p.status})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+      )}
+
+      {/* Landlord KPI cards */}
       {role === 'landlord' && (
         <>
-          <Card className="bg-white border border-border rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="space-y-1 text-left">
-              <span className="text-xs text-muted font-bold uppercase tracking-wider block">
-                Chọn căn hộ quản lý
-              </span>
-              <p className="text-xs text-muted">
-                Chuyển đổi căn hộ để theo dõi tiến trình và dòng tiền tương ứng.
-              </p>
-            </div>
-            <div className="w-full sm:w-64">
-              <Select
-                value={activePropertyId}
-                onValueChange={handlePropertyChange}
-              >
-                <SelectTrigger className="w-full bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-semibold text-fg focus:ring-1 focus:ring-primary">
-                  <SelectValue placeholder="Chọn căn hộ" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-border">
-                  {properties.map(p => (
-                    <SelectItem key={p.id} value={p.id} className="text-xs">
-                      {p.name} ({p.status})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </Card>
-
-          {/* Landlord KPI cards */}
           <LandlordKpis
             stats={portfolio.isLive ? portfolio.stats : undefined}
             pendingIssues={portfolio.isLive ? null : undefined}
@@ -135,16 +219,13 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
           <h3 className="font-marketing text-lg font-bold text-fg flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            {role === 'tenant'
-              ? 'Vinhomes Central Park - Căn hộ #102'
-              : activeProperty.name}
+            {activeProperty.name || 'Căn hộ thuê'}
           </h3>
           <Badge
             variant="outline"
             className="font-mono text-[11px] bg-secondary-soft text-secondary border-secondary/20"
           >
-            Hợp đồng:{' '}
-            {role === 'tenant' ? 'CTR-2026-0048' : activeProperty.code}
+            Hợp đồng: {activeProperty.code || '—'}
           </Badge>
         </div>
 
@@ -183,7 +264,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
                 onClick={handlePayDeposit}
                 className="h-10 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-full px-6 shadow-md cursor-pointer shrink-0 self-start md:self-auto"
               >
-                Thanh toán cọc 18.000.000đ
+                Thanh toán cọc {depositLabel}
               </Button>
             ) : (
               <Badge
@@ -207,12 +288,20 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               </h4>
               <p className="font-body text-xs text-muted">
                 {role === 'tenant'
-                  ? 'Tiền cọc đã được lưu vết ký quỹ an toàn. Vui lòng đọc kỹ điều khoản và ký số hợp đồng điện tử.'
+                  ? 'Tiền cọc đã được xác nhận an toàn qua hệ thống. Vui lòng đọc kỹ điều khoản và ký số hợp đồng điện tử.'
                   : 'Khách thuê đã nộp tiền cọc thành công. Vui lòng ký số duyệt hợp đồng điện tử để phê duyệt giao dịch.'}
               </p>
             </div>
             <Button
-              onClick={handleOpenContractModal}
+              onClick={() => {
+                const targetId =
+                  tenantContract?._id || activeProperty.contractId
+                if (targetId) {
+                  router.push(`/contracts/${targetId}` as Route)
+                } else {
+                  handleOpenContractModal()
+                }
+              }}
               className="h-10 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-full px-6 shadow-md cursor-pointer shrink-0 self-start md:self-auto"
             >
               {role === 'tenant' ? 'Ký hợp đồng số' : 'Ký duyệt hợp đồng'}
@@ -240,7 +329,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
                 onClick={handlePayRent}
                 className="h-10 bg-success hover:bg-success/90 text-white text-xs font-bold rounded-full px-6 shadow-md cursor-pointer shrink-0 self-start md:self-auto"
               >
-                Thanh toán tháng đầu 18.000.000đ
+                Thanh toán tháng đầu {rentLabel}
               </Button>
             ) : (
               <Badge
@@ -294,7 +383,15 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
             </div>
             <div className="flex flex-wrap gap-2.5 shrink-0 self-start md:self-auto">
               <Button
-                onClick={handleViewSignedContract}
+                onClick={() => {
+                  const targetId =
+                    tenantContract?._id || activeProperty.contractId
+                  if (targetId) {
+                    router.push(`/contracts/${targetId}` as Route)
+                  } else {
+                    handleViewSignedContract()
+                  }
+                }}
                 variant="secondary"
                 className="h-10 text-xs font-bold rounded-full px-5 border border-primary/30 text-primary bg-primary-soft/20 hover:bg-primary-soft/40"
               >
