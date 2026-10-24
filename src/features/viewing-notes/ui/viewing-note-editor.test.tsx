@@ -63,4 +63,16 @@ describe('ViewingNoteEditor', () => {
     expect(await screen.findByText(/không tải được ghi chú/i)).toBeTruthy()
     expect(screen.getByRole('button', { name: /thử lại/i })).toBeTruthy()
   })
+
+  it('shows login prompt when viewing notes returns 401 unauthorized', async () => {
+    const { ApiClientError } = await import('@/shared/api')
+    mocks.getNotes.mockRejectedValue(
+      new ApiClientError('Unauthorized', 401, null)
+    )
+    renderEditor()
+    expect(
+      await screen.findByText(/đăng nhập để ghi chép khi đi xem thực tế/i)
+    ).toBeTruthy()
+    expect(screen.getByRole('link', { name: /đăng nhập ngay/i })).toBeTruthy()
+  })
 })

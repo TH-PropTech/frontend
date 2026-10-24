@@ -141,7 +141,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
           </h3>
           <Badge
             variant="outline"
-            className="font-mono text-[10px] bg-secondary-soft text-secondary border-secondary/20"
+            className="font-mono text-[11px] bg-secondary-soft text-secondary border-secondary/20"
           >
             Hợp đồng:{' '}
             {role === 'tenant' ? 'CTR-2026-0048' : activeProperty.code}
@@ -175,7 +175,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               <p className="font-body text-xs text-muted">
                 {role === 'tenant'
                   ? 'Vui lòng thanh toán khoản tiền đặt cọc để khóa giữ chỗ căn hộ và bắt đầu ký kết hợp đồng.'
-                  : `Khách thuê đang tiến hành thanh toán khoản tiền cọc ${depositLabel} để khóa giữ chỗ căn hộ trên Smart Contract.`}
+                  : `Khách thuê đang tiến hành thanh toán khoản tiền cọc ${depositLabel} để khóa giữ chỗ căn hộ và lưu vết an toàn.`}
               </p>
             </div>
             {role === 'tenant' ? (
@@ -207,7 +207,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               </h4>
               <p className="font-body text-xs text-muted">
                 {role === 'tenant'
-                  ? 'Tiền cọc đã được khóa ký quỹ trên Blockchain. Vui lòng đọc kỹ điều khoản và ký số hợp đồng điện tử.'
+                  ? 'Tiền cọc đã được lưu vết ký quỹ an toàn. Vui lòng đọc kỹ điều khoản và ký số hợp đồng điện tử.'
                   : 'Khách thuê đã nộp tiền cọc thành công. Vui lòng ký số duyệt hợp đồng điện tử để phê duyệt giao dịch.'}
               </p>
             </div>
@@ -330,7 +330,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               </h4>
               <p className="font-body text-xs text-muted leading-relaxed">
                 {role === 'tenant'
-                  ? `Số tiền đặt cọc ký quỹ (sau khi khấu trừ thiệt hại hao mòn ${damageDeductions.toLocaleString()}đ nếu có) đã được hoàn trả tự động từ Smart Contract về ví của bạn.`
+                  ? `Số tiền đặt cọc ký quỹ (sau khi khấu trừ thiệt hại hao mòn ${damageDeductions.toLocaleString()}đ nếu có) đã được hoàn trả tự động về tài khoản của bạn.`
                   : `Tiền cọc (có khấu trừ thiệt hại hao mòn ${damageDeductions.toLocaleString()}đ nếu có) đã được hoàn trả cho khách thuê.`}
               </p>
             </div>
@@ -348,7 +348,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
         <div className="space-y-6 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-border/60">
           {/* Step 1 */}
           <div className="flex gap-4 relative text-left">
-            <div className="h-7 w-7 rounded-full bg-success text-white flex items-center justify-center text-[10px] font-bold z-10 shrink-0">
+            <div className="h-7 w-7 rounded-full bg-success text-white flex items-center justify-center text-xs font-bold z-10 shrink-0">
               <Check className="h-3.5 w-3.5" />
             </div>
             <div className="space-y-1">
@@ -368,7 +368,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
           {/* Step 2 */}
           <div className="flex gap-4 relative text-left">
             <div
-              className={`h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-bold z-10 shrink-0 ${
+              className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold z-10 shrink-0 ${
                 depositPaid
                   ? 'bg-success text-white'
                   : 'bg-primary text-white animate-pulse'
@@ -384,7 +384,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               </h4>
               <p className="font-body text-xs text-muted">
                 {depositPaid
-                  ? 'Đã chuyển tiền ký quỹ cọc và băm mật mã an toàn trên Smart Contract.'
+                  ? 'Đã chuyển tiền ký quỹ cọc và lưu vết bảo mật chống sửa đổi.'
                   : 'Chờ khách thuê chuyển khoản tiền đặt cọc.'}
               </p>
             </div>
@@ -393,7 +393,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
           {/* Step 3 */}
           <div className="flex gap-4 relative text-left">
             <div
-              className={`h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-bold z-10 shrink-0 ${
+              className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold z-10 shrink-0 ${
                 contractSigned
                   ? 'bg-success text-white'
                   : depositPaid
@@ -411,8 +411,8 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               </h4>
               <p className="font-body text-xs text-muted">
                 {contractSigned
-                  ? 'Hợp đồng đã được ký duyệt số bởi cả 2 bên và tạo block trên chuỗi.'
-                  : 'Đang chờ ký hợp đồng điện tử thông qua Smart Contract.'}
+                  ? 'Hợp đồng đã được ký duyệt số bởi cả hai bên và lưu vết chống sửa đổi.'
+                  : 'Đang chờ ký hợp đồng điện tử xác nhận hai bên.'}
               </p>
             </div>
           </div>
@@ -420,7 +420,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
           {/* Step 4 */}
           <div className="flex gap-4 relative text-left">
             <div
-              className={`h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-bold z-10 shrink-0 ${
+              className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold z-10 shrink-0 ${
                 handoverSigned
                   ? 'bg-success text-white'
                   : firstMonthPaid

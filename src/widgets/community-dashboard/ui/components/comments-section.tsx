@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { apiClient } from '@/shared/api/api-client'
+import { UserAvatar } from './user-avatar'
 
 interface BackendCommentResponse {
   _id?: string
@@ -197,29 +198,35 @@ export function CommentsSection({
           return (
             <div key={comment.id} className="group/comment space-y-2">
               <div className="bg-surface-muted/30 hover:bg-surface-muted/50 transition-colors p-3.5 rounded-2xl border border-border/40">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
+                    <UserAvatar
+                      name={comment.authorName}
+                      size="sm"
+                      className="h-6 w-6 text-[10px]"
+                    />
                     <span className="text-xs font-bold text-fg">
                       {comment.authorName}
                     </span>
                     <span
-                      className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${ROLE_CLASSES[comment.authorRole] || ROLE_CLASSES.tenant}`}
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${ROLE_CLASSES[comment.authorRole] || ROLE_CLASSES.tenant}`}
                     >
                       {ROLE_LABELS[comment.authorRole] || ROLE_LABELS.tenant}
                     </span>
                   </div>
-                  <span className="text-[10px] text-muted">
+                  <span className="text-[11px] text-muted shrink-0">
                     {comment.createdAt}
                   </span>
                 </div>
-                <p className="text-xs text-muted mt-1.5 leading-relaxed">
+                <p className="text-xs text-muted mt-2 leading-relaxed">
                   {comment.content}
                 </p>
 
                 {/* Comment Actions */}
-                <div className="mt-2 flex items-center gap-4">
+                <div className="mt-2.5 flex items-center gap-4">
                   {isAuthenticated && (
                     <button
+                      type="button"
                       onClick={() => {
                         if (isReplying) {
                           setReplyToId(null)
@@ -228,15 +235,16 @@ export function CommentsSection({
                           setReplyText('')
                         }
                       }}
-                      className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       Trả lời
                     </button>
                   )}
                   {isStaffOrAdmin && (
                     <button
+                      type="button"
                       onClick={() => handleDeleteComment(comment.id)}
-                      className="text-[10px] font-bold text-danger hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] font-bold text-danger hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       Gỡ
                     </button>

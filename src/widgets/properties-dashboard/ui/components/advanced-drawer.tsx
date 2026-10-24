@@ -68,20 +68,47 @@ export function AdvancedDrawer({
   resetFilters,
   totalCount,
 }: AdvancedDrawerProps): React.ReactElement | null {
+  React.useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
   return (
     <>
       {/* Advanced Drawer Overlay Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[99] bg-fg/40 backdrop-blur-sm transition-opacity duration-300"
+          role="presentation"
+          aria-hidden="true"
+          className="fixed inset-0 z-[99] bg-fg/40 backdrop-blur-sm transition-opacity duration-300 cursor-pointer"
           onClick={onClose}
         />
       )}
 
       {/* Advanced Drawer Panel */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Bộ lọc nâng cao"
         className={`fixed inset-y-0 right-0 z-[100] w-full max-w-md bg-white border-l border-border shadow-2xl flex flex-col justify-between transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+          isOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
         }`}
       >
         {/* Header */}

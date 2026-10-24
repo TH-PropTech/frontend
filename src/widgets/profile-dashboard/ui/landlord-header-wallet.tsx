@@ -24,7 +24,7 @@ export function LandlordHeaderWallet({
               {data.bank?.name} - {data.accountNumberMasked}
             </span>
           </div>
-          <p className="text-[10px] text-muted">
+          <p className="text-[11px] text-muted">
             <strong className="text-fg">Đã liên kết nhận tiền</strong>
           </p>
         </div>

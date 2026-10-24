@@ -50,7 +50,7 @@ type TabKey =
   | 'rental-applications'
 
 const TRIGGER_CLASS =
-  'pb-3 rounded-none border-b-2 border-transparent bg-transparent px-0 font-semibold text-muted hover:text-fg data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-bold data-[state=active]:bg-transparent shadow-none transition-all cursor-pointer inline-flex items-center'
+  'min-h-11 py-2 rounded-none border-b-2 border-transparent bg-transparent px-1 font-semibold text-muted hover:text-fg data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-bold data-[state=active]:bg-transparent shadow-none transition-all cursor-pointer inline-flex items-center text-xs sm:text-sm'
 
 interface MoreItem {
   value: TabKey
@@ -168,7 +168,7 @@ export function ProfileWidget(): React.ReactElement {
                   <DropdownMenuItem
                     key={item.value}
                     onClick={() => setActiveTab(item.value)}
-                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm cursor-pointer transition-colors ${
+                    className={`flex items-center gap-2.5 px-3.5 py-3 min-h-11 rounded-lg text-sm cursor-pointer transition-colors ${
                       isActive
                         ? 'font-bold text-primary bg-primary/10 focus:bg-primary/10 focus:text-primary'
                         : 'text-fg hover:bg-surface-muted focus:bg-surface-muted focus:text-fg'

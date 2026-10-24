@@ -92,60 +92,80 @@ export function CommunityDashboard(): React.ReactElement {
         <CommunityHero />
 
         {/* Action Header & Tabs */}
-        <section className="mx-auto max-w-7xl px-6 md:px-10 mt-12 relative z-30">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white border border-border/80 rounded-2xl p-4 shadow-sm">
-            {/* Left side: Topics pills */}
-            <div className="flex rounded-full bg-surface-muted p-1 border border-border/80 w-full md:w-auto max-w-md">
-              {TOPIC_TABS.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => state.setTopicFilter(tab.id)}
-                  className={`flex-1 rounded-full py-2 px-4 text-xs font-bold transition-all duration-300 ${
-                    state.topicFilter === tab.id
-                      ? 'bg-primary text-white shadow-sm'
-                      : 'text-muted hover:text-fg'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Right side: Action Buttons */}
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              {isAuthenticated ? (
-                <>
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 mt-8 sm:mt-12 relative z-30">
+          <div className="bg-white border border-border/80 rounded-2xl p-4 shadow-sm space-y-4">
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+              {/* Left side: Topics pills with horizontal scroll on mobile */}
+              <div
+                role="tablist"
+                aria-label="Chủ đề thảo luận"
+                className="flex items-center overflow-x-auto no-scrollbar scroll-smooth rounded-full bg-surface-muted p-1 border border-border/80 w-full lg:w-auto"
+              >
+                {TOPIC_TABS.map(tab => (
                   <button
-                    onClick={() => state.setShowMyPosts(!state.showMyPosts)}
-                    className={`flex-1 md:flex-initial rounded-xl py-3 px-5 text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer ${
-                      state.showMyPosts
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'bg-white border-border text-muted hover:border-primary/30 hover:text-fg'
+                    key={tab.id}
+                    role="tab"
+                    aria-selected={state.topicFilter === tab.id}
+                    onClick={() => state.setTopicFilter(tab.id)}
+                    className={`rounded-full py-2 px-4 text-xs font-bold transition-all duration-300 whitespace-nowrap cursor-pointer shrink-0 ${
+                      state.topicFilter === tab.id
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'text-muted hover:text-fg'
                     }`}
                   >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                      />
-                    </svg>
-                    {state.showMyPosts ? 'Hiển thị tất cả' : 'Bài viết của tôi'}
+                    {tab.label}
                   </button>
+                ))}
+              </div>
 
-                  {canPost ? (
+              {/* Middle: Search input bar */}
+              <div className="relative flex-1 min-w-[200px] max-w-md w-full">
+                <svg
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted/70 pointer-events-none"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <input
+                  type="text"
+                  value={state.searchQuery}
+                  onChange={e => state.setSearchQuery(e.target.value)}
+                  placeholder="Tìm bài viết, dự án, nội dung..."
+                  className="w-full pl-10 pr-9 py-2 bg-surface-muted/60 border border-border/80 rounded-full text-xs text-fg placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+                {state.searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => state.setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg text-xs p-1"
+                    title="Xóa tìm kiếm"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Right side: Action Buttons */}
+              <div className="flex items-center gap-3 shrink-0">
+                {isAuthenticated ? (
+                  <>
                     <button
-                      onClick={() => state.setShowCreateModal(true)}
-                      className="flex-1 md:flex-initial rounded-xl bg-primary py-3 px-5 text-xs font-bold text-white shadow-[0_8px_24px_rgba(198,90,58,0.15)] hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
+                      onClick={() => state.setShowMyPosts(!state.showMyPosts)}
+                      className={`flex-1 lg:flex-initial rounded-xl py-2.5 px-4 text-xs font-bold transition-all border flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
+                        state.showMyPosts
+                          ? 'bg-primary text-white border-primary shadow-sm'
+                          : 'bg-white border-border text-muted hover:border-primary/30 hover:text-fg'
+                      }`}
                     >
                       <svg
-                        className="h-4 w-4"
+                        className="h-4 w-4 shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -154,35 +174,104 @@ export function CommunityDashboard(): React.ReactElement {
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M12 4v16m8-8H4"
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                         />
                       </svg>
-                      Đăng bài mới
+                      <span>
+                        {state.showMyPosts
+                          ? 'Hiển thị tất cả'
+                          : 'Bài viết của tôi'}
+                      </span>
                     </button>
-                  ) : null}
-                </>
-              ) : (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="flex-1 md:flex-initial rounded-xl bg-primary py-3 px-5 text-xs font-bold text-white shadow-[0_8px_24px_rgba(198,90,58,0.15)] hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
+
+                    {canPost ? (
+                      <button
+                        onClick={() => state.setShowCreateModal(true)}
+                        className="flex-1 lg:flex-initial rounded-xl bg-primary py-2.5 px-5 text-xs font-bold text-white shadow-[0_8px_24px_rgba(198,90,58,0.15)] hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
+                      >
+                        <svg
+                          className="h-4 w-4 shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                        <span>Đăng bài mới</span>
+                      </button>
+                    ) : null}
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="w-full lg:w-auto rounded-xl bg-primary py-2.5 px-5 text-xs font-bold text-white shadow-[0_8px_24px_rgba(198,90,58,0.15)] hover:bg-primary-hover hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  Đăng bài mới
-                </button>
-              )}
+                    <svg
+                      className="h-4 w-4 shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    <span>Đăng bài mới</span>
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Active Filter Chips */}
+            {(state.selectedProject || state.searchQuery) && (
+              <div className="flex items-center gap-2 flex-wrap text-xs text-muted pt-2 border-t border-border/40">
+                <span className="font-medium">Đang lọc:</span>
+                {state.selectedProject && (
+                  <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-full font-bold text-[11px]">
+                    Dự án: {state.selectedProject}
+                    <button
+                      type="button"
+                      onClick={() => state.setSelectedProject(null)}
+                      className="hover:opacity-75 cursor-pointer ml-1"
+                      title="Bỏ lọc dự án"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                )}
+                {state.searchQuery && (
+                  <span className="inline-flex items-center gap-1.5 bg-surface-muted text-fg border border-border px-2.5 py-1 rounded-full text-[11px]">
+                    Từ khóa: &quot;{state.searchQuery}&quot;
+                    <button
+                      type="button"
+                      onClick={() => state.setSearchQuery('')}
+                      className="hover:opacity-75 cursor-pointer ml-1"
+                      title="Xóa từ khóa"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    state.setSelectedProject(null)
+                    state.setSearchQuery('')
+                  }}
+                  className="text-[11px] text-primary hover:underline font-bold cursor-pointer ml-auto"
+                >
+                  Đặt lại bộ lọc
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -231,7 +320,7 @@ export function CommunityDashboard(): React.ReactElement {
 
               {/* Feed Content rendering */}
               {state.approvedPosts.length === 0 ? (
-                <div className="text-center py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40">
+                <div className="text-center py-16 sm:py-20 rounded-3xl border border-dashed border-border bg-surface-muted/40 p-6">
                   <svg
                     className="mx-auto h-10 w-10 text-muted/60 mb-3"
                     fill="none"
@@ -245,9 +334,26 @@ export function CommunityDashboard(): React.ReactElement {
                       d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                     />
                   </svg>
-                  <p className="font-body text-sm text-muted">
-                    Chưa có bài viết nào trong danh mục này.
+                  <p className="font-body text-sm font-semibold text-fg">
+                    Không tìm thấy bài viết nào
                   </p>
+                  <p className="font-body text-xs text-muted mt-1 max-w-sm mx-auto">
+                    {state.searchQuery || state.selectedProject
+                      ? 'Thử xóa bộ lọc hoặc tìm kiếm với từ khóa khác.'
+                      : 'Hãy là người đầu tiên chia sẻ câu hỏi hoặc trải nghiệm cùng cộng đồng.'}
+                  </p>
+                  {(state.searchQuery || state.selectedProject) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        state.setSearchQuery('')
+                        state.setSelectedProject(null)
+                      }}
+                      className="mt-4 px-4 py-2 bg-white border border-border text-xs font-bold rounded-xl text-primary hover:border-primary transition-all cursor-pointer shadow-sm"
+                    >
+                      Xóa tất cả bộ lọc
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -259,6 +365,7 @@ export function CommunityDashboard(): React.ReactElement {
                       onCommentAdded={state.handleCommentAdded}
                       onDeletePost={state.handleDeletePost}
                       onCommentRemoved={state.handleCommentRemoved}
+                      onSelectProject={state.setSelectedProject}
                       currentUser={state.currentUser}
                       isAuthenticated={isAuthenticated}
                       onAuthRequired={() => setShowAuthModal(true)}
@@ -276,6 +383,15 @@ export function CommunityDashboard(): React.ReactElement {
                 myTotalCount={state.myTotalCount}
                 myPendingCount={state.myPendingCount}
                 myApprovedCount={state.myApprovedCount}
+                projectStats={state.projectStats}
+                selectedProject={state.selectedProject}
+                onSelectProject={proj => {
+                  if (state.selectedProject === proj) {
+                    state.setSelectedProject(null)
+                  } else {
+                    state.setSelectedProject(proj)
+                  }
+                }}
               />
             </div>
           </div>

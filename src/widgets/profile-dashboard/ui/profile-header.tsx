@@ -67,26 +67,26 @@ export function ProfileHeader({
           <button
             type="button"
             onClick={() => handleRoleChange('tenant')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+            className={`min-h-11 px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               role === 'tenant'
                 ? 'bg-primary text-white shadow-sm'
                 : 'text-muted hover:text-fg'
             }`}
           >
-            <User className="h-3.5 w-3.5" />
-            Khách thuê (Tenant)
+            <User className="h-4 w-4 shrink-0" />
+            Khách thuê
           </button>
           <button
             type="button"
             onClick={() => handleRoleChange('landlord')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+            className={`min-h-11 px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               role === 'landlord'
                 ? 'bg-primary text-white shadow-sm'
                 : 'text-muted hover:text-fg'
             }`}
           >
-            <Briefcase className="h-3.5 w-3.5" />
-            Chủ nhà (Landlord)
+            <Briefcase className="h-4 w-4 shrink-0" />
+            Chủ nhà
           </button>
         </div>
       </div>
@@ -167,9 +167,9 @@ export function ProfileHeader({
                 <span>CCCD: {kycForm.cccdNumber}</span>
                 <Badge
                   variant="outline"
-                  className="text-[9px] font-mono py-0.5 bg-success-soft text-success border-success/20"
+                  className="text-[11px] font-medium py-0.5 bg-success-soft text-success border-success/20"
                 >
-                  Ledger Verified
+                  Đã xác thực dữ liệu
                 </Badge>
               </div>
             ) : (
@@ -206,13 +206,14 @@ export function ProfileHeader({
                   <button
                     type="button"
                     onClick={() => handleCopyText(walletAddress)}
-                    className="text-subtle hover:text-fg transition-colors"
+                    className="p-1 text-subtle hover:text-fg transition-colors inline-flex items-center justify-center rounded-md"
                     title="Sao chép số tài khoản"
+                    aria-label="Sao chép số tài khoản"
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <div className="border-t border-border/50 pt-1.5 flex flex-col gap-1 text-[10px] text-muted">
+                <div className="border-t border-border/50 pt-1.5 flex flex-col gap-1 text-[11px] text-muted">
                   <div className="flex justify-between">
                     <span>
                       Số dư:{' '}
@@ -228,15 +229,20 @@ export function ProfileHeader({
                     </span>
                   </div>
                   {isKycVerified && (
-                    <div className="border-t border-border/30 pt-1 flex justify-between items-center text-[9px] text-success font-medium">
-                      <span>Fabric CA:</span>
-                      <span className="font-mono text-right truncate max-w-[150px]">
-                        {role === 'tenant'
-                          ? 'org1.tenant.nguyen_van_a'
-                          : 'org1.landlord.le_hoang_minh'}{' '}
-                        (X.509)
-                      </span>
-                    </div>
+                    <details className="border-t border-border/30 pt-1 text-left">
+                      <summary className="text-[10px] text-muted hover:text-fg cursor-pointer select-none">
+                        Chi tiết kỹ thuật định danh ▾
+                      </summary>
+                      <div className="pt-1 flex flex-col gap-0.5 text-[10px] text-muted font-mono">
+                        <span>
+                          Định danh:{' '}
+                          {role === 'tenant'
+                            ? 'org1.tenant.nguyen_van_a'
+                            : 'org1.landlord.le_hoang_minh'}
+                        </span>
+                        <span>Chứng thư: Chuẩn số X.509</span>
+                      </div>
+                    </details>
                   )}
                 </div>
               </div>
@@ -247,12 +253,8 @@ export function ProfileHeader({
                   <span>Chưa liên kết tài khoản ngân hàng</span>
                 </div>
                 {isKycVerified && (
-                  <span className="text-[9px] text-success font-mono mt-0.5">
-                    Fabric CA ID:{' '}
-                    {role === 'tenant'
-                      ? 'org1.tenant.nguyen_van_a'
-                      : 'org1.landlord.le_hoang_minh'}{' '}
-                    (X.509)
+                  <span className="text-[11px] text-success font-medium mt-0.5">
+                    Định danh số đã sẵn sàng
                   </span>
                 )}
               </div>

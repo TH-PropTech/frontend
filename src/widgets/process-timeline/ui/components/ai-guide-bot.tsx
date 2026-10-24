@@ -450,7 +450,7 @@ function AiGuideBotImpl({
             <div className="flex justify-between items-center gap-4">
               <button
                 onClick={tutorial.skipTutorial}
-                className="text-[10px] text-muted hover:text-fg font-bold cursor-pointer transition-colors"
+                className="text-[11px] text-muted hover:text-fg font-bold cursor-pointer transition-colors"
               >
                 Bỏ qua
               </button>
@@ -540,7 +540,7 @@ function AiGuideBotImpl({
             <div>
               <h4 className="font-marketing text-base font-extrabold text-fg flex items-center gap-1.5">
                 {guide.title}
-                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary tracking-wide">
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary tracking-wide">
                   HƯỚNG DẪN
                 </span>
               </h4>
@@ -574,7 +574,7 @@ function AiGuideBotImpl({
 
             {/* Font Size adjustment */}
             <div className="flex items-center gap-2 bg-primary/[0.03] border border-primary/10 rounded-xl p-1 shadow-inner">
-              <span className="text-[10px] font-bold text-primary/60 pl-2 select-none uppercase tracking-wider hidden sm:inline">
+              <span className="text-[11px] font-bold text-primary/60 pl-2 select-none uppercase tracking-wider hidden sm:inline">
                 Cỡ chữ
               </span>
               <div className="relative flex items-center bg-primary/[0.06] rounded-lg p-0.5 select-none">
@@ -624,7 +624,7 @@ function AiGuideBotImpl({
 
             {/* Speech Rate adjustment */}
             <div className="flex items-center gap-2 bg-primary/[0.03] border border-primary/10 rounded-xl p-1 shadow-inner">
-              <span className="text-[10px] font-bold text-primary/60 pl-2 select-none uppercase tracking-wider hidden sm:inline">
+              <span className="text-[11px] font-bold text-primary/60 pl-2 select-none uppercase tracking-wider hidden sm:inline">
                 Giọng đọc
               </span>
               <div className="relative flex items-center bg-primary/[0.06] rounded-lg p-0.5 select-none">
@@ -931,7 +931,7 @@ function AiGuideBotImpl({
                         <div className="mt-3 pl-9 space-y-2">
                           {/* Step Tip text - shown inline on ALL screens */}
                           <div className="text-xs text-primary bg-primary/5 p-3 rounded-lg leading-relaxed border border-primary/10">
-                            <span className="font-bold uppercase tracking-wider text-[10px] block mb-1">
+                            <span className="font-bold uppercase tracking-wider text-[11px] block mb-1">
                               Hướng dẫn:
                             </span>
                             {speechHelper.isSpeaking ? (

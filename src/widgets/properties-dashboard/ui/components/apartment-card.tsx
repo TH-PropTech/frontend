@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Route } from 'next'
 import { Button } from '@/shared/ui/button'
 import { useFavorites } from '@/shared/lib/use-favorites'
@@ -66,11 +67,13 @@ export function ApartmentCard({
         {/* Visual Card Top */}
         <div className="relative mb-3 flex h-32 flex-col justify-between rounded-lg border border-border bg-surface-muted p-3 overflow-hidden">
           {apt.image ? (
-            <img
+            <Image
               src={apt.image}
               alt={apt.title}
-              loading="lazy"
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+              fill
+              unoptimized
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover transition-transform duration-500 hover:scale-105"
             />
           ) : (
             /* Grid background simulation */
@@ -84,21 +87,28 @@ export function ApartmentCard({
             />
           )}
           {/* Overlay gradient to keep text/buttons readable */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 pointer-events-none" />
 
           <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {showCompareCheckbox && (
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  disabled={disableCompare && !isSelected}
-                  onChange={e => {
-                    e.stopPropagation()
-                    onToggleCompare?.()
-                  }}
-                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary disabled:opacity-40 disabled:cursor-not-allowed"
-                />
+                <label
+                  className="flex items-center gap-1 cursor-pointer rounded-full bg-black/60 backdrop-blur-sm px-2 py-0.5 text-[10px] text-white border border-white/20 hover:bg-black/80 transition-colors"
+                  title="Chọn để so sánh căn hộ"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    disabled={disableCompare && !isSelected}
+                    onChange={e => {
+                      e.stopPropagation()
+                      onToggleCompare?.()
+                    }}
+                    className="h-3 w-3 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                    aria-label={`Chọn so sánh căn hộ ${apt.title}`}
+                  />
+                  <span className="font-medium select-none">So sánh</span>
+                </label>
               )}
               <span
                 role="status"

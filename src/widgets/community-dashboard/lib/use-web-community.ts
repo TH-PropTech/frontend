@@ -125,6 +125,8 @@ export function useWebCommunity() {
   const [topicFilter, setTopicFilter] = useState<
     'all' | 'qa' | 'review' | 'roommate'
   >('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showMyPosts, setShowMyPosts] = useState(false)
 
@@ -243,18 +245,56 @@ export function useWebCommunity() {
   }, [loadPosts])
 
   const approvedPosts = useMemo(() => {
-    if (showMyPosts) {
-      let filtered = posts.filter(p => p.isOwn)
-      if (topicFilter !== 'all')
-        filtered = filtered.filter(p => p.topic === topicFilter)
-      return filtered
-    } else {
-      let filtered = posts.filter(p => p.status === 'approved')
-      if (topicFilter !== 'all')
-        filtered = filtered.filter(p => p.topic === topicFilter)
-      return filtered
+    let list = showMyPosts
+      ? posts.filter(p => p.isOwn)
+      : posts.filter(p => p.status === 'approved')
+
+    if (topicFilter !== 'all') {
+      list = list.filter(p => p.topic === topicFilter)
     }
-  }, [posts, topicFilter, showMyPosts])
+
+    if (selectedProject) {
+      list = list.filter(
+        p => p.projectName.toLowerCase() === selectedProject.toLowerCase()
+      )
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      list = list.filter(
+        p =>
+          p.title.toLowerCase().includes(q) ||
+          p.content.toLowerCase().includes(q) ||
+          p.projectName.toLowerCase().includes(q) ||
+          p.authorName.toLowerCase().includes(q)
+      )
+    }
+
+    return list
+  }, [posts, topicFilter, showMyPosts, selectedProject, searchQuery])
+
+  const projectStats = useMemo(() => {
+    const counts: Record<string, number> = {}
+    posts
+      .filter(p => p.status === 'approved')
+      .forEach(p => {
+        if (p.projectName) {
+          counts[p.projectName] = (counts[p.projectName] || 0) + 1
+        }
+      })
+    const entries = Object.entries(counts).map(([name, count]) => ({
+      name,
+      posts: count,
+    }))
+    entries.sort((a, b) => b.posts - a.posts)
+    if (entries.length > 0) return entries
+    return [
+      { name: 'Vinhomes Central Park', posts: 34 },
+      { name: 'Masteri Thảo Điền', posts: 21 },
+      { name: 'Sunrise City', posts: 18 },
+      { name: 'The Sun Avenue', posts: 12 },
+    ]
+  }, [posts])
 
   const pendingPosts = useMemo(
     () => posts.filter(p => p.status === 'pending'),
@@ -428,6 +468,11 @@ export function useWebCommunity() {
     pendingPosts,
     topicFilter,
     setTopicFilter,
+    searchQuery,
+    setSearchQuery,
+    selectedProject,
+    setSelectedProject,
+    projectStats,
     showCreateModal,
     setShowCreateModal,
     showMyPosts,
