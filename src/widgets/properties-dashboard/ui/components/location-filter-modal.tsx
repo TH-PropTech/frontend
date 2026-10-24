@@ -29,6 +29,15 @@ interface LocationFilterModalProps {
   setSelectedDistrictCode: (val: number | null) => void
 }
 
+const POPULAR_PROVINCES = [
+  { name: 'Thành phố Hồ Chí Minh', code: 79 },
+  { name: 'Thành phố Hà Nội', code: 1 },
+  { name: 'Thành phố Đà Nẵng', code: 48 },
+  { name: 'Tỉnh Bình Dương', code: 74 },
+  { name: 'Thành phố Hải Phòng', code: 31 },
+  { name: 'Thành phố Cần Thơ', code: 92 },
+]
+
 export function LocationFilterModal({
   onClose,
   onApply,
@@ -43,8 +52,10 @@ export function LocationFilterModal({
   selectedDistrictCode,
   setSelectedDistrictCode,
 }: LocationFilterModalProps): React.ReactElement {
-  const { provinces, wards, isLoadingProvinces, isLoadingWards } =
+  const { provinces, wards, isLoadingWards } =
     useVietnamLocations(selectedProvinceCode)
+  const availableProvinces =
+    provinces.length > 0 ? provinces : POPULAR_PROVINCES
 
   // 1. Auto-resolve missing city/province from selectedDistrict
   React.useEffect(() => {
@@ -133,7 +144,7 @@ export function LocationFilterModal({
                 setSelectedCity('')
                 setSelectedProvinceCode(null)
               } else {
-                const province = provinces.find(p => p.name === val)
+                const province = availableProvinces.find(p => p.name === val)
                 setSelectedCity(val)
                 setSelectedProvinceCode(province?.code ?? null)
               }
@@ -146,14 +157,12 @@ export function LocationFilterModal({
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="max-h-60 overflow-y-auto">
-              <SelectItem value="all">
-                {isLoadingProvinces ? 'Đang tải...' : 'Chọn Tỉnh/Thành phố'}
-              </SelectItem>
+              <SelectItem value="all">Chọn Tỉnh/Thành phố</SelectItem>
               {selectedCity &&
-                !provinces.some(p => p.name === selectedCity) && (
+                !availableProvinces.some(p => p.name === selectedCity) && (
                   <SelectItem value={selectedCity}>{selectedCity}</SelectItem>
                 )}
-              {provinces.map(province => (
+              {availableProvinces.map(province => (
                 <SelectItem key={province.code} value={province.name}>
                   {province.name}
                 </SelectItem>
@@ -179,7 +188,7 @@ export function LocationFilterModal({
             </SelectTrigger>
             <SelectContent className="max-h-60 overflow-y-auto">
               <SelectItem value="all">
-                {isLoadingWards ? 'Đang tải...' : 'Chọn Phường/Xã'}
+                {isLoadingWards ? 'Đang tải phường/xã...' : 'Chọn Phường/Xã'}
               </SelectItem>
               {selectedWard && !wards.some(w => w.name === selectedWard) && (
                 <SelectItem value={selectedWard}>{selectedWard}</SelectItem>

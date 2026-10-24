@@ -1,9 +1,18 @@
 'use client'
 
 import * as React from 'react'
+import Link from 'next/link'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { LockKeyhole, NotebookPen, RotateCcw, Save, Trash2 } from 'lucide-react'
+import {
+  LockKeyhole,
+  NotebookPen,
+  RotateCcw,
+  Save,
+  Trash2,
+  LogIn,
+} from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { ApiClientError } from '@/shared/api'
 import {
   createViewingNote,
   deleteViewingNote,
@@ -33,6 +42,7 @@ export function ViewingNoteEditor({
   const notes = useQuery({
     queryKey: ['viewing-notes', apartmentId],
     queryFn: () => getViewingNotes(apartmentId),
+    retry: false,
   })
   const createNote = useMutation({
     mutationFn: (input: ViewingNoteInput) => createViewingNote(input),
@@ -59,6 +69,61 @@ export function ViewingNoteEditor({
       if (draft[name] !== undefined) input[name] = draft[name]
     }
     createNote.mutate(input)
+  }
+
+  const isUnauthorized =
+    notes.isError &&
+    notes.error instanceof ApiClientError &&
+    notes.error.status === 401
+
+  if (isUnauthorized) {
+    return (
+      <section
+        className="rounded-3xl border border-border bg-surface p-4 md:p-5 shadow-sm"
+        aria-labelledby="viewing-note-title"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3
+              id="viewing-note-title"
+              className="flex items-center gap-2 text-base font-bold text-fg"
+            >
+              <NotebookPen
+                className="h-5 w-5 text-primary"
+                aria-hidden="true"
+              />{' '}
+              Ghi chú xem nhà
+            </h3>
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
+              <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" /> Sổ tay
+              riêng tư cho bạn.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl bg-surface-muted/60 border border-border/40 p-5 text-center space-y-2">
+          <p className="text-sm font-semibold text-fg">
+            Đăng nhập để ghi chép khi đi xem thực tế
+          </p>
+          <p className="text-xs text-muted max-w-sm mx-auto leading-relaxed">
+            Chấm điểm độ yên tĩnh, ánh sáng, sóng điện thoại, áp lực nước và lưu
+            lại nhận xét riêng chỉ bạn thấy được.
+          </p>
+          <div className="pt-2">
+            <Button
+              asChild
+              size="sm"
+              className="rounded-xl bg-primary text-white hover:bg-primary-hover shadow-sm inline-flex items-center gap-2"
+            >
+              <Link href="/login">
+                <LogIn className="h-3.5 w-3.5" aria-hidden="true" />
+                <span>Đăng nhập ngay</span>
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   if (notes.isLoading)

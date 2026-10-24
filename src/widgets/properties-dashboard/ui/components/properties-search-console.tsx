@@ -233,7 +233,7 @@ export function PropertiesSearchConsole({
           {activeTab === 'single' && (
             <Popover open={isAreaModalOpen} onOpenChange={setIsAreaOpen}>
               <PopoverTrigger asChild>
-                <div className="col-span-2 lg:col-span-1 flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-4 sm:px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
+                <div className="col-span-1 flex items-center gap-3 rounded-2xl lg:rounded-none hover:bg-primary/5 px-4 sm:px-5 py-2.5 transition-all cursor-pointer relative group lg:border-r lg:border-primary/15">
                   <svg
                     className="h-5 w-5 text-primary shrink-0"
                     fill="none"
@@ -273,11 +273,13 @@ export function PropertiesSearchConsole({
           )}
 
           {/* Advanced Filters Button */}
-          <div className="px-3 py-1 flex justify-center">
+          <div
+            className={`${activeTab === 'project' ? 'col-span-2 lg:col-span-1' : 'col-span-1'} px-3 py-1 flex justify-center`}
+          >
             <button
               type="button"
               onClick={() => setIsAdvancedDrawerOpen(true)}
-              className={`flex min-h-11 items-center gap-2 px-4 py-2.5 lg:min-h-0 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+              className={`flex min-h-11 w-full lg:w-auto items-center justify-center gap-2 px-4 py-2.5 lg:min-h-0 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
                 activeFiltersCount > 0
                   ? 'border-primary bg-primary-soft text-primary'
                   : 'border-border bg-white text-muted hover:bg-surface-muted'
@@ -306,10 +308,10 @@ export function PropertiesSearchConsole({
           </div>
 
           {/* Submit button */}
-          <div className="px-3 py-1 flex justify-center lg:justify-end">
+          <div className="col-span-2 lg:col-span-1 px-3 py-1 flex justify-center lg:justify-end">
             <button
               type="submit"
-              className="flex h-11 w-full lg:h-11 lg:w-11 items-center justify-center rounded-[12px] lg:rounded-full bg-primary text-white shadow-md hover:bg-primary-hover hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 cursor-pointer"
+              className="flex h-11 w-full lg:h-11 lg:w-11 items-center justify-center gap-2 rounded-[12px] lg:rounded-full bg-primary text-white shadow-md hover:bg-primary-hover hover:scale-[1.02] lg:hover:scale-105 active:scale-95 transition-all duration-200 shrink-0 cursor-pointer"
               aria-label="Tìm kiếm căn hộ"
             >
               <svg
@@ -325,6 +327,7 @@ export function PropertiesSearchConsole({
                   d="m21 21-4.35-4.35m1.35-5.4a6.75 6.75 0 1 1-13.5 0 6.75 6.75 0 0 1 13.5 0Z"
                 />
               </svg>
+              <span className="lg:hidden text-xs font-bold">Tìm kiếm</span>
             </button>
           </div>
         </form>

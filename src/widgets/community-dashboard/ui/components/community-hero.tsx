@@ -1,3 +1,5 @@
+import { UserAvatar } from './user-avatar'
+
 export function CommunityHero(): React.ReactElement {
   return (
     <section className="relative flex flex-col items-center justify-center bg-gradient-to-b from-[#f5ece2] via-[#faf6f1] to-bg pb-24 pt-32 text-center rounded-b-[40px] border-b border-border overflow-hidden">
@@ -89,20 +91,20 @@ export function CommunityHero(): React.ReactElement {
         <div className="flex items-center justify-center gap-8 mt-6">
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=40&auto=format&fit=crop&q=80"
-                alt=""
-                className="h-7 w-7 rounded-full border-2 border-[#f5ece2] object-cover"
+              <UserAvatar
+                name="Thạch"
+                size="sm"
+                className="border-2 border-[#f5ece2] shadow-sm"
               />
-              <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&auto=format&fit=crop&q=80"
-                alt=""
-                className="h-7 w-7 rounded-full border-2 border-[#f5ece2] object-cover"
+              <UserAvatar
+                name="Huy"
+                size="sm"
+                className="border-2 border-[#f5ece2] shadow-sm"
               />
-              <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&auto=format&fit=crop&q=80"
-                alt=""
-                className="h-7 w-7 rounded-full border-2 border-[#f5ece2] object-cover"
+              <UserAvatar
+                name="Minh"
+                size="sm"
+                className="border-2 border-[#f5ece2] shadow-sm"
               />
             </div>
             <span className="text-[11px] text-muted font-semibold">

@@ -45,9 +45,9 @@ export const servicesArticles: Article[] = [
         <H3>Dấu vết và kiểm tra tính toàn vẹn:</H3>
         <Bullets>
           <li>
-            Khi mạng sổ cái được bật, hệ thống ghi các mã băm (hash) của hợp
-            đồng và các giao dịch quan trọng lên sổ cái Hyperledger Fabric. Số
-            tiền và thông tin cá nhân không được ghi lên sổ cái.
+            Khi hệ thống lưu vết chống sửa đổi hoạt động, hệ thống ghi nhận mã
+            xác thực nội dung của hợp đồng và các giao dịch quan trọng. Số tiền
+            và thông tin cá nhân không được đưa vào dữ liệu lưu vết.
           </li>
           <li>
             Ở bước Kích hoạt có nút <em>Đối soát toàn vẹn nội dung hợp đồng</em>{' '}
@@ -304,15 +304,17 @@ export const paymentsArticles: Article[] = [
           </li>
         </Steps>
 
-        <H3>Sổ cái ghi gì?</H3>
+        <H3>Hệ thống lưu vết ghi những gì?</H3>
         <Bullets>
           <li>
-            Chỉ ghi mã băm (hash) và mã định danh của hợp đồng, thanh toán, bàn
-            giao. Số tiền, họ tên, CCCD không được ghi lên sổ cái.
+            Chỉ ghi mã xác thực nội dung và mã định danh của hợp đồng, thanh
+            toán, bàn giao. Số tiền, họ tên, CCCD không được ghi vào dữ liệu lưu
+            vết.
           </li>
           <li>Bạn không phải nhập hay dán mã giao dịch ở bất kỳ bước nào.</li>
           <li>
-            Khi mạng sổ cái chưa được bật, hệ thống ghi nhận ở chế độ mô phỏng.
+            Khi chưa kích hoạt lưu vết trực tiếp, hệ thống ghi nhận ở chế độ thử
+            nghiệm.
           </li>
         </Bullets>
       </Prose>

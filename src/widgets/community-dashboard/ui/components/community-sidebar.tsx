@@ -8,6 +8,9 @@ interface CommunitySidebarProps {
   myTotalCount: number
   myPendingCount: number
   myApprovedCount: number
+  projectStats?: { name: string; posts: number }[]
+  selectedProject?: string | null
+  onSelectProject?: (project: string) => void
 }
 
 export function CommunitySidebar({
@@ -16,7 +19,19 @@ export function CommunitySidebar({
   myTotalCount,
   myPendingCount,
   myApprovedCount,
+  projectStats,
+  selectedProject,
+  onSelectProject,
 }: CommunitySidebarProps): React.ReactElement {
+  const displayProjects = React.useMemo(() => {
+    if (projectStats && projectStats.length > 0) return projectStats
+    return [
+      { name: 'Vinhomes Central Park', posts: 34 },
+      { name: 'Masteri Thảo Điền', posts: 21 },
+      { name: 'Sunrise City', posts: 18 },
+      { name: 'The Sun Avenue', posts: 12 },
+    ]
+  }, [projectStats])
   return (
     <div className="space-y-6">
       {/* My Posts Tracker widget */}
@@ -75,41 +90,63 @@ export function CommunitySidebar({
 
       {/* Trending Projects widget */}
       <div className="rounded-2xl border border-border bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <h3 className="font-display text-xs font-bold text-fg uppercase tracking-wider mb-4 flex items-center gap-2">
-          <svg
-            className="h-4 w-4 text-primary"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-            />
-          </svg>
-          Dự án nổi bật
-        </h3>
-        <div className="space-y-3">
-          {[
-            { name: 'Vinhomes Central Park', posts: 34 },
-            { name: 'Masteri Thảo Điền', posts: 21 },
-            { name: 'Sunrise City', posts: 18 },
-            { name: 'The Sun Avenue', posts: 12 },
-          ].map(proj => (
-            <div
-              key={proj.name}
-              className="flex items-center justify-between group cursor-pointer"
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display text-xs font-bold text-fg uppercase tracking-wider flex items-center gap-2">
+            <svg
+              className="h-4 w-4 text-primary"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
             >
-              <span className="text-xs font-semibold text-fg group-hover:text-primary transition-colors">
-                {proj.name}
-              </span>
-              <span className="text-[10px] font-bold text-muted bg-surface-muted/60 px-2 py-0.5 rounded-full">
-                {proj.posts} bài
-              </span>
-            </div>
-          ))}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
+            </svg>
+            Dự án nổi bật
+          </h3>
+          {selectedProject && (
+            <button
+              type="button"
+              onClick={() => onSelectProject?.(selectedProject)}
+              className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
+            >
+              Bỏ chọn
+            </button>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          {displayProjects.map(proj => {
+            const isSelected =
+              selectedProject?.toLowerCase() === proj.name.toLowerCase()
+            return (
+              <button
+                key={proj.name}
+                type="button"
+                onClick={() => onSelectProject?.(proj.name)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-primary/10 border border-primary/25 text-primary font-bold'
+                    : 'hover:bg-surface-muted/60 text-fg border border-transparent'
+                }`}
+              >
+                <span className="text-xs font-medium truncate pr-2">
+                  {proj.name}
+                </span>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                    isSelected
+                      ? 'bg-primary text-white'
+                      : 'text-muted bg-surface-muted border border-border/60'
+                  }`}
+                >
+                  {proj.posts} bài
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
 

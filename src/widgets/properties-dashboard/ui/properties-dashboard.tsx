@@ -232,26 +232,30 @@ export function PropertiesDashboard(): React.ReactElement {
                 setActiveTab('single')
                 setSearchStatus('')
               }}
-              className={`flex-1 rounded-full py-2.5 text-xs font-bold transition-all duration-300 ${
+              className={`flex-1 rounded-full py-2.5 px-3 text-xs font-bold transition-all duration-300 whitespace-nowrap ${
                 activeTab === 'single'
                   ? 'bg-primary text-white shadow-md'
                   : 'text-muted hover:text-fg'
               }`}
             >
-              Căn hộ thuê lẻ (Chủ nhà cá nhân)
+              <span className="sm:hidden">Căn hộ cá nhân</span>
+              <span className="hidden sm:inline">
+                Căn hộ thuê lẻ (Chủ nhà cá nhân)
+              </span>
             </button>
             <button
               onClick={() => {
                 setActiveTab('project')
                 setSearchStatus('')
               }}
-              className={`flex-1 rounded-full py-2.5 text-xs font-bold transition-all duration-300 ${
+              className={`flex-1 rounded-full py-2.5 px-3 text-xs font-bold transition-all duration-300 whitespace-nowrap ${
                 activeTab === 'project'
                   ? 'bg-primary text-white shadow-md'
                   : 'text-muted hover:text-fg'
               }`}
             >
-              Dự án (Chủ đầu tư)
+              <span className="sm:hidden">Dự án CĐT</span>
+              <span className="hidden sm:inline">Dự án (Chủ đầu tư)</span>
             </button>
           </div>
         </section>

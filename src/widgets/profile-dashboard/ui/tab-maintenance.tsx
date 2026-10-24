@@ -94,71 +94,85 @@ export function TabMaintenance({
             ? 'Lịch sử yêu cầu sửa chữa'
             : 'Yêu cầu bảo trì từ khách thuê'}
         </h3>
-        <div className="space-y-4">
-          {maintenanceTickets.map(t => (
-            <div
-              key={t.id}
-              className="border border-border rounded-2xl p-5 flex flex-col md:flex-row md:items-start justify-between gap-4 bg-surface/40 hover:border-border-strong hover:shadow-sm transition-all text-left"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xs font-bold text-fg font-display">
-                    {t.title}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[10px] text-muted">
-                    <Clock className="h-3 w-3 text-subtle" />
-                    {t.createdAt}
-                  </span>
+        {maintenanceTickets.length === 0 ? (
+          <div className="py-12 border border-dashed border-border rounded-2xl flex flex-col items-center justify-center gap-2 text-center bg-surface-muted/10">
+            <Wrench className="h-8 w-8 text-muted/50" />
+            <p className="font-semibold text-fg text-sm">
+              Chưa có yêu cầu sửa chữa nào
+            </p>
+            <p className="text-xs text-muted max-w-sm">
+              {role === 'tenant'
+                ? 'Nếu các thiết bị hoặc tiện ích trong căn hộ gặp sự cố, bạn có thể gửi yêu cầu ở biểu mẫu phía trên.'
+                : 'Hiện tại chưa có sự cố hoặc yêu cầu hỗ trợ sửa chữa nào từ khách thuê.'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {maintenanceTickets.map(t => (
+              <div
+                key={t.id}
+                className="border border-border rounded-2xl p-5 flex flex-col md:flex-row md:items-start justify-between gap-4 bg-surface/40 hover:border-border-strong hover:shadow-sm transition-all text-left"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs font-bold text-fg font-display">
+                      {t.title}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-muted">
+                      <Clock className="h-3.5 w-3.5 text-subtle" />
+                      {t.createdAt}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted font-body leading-relaxed max-w-2xl">
+                    {t.description}
+                  </p>
+                  {t.cost && (
+                    <span className="inline-block px-2.5 py-0.5 rounded bg-primary-soft text-primary text-[11px] font-bold font-mono">
+                      Chi phí: {t.cost.toLocaleString('vi-VN')} VND{' '}
+                      {role === 'tenant'
+                        ? '(Đã trừ vào tiền thuê/hợp đồng điện tử)'
+                        : '(Đã duyệt chi từ tài khoản ký quỹ)'}
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-muted font-body leading-relaxed max-w-2xl">
-                  {t.description}
-                </p>
-                {t.cost && (
-                  <span className="inline-block px-2.5 py-0.5 rounded bg-primary-soft text-primary text-[10px] font-bold font-mono">
-                    Chi phí: {t.cost.toLocaleString('vi-VN')} VND{' '}
-                    {role === 'tenant'
-                      ? '(Đã trừ vào tiền thuê/smart contract)'
-                      : '(Đã duyệt chi từ tài khoản ký quỹ)'}
-                  </span>
-                )}
-              </div>
 
-              <div className="flex items-center gap-3 shrink-0">
-                {/* Landlord Action Button */}
-                {role === 'landlord' && t.status === 'pending' && (
-                  <button
-                    type="button"
-                    onClick={() => handleApproveTicket(t.id)}
-                    className="px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-[10px] font-bold rounded-full transition-all active:scale-95 shadow-sm flex items-center gap-1 cursor-pointer animate-none border-none"
+                <div className="flex items-center gap-3 shrink-0">
+                  {/* Landlord Action Button */}
+                  {role === 'landlord' && t.status === 'pending' && (
+                    <button
+                      type="button"
+                      onClick={() => handleApproveTicket(t.id)}
+                      className="min-h-11 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-full transition-all active:scale-95 shadow-sm flex items-center gap-1.5 cursor-pointer animate-none border-none"
+                    >
+                      <Hammer className="h-3.5 w-3.5" />
+                      Phê duyệt & Gọi thợ
+                    </button>
+                  )}
+
+                  <Badge
+                    variant="outline"
+                    className={`uppercase tracking-wider py-0.5 ${
+                      t.status === 'completed'
+                        ? 'bg-success-soft text-success border-success/20'
+                        : t.status === 'processing'
+                          ? 'bg-primary-soft text-primary border-primary/20 animate-pulse-subtle'
+                          : 'bg-warning-soft text-warning border-warning/20'
+                    }`}
                   >
-                    <Hammer className="h-3 w-3" />
-                    Phê duyệt & Gọi thợ
-                  </button>
-                )}
-
-                <Badge
-                  variant="outline"
-                  className={`uppercase tracking-wider py-0.5 ${
-                    t.status === 'completed'
-                      ? 'bg-success-soft text-success border-success/20'
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full mr-1 ${t.status === 'completed' ? 'bg-success' : t.status === 'processing' ? 'bg-primary' : 'bg-warning'}`}
+                    />
+                    {t.status === 'completed'
+                      ? 'Đã hoàn thành'
                       : t.status === 'processing'
-                        ? 'bg-primary-soft text-primary border-primary/20 animate-pulse-subtle'
-                        : 'bg-warning-soft text-warning border-warning/20'
-                  }`}
-                >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full mr-1 ${t.status === 'completed' ? 'bg-success' : t.status === 'processing' ? 'bg-primary' : 'bg-warning'}`}
-                  />
-                  {t.status === 'completed'
-                    ? 'Đã hoàn thành'
-                    : t.status === 'processing'
-                      ? 'Đang sửa chữa'
-                      : 'Chờ duyệt'}
-                </Badge>
+                        ? 'Đang sửa chữa'
+                        : 'Chờ duyệt'}
+                  </Badge>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Tenant reviews card for landlord */}

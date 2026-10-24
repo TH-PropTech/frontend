@@ -162,7 +162,7 @@ export const accountArticles: Article[] = [
         <Note title="Về dữ liệu của bạn:">
           Ảnh CCCD được mã hóa AES-256-GCM khi lưu trữ. Để đọc thông tin trên
           thẻ, hệ thống gửi ảnh tới dịch vụ nhận dạng của bên thứ ba. Thông tin
-          cá nhân và số tiền không được ghi lên sổ cái.
+          cá nhân và số tiền không được ghi vào dữ liệu lưu vết.
         </Note>
       </Prose>
     ),
@@ -380,8 +380,8 @@ export const policiesArticles: Article[] = [
         <Lead>Dữ liệu của bạn được bảo vệ như thế nào?</Lead>
         <Bullets>
           <li>
-            <strong>Mật khẩu:</strong> được băm bằng bcrypt, hệ thống không lưu
-            mật khẩu gốc.
+            <strong>Mật khẩu:</strong> được mã hóa một chiều an toàn bằng
+            bcrypt, hệ thống không lưu mật khẩu gốc.
           </li>
           <li>
             <strong>Ảnh CCCD:</strong> mã hóa AES-256-GCM khi lưu trữ. Để đọc
@@ -393,8 +393,9 @@ export const policiesArticles: Article[] = [
             thử, hỗ trợ xác thực hai lớp (2FA) và Smart OTP.
           </li>
           <li>
-            <strong>Sổ cái:</strong> chỉ ghi mã băm và mã định danh của hợp
-            đồng, thanh toán. Họ tên, CCCD, số tiền không được ghi lên sổ cái.
+            <strong>Lưu vết:</strong> chỉ ghi mã xác thực nội dung và mã định
+            danh của hợp đồng, thanh toán. Họ tên, CCCD, số tiền không được ghi
+            vào dữ liệu lưu vết.
           </li>
         </Bullets>
 

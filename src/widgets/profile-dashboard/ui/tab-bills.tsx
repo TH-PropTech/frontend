@@ -136,7 +136,7 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                 : 'Quản lý dòng tiền & Doanh thu'}
             </h3>
             <p className="text-xs text-muted">
-              Cập nhật theo Smart Contract • Giao dịch được xử lý tự động qua
+              Cập nhật theo Hợp đồng điện tử • Giao dịch được xử lý tự động qua
               cổng ngân hàng liên kết Techcombank
             </p>
             {!live && (
@@ -170,66 +170,87 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                 </TableHead>
                 <TableHead className="p-4">Số tiền</TableHead>
                 <TableHead className="p-4">Trạng thái</TableHead>
-                <TableHead className="p-4">Giao dịch (Tx Hash)</TableHead>
+                <TableHead className="p-4">Mã giao dịch lưu vết</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {role === 'tenant' ? (
-                bills.map(b => (
-                  <TableRow
-                    key={b.id}
-                    className="hover:bg-surface-muted/10 transition-colors"
-                  >
-                    <TableCell className="p-4 font-semibold text-fg flex items-center gap-1.5 border-none h-12">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                      {b.title}
-                    </TableCell>
-                    <TableCell className="p-4 text-muted border-none">
-                      {b.dueDate}
-                    </TableCell>
-                    <TableCell className="p-4 font-bold text-fg text-sm border-none">
-                      {b.amount.toLocaleString('vi-VN')} VND
-                    </TableCell>
-                    <TableCell className="p-4 border-none">
-                      <Badge
-                        variant="outline"
-                        className={`gap-1 py-0.5 ${
-                          b.status === 'paid'
-                            ? 'bg-success-soft text-success border-success/20'
-                            : 'bg-destructive/10 text-destructive border-destructive/20 animate-pulse-subtle'
-                        }`}
-                      >
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${b.status === 'paid' ? 'bg-success' : 'bg-destructive animate-ping'}`}
-                        />
-                        {b.status === 'paid'
-                          ? 'Đã thanh toán'
-                          : 'Chưa thanh toán'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="p-4 border-none">
-                      {b.txHash ? (
-                        <div className="flex items-center gap-1.5 font-mono text-primary max-w-[180px]">
-                          <span className="truncate" title={b.txHash}>
-                            {b.txHash}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyText(b.txHash || '')}
-                            className="text-subtle hover:text-fg transition-colors"
-                            title="Sao chép Tx Hash"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-muted/60 font-mono italic">
-                          N/A
-                        </span>
-                      )}
+                bills.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="py-12 text-center border-none"
+                    >
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <FileText className="h-8 w-8 text-muted/50" />
+                        <p className="font-semibold text-fg text-sm">
+                          Chưa có hóa đơn nào phát sinh
+                        </p>
+                        <p className="text-xs text-muted max-w-sm">
+                          Các khoản phí thuê nhà, điện nước và dịch vụ sẽ tự
+                          động hiển thị tại đây khi tới kỳ thanh toán.
+                        </p>
+                      </div>
                     </TableCell>
                   </TableRow>
-                ))
+                ) : (
+                  bills.map(b => (
+                    <TableRow
+                      key={b.id}
+                      className="hover:bg-surface-muted/10 transition-colors"
+                    >
+                      <TableCell className="p-4 font-semibold text-fg flex items-center gap-1.5 border-none h-12">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                        {b.title}
+                      </TableCell>
+                      <TableCell className="p-4 text-muted border-none">
+                        {b.dueDate}
+                      </TableCell>
+                      <TableCell className="p-4 font-bold text-fg text-sm border-none">
+                        {b.amount.toLocaleString('vi-VN')} VND
+                      </TableCell>
+                      <TableCell className="p-4 border-none">
+                        <Badge
+                          variant="outline"
+                          className={`gap-1 py-0.5 ${
+                            b.status === 'paid'
+                              ? 'bg-success-soft text-success border-success/20'
+                              : 'bg-destructive/10 text-destructive border-destructive/20 animate-pulse-subtle'
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${b.status === 'paid' ? 'bg-success' : 'bg-destructive animate-ping'}`}
+                          />
+                          {b.status === 'paid'
+                            ? 'Đã thanh toán'
+                            : 'Chưa thanh toán'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="p-4 border-none">
+                        {b.txHash ? (
+                          <div className="flex items-center gap-1.5 font-mono text-primary max-w-[180px]">
+                            <span className="truncate" title={b.txHash}>
+                              {b.txHash}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyText(b.txHash || '')}
+                              className="p-1 text-subtle hover:text-fg transition-colors inline-flex items-center justify-center rounded"
+                              title="Sao chép mã giao dịch"
+                              aria-label="Sao chép mã giao dịch"
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-muted/60 font-mono italic">
+                            N/A
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )
               ) : live ? (
                 <LandlordCashflowRows
                   rows={current.items}
@@ -270,7 +291,9 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                           onClick={() =>
                             handleCopyText('0x2d9a3b8e4f1a4e1272c41e8aa2206b7d')
                           }
-                          className="text-subtle hover:text-fg transition-colors"
+                          className="p-1 text-subtle hover:text-fg transition-colors inline-flex items-center justify-center rounded"
+                          title="Sao chép mã giao dịch"
+                          aria-label="Sao chép mã giao dịch"
                         >
                           <Copy className="h-3.5 w-3.5" />
                         </button>
@@ -318,7 +341,9 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                                 '0x3a2c91ba40fe93b8219c009d12d4109b'
                               )
                             }
-                            className="text-subtle hover:text-fg transition-colors"
+                            className="p-1 text-subtle hover:text-fg transition-colors inline-flex items-center justify-center rounded"
+                            title="Sao chép mã giao dịch"
+                            aria-label="Sao chép mã giao dịch"
                           >
                             <Copy className="h-3.5 w-3.5" />
                           </button>
