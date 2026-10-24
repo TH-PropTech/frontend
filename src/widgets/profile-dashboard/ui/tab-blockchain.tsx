@@ -54,8 +54,8 @@ export function TabBlockchain({
   }
 
   return (
-    <div className="space-y-6 mt-0 outline-none">
-      <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+    <div className="space-y-5 mt-0 outline-none">
+      <Card className="bg-white border border-border rounded-3xl p-5 md:p-6 shadow-sm space-y-4">
         <div className="space-y-1.5 text-left">
           <h3 className="font-marketing text-base font-bold text-fg flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />

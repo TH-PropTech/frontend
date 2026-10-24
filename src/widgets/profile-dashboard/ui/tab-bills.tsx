@@ -77,7 +77,7 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
   }
 
   return (
-    <div className="space-y-6 mt-0 outline-none">
+    <div className="space-y-5 mt-0 outline-none">
       {/* Landlord Financial Overviews */}
       {role === 'landlord' && (
         <>
@@ -87,7 +87,7 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
       )}
 
       {/* Visual Financial Chart Card */}
-      <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+      <Card className="bg-white border border-border rounded-3xl p-5 md:p-6 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-left">
           <div className="space-y-1">
             <h3 className="font-marketing text-base font-bold text-fg flex items-center gap-2">
@@ -126,7 +126,7 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
       </Card>
 
       {/* Table section (using generic Table UI components) */}
-      <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+      <Card className="bg-white border border-border rounded-3xl p-5 md:p-6 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-left">
           <div className="space-y-1">
             <h3 className="font-marketing text-base font-bold text-fg flex items-center gap-2">

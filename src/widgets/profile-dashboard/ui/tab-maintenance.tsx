@@ -28,10 +28,10 @@ export function TabMaintenance({
   } = profile
 
   return (
-    <div className="space-y-6 mt-0 outline-none">
+    <div className="space-y-5 mt-0 outline-none">
       {/* Submit new issue (Only for Tenant) */}
       {role === 'tenant' && (
-        <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-5">
+        <Card className="bg-white border border-border rounded-3xl p-5 md:p-6 shadow-sm space-y-4">
           <h3 className="font-marketing text-base font-bold text-fg flex items-center gap-2 text-left">
             <Wrench className="h-4 w-4 text-primary" />
             Báo cáo sự cố thiết bị trong căn hộ
@@ -87,7 +87,7 @@ export function TabMaintenance({
       )}
 
       {/* Tickets list */}
-      <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+      <Card className="bg-white border border-border rounded-3xl p-5 md:p-6 shadow-sm space-y-4">
         <h3 className="font-marketing text-base font-bold text-fg flex items-center gap-2 text-left">
           <Clock className="h-4 w-4 text-primary" />
           {role === 'tenant'
