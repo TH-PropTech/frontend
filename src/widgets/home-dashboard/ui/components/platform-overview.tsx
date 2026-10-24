@@ -104,7 +104,7 @@ export function PlatformOverview(): React.ReactElement {
               href={'/properties' as Route}
               className="inline-flex items-center gap-2 text-xs font-bold text-primary group-hover:translate-x-1 transition-transform"
             >
-              Khám phá căn hộ
+              Tìm căn hộ
               <svg
                 className="h-4 w-4"
                 fill="none"
