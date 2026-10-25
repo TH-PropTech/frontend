@@ -145,32 +145,7 @@ export function ProcessTimeline(): React.ReactElement {
         {viewMode === 'dashboard' && (
           <div className="space-y-16 animate-in fade-in duration-300">
             {/* Support Center Header */}
-            <section className="relative flex flex-col items-center justify-center bg-gradient-to-b from-[#f5ece2] via-[#faf6f1] to-background pb-20 md:pb-24 pt-28 md:pt-36 text-center rounded-b-[32px] md:rounded-b-[40px] border-b border-border overflow-hidden px-4 sm:px-6 md:px-10">
-              <div className="absolute inset-0 opacity-[0.08] pointer-events-none select-none overflow-hidden">
-                <svg
-                  className="w-full h-full max-w-full"
-                  viewBox="0 0 1440 300"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  preserveAspectRatio="none"
-                >
-                  <path
-                    d="M-100 80 C 300 10, 600 150, 1000 60 C 1200 30, 1500 100, 1600 80"
-                    stroke="currentColor"
-                    className="text-primary"
-                    strokeWidth="1.5"
-                    fill="none"
-                  />
-                  <path
-                    d="M-100 140 C 300 70, 600 210, 1000 120 C 1200 90, 1500 160, 1600 140"
-                    stroke="currentColor"
-                    className="text-primary"
-                    strokeWidth="1.5"
-                    fill="none"
-                  />
-                </svg>
-              </div>
-
+            <section className="relative flex flex-col items-center justify-center bg-surface-muted pb-20 md:pb-24 pt-28 md:pt-36 text-center border-b border-border px-4 sm:px-6 md:px-10">
               <div className="mx-auto w-full max-w-4xl z-10 relative space-y-4 md:space-y-6">
                 <span className="font-mono text-[11px] md:text-xs font-bold uppercase tracking-widest text-primary mb-1 block">
                   TRUNG TÂM HỖ TRỢ KHÁCH HÀNG TH PROPTECH
@@ -279,9 +254,9 @@ export function ProcessTimeline(): React.ReactElement {
                   <button
                     key={cat.id}
                     onClick={() => handleCategoryClick(cat.id)}
-                    className="bg-white border border-border/80 rounded-2xl p-5 md:p-6 text-left shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_35px_rgba(198,90,58,0.06)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-4 group cursor-pointer"
+                    className="bg-surface border border-border rounded-xl p-5 md:p-6 text-left hover:border-primary transition-colors duration-200 flex items-start gap-4 group cursor-pointer"
                   >
-                    <div className="h-11 w-11 rounded-xl bg-primary/5 group-hover:bg-primary/10 flex items-center justify-center shrink-0 transition-colors duration-300">
+                    <div className="h-6 w-6 flex items-center justify-center shrink-0">
                       {cat.icon}
                     </div>
                     <div className="flex-1 space-y-1">
@@ -303,7 +278,7 @@ export function ProcessTimeline(): React.ReactElement {
         {viewMode === 'detail' && (
           <div className="animate-in fade-in duration-300">
             {/* Header Breadcrumbs & Search Area */}
-            <section className="border-b border-border bg-white pb-4 pt-24 md:pt-28 shadow-sm">
+            <section className="border-b border-border bg-surface pb-4 pt-24 md:pt-28">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
                 {/* Breadcrumbs with click action to return back */}
                 <div className="flex items-center gap-2 text-xs text-muted font-semibold overflow-x-auto whitespace-nowrap py-1 scrollbar-none">
@@ -405,45 +380,11 @@ export function ProcessTimeline(): React.ReactElement {
             <section className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 mt-6 md:mt-10">
               <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6 md:gap-8">
                 {/* LEFT SIDEBAR: Article Tree Directory */}
-                <aside className="w-full bg-white border border-border rounded-2xl p-4 sm:p-5 self-start space-y-4 shadow-sm">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Lọc theo tên..."
-                      className="w-full rounded-xl border border-border bg-[#faf6f1]/20 py-2.5 px-3 pl-8 text-xs text-fg outline-none focus:border-primary focus:bg-white transition-all duration-200"
-                    />
-                    <svg
-                      className="absolute top-3 left-2.5 h-3.5 w-3.5 text-muted"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                    {searchQuery && (
-                      <button
-                        type="button"
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-2.5 top-2.5 text-xs text-muted hover:text-fg p-0.5"
-                        aria-label="Xóa bộ lọc"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
+                <aside className="w-full self-start space-y-4 bg-surface border border-border rounded-xl p-4 sm:p-5 md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto scrollbar-thin scrollbar-thumb-border">
                   {/* Empty state when no categories match */}
                   {filteredCategories.length === 0 ? (
-                    <div className="py-6 px-3 text-center space-y-3 bg-[#faf6f1]/40 rounded-xl border border-dashed border-border/80">
-                      <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm text-muted">
+                    <div className="py-6 px-3 text-center space-y-3">
+                      <div className="mx-auto flex h-9 w-9 items-center justify-center text-muted">
                         <svg
                           className="h-4 w-4"
                           fill="none"
@@ -567,7 +508,7 @@ export function ProcessTimeline(): React.ReactElement {
                 </aside>
 
                 {/* RIGHT MAIN CONTENT: Rich Document Reader */}
-                <article className="bg-white border border-border rounded-2xl p-5 md:p-10 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-6">
+                <article className="min-w-0 space-y-6 bg-surface border border-border rounded-xl p-5 md:p-8">
                   {/* Document Header */}
                   <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-border/60 gap-4">
                     <div className="space-y-1">

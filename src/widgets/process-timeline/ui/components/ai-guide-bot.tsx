@@ -496,8 +496,8 @@ function AiGuideBotImpl({
 
       {/* Main Bot Card Container */}
       <div
-        className={`relative rounded-2xl border border-primary/20 bg-gradient-to-br from-white/95 via-primary/[0.01] to-primary/[0.03] shadow-md backdrop-blur-md overflow-hidden group transition-all duration-300 ${
-          fontSize === 'sm' ? 'p-5' : fontSize === 'base' ? 'p-6' : 'p-7'
+        className={`relative border-b border-border overflow-hidden group transition-all duration-300 ${
+          fontSize === 'sm' ? 'py-5' : fontSize === 'base' ? 'py-6' : 'py-7'
         }`}
       >
         {/* Wiggle / Crawling keyframes */}
@@ -573,8 +573,8 @@ function AiGuideBotImpl({
             </button>
 
             {/* Font Size adjustment */}
-            <div className="flex items-center gap-2 bg-primary/[0.03] border border-primary/10 rounded-xl p-1 shadow-inner">
-              <span className="text-[11px] font-bold text-primary/60 pl-2 select-none uppercase tracking-wider hidden sm:inline">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-primary/60 select-none uppercase tracking-wider hidden sm:inline">
                 Cỡ chữ
               </span>
               <div className="relative flex items-center bg-primary/[0.06] rounded-lg p-0.5 select-none">
@@ -623,8 +623,8 @@ function AiGuideBotImpl({
             </div>
 
             {/* Speech Rate adjustment */}
-            <div className="flex items-center gap-2 bg-primary/[0.03] border border-primary/10 rounded-xl p-1 shadow-inner">
-              <span className="text-[11px] font-bold text-primary/60 pl-2 select-none uppercase tracking-wider hidden sm:inline">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-primary/60 select-none uppercase tracking-wider hidden sm:inline">
                 Giọng đọc
               </span>
               <div className="relative flex items-center bg-primary/[0.06] rounded-lg p-0.5 select-none">
@@ -783,7 +783,7 @@ function AiGuideBotImpl({
               className="w-12 h-[52px] shrink-0"
               onClick={handleMascotClick}
             />
-            <div className="flex-1 text-xs text-primary font-bold bg-primary/5 p-3 rounded-lg border border-primary/10">
+            <div className="flex-1 text-xs text-primary font-bold border-l-2 border-primary pl-3">
               {greetingText ?? currentTip}
             </div>
           </div>
@@ -822,18 +822,18 @@ function AiGuideBotImpl({
                       key={idx}
                       id={`step-btn-${idx}`}
                       onClick={() => setActiveStepIndex(idx)}
-                      className={`flex flex-col text-left rounded-xl border transition-colors duration-200 cursor-pointer ${
+                      className={`flex flex-col text-left border-l-2 pl-3 transition-colors duration-200 cursor-pointer ${
                         fontSize === 'sm'
-                          ? 'p-3.5'
+                          ? 'py-3'
                           : fontSize === 'base'
-                            ? 'p-4'
-                            : 'p-5'
+                            ? 'py-3.5'
+                            : 'py-4'
                       } ${
                         isActive
-                          ? 'bg-primary/[0.06] border-primary/30 shadow-sm'
+                          ? 'bg-primary/[0.05] border-primary'
                           : isChecked
-                            ? 'bg-primary/[0.01] border-primary/15 opacity-80'
-                            : 'bg-white/50 border-border/70 hover:bg-white/80'
+                            ? 'border-transparent opacity-70'
+                            : 'border-transparent hover:bg-surface-muted'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -844,7 +844,7 @@ function AiGuideBotImpl({
                               e.stopPropagation()
                               handleStepToggle(idx)
                             }}
-                            className={`mt-0.5 flex shrink-0 items-center justify-center rounded-full border border-primary/30 hover:border-primary bg-white transition-all duration-200 cursor-pointer shadow-sm ${
+                            className={`mt-0.5 flex shrink-0 items-center justify-center rounded-full border border-primary/30 hover:border-primary bg-white transition-all duration-200 cursor-pointer ${
                               fontSize === 'sm'
                                 ? 'h-5 w-5'
                                 : fontSize === 'base'
@@ -930,7 +930,7 @@ function AiGuideBotImpl({
                       {isActive && (
                         <div className="mt-3 pl-9 space-y-2">
                           {/* Step Tip text - shown inline on ALL screens */}
-                          <div className="text-xs text-primary bg-primary/5 p-3 rounded-lg leading-relaxed border border-primary/10">
+                          <div className="text-xs text-primary leading-relaxed">
                             <span className="font-bold uppercase tracking-wider text-[11px] block mb-1">
                               Hướng dẫn:
                             </span>
@@ -983,12 +983,12 @@ function AiGuideBotImpl({
 
           {/* AI Tip / Suggestion */}
           <div
-            className={`relative rounded-xl border border-amber-500/25 bg-amber-500/[0.03] text-amber-900 leading-relaxed font-semibold flex transition-all duration-300 ${
+            className={`relative border-l-2 border-accent text-amber-900 leading-relaxed font-semibold flex transition-all duration-300 ${
               fontSize === 'sm'
-                ? 'p-3.5 gap-2 text-[11px]'
+                ? 'pl-3.5 py-1 gap-2 text-[11px]'
                 : fontSize === 'base'
-                  ? 'p-4 gap-2.5 text-xs'
-                  : 'p-5 gap-3 text-sm'
+                  ? 'pl-4 py-1.5 gap-2.5 text-xs'
+                  : 'pl-5 py-2 gap-3 text-sm'
             }`}
           >
             <svg
