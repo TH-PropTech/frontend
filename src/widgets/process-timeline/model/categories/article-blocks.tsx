@@ -53,7 +53,7 @@ export function Note({
   children: React.ReactNode
 }): React.ReactElement {
   return (
-    <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 mt-6">
+    <div className="pl-4 border-l-2 border-primary mt-6">
       <span className="font-bold text-primary text-xs block mb-1">{title}</span>
       {children}
     </div>
