@@ -132,7 +132,6 @@ export function useProfile(): UseProfileReturn {
   const [isWalletConnected, setIsWalletConnected] = React.useState(false)
   const [walletAddress, setWalletAddress] = React.useState('')
   const [usdtBalance, setUsdtBalance] = React.useState(1000)
-  const [escrowBalance, setEscrowBalance] = React.useState(0)
 
   // KYC
   const [kycStatus, setKycStatus] = React.useState<
@@ -291,8 +290,6 @@ export function useProfile(): UseProfileReturn {
   } = useProfileMaintenance(addBlockchainLog)
 
   // Lease
-  const [leaseTerminated, setLeaseTerminated] = React.useState(false)
-  const [damageDeductions] = React.useState(500000)
   const [depositPaid, setDepositPaid] = React.useState(false)
   const [contractSigned, setContractSigned] = React.useState(false)
   const [firstMonthPaid, setFirstMonthPaid] = React.useState(false)
@@ -345,7 +342,7 @@ export function useProfile(): UseProfileReturn {
   const effContractSigned = live ? live.contractSigned : contractSigned
   const effFirstMonthPaid = live ? live.firstMonthPaid : firstMonthPaid
   const effHandoverSigned = live ? live.handoverSigned : handoverSigned
-  const effLeaseTerminated = live ? live.leaseTerminated : leaseTerminated
+  const effLeaseTerminated = live ? live.leaseTerminated : false
 
   const effBills = React.useMemo(() => {
     if (role === 'tenant' && tenantPortfolio.isLive) {
@@ -358,7 +355,6 @@ export function useProfile(): UseProfileReturn {
     if (isWalletConnected) {
       setIsWalletConnected(false)
       setWalletAddress('')
-      setEscrowBalance(0)
       toast.info('Đã hủy liên kết tài khoản ngân hàng')
       return
     }
@@ -369,7 +365,6 @@ export function useProfile(): UseProfileReturn {
         : 'TPBank - 04382910301'
     )
     setUsdtBalance(role === 'tenant' ? 50000000 : 150000000)
-    if (depositPaid && !leaseTerminated) setEscrowBalance(18000000)
     toast.success('Liên kết tài khoản ngân hàng thành công!', {
       description: `Đã liên kết tài khoản ngân hàng qua cổng thanh toán TPBank/Techcombank (PayOS).`,
     })
@@ -400,14 +395,13 @@ export function useProfile(): UseProfileReturn {
           : b
       )
     )
-    if (isWalletConnected) setEscrowBalance(18000000)
     addBlockchainLog(
       'DEPOSIT_CONFIRMED',
       '2d9a3b8e4f1a4e1272c41e8aa2206b7d27e3d09a25b18920138d89f2c1e8aa22'
     )
     toast.success('Thanh toán tiền đặt cọc thành công!', {
       description:
-        'Tiền ký quỹ đã khóa bảo chứng tại ngân hàng Techcombank (giám sát bởi Fabric Ledger).',
+        'Khoản cọc được ghi nhận và lưu vết chống sửa đổi. Tiền cọc chuyển trực tiếp cho chủ nhà.',
     })
   }
 
@@ -468,19 +462,6 @@ export function useProfile(): UseProfileReturn {
     )
   }
 
-  const handleTerminateLease = (): void => {
-    setLeaseTerminated(true)
-    setEscrowBalance(0)
-    addBlockchainLog(
-      'LEASE_TERMINATED',
-      '9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b7c8d9e0f1a2b3c4d5e6f7a8'
-    )
-    toast.success('Thanh lý hợp đồng thành công!', {
-      description:
-        'Tiền ký quỹ đặt cọc bảo chứng giữ tại TPBank/Techcombank đã được giải tỏa hoàn trả.',
-    })
-  }
-
   const handleCopyText = (text: string): void => {
     navigator.clipboard.writeText(text)
     toast.success('Đã sao chép vào bộ nhớ tạm!')
@@ -529,15 +510,11 @@ export function useProfile(): UseProfileReturn {
       setContractSigned(true)
       setFirstMonthPaid(true)
       setHandoverSigned(true)
-      setLeaseTerminated(false)
-      setEscrowBalance(isWalletConnected ? 18000000 : 0)
     } else {
       setDepositPaid(false)
       setContractSigned(false)
       setFirstMonthPaid(false)
       setHandoverSigned(false)
-      setLeaseTerminated(false)
-      setEscrowBalance(0)
     }
     toast.info(
       `Đã chuyển sang căn hộ: ${properties.find(p => p.id === propertyId)?.name}`
@@ -548,7 +525,6 @@ export function useProfile(): UseProfileReturn {
     setRole(newRole)
     setIsWalletConnected(false)
     setWalletAddress('')
-    setEscrowBalance(0)
     setKycStatus('not-started')
     setCccdUploaded(false)
     setKycForm(EMPTY_KYC)
@@ -614,7 +590,6 @@ export function useProfile(): UseProfileReturn {
     isWalletConnected,
     walletAddress,
     usdtBalance,
-    escrowBalance,
     isKycVerified,
     kycStatus,
     showKycModal,
@@ -636,7 +611,6 @@ export function useProfile(): UseProfileReturn {
     newTicketDesc,
     setNewTicketDesc,
     leaseTerminated: effLeaseTerminated,
-    damageDeductions,
     depositPaid: effDepositPaid,
     contractSigned: effContractSigned,
     firstMonthPaid: effFirstMonthPaid,
@@ -653,7 +627,6 @@ export function useProfile(): UseProfileReturn {
     handleConfirmHandover,
     handleNewMaintenanceTicket,
     handleApproveTicket,
-    handleTerminateLease,
     handleCopyText,
     progressPercent,
     handleOpenContractModal,

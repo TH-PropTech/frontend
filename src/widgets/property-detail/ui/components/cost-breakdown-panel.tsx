@@ -56,7 +56,7 @@ export function CostBreakdownPanel({
       title: 'Cách tính chi phí ban đầu',
       description: cost.estimated
         ? 'Tin này chưa có gói thuê nên hệ thống ước tính từ giá niêm yết: cọc 2 tháng và tiền thuê tháng đầu. Số thật sẽ chốt khi chọn gói và ký hợp đồng.'
-        : 'Số tiền lấy trực tiếp từ gói thuê chủ nhà thiết lập: cọc (gồm cọc giữ chỗ và phần ký quỹ còn lại) cộng tiền thuê trả trước theo chính sách của gói. Khoản cọc được hoàn trả khi chấm dứt hợp đồng theo điều khoản.',
+        : 'Số tiền lấy trực tiếp từ gói thuê chủ nhà thiết lập: cọc (gồm cọc giữ chỗ và phần cọc bổ sung) cộng tiền thuê trả trước theo chính sách của gói. Khoản cọc được hoàn trả khi chấm dứt hợp đồng theo điều khoản.',
       visualExample: cost.segments
         .map(segment => `${segment.label}: ${formatCurrency(segment.amount)}`)
         .join(' · ')

@@ -53,6 +53,14 @@ const MOVE_IN_STEP: TimelineStep = {
   icon: Home,
 }
 
+const MOVE_OUT_STEP: TimelineStep = {
+  id: 'step-move-out',
+  title: 'Trả nhà & hoàn cọc',
+  description: 'Biên bản trả nhà, bảng khấu trừ cọc và hoàn cọc',
+  state: 'upcoming',
+  icon: Home,
+}
+
 export function ContractStatusTimeline({
   status,
   depositStatus,
@@ -150,6 +158,7 @@ export function ContractStatusTimeline({
     signing: signStep,
     ledger: ledgerStep,
     'move-in': MOVE_IN_STEP,
+    'move-out': MOVE_OUT_STEP,
   }
   const steps: TimelineStep[] = serverFlow
     ? serverFlow.stages.map(stage => ({

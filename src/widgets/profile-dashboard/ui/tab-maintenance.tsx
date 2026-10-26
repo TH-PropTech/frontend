@@ -131,7 +131,7 @@ export function TabMaintenance({
                       Chi phí: {t.cost.toLocaleString('vi-VN')} VND{' '}
                       {role === 'tenant'
                         ? '(Đã trừ vào tiền thuê/hợp đồng điện tử)'
-                        : '(Đã duyệt chi từ tài khoản ký quỹ)'}
+                        : '(Chủ nhà đã duyệt chi)'}
                     </span>
                   )}
                 </div>

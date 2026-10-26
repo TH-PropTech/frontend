@@ -93,7 +93,6 @@ export interface UseProfileReturn {
   isWalletConnected: boolean
   walletAddress: string
   usdtBalance: number
-  escrowBalance: number
   isKycVerified: boolean
   kycStatus: 'not-started' | 'pending' | 'verified' | 'rejected'
   showKycModal: boolean
@@ -152,7 +151,6 @@ export interface UseProfileReturn {
   newTicketDesc: string
   setNewTicketDesc: React.Dispatch<React.SetStateAction<string>>
   leaseTerminated: boolean
-  damageDeductions: number
   depositPaid: boolean
   contractSigned: boolean
   firstMonthPaid: boolean
@@ -169,7 +167,6 @@ export interface UseProfileReturn {
   handleConfirmHandover: () => void
   handleNewMaintenanceTicket: (e: React.FormEvent) => void
   handleApproveTicket: (id: string) => void
-  handleTerminateLease: () => void
   handleCopyText: (text: string) => void
   progressPercent: () => number
   handleOpenContractModal: () => void
@@ -190,7 +187,6 @@ export type EventType =
   | 'LANDLORD_SIGNED'
   | 'RENT_PAID_CONFIRMED'
   | 'HANDOVER_SIGNED'
-  | 'LEASE_TERMINATED'
   | 'MAINTENANCE_APPROVED_BY_LANDLORD'
 
 export interface EventLabelConfig {

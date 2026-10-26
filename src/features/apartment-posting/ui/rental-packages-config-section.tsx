@@ -29,6 +29,10 @@ export interface RentalPackagesConfigSectionProps {
   form: UseFormReturn<ApartmentFormValues, unknown, ApartmentFormValues>
 }
 
+const MOVE_OUT_MIN_DAYS = 1
+const MOVE_OUT_MAX_DAYS = 15
+const MOVE_OUT_DEFAULT_DAYS = 3
+
 const SUPPORTED_DURATIONS: Array<{
   duration: 3 | 6 | 12 | 24
   label: string
@@ -247,6 +251,22 @@ export function RentalPackagesConfigSection({
         if (pkg.durationMonths !== duration || !pkg.settlementPolicy) return pkg
         return { ...pkg, settlementPolicy: update(pkg.settlementPolicy) }
       }),
+      { shouldValidate: true }
+    )
+  }
+
+  const handleMoveOutDaysChange = (duration: number, raw: string): void => {
+    const responseDays = Math.min(
+      MOVE_OUT_MAX_DAYS,
+      Math.max(MOVE_OUT_MIN_DAYS, Math.round(Number(raw)) || MOVE_OUT_MIN_DAYS)
+    )
+    setValue(
+      'rentalPackages',
+      currentPackages.map(pkg =>
+        pkg.durationMonths !== duration
+          ? pkg
+          : { ...pkg, moveOutPolicy: { responseDays } }
+      ),
       { shouldValidate: true }
     )
   }
@@ -679,6 +699,37 @@ export function RentalPackagesConfigSection({
                         </p>
                       </div>
                     ) : null}
+                  </section>
+
+                  <section
+                    className="space-y-2 rounded-lg border border-border/70 bg-surface-muted/30 p-3"
+                    data-testid={`move-out-policy-${duration}`}
+                  >
+                    <label className="block space-y-1 text-[11px] font-semibold text-fg">
+                      Số ngày khách có để phản hồi khi trả nhà
+                      <Input
+                        type="number"
+                        min={MOVE_OUT_MIN_DAYS}
+                        max={MOVE_OUT_MAX_DAYS}
+                        step={1}
+                        data-testid={`move-out-response-days-${duration}`}
+                        value={
+                          pkg.moveOutPolicy?.responseDays ??
+                          MOVE_OUT_DEFAULT_DAYS
+                        }
+                        onChange={event =>
+                          handleMoveOutDaysChange(duration, event.target.value)
+                        }
+                        className="h-8 text-xs bg-surface"
+                      />
+                    </label>
+                    <p className="text-[10px] text-muted">
+                      Khi khách trả nhà, bạn lập biên bản trả nhà rồi bảng khấu
+                      trừ cọc. Khách có số ngày này (từ 1 đến 15 ngày, tính cả
+                      ngày nghỉ) để đồng ý hoặc phản đối. Nếu khách không phản
+                      hồi trong hạn, nội dung được xem là đã đồng ý. Số ngày
+                      được ghi vào hợp đồng.
+                    </p>
                   </section>
                 </div>
               )}

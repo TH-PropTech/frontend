@@ -7,6 +7,8 @@ import {
   getLegalBasisSourceUrl,
   getLegalProfileLabel,
   getTemplateLabel,
+  getFlowReasonLabel,
+  getMoveOutPhaseLabel,
   humanizeCode,
 } from './contract-labels'
 
@@ -45,5 +47,21 @@ describe('contract labels', () => {
     expect(isDepositPaid('refunded')).toBe(false)
     expect(isDepositPaid('pending')).toBe(false)
     expect(isDepositPaid(undefined)).toBe(false)
+  })
+  it('names the move-out phases in plain Vietnamese', () => {
+    expect(getMoveOutPhaseLabel('awaiting-move-out')).toBe('Chờ trả nhà')
+    expect(getMoveOutPhaseLabel('awaiting-deposit-settlement')).toBe(
+      'Chờ quyết toán cọc'
+    )
+    expect(getMoveOutPhaseLabel('settled')).toBe('Đã quyết toán')
+    expect(getMoveOutPhaseLabel('NEW_PHASE_X')).toBe('New phase x')
+  })
+
+  it('translates flow reason codes and never prints a raw UPPER_SNAKE code', () => {
+    expect(getFlowReasonLabel('MOVE_OUT_HANDOVER_NOT_COMPLETED')).toMatch(
+      /biên bản trả nhà/
+    )
+    expect(getFlowReasonLabel('SOMETHING_NEW_HERE')).not.toMatch(/[A-Z]{3,}_/)
+    expect(getFlowReasonLabel(null)).toMatch(/Đang chờ/)
   })
 })

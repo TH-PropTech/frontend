@@ -7,6 +7,7 @@ export type ContractActiveStep =
   | 'signing' // Đến lượt ký số SmartCA
   | 'ledger' // Đã xong cả cọc + ký, đang ghi sổ cái
   | 'move-in' // Quyết toán và bàn giao nhận nhà (chỉ khi server trả stage này)
+  | 'move-out' // Trả nhà, khấu trừ và hoàn cọc (chỉ khi server trả stage này)
   | 'completed' // Hợp đồng hoàn tất
 
 export interface ResolveActiveStepInput {

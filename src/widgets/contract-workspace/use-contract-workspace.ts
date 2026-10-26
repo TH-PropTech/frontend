@@ -212,6 +212,7 @@ export function useContractWorkspace({
       flowActiveStage === 'deposit' ||
       flowActiveStage === 'ledger' ||
       flowActiveStage === 'move-in' ||
+      flowActiveStage === 'move-out' ||
       ledgerStatus === 'pending' ||
       ledgerStatus === 'processing' ||
       ledgerStatus === 'failed-retryable'

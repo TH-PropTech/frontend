@@ -33,6 +33,9 @@ function getGuardMessage(
   hasStep: boolean,
   activeLabel: string
 ): string | null {
+  if (!hasStep && step === 'move-out') {
+    return 'Hợp đồng này chưa đến giai đoạn trả nhà và hoàn cọc.'
+  }
   if (!hasStep && step === 'move-in') {
     return 'Hợp đồng này không có bước nhận nhà vì không có quyết toán nhận nhà.'
   }

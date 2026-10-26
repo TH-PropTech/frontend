@@ -30,6 +30,17 @@ describe('initial cost', () => {
     expect(cost.estimated).toBe(false)
   })
 
+  it('labels the extra deposit without escrow wording', () => {
+    const cost = buildPackageCost({
+      ...base,
+      resolvedHoldingDepositAmount: 5_000_000,
+      resolvedSecurityTopUpAmount: 21_000_000,
+    })
+    const labels = cost.segments.map(s => s.label).join('|')
+    expect(labels).toContain('Cọc bổ sung')
+    expect(labels).not.toMatch(/ký quỹ|escrow/i)
+  })
+
   it('omits prepaid rent for deposit-only packages', () => {
     const cost = buildPackageCost({
       ...base,
