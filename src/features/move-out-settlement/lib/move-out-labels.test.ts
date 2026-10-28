@@ -46,6 +46,11 @@ describe('move-out labels', () => {
       message: 'x',
     })
     expect(getMoveOutErrorMessage(exists, 'fb')).toMatch(/tải lại/)
+    const foreignUrl = new ApiClientError('x', 400, {
+      code: 'STATEMENT_EVIDENCE_URL_NOT_ALLOWED',
+      message: 'x',
+    })
+    expect(getMoveOutErrorMessage(foreignUrl, 'fb')).toMatch(/tải lên/)
     expect(getMoveOutErrorMessage(new Error('?'), 'fb')).toBe('fb')
   })
 
