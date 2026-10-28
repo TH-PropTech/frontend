@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Toaster } from 'sonner'
+import { NotificationToaster } from '@/entities/notification'
 import { PermissionsLoader } from '@/shared/lib/permissions'
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -22,6 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <PermissionsLoader>{children}</PermissionsLoader>
       <Toaster position="top-right" richColors closeButton />
+      <NotificationToaster />
     </QueryClientProvider>
   )
 }
