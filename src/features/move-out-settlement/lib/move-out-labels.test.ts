@@ -41,6 +41,11 @@ describe('move-out labels', () => {
       message: 'x',
     })
     expect(getMoveOutErrorMessage(expired, 'fb')).toMatch(/quá hạn/)
+    const exists = new ApiClientError('x', 409, {
+      code: 'STATEMENT_EXISTS',
+      message: 'x',
+    })
+    expect(getMoveOutErrorMessage(exists, 'fb')).toMatch(/tải lại/)
     expect(getMoveOutErrorMessage(new Error('?'), 'fb')).toBe('fb')
   })
 

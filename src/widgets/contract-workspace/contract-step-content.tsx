@@ -332,6 +332,7 @@ export function ContractStepContent({
           role={signerRole}
           depositAmount={data.contract.commercial.deposit}
           gates={toMoveOutGates(data.flow?.nextActions ?? [])}
+          onChanged={refresh}
           phase={data.flow?.moveOut?.phase}
         />
       </div>

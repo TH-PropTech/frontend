@@ -25,6 +25,8 @@ export interface DepositStatementSectionProps {
   /** Chỉ mở khi biên bản trả nhà đã hoàn tất. */
   enabled: boolean
   gates?: MoveOutGates | undefined
+  /** Gọi sau mỗi thao tác ghi thành công để cha tải lại hợp đồng. */
+  onChanged?: (() => unknown) | undefined
   /** Tiền cọc của hợp đồng, dùng khi chưa có bảng để kiểm tra tổng khấu trừ. */
   depositAmount: number
 }
@@ -36,10 +38,11 @@ export function DepositStatementSection({
   role,
   enabled,
   gates,
+  onChanged,
   depositAmount,
 }: DepositStatementSectionProps): ReactElement {
   const { statement, isLoading, isError, refetch, busy, error, run } =
-    useDepositStatement(contractId, enabled)
+    useDepositStatement(contractId, enabled, onChanged)
 
   const saveDraft = (lines: DeductionLineInput[]): Promise<boolean> =>
     run(

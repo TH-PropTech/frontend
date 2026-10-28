@@ -43,12 +43,21 @@ export function useActionRunner(onDone: () => unknown): ActionRunner {
   return { busy, error, run }
 }
 
-export function useMoveOutHandover(contractId: string) {
+/** Tải lại dữ liệu của hợp đồng cha sau mỗi thao tác ghi thành công. */
+export type OnChanged = () => unknown
+
+export function useMoveOutHandover(contractId: string, onChanged?: OnChanged) {
   const query = useQuery({
     queryKey: moveOutKeys.handover(contractId),
     queryFn: () => getMoveOutHandover(contractId),
   })
-  const runner = useActionRunner(query.refetch)
+  const { refetch } = query
+  const runner = useActionRunner(
+    useCallback(async () => {
+      await refetch()
+      await onChanged?.()
+    }, [refetch, onChanged])
+  )
   return {
     handover: query.data ?? null,
     isLoading: query.isLoading,
@@ -59,13 +68,23 @@ export function useMoveOutHandover(contractId: string) {
 }
 
 /** Chỉ tải bảng khấu trừ khi biên bản trả nhà đã hoàn tất. */
-export function useDepositStatement(contractId: string, enabled: boolean) {
+export function useDepositStatement(
+  contractId: string,
+  enabled: boolean,
+  onChanged?: OnChanged
+) {
   const query = useQuery({
     queryKey: moveOutKeys.statement(contractId),
     queryFn: () => getDepositStatement(contractId),
     enabled,
   })
-  const runner = useActionRunner(query.refetch)
+  const { refetch } = query
+  const runner = useActionRunner(
+    useCallback(async () => {
+      await refetch()
+      await onChanged?.()
+    }, [refetch, onChanged])
+  )
   return {
     statement: query.data ?? null,
     isLoading: enabled && query.isLoading,

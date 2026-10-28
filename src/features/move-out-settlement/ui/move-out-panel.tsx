@@ -17,6 +17,8 @@ export interface MoveOutPanelProps {
   depositAmount: number
   /** Quyền thao tác từ flow của hợp đồng; vắng thì không chặn thêm. */
   gates?: MoveOutGates
+  /** Gọi sau mỗi thao tác ghi thành công để cha tải lại hợp đồng. */
+  onChanged?: () => unknown
   /** Giai đoạn do server tính, hiện thành nhãn tiếng Việt. */
   phase?: ContractMoveOutPhase | undefined
 }
@@ -27,6 +29,7 @@ export function MoveOutPanel({
   role,
   depositAmount,
   gates,
+  onChanged,
   phase,
 }: MoveOutPanelProps): ReactElement {
   const [handoverCompleted, setHandoverCompleted] = useState(false)
@@ -41,6 +44,7 @@ export function MoveOutPanel({
         contractId={contractId}
         role={role}
         gates={gates}
+        onChanged={onChanged}
         onCompletedChange={setHandoverCompleted}
       />
       <DepositStatementSection
@@ -48,6 +52,7 @@ export function MoveOutPanel({
         role={role}
         enabled={handoverCompleted}
         gates={gates}
+        onChanged={onChanged}
         depositAmount={depositAmount}
       />
     </div>

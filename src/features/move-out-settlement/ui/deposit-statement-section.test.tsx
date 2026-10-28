@@ -31,7 +31,8 @@ vi.mock('../api/move-out-api', () => ({
 const renderSection = (
   role: 'tenant' | 'landlord',
   enabled = true,
-  gates?: MoveOutGates
+  gates?: MoveOutGates,
+  onChanged?: () => unknown
 ): ReturnType<typeof render> => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -43,6 +44,7 @@ const renderSection = (
         role={role}
         enabled={enabled}
         gates={gates}
+        onChanged={onChanged}
         depositAmount={10_000_000}
       />
     </QueryClientProvider>
@@ -256,6 +258,30 @@ describe('DepositStatementSection', () => {
     await waitFor(() =>
       expect(api.acknowledgeDepositRefund).toHaveBeenCalledWith('c1', 'r1')
     )
+  })
+
+  it('tells the parent to refresh the contract after the tenant acknowledges a refund', async () => {
+    vi.mocked(api.getDepositStatement).mockResolvedValue(
+      makeStatement({
+        status: 'refund-recorded',
+        refunds: [
+          {
+            id: 'r1',
+            amount: 7_500_000,
+            transactionRef: 'FT123',
+            paidAt: '2026-10-05T00:00:00.000Z',
+            note: null,
+            recordedAt: '2026-10-05T00:00:00.000Z',
+            tenantAcknowledgedAt: null,
+          },
+        ],
+      })
+    )
+    vi.mocked(api.acknowledgeDepositRefund).mockResolvedValue(makeStatement())
+    const onChanged = vi.fn()
+    renderSection('tenant', true, undefined, onChanged)
+    fireEvent.click(await screen.findByRole('button', { name: 'Tôi đã nhận' }))
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1))
   })
 
   it('shows the overdue refund status and stays free of banned terms and codes', async () => {

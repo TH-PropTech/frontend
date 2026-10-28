@@ -49,6 +49,8 @@ const CLOSE_REASON_LABELS: Record<string, string> = {
 
 const ERROR_LABELS: Record<string, string> = {
   MOVE_OUT_HANDOVER_EXISTS: 'Biên bản trả nhà đã có. Hãy tải lại trang để sửa.',
+  STATEMENT_EXISTS:
+    'Bảng khấu trừ vừa được tạo ở nơi khác. Hãy tải lại trang để tiếp tục.',
   MOVE_OUT_REVISION_STALE:
     'Biên bản vừa được cập nhật. Vui lòng tải lại và xem bản mới nhất.',
   MOVE_OUT_DISCREPANCY_OPEN:

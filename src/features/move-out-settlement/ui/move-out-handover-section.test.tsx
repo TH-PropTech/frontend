@@ -23,7 +23,11 @@ vi.mock('../api/move-out-api', () => ({
 }))
 vi.mock('sonner', () => ({ toast: { error: vi.fn() } }))
 
-const renderSection = (role: 'tenant' | 'landlord', gates?: MoveOutGates) => {
+const renderSection = (
+  role: 'tenant' | 'landlord',
+  gates?: MoveOutGates,
+  onChanged?: () => unknown
+) => {
   const onCompletedChange = vi.fn()
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -34,6 +38,7 @@ const renderSection = (role: 'tenant' | 'landlord', gates?: MoveOutGates) => {
         contractId="c1"
         role={role}
         gates={gates}
+        onChanged={onChanged}
         onCompletedChange={onCompletedChange}
       />
     </QueryClientProvider>
@@ -91,6 +96,29 @@ describe('MoveOutHandoverSection', () => {
     await waitFor(() =>
       expect(api.confirmMoveOutHandover).toHaveBeenCalledWith('c1', HASH)
     )
+  })
+
+  it('tells the parent to refresh the contract after a successful action', async () => {
+    vi.mocked(api.getMoveOutHandover).mockResolvedValue(makeHandover())
+    vi.mocked(api.confirmMoveOutHandover).mockResolvedValue(makeHandover())
+    const onChanged = vi.fn()
+    renderSection('tenant', undefined, onChanged)
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Xác nhận biên bản' })
+    )
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1))
+  })
+
+  it('does not refresh the contract when the action fails', async () => {
+    vi.mocked(api.getMoveOutHandover).mockResolvedValue(makeHandover())
+    vi.mocked(api.confirmMoveOutHandover).mockRejectedValue(new Error('x'))
+    const onChanged = vi.fn()
+    renderSection('tenant', undefined, onChanged)
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Xác nhận biên bản' })
+    )
+    await screen.findByRole('alert')
+    expect(onChanged).not.toHaveBeenCalled()
   })
 
   it('requires a note to object and sends it', async () => {

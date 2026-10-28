@@ -26,6 +26,8 @@ export interface MoveOutHandoverSectionProps {
   contractId: string
   role: MoveOutRole
   gates?: MoveOutGates | undefined
+  /** Gọi sau mỗi thao tác ghi thành công để cha tải lại hợp đồng. */
+  onChanged?: (() => unknown) | undefined
   /** Báo lên cha khi biên bản đã hoàn tất để mở bảng khấu trừ. */
   onCompletedChange: (completed: boolean) => void
 }
@@ -34,10 +36,11 @@ export function MoveOutHandoverSection({
   contractId,
   role,
   gates,
+  onChanged,
   onCompletedChange,
 }: MoveOutHandoverSectionProps): ReactElement {
   const { handover, isLoading, isError, refetch, busy, error, run } =
-    useMoveOutHandover(contractId)
+    useMoveOutHandover(contractId, onChanged)
   const [downloading, setDownloading] = useState(false)
   const [showRevise, setShowRevise] = useState(false)
 
