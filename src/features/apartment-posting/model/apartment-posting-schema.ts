@@ -49,6 +49,12 @@ export const rentalPackagePostingSchema = z.object({
       firstPaymentDueOffsetDays: z.number().int().min(0).max(15),
     })
     .optional(),
+  // số ngày khách có để phản hồi biên bản trả nhà và bảng khấu trừ; vắng mặt = backend dùng 3 ngày
+  moveOutPolicy: z
+    .object({
+      responseDays: z.number().int().min(1).max(15),
+    })
+    .optional(),
   // tiền thuê trả trước ngoài tiền cọc; vắng mặt = giữ quy tắc cũ (thu kỳ thanh toán đầu khi nhận nhà)
   prepaidRent: z
     .discriminatedUnion('type', [

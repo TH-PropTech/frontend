@@ -22,7 +22,7 @@ export function buildPackageCost(pkg: RentalPackageItem): InitialCost {
     if (holding > 0)
       segments.push({ key: 'holding', label: 'Cọc giữ chỗ', amount: holding })
     if (topUp > 0)
-      segments.push({ key: 'security', label: 'Ký quỹ còn lại', amount: topUp })
+      segments.push({ key: 'security', label: 'Cọc bổ sung', amount: topUp })
   } else if (pkg.resolvedDepositAmount > 0) {
     segments.push({
       key: 'deposit',

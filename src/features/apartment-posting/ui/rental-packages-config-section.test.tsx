@@ -323,4 +323,41 @@ describe('RentalPackagesConfigSection', () => {
       )
     })
   })
+  describe('move-out response days', () => {
+    const sixMonth = {
+      packageId: 'pkg-6',
+      version: 1,
+      durationMonths: 6 as const,
+      monthlyRent: 10_000_000,
+      depositPolicy: { type: 'MONTHS_OF_RENT' as const, months: 1 },
+      status: 'active' as const,
+    }
+    const renderSix = (extra: Record<string, unknown> = {}) =>
+      render(
+        <TestHarness
+          initialValues={{ rentalPackages: [{ ...sixMonth, ...extra }] }}
+        />
+      )
+
+    it('shows the default of 3 days with plain-Vietnamese help when the package has none', () => {
+      renderSix()
+      const input = screen.getByTestId(
+        'move-out-response-days-6'
+      ) as HTMLInputElement
+      expect(input.value).toBe('3')
+      expect(screen.getByText(/không phản hồi trong hạn/i)).toBeDefined()
+    })
+
+    it('shows the saved value and clamps edits to 1-15', () => {
+      renderSix({ moveOutPolicy: { responseDays: 7 } })
+      const input = screen.getByTestId(
+        'move-out-response-days-6'
+      ) as HTMLInputElement
+      expect(input.value).toBe('7')
+      fireEvent.change(input, { target: { value: '40' } })
+      expect(input.value).toBe('15')
+      fireEvent.change(input, { target: { value: '0' } })
+      expect(input.value).toBe('1')
+    })
+  })
 })

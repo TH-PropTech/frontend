@@ -27,6 +27,7 @@ import {
   Compass,
   FileText,
 } from 'lucide-react'
+import { MoveOutPanel } from '@/features/move-out-settlement'
 import { LandlordKpis } from './landlord-kpis'
 import { LandlordAlerts } from './landlord-alerts'
 import { LandlordTenantInfo } from './landlord-tenant-info'
@@ -57,8 +58,6 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
     handoverSigned,
     leaseTerminated,
     setShowHandoverArchiveModal,
-    handleTerminateLease,
-    damageDeductions,
     appointments,
     handleApproveAppointment,
     handleRejectAppointment,
@@ -157,6 +156,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
       ? portfolio.contractByProperty[activeProperty.id]
       : tenantContract
 
+  const moveOutContractId = liveContract?._id ?? activeProperty.contractId
   const depositLabel = `${(liveContract?.deposit ?? activeProperty.price ?? 18_000_000).toLocaleString('vi-VN')}đ`
   const rentLabel = `${(liveContract?.monthlyRent ?? activeProperty.price ?? 18_000_000).toLocaleString('vi-VN')}đ`
 
@@ -377,8 +377,8 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               </h4>
               <p className="font-body text-xs text-muted leading-relaxed">
                 {role === 'tenant'
-                  ? 'Mọi thủ tục đã hoàn tất. Bạn đang cư trú tại căn hộ. Khi kết thúc kỳ thuê, bạn có thể đề xuất thanh lý hợp đồng để nhận lại tiền cọc.'
-                  : 'Mọi thủ tục hoàn tất. Khách thuê đang ở trong căn hộ. Khi kết thúc kỳ thuê, bạn hoặc khách thuê có thể kích hoạt quy trình thanh lý hợp đồng.'}
+                  ? 'Mọi thủ tục đã hoàn tất. Bạn đang cư trú tại căn hộ. Khi kết thúc kỳ thuê, hãy làm tiếp mục "Trả nhà và hoàn cọc" bên dưới để chốt biên bản và nhận lại tiền cọc.'
+                  : 'Mọi thủ tục hoàn tất. Khách thuê đang ở trong căn hộ. Khi kết thúc kỳ thuê, bạn lập biên bản trả nhà và bảng khấu trừ cọc ở mục "Trả nhà và hoàn cọc" bên dưới.'}
               </p>
             </div>
             <div className="flex flex-wrap gap-2.5 shrink-0 self-start md:self-auto">
@@ -405,15 +405,6 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               >
                 Xem biên bản bàn giao đã ký
               </Button>
-              <Button
-                onClick={handleTerminateLease}
-                variant="danger"
-                className="h-10 text-xs font-bold rounded-full px-6 shadow-md cursor-pointer bg-danger hover:bg-danger-hover text-white border-none"
-              >
-                {role === 'tenant'
-                  ? 'Yêu cầu thanh lý hợp đồng & Rút cọc'
-                  : 'Xác nhận thanh lý & hoàn cọc'}
-              </Button>
             </div>
           </div>
         )}
@@ -423,17 +414,25 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
             <ShieldCheck className="h-5 w-5 text-success mt-0.5 shrink-0" />
             <div className="space-y-1">
               <h4 className="font-marketing text-sm font-bold text-success">
-                Hợp đồng thuê nhà đã thanh lý thành công
+                Hợp đồng thuê nhà đã kết thúc
               </h4>
               <p className="font-body text-xs text-muted leading-relaxed">
-                {role === 'tenant'
-                  ? `Số tiền đặt cọc ký quỹ (sau khi khấu trừ thiệt hại hao mòn ${damageDeductions.toLocaleString()}đ nếu có) đã được hoàn trả tự động về tài khoản của bạn.`
-                  : `Tiền cọc (có khấu trừ thiệt hại hao mòn ${damageDeductions.toLocaleString()}đ nếu có) đã được hoàn trả cho khách thuê.`}
+                Theo dõi biên bản trả nhà, bảng khấu trừ và việc hoàn cọc ở mục
+                &quot;Trả nhà và hoàn cọc&quot; bên dưới.
               </p>
             </div>
           </div>
         )}
       </Card>
+
+      {/* Trả nhà và hoàn cọc: dữ liệu thật từ hợp đồng */}
+      {(handoverSigned || leaseTerminated) && moveOutContractId ? (
+        <MoveOutPanel
+          contractId={moveOutContractId}
+          role={role}
+          depositAmount={liveContract?.deposit ?? 0}
+        />
+      ) : null}
 
       {/* Progress Steps Timeline */}
       <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
@@ -481,7 +480,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               </h4>
               <p className="font-body text-xs text-muted">
                 {depositPaid
-                  ? 'Đã chuyển tiền ký quỹ cọc và lưu vết bảo mật chống sửa đổi.'
+                  ? 'Đã ghi nhận khoản cọc và lưu vết chống sửa đổi.'
                   : 'Chờ khách thuê chuyển khoản tiền đặt cọc.'}
               </p>
             </div>

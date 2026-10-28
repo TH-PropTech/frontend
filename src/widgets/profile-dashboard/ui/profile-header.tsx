@@ -31,7 +31,6 @@ export function ProfileHeader({
     isWalletConnected,
     walletAddress,
     usdtBalance,
-    escrowBalance,
     handleConnectWallet,
     handleCopyText,
     setShowKycModal,
@@ -222,12 +221,6 @@ export function ProfileHeader({
                       Số dư:{' '}
                       <strong className="text-fg">
                         {usdtBalance.toLocaleString()} VND
-                      </strong>
-                    </span>
-                    <span>
-                      {role === 'tenant' ? 'Ký quỹ: ' : 'Cọc đã nhận: '}
-                      <strong className="text-primary">
-                        {escrowBalance.toLocaleString()} VND
                       </strong>
                     </span>
                   </div>

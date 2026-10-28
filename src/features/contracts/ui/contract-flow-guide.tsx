@@ -75,12 +75,20 @@ const MOVE_IN_STEP: StepDef = {
   icon: Home,
 }
 
+const MOVE_OUT_STEP: StepDef = {
+  key: 'move-out',
+  label: 'Trả nhà & hoàn cọc',
+  shortLabel: 'Trả nhà',
+  icon: Home,
+}
+
 const STEP_BY_KEY: Record<Exclude<ContractActiveStep, 'completed'>, StepDef> = {
   document: SIGN_FIRST_STEPS[0] as StepDef,
   signing: SIGN_FIRST_STEPS[1] as StepDef,
   deposit: SIGN_FIRST_STEPS[2] as StepDef,
   ledger: SIGN_FIRST_STEPS[3] as StepDef,
   'move-in': MOVE_IN_STEP,
+  'move-out': MOVE_OUT_STEP,
 }
 
 type StepState = 'done' | 'active' | 'upcoming' | 'blocked'

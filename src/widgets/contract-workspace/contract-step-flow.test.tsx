@@ -10,6 +10,25 @@ import { ContractStepFlow } from './contract-step-flow'
 
 const mockUseContractWorkspace = vi.hoisted(() => vi.fn())
 
+vi.mock('@/features/move-out-settlement', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('@/features/move-out-settlement')>()
+  return {
+    ...actual,
+    MoveOutPanel: (props: {
+      contractId: string
+      role: string
+      depositAmount: number
+      phase?: string
+      gates?: Record<string, { enabled: boolean }>
+    }) => (
+      <div data-testid="move-out-panel-stub">
+        {`${props.contractId}|${props.role}|${props.depositAmount}|${props.phase}|${JSON.stringify(props.gates)}`}
+      </div>
+    ),
+  }
+})
+
 vi.mock('./use-contract-workspace', () => ({
   useContractWorkspace: mockUseContractWorkspace,
 }))
@@ -373,5 +392,47 @@ describe('ContractStepFlow with server flow', () => {
     expect(
       screen.getByRole('link', { name: /về bước đặt cọc/i })
     ).toHaveAttribute('href', '/contracts/contract-1/steps/deposit')
+  })
+  it('mounts the move-out panel from flow.moveOut with gates from the flow actions', () => {
+    const flow: ContractFlowView = {
+      version: 1,
+      strategy: 'SIGN_FIRST',
+      stages: [
+        { key: 'ledger', status: 'done', blockers: [], completedAt: null },
+        { key: 'move-out', status: 'active', blockers: [], completedAt: null },
+      ],
+      activeStage: 'move-out',
+      nextActions: [
+        {
+          action: 'CONFIRM_MOVE_OUT_HANDOVER',
+          actorRole: 'tenant',
+          enabled: false,
+          reasonCode: 'MOVE_OUT_HANDOVER_NOT_FOUND',
+          stage: 'move-out',
+        },
+      ],
+      moveOut: {
+        phase: 'awaiting-move-out',
+        disputed: false,
+        handoverStatus: null,
+        statementStatus: null,
+      },
+    }
+    configureHook({ data: { ...contractView, flow } })
+
+    render(<ContractStepFlow contractId="contract-1" step="move-out" />)
+
+    expect(screen.getByTestId('contract-step-move-out')).toBeInTheDocument()
+    expect(screen.getByTestId('move-out-panel-stub').textContent).toBe(
+      'contract-1|tenant|10000000|awaiting-move-out|{"CONFIRM_MOVE_OUT_HANDOVER":{"enabled":false,"reasonCode":"MOVE_OUT_HANDOVER_NOT_FOUND"}}'
+    )
+  })
+
+  it('tells the user the move-out step is not open yet when the server has no such stage', () => {
+    configureHook()
+
+    render(<ContractStepFlow contractId="contract-1" step="move-out" />)
+
+    expect(screen.queryByTestId('contract-step-move-out')).toBeNull()
   })
 })

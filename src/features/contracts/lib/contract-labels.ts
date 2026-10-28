@@ -128,3 +128,34 @@ export function getAmendmentFieldLabel(field: string): string {
 export function isDepositPaid(status: string | null | undefined): boolean {
   return status === 'paid' || status === 'transferred' || status === 'released'
 }
+
+const FLOW_REASON_LABELS: Record<string, string> = {
+  MOVE_OUT_HANDOVER_COMPLETED_IMMUTABLE:
+    'Biên bản trả nhà đã hoàn tất nên không sửa được nữa.',
+  MOVE_OUT_HANDOVER_DISPUTED:
+    'Biên bản trả nhà đang có tranh chấp nên tạm dừng thao tác.',
+  MOVE_OUT_HANDOVER_NOT_FOUND: 'Chủ nhà chưa lập biên bản trả nhà.',
+  MOVE_OUT_HANDOVER_NOT_COMPLETED:
+    'Cần hoàn tất biên bản trả nhà trước bước này.',
+  STATEMENT_NOT_DRAFT: 'Bảng khấu trừ cọc đã được gửi, không sửa được nữa.',
+  STATEMENT_NOT_AWAITING_TENANT: 'Bảng khấu trừ cọc không còn chờ phản hồi.',
+  STATEMENT_REFUND_NOT_ALLOWED: 'Chưa thể khai báo hoàn cọc ở giai đoạn này.',
+  STATEMENT_NO_REFUND_TO_ACKNOWLEDGE:
+    'Chưa có khoản hoàn cọc nào chờ bạn xác nhận.',
+}
+
+/** Lý do một hành động bị khóa: nhãn tiếng Việt, mã lạ được viết lại thành câu thường. */
+export function getFlowReasonLabel(code: string | null | undefined): string {
+  if (!code) return 'Đang chờ điều kiện trước đó.'
+  return FLOW_REASON_LABELS[code] ?? humanizeCode(code)
+}
+
+const MOVE_OUT_PHASE_LABELS: Record<string, string> = {
+  'awaiting-move-out': 'Chờ trả nhà',
+  'awaiting-deposit-settlement': 'Chờ quyết toán cọc',
+  settled: 'Đã quyết toán',
+}
+
+export function getMoveOutPhaseLabel(phase: string): string {
+  return MOVE_OUT_PHASE_LABELS[phase] ?? humanizeCode(phase)
+}

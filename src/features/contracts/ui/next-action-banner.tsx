@@ -10,6 +10,7 @@ import type {
   ContractFlowView,
 } from '../api/contracts-api'
 import { toContractStepHref } from '../lib/contract-flow-steps'
+import { getFlowReasonLabel } from '../lib/contract-labels'
 
 export interface NextActionBannerProps {
   contractId: string
@@ -29,6 +30,13 @@ const ACTION_LABELS: Record<ContractFlowActionKey, string> = {
   RECORD_HANDOVER: 'Ghi biên bản bàn giao',
   CONFIRM_HANDOVER: 'Xác nhận biên bản bàn giao',
   VERIFY_LEDGER: 'Đối soát bằng chứng lưu vết',
+  RECORD_MOVE_OUT_HANDOVER: 'Lập biên bản trả nhà',
+  CONFIRM_MOVE_OUT_HANDOVER: 'Xác nhận biên bản trả nhà',
+  REPORT_MOVE_OUT_DISCREPANCY: 'Phản đối biên bản trả nhà',
+  CREATE_DEPOSIT_STATEMENT: 'Lập bảng khấu trừ cọc',
+  RESPOND_DEPOSIT_STATEMENT: 'Phản hồi bảng khấu trừ cọc',
+  RECORD_DEPOSIT_REFUND: 'Khai báo đã hoàn cọc',
+  ACKNOWLEDGE_DEPOSIT_REFUND: 'Xác nhận đã nhận cọc',
 }
 
 const REASON_LABELS: Record<string, string> = {
@@ -46,7 +54,7 @@ const REASON_LABELS: Record<string, string> = {
 function describeReason(action: ContractFlowAction): string {
   return (
     (action.reasonCode ? REASON_LABELS[action.reasonCode] : undefined) ??
-    `Chưa thể thực hiện (${action.reasonCode ?? 'đang chờ điều kiện'}).`
+    getFlowReasonLabel(action.reasonCode)
   )
 }
 

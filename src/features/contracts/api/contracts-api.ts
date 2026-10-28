@@ -323,6 +323,7 @@ export type ContractFlowStageKey =
   | 'signing'
   | 'ledger'
   | 'move-in'
+  | 'move-out'
 
 export type ContractFlowStageStatus =
   | 'done'
@@ -344,6 +345,13 @@ export type ContractFlowActionKey =
   | 'RECORD_HANDOVER'
   | 'CONFIRM_HANDOVER'
   | 'VERIFY_LEDGER'
+  | 'RECORD_MOVE_OUT_HANDOVER'
+  | 'CONFIRM_MOVE_OUT_HANDOVER'
+  | 'REPORT_MOVE_OUT_DISCREPANCY'
+  | 'CREATE_DEPOSIT_STATEMENT'
+  | 'RESPOND_DEPOSIT_STATEMENT'
+  | 'RECORD_DEPOSIT_REFUND'
+  | 'ACKNOWLEDGE_DEPOSIT_REFUND'
 
 export interface ContractFlowBlocker {
   code: string
@@ -366,6 +374,25 @@ export interface ContractFlowAction {
   stage: ContractFlowStageKey
 }
 
+export type ContractMoveOutPhase =
+  | 'awaiting-move-out'
+  | 'awaiting-deposit-settlement'
+  | 'settled'
+
+export interface ContractMoveOutFlow {
+  phase: ContractMoveOutPhase
+  disputed: boolean
+  handoverStatus: 'recorded' | 'completed' | 'disputed' | null
+  statementStatus:
+    | 'draft'
+    | 'awaiting-tenant'
+    | 'accepted'
+    | 'disputed'
+    | 'refund-recorded'
+    | 'closed'
+    | null
+}
+
 /** Trạng thái luồng do server tính; `nextActions` đã lọc theo user hiện tại. */
 export interface ContractFlowView {
   version: number
@@ -373,6 +400,8 @@ export interface ContractFlowView {
   stages: ContractFlowStage[]
   activeStage: ContractFlowStageKey | 'completed'
   nextActions: ContractFlowAction[]
+  /** Giai đoạn trả nhà và hoàn cọc; vắng khi chưa có. */
+  moveOut?: ContractMoveOutFlow
 }
 
 export interface ContractViewDto {

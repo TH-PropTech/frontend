@@ -84,7 +84,7 @@ export const EVENT_LABELS: Record<EventType, EventLabelConfig> = {
       },
       {
         field: 'Ngân hàng bảo chứng',
-        value: 'Techcombank - Tài khoản ký quỹ trung gian',
+        value: 'Techcombank - Tài khoản thụ hưởng của chủ nhà',
       },
       { field: 'Trạng thái', value: 'Đã khóa bảo chứng an toàn tại ngân hàng' },
       { field: 'Phương thức', value: 'Chuyển khoản qua cổng PayOS' },
@@ -148,22 +148,6 @@ export const EVENT_LABELS: Record<EventType, EventLabelConfig> = {
       { field: 'Nhà tắm', value: '✓ Vòi sen, bình nóng lạnh — Tình trạng tốt' },
       { field: 'Bên bàn giao', value: 'Lê Hoàng Minh (Chủ nhà)' },
       { field: 'Bên tiếp nhận', value: 'Nguyễn Văn A (Khách thuê)' },
-    ],
-  },
-  LEASE_TERMINATED: {
-    label: 'Thanh lý hợp đồng & hoàn cọc',
-    iconName: 'file-check-2',
-    details: [
-      { field: 'Mã hợp đồng', value: 'CTR-2026-0048' },
-      { field: 'Lý do', value: 'Hết thời hạn hợp đồng thuê 12 tháng' },
-      { field: 'Tiền cọc gốc', value: '18.000.000 VNĐ' },
-      { field: 'Khấu trừ hư hỏng', value: '0 VNĐ (không có hư hỏng)' },
-      { field: 'Số tiền hoàn trả', value: '18.000.000 VNĐ' },
-      {
-        field: 'Hoàn trả về',
-        value: 'Nguyễn Văn A (Techcombank - 19023456789012)',
-      },
-      { field: 'Trạng thái', value: 'Đã giải tỏa và hoàn trả thành công' },
     ],
   },
   MAINTENANCE_APPROVED_BY_LANDLORD: {

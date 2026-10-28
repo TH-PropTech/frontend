@@ -18,6 +18,7 @@ import {
 import { DepositPaymentPanel } from '@/features/payments'
 import { PaymentSchedulePanel } from '@/features/payments/ui/payment-schedule-panel'
 import { MoveInSettlementPanel } from '@/features/move-in-settlement'
+import { MoveOutPanel, toMoveOutGates } from '@/features/move-out-settlement'
 import type { ContractAuditEventDto } from '@/features/contracts'
 import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
 import { LandlordReceiptsPanel } from './landlord-receipts-panel'
@@ -318,6 +319,21 @@ export function ContractStepContent({
             setIsSigningModalOpen(false)
             void refresh()
           }}
+        />
+      </div>
+    )
+  }
+
+  if (step === 'move-out') {
+    return (
+      <div data-testid="contract-step-move-out" className="space-y-4">
+        <MoveOutPanel
+          contractId={contractId}
+          role={signerRole}
+          depositAmount={data.contract.commercial.deposit}
+          gates={toMoveOutGates(data.flow?.nextActions ?? [])}
+          onChanged={refresh}
+          phase={data.flow?.moveOut?.phase}
         />
       </div>
     )

@@ -49,9 +49,9 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
               Chào mừng quay trở lại, {userName}!
             </h2>
             <p className="text-xs text-white/80 leading-relaxed font-body">
-              Tất cả các cổng giao dịch, cổng kết nối VR 360° và các Escrow
-              Smart Contracts trên chuỗi khối vẫn đang vận hành ổn định. Chúc
-              bạn một ngày làm việc hiệu quả!
+              Tất cả các cổng giao dịch, cổng kết nối VR 360° và hệ thống lưu
+              vết chống sửa đổi vẫn đang vận hành ổn định. Chúc bạn một ngày làm
+              việc hiệu quả!
             </p>
           </div>
           <div className="flex gap-2">

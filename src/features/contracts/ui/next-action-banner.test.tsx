@@ -95,4 +95,24 @@ describe('NextActionBanner', () => {
       'Hợp đồng đã hoàn tất các bước'
     )
   })
+  it('hành động trả nhà bị khóa hiện lý do tiếng Việt, không lộ mã thô', () => {
+    render(
+      <NextActionBanner
+        contractId="c-1"
+        flow={flow([
+          action({
+            action: 'CREATE_DEPOSIT_STATEMENT',
+            enabled: false,
+            reasonCode: 'MOVE_OUT_HANDOVER_NOT_COMPLETED',
+            stage: 'move-out',
+          }),
+        ])}
+      />
+    )
+
+    const text = screen.getByTestId('next-action-banner').textContent ?? ''
+    expect(text).toContain('Lập bảng khấu trừ cọc')
+    expect(text).toContain('Cần hoàn tất biên bản trả nhà')
+    expect(text).not.toMatch(/[A-Z]{3,}(_[A-Z0-9]+)+/)
+  })
 })

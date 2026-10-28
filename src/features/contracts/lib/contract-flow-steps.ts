@@ -46,9 +46,18 @@ export const MOVE_IN_FLOW_STEP = {
   pathSegment: 'move-in',
 } as const satisfies ContractFlowStepDefinition
 
+/** Chỉ xuất hiện khi server trả stage `move-out`. */
+export const MOVE_OUT_FLOW_STEP = {
+  key: 'move-out',
+  label: 'Trả nhà',
+  shortLabel: 'Trả nhà & hoàn cọc',
+  pathSegment: 'move-out',
+} as const satisfies ContractFlowStepDefinition
+
 const ALL_FLOW_STEPS: readonly ContractFlowStepDefinition[] = [
   ...CONTRACT_FLOW_STEPS,
   MOVE_IN_FLOW_STEP,
+  MOVE_OUT_FLOW_STEP,
 ]
 
 /** Luồng duy nhất: ký trước, cọc sau. */

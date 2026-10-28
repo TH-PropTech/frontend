@@ -146,6 +146,40 @@ describe('apartmentPostingSchema & rentalPackagePostingSchema', () => {
     expect(result.success).toBe(false)
   })
 
+  describe('moveOutPolicy', () => {
+    const base = {
+      packageId: 'pkg-3m',
+      version: 1,
+      durationMonths: 3,
+      monthlyRent: 5000000,
+      depositPolicy: { type: 'MONTHS_OF_RENT', months: 1 },
+      status: 'active',
+    }
+
+    it('accepts 1..15 days and a package without the field', () => {
+      expect(rentalPackagePostingSchema.safeParse(base).success).toBe(true)
+      for (const responseDays of [1, 15]) {
+        expect(
+          rentalPackagePostingSchema.safeParse({
+            ...base,
+            moveOutPolicy: { responseDays },
+          }).success
+        ).toBe(true)
+      }
+    })
+
+    it('rejects out-of-range and non-integer days', () => {
+      for (const responseDays of [0, 16, 2.5]) {
+        expect(
+          rentalPackagePostingSchema.safeParse({
+            ...base,
+            moveOutPolicy: { responseDays },
+          }).success
+        ).toBe(false)
+      }
+    })
+  })
+
   describe('ensureRentalPackagesFallback', () => {
     it('generates a 12-month default package when no packages provided', () => {
       const fallback = ensureRentalPackagesFallback(15) // 15 million VND

@@ -355,8 +355,8 @@ export function ModalContract({
                       ? '18.000.000đ'
                       : activeProperty.price.toLocaleString() + 'đ'}
                   </strong>
-                  , khoản tiền này được khóa ký quỹ bảo chứng tại ngân hàng
-                  Techcombank dưới sự giám sát của hệ thống Fabric.
+                  , khoản tiền này được chuyển trực tiếp cho chủ nhà; nền tảng
+                  không giữ tiền cọc và chỉ lưu vết chống sửa đổi.
                 </p>
               </div>
 

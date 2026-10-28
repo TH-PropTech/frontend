@@ -27,6 +27,7 @@ const STAGE_LABELS: Record<ContractActiveStep, string> = {
   signing: 'Ký số',
   ledger: 'Lưu vết',
   'move-in': 'Nhận nhà',
+  'move-out': 'Trả nhà & hoàn cọc',
   completed: 'Hoàn tất',
 }
 
