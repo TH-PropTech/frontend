@@ -27,8 +27,8 @@ export function SecurityCommitmentsSection(): React.ReactElement {
               icon: 'M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z',
             },
             {
-              title: 'Blockchain bất biến',
-              desc: 'Mọi giao dịch tài chính đều được ghi nhận hash trên hệ thống phân tán. Không ai có thể sửa đổi, xóa bỏ hay phủ nhận lịch sử giao dịch.',
+              title: 'Lưu vết chống sửa đổi',
+              desc: 'Hợp đồng và giao dịch tài chính được lưu vết toàn vẹn trên hệ thống Blockchain (Hyperledger Fabric), đảm bảo tính minh bạch và chống giả mạo tuyệt đối.',
               icon: 'M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244',
             },
             {

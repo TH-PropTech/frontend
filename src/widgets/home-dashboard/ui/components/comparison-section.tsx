@@ -39,12 +39,12 @@ export function ComparisonSection(): React.ReactElement {
               {
                 feat: 'Trải nghiệm xem nhà',
                 old: 'Tốn công sức đi lại xem thực tế nhiều nơi, lịch hẹn không đồng bộ.',
-                new: 'Tham quan trước qua 360° VR Tour trực quan, đặt lịch xem nhà trực tuyến tự động.',
+                new: 'Trải nghiệm Mô hình 3D tương tác (Three.js), nộp hồ sơ eKYC CCCD và đặt lịch xem nhà trực tiếp.',
               },
               {
                 feat: 'Bảo mật đặt cọc & hợp đồng',
                 old: 'Dễ xảy ra tranh chấp cọc giấy, hợp đồng dễ bị thay đổi điều khoản đơn phương.',
-                new: 'Ghi nhận hash giao dịch đặt cọc và hợp đồng vĩnh viễn trên Blockchain, chống sửa đổi.',
+                new: 'Hợp đồng theo Nghị định 96/2024/NĐ-CP, ký số VNPT SmartCA và lưu vết chống sửa đổi trên Blockchain.',
               },
               {
                 feat: 'Hỗ trợ tìm kiếm & gợi ý',

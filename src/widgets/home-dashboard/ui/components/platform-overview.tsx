@@ -15,8 +15,8 @@ export function PlatformOverview(): React.ReactElement {
           Nền tảng thuê nhà thế hệ mới
         </h2>
         <p className="mx-auto mt-4 max-w-xl font-body text-sm text-muted">
-          Kết hợp công nghệ tìm kiếm thông minh, hình ảnh VR 3D trực quan và
-          minh bạch giao dịch trên nền tảng số.
+          Kết hợp công nghệ AI tìm kiếm thông minh, Mô hình 3D tương tác
+          Three.js trực quan và giao dịch lưu vết chống sửa đổi trên Blockchain.
         </p>
       </div>
 
@@ -91,12 +91,12 @@ export function PlatformOverview(): React.ReactElement {
               </svg>
             </div>
             <h3 className="font-marketing text-xl font-bold text-fg">
-              Không gian 3D tương tác thực tế ảo
+              Mô hình 3D tương tác & Thiết kế layout
             </h3>
             <p className="font-body text-xs text-muted leading-relaxed">
-              Tham quan phòng từ xa thông qua công nghệ 360 VR Tour. Xem chi
-              tiết cấu trúc phòng, cách bài trí nội thất trực quan trước khi đi
-              xem thực tế.
+              Trải nghiệm không gian căn hộ trực quan thông qua Mô hình 3D tương
+              tác (Three.js) và công cụ thiết kế layout Floorplan 3D Editor
+              trước khi đặt lịch hẹn xem nhà trực tiếp.
             </p>
           </div>
           <div className="pt-6">
