@@ -555,14 +555,6 @@ export function PropertyDetail(): React.ReactElement {
                 </div>
               </div>
             )}
-
-            {/* Direct Landlord Chat Button */}
-            <button
-              onClick={() => setShowChat(true)}
-              className="w-full bg-primary text-white text-xs font-bold rounded-2xl py-4 hover:bg-primary-hover transition-all active:scale-95 shadow-sm cursor-pointer"
-            >
-              Trò chuyện trực tiếp với chủ nhà
-            </button>
           </div>
         </section>
 
