@@ -17,7 +17,7 @@ export function FaqSection(): React.ReactElement {
           </h2>
           <p className="mx-auto mt-4 max-w-xl font-body text-sm text-muted">
             Tìm hiểu nhanh về cách thức hoạt động, tính năng an toàn Blockchain
-            và xem nhà 3D.
+            và Mô hình 3D tương tác.
           </p>
         </div>
 
@@ -25,19 +25,19 @@ export function FaqSection(): React.ReactElement {
           {[
             {
               q: 'Công nghệ Blockchain bảo mật đặt cọc và hợp đồng như thế nào?',
-              a: 'Khi bạn thực hiện đặt cọc hoặc ký hợp đồng thuê, hệ thống sẽ tự động tạo một giao dịch tương ứng và lưu trữ mã hash (dấu bản quyền số) lên mạng lưới Blockchain. Mã hash này đóng vai trò như một bằng chứng pháp lý bất biến — thông tin hợp đồng và số tiền giao dịch không bao giờ có thể bị sửa đổi, xóa bỏ hay giả mạo bởi bất kỳ bên nào.',
+              a: 'Khi bạn thực hiện đặt cọc hoặc ký hợp đồng thuê theo mẫu Nghị định 96/2024/NĐ-CP, hệ thống tự động lưu vết chống sửa đổi lên Blockchain (Hyperledger Fabric) cùng chữ ký số VNPT SmartCA. Dữ liệu này là bằng chứng số xác thực tính toàn vẹn — thông tin hợp đồng và số tiền giao dịch không thể bị sửa đổi đơn phương hay giả mạo bởi bất kỳ bên nào.',
             },
             {
-              q: 'Xem nhà qua VR Tour 360° có phản ánh chính xác thực tế không?',
-              a: 'Có. Tất cả hình ảnh trong VR Tour 360° đều được đội ngũ chuyên viên chụp thực tế tại chính căn hộ đó với chất lượng phân giải cao. Bạn có thể nhìn thấy chi tiết cấu trúc, hiện trạng nội thất, các góc chết và view ban công một cách chân thực nhất, cam kết không dùng ảnh ảo hay ảnh dựng Photoshop sai thực tế.',
+              q: 'Mô hình 3D tương tác (Interactive 3D Walkthrough) có phản ánh chính xác thực tế không?',
+              a: 'Có. Mô hình 3D tương tác được xây dựng chuẩn xác theo tỉ lệ thực tế thông qua công nghệ Three.js và công cụ Floorplan 3D Editor. Khách thuê có thể tự do di chuyển, quan sát không gian đa chiều và kiểm tra bố cục nội thất trước khi đặt lịch hẹn xem nhà trực tiếp.',
             },
             {
-              q: 'Quy trình đặt lịch xem nhà thực tế diễn ra như thế nào?',
-              a: 'Sau khi tìm được căn hộ ưng ý, bạn nhấn nút "Đặt lịch xem". Bạn có thể chủ động chọn ngày giờ rảnh của mình. Hệ thống sẽ tự động gửi thông báo tới chủ nhà hoặc người quản lý căn hộ để xác nhận. Khi lịch hẹn được duyệt, bạn sẽ nhận được thông báo SMS/Email hướng dẫn vị trí và thông tin người đón tiếp.',
+              q: 'Quy trình đặt lịch xem nhà trực tiếp diễn ra như thế nào?',
+              a: 'Sau khi trải nghiệm mô hình 3D và tìm được căn hộ ưng ý, bạn nộp hồ sơ thuê kèm xác thực eKYC CCCD và chọn ngày giờ thuận tiện. Hệ thống sẽ tự động gửi thông báo tới chủ nhà để thẩm định và phê duyệt lịch hẹn xem căn hộ trực tiếp.',
             },
             {
               q: 'Khách thuê có phải trả phí môi giới hay phí dịch vụ nền tảng không?',
-              a: 'Không. Khách thuê được sử dụng hoàn toàn miễn phí các tính năng tìm kiếm, trải nghiệm VR Tour 3D, nhận đề xuất từ AI và quản lý hợp đồng trên hệ thống TH-PropTech. Chúng tôi hướng tới việc xây dựng một hệ sinh thái kết nối trực tiếp minh bạch và tiết kiệm chi phí nhất cho cộng đồng.',
+              a: 'Không. Khách thuê được sử dụng hoàn toàn miễn phí các tính năng tìm kiếm, trải nghiệm Mô hình 3D tương tác, nhận đề xuất từ AI và quản lý hợp đồng trên hệ thống TH-PropTech. Chúng tôi hướng tới việc xây dựng một hệ sinh thái kết nối trực tiếp minh bạch và tiết kiệm chi phí nhất cho cộng đồng.',
             },
           ].map((faq, idx) => {
             const isOpen = openFaq === idx

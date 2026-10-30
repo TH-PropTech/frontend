@@ -29,15 +29,15 @@ const PILLARS = [
     ],
   },
   {
-    key: 'vr',
+    key: '3d',
     icon: Eye,
-    badge: 'Không gian 3D tương tác (VR Tour)',
-    title: 'Xem nhà từ xa, trải nghiệm như thực tế',
-    desc: 'Mô hình 3D tương tác toàn khu đô thị cho phép bạn chọn vị trí tòa nhà, chọn tầng và bước vào xem nội thất căn hộ qua VR Tour 360°. Toàn bộ chi tiết về bếp, phòng khách, phòng ngủ và góc ban công được thể hiện chân thực với hình ảnh chất lượng cao.',
+    badge: 'Mô hình 3D tương tác (Three.js)',
+    title: 'Trải nghiệm không gian & Thiết kế layout',
+    desc: 'Hệ thống tích hợp Mô hình 3D tương tác (Interactive 3D Walkthrough) qua Three.js và công cụ thiết kế layout căn hộ (Floorplan 3D Editor). Khách thuê có thể trải nghiệm không gian đa chiều, quan sát cấu trúc thực tế trước khi đặt lịch hẹn xem nhà trực tiếp.',
     points: [
-      'Mô hình 3D Master Plan định vị trực quan toàn khu đô thị',
-      'VR Tour 360° nội thất thực tế đến từng góc phòng',
-      'Chế độ đi bộ tham quan tự do như đang trực tiếp xem nhà',
+      'Mô hình 3D Master Plan định vị trực quan phân khu và tòa nhà',
+      'Mô hình 3D tương tác Three.js di chuyển tự do trong không gian căn hộ',
+      'Công cụ thiết kế layout Floorplan 3D Editor và gửi yêu cầu thiết kế',
     ],
   },
 ]
@@ -53,9 +53,10 @@ export function TechnologyDeepDive(): React.ReactElement {
           Ba trụ cột công nghệ của TH-PropTech
         </h2>
         <p className="mx-auto mt-4 max-w-2xl font-body text-sm text-muted leading-relaxed">
-          Kết hợp công nghệ lưu vết bất biến Blockchain, thuật toán AI gợi ý cá
-          nhân hóa và trải nghiệm không gian 3D VR Tour trực quan giúp quy trình
-          thuê nhà trở nên minh bạch và an toàn tuyệt đối.
+          Kết hợp công nghệ lưu vết chống sửa đổi Blockchain (Hyperledger
+          Fabric), thuật toán AI gợi ý cá nhân hóa và trải nghiệm Mô hình 3D
+          tương tác (Three.js) giúp quy trình thuê căn hộ trở nên minh bạch và
+          an toàn tuyệt đối.
         </p>
       </div>
 

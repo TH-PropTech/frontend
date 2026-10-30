@@ -21,8 +21,8 @@ export function FinalCtaBanner(): React.ReactElement {
             Sẵn sàng tìm căn hộ phù hợp?
           </h2>
           <p className="mx-auto max-w-xl font-body text-sm leading-relaxed text-muted">
-            Bắt đầu tìm kiếm căn hộ, trải nghiệm VR 3D và theo dõi quy trình
-            thuê minh bạch trên nền tảng TH-PropTech ngay hôm nay.
+            Bắt đầu tìm kiếm căn hộ, trải nghiệm Mô hình 3D tương tác và theo
+            dõi quy trình thuê minh bạch trên nền tảng TH-PropTech ngay hôm nay.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <Link href={'/properties' as Route}>

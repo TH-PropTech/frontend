@@ -9,19 +9,19 @@ export function StatsSection(): React.ReactElement {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           {[
             {
-              value: '360°',
-              label: 'VR Tour trực quan',
-              sub: 'Xem từng phòng',
+              value: '3D',
+              label: 'Mô hình 3D tương tác',
+              sub: 'Three.js & Floorplan',
             },
             {
               value: '4',
               label: 'Bước quy trình',
-              sub: 'Số hóa hoàn toàn',
+              sub: 'Số hóa chuẩn NĐ 96',
             },
             {
               value: '100%',
-              label: 'Ghi nhận Blockchain',
-              sub: 'Chống sửa đổi',
+              label: 'Lưu vết chống sửa đổi',
+              sub: 'Hyperledger Fabric',
             },
             { value: 'AI', label: 'Gợi ý thông minh', sub: 'Cá nhân hóa' },
           ].map(stat => (

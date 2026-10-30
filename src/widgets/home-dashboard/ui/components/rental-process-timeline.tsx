@@ -35,20 +35,20 @@ export function RentalProcessTimeline(): React.ReactElement {
             },
             {
               step: '02',
-              title: 'Đặt lịch xem thực tế',
-              desc: 'Chọn ngày giờ thuận tiện để xem căn hộ trực tiếp. Trước khi đến, bạn có thể xem trước không gian qua VR Tour 360° ngay trên nền tảng.',
+              title: 'Trải nghiệm 3D & Xem nhà trực tiếp',
+              desc: 'Khách thuê trải nghiệm xem trước không gian qua Mô hình 3D tương tác (Three.js), nộp hồ sơ thuê kèm eKYC CCCD và đặt lịch hẹn xem căn hộ trực tiếp.',
               icon: 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5',
             },
             {
               step: '03',
-              title: 'Đặt cọc & Tạo hợp đồng',
-              desc: 'Thanh toán đặt cọc trực tuyến an toàn. Hợp đồng được tạo tự động với điều khoản rõ ràng, hai bên xác nhận điện tử trước khi có hiệu lực.',
+              title: 'Đặt cọc & Ký số hợp đồng',
+              desc: 'Thanh toán cọc trực tuyến an toàn. Hợp đồng chuẩn pháp lý theo mẫu Nghị định 96/2024/NĐ-CP được tạo tự động và ký số VNPT SmartCA xác thực hai bên.',
               icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z',
             },
             {
               step: '04',
-              title: 'Thanh toán & Ghi nhận Blockchain',
-              desc: 'Mỗi giao dịch thanh toán được ghi nhận hash lên Blockchain. Bạn có thể kiểm chứng bất kỳ lúc nào — đảm bảo minh bạch, chống sửa đổi và bảo vệ quyền lợi cả hai bên.',
+              title: 'Lưu vết Blockchain & Giải ngân',
+              desc: 'Hợp đồng và giao dịch thanh toán được lưu vết chống sửa đổi trên Blockchain (Hyperledger Fabric), đảm bảo tính toàn vẹn và giải ngân minh bạch về ví hoặc ngân hàng.',
               icon: 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h0A11.956 11.956 0 0012 2.714z',
             },
           ].map((item, i) => (
