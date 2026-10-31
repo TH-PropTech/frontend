@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { apiClient } from '@/shared/api/api-client'
@@ -52,5 +52,63 @@ describe('OverviewView data loading', () => {
     expect(container.textContent).toContain('Lỗi máy chủ nội bộ')
     expect(container.textContent).not.toContain('OK')
     expect(container.textContent).not.toMatch(/[A-Z]{3,}(_[A-Z0-9]+){2,}/)
+  })
+
+  it('renders confirmation rate accurately without negative badge when all are pending', async () => {
+    vi.mocked(apiClient.get).mockImplementation((url: string) => {
+      if (url === '/operations/stats') {
+        return Promise.resolve({
+          bookings: {
+            total: 2,
+            pending: 2,
+            confirmed: 0,
+            cancelled: 0,
+            completed: 0,
+          },
+          kyc: { total: 0, pending: 0, verified: 0, rejected: 0 },
+          apartments: { total: 0, pending: 0, available: 0, rejected: 0 },
+          tickets: { total: 0, open: 0, inProgress: 0, resolved: 0 },
+        })
+      }
+      return Promise.resolve({ trend: [], statusBreakdown: [] })
+    })
+
+    render(<OverviewView />)
+    await act(async () => {
+      vi.runAllTimers()
+    })
+
+    expect(screen.getByText('Tỷ lệ đã xác nhận')).toBeTruthy()
+    expect(screen.getByText('0%')).toBeTruthy()
+    expect(screen.getByText('Chờ xử lý')).toBeTruthy()
+    expect(screen.queryByText('Cần cải thiện')).toBeNull()
+  })
+
+  it('renders "Chưa có dữ liệu" when total bookings is 0', async () => {
+    vi.mocked(apiClient.get).mockImplementation((url: string) => {
+      if (url === '/operations/stats') {
+        return Promise.resolve({
+          bookings: {
+            total: 0,
+            pending: 0,
+            confirmed: 0,
+            cancelled: 0,
+            completed: 0,
+          },
+          kyc: { total: 0, pending: 0, verified: 0, rejected: 0 },
+          apartments: { total: 0, pending: 0, available: 0, rejected: 0 },
+          tickets: { total: 0, open: 0, inProgress: 0, resolved: 0 },
+        })
+      }
+      return Promise.resolve({ trend: [], statusBreakdown: [] })
+    })
+
+    render(<OverviewView />)
+    await act(async () => {
+      vi.runAllTimers()
+    })
+
+    expect(screen.getByText('Tỷ lệ đã xác nhận')).toBeTruthy()
+    expect(screen.getByText('Chưa có dữ liệu')).toBeTruthy()
   })
 })

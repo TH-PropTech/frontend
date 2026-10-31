@@ -21,6 +21,7 @@ import {
   FILTER_OPTIONS,
   formatPrice,
 } from './components/apartment-management/types'
+import { joinAddressParts } from '@/shared/lib/join-address'
 import type {
   StaffApartment,
   ApartmentStatus,
@@ -78,7 +79,7 @@ function ApartmentCard({
         </h3>
         <p className="text-[10px] text-[color:var(--muted)] flex items-center gap-1">
           <MapPin className="w-2.5 h-2.5 shrink-0" />
-          {apt.district}, {apt.city}
+          {joinAddressParts(apt.district, apt.city)}
         </p>
         <div className="flex items-center justify-between mt-auto pt-2 border-t border-[color:var(--border)]/50">
           <span className="text-xs font-bold text-[color:var(--primary)]">
@@ -128,7 +129,7 @@ function StatusFilterBar({
   onChange,
 }: StatusFilterBarProps): React.ReactElement {
   return (
-    <div className="flex rounded-xl border border-[color:var(--border)] p-1 bg-[color:var(--surface-muted)]/20 text-xs gap-1 font-semibold overflow-x-auto no-scrollbar">
+    <div className="flex flex-wrap sm:flex-nowrap rounded-xl border border-[color:var(--border)] p-1 bg-[color:var(--surface-muted)]/20 text-xs gap-1 font-semibold overflow-x-auto no-scrollbar">
       {FILTER_OPTIONS.map(opt => {
         const count =
           opt.value === 'all' ? totalCount : (counts[opt.value] ?? 0)

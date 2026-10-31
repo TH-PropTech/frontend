@@ -3,6 +3,8 @@
 import * as React from 'react'
 import { IsometricBuilding } from './components/isometric-building'
 import { AdminCard } from '@/shared/ui/admin-card'
+import { useStaffWorkSummary } from './lib/use-staff-work-summary'
+import { useAuditOverview } from '@/features/fabric-audit'
 
 interface HomeViewProps {
   onNavigateTab: (tab: 'properties' | 'kyc' | 'schedules' | 'community') => void
@@ -10,6 +12,18 @@ interface HomeViewProps {
 
 export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
   const [userName, setUserName] = React.useState('bạn')
+  const { kycPendingCount, apartmentsPendingCount } = useStaffWorkSummary()
+  const audit = useAuditOverview()
+
+  let fabricStatusText = 'Lưu vết chống sửa đổi: đang kiểm tra...'
+  if (audit.isError) {
+    fabricStatusText = 'Lưu vết chống sửa đổi: không khả dụng'
+  } else if (audit.data) {
+    const isReady = audit.data.worker?.state === 'ready'
+    fabricStatusText = isReady
+      ? 'Lưu vết chống sửa đổi: sẵn sàng'
+      : 'Lưu vết chống sửa đổi: không khả dụng'
+  }
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -50,18 +64,20 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
             </h2>
             <p className="text-xs text-white/80 leading-relaxed font-body">
               Tất cả các cổng giao dịch, cổng kết nối VR 360° và hệ thống lưu
-              vết chống sửa đổi vẫn đang vận hành ổn định. Chúc bạn một ngày làm
+              vết chống sửa đổi được theo dõi liên tục. Chúc bạn một ngày làm
               việc hiệu quả!
             </p>
           </div>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => onNavigateTab('properties')}
               className="px-4 py-2.5 bg-white text-primary text-xs font-bold rounded-lg shadow-sm hover:bg-white/95 transition-all"
             >
               Duyệt tin ngay
             </button>
             <button
+              type="button"
               onClick={() => onNavigateTab('kyc')}
               className="px-4 py-2.5 bg-white/10 hover:bg-white/15 border border-white/20 text-white text-xs font-bold rounded-lg transition-all"
             >
@@ -87,7 +103,17 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
 
           {/* Isometric Building SVG Graphics */}
           <div className="flex-grow flex items-center justify-center py-4 select-none relative z-10">
-            <IsometricBuilding />
+            <IsometricBuilding
+              labels={{
+                kycLabel:
+                  kycPendingCount > 0
+                    ? `${kycPendingCount} hồ sơ chờ duyệt`
+                    : undefined,
+              }}
+            />
+          </div>
+          <div className="border-t border-line pt-3 flex justify-between items-center text-[10px] text-muted font-mono relative z-10">
+            <span>{fabricStatusText}</span>
           </div>
         </AdminCard>
 
@@ -100,7 +126,7 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
             </h4>
 
             <div className="space-y-2">
-              {/* Task 1 */}
+              {/* Task 1: Duyệt tin */}
               <button
                 type="button"
                 onClick={() => onNavigateTab('properties')}
@@ -123,12 +149,14 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
                     Duyệt tin bất động sản
                   </span>
                   <span className="text-[10px] text-muted block mt-0.5">
-                    Kiểm định thông tin pháp lý & hình ảnh căn hộ
+                    {apartmentsPendingCount > 0
+                      ? `${apartmentsPendingCount} tin đang chờ kiểm định pháp lý & VR`
+                      : 'Không có tin chờ duyệt'}
                   </span>
                 </div>
               </button>
 
-              {/* Task 2 */}
+              {/* Task 2: KYC */}
               <button
                 type="button"
                 onClick={() => onNavigateTab('kyc')}
@@ -151,12 +179,14 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
                     Xác minh danh tính (KYC)
                   </span>
                   <span className="text-[10px] text-muted block mt-0.5">
-                    Đối soát CCCD và thông tin định danh
+                    {kycPendingCount > 0
+                      ? `${kycPendingCount} người dùng chờ đối soát CCCD`
+                      : 'Không có hồ sơ chờ'}
                   </span>
                 </div>
               </button>
 
-              {/* Task 3 */}
+              {/* Task 3: Bài viết cộng đồng */}
               <button
                 type="button"
                 onClick={() => onNavigateTab('community')}

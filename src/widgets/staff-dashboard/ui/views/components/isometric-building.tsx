@@ -2,7 +2,19 @@
 
 import * as React from 'react'
 
-export function IsometricBuilding(): React.ReactElement {
+export interface IsometricBuildingLabels {
+  contractLabel?: string | undefined
+  vrLabel?: string | undefined
+  kycLabel?: string | undefined
+}
+
+export interface IsometricBuildingProps {
+  labels?: IsometricBuildingLabels
+}
+
+export function IsometricBuilding({
+  labels,
+}: IsometricBuildingProps = {}): React.ReactElement {
   return (
     <svg
       className="w-full max-w-[480px] aspect-[1.2/1]"
@@ -162,16 +174,18 @@ export function IsometricBuilding(): React.ReactElement {
         >
           HỢP ĐỒNG ĐIỆN TỬ
         </text>
-        <text
-          x="83"
-          y="210"
-          fill="var(--primary)"
-          fontSize="8.5"
-          fontWeight="semibold"
-          textAnchor="end"
-        >
-          Lưu vết chống sửa đổi
-        </text>
+        {(labels?.contractLabel ?? 'Lưu vết chống sửa đổi') ? (
+          <text
+            x="83"
+            y="210"
+            fill="var(--primary)"
+            fontSize="8.5"
+            fontWeight="semibold"
+            textAnchor="end"
+          >
+            {labels?.contractLabel ?? 'Lưu vết chống sửa đổi'}
+          </text>
+        ) : null}
       </g>
 
       {/* ═══════════════════════════════════════
@@ -232,16 +246,18 @@ export function IsometricBuilding(): React.ReactElement {
         >
           KHÔNG GIAN VR 360
         </text>
-        <text
-          x="447"
-          y="130"
-          fill="var(--success)"
-          fontSize="8.5"
-          fontWeight="semibold"
-          textAnchor="start"
-        >
-          Không gian đa chiều
-        </text>
+        {(labels?.vrLabel ?? 'Không gian đa chiều') ? (
+          <text
+            x="447"
+            y="130"
+            fill="var(--success)"
+            fontSize="8.5"
+            fontWeight="semibold"
+            textAnchor="start"
+          >
+            {labels?.vrLabel ?? 'Không gian đa chiều'}
+          </text>
+        ) : null}
       </g>
 
       {/* ═══════════════════════════════════════
@@ -312,16 +328,18 @@ export function IsometricBuilding(): React.ReactElement {
         >
           XÁC THỰC KYC
         </text>
-        <text
-          x="83"
-          y="65"
-          fill="var(--warning)"
-          fontSize="8.5"
-          fontWeight="semibold"
-          textAnchor="end"
-        >
-          Xác thực danh tính
-        </text>
+        {(labels?.kycLabel ?? 'Xác thực danh tính') ? (
+          <text
+            x="83"
+            y="65"
+            fill="var(--warning)"
+            fontSize="8.5"
+            fontWeight="semibold"
+            textAnchor="end"
+          >
+            {labels?.kycLabel ?? 'Xác thực danh tính'}
+          </text>
+        ) : null}
       </g>
     </svg>
   )

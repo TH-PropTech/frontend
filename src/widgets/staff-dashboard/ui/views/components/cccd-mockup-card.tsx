@@ -36,9 +36,14 @@ export function CccdMockupCard({
             <br />
             Độc lập - Tự do - Hạnh phúc
           </div>
-          <span className="text-[9px] font-bold text-fg border border-line px-1 py-0.5 rounded bg-surface/50">
-            CCCD
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-[9px] font-bold text-fg border border-line px-1 py-0.5 rounded bg-surface/50">
+              CCCD
+            </span>
+            <span className="text-[8px] font-bold text-accent border border-accent/30 px-1.5 py-0.5 rounded bg-accent/10">
+              Bản dựng từ dữ liệu OCR
+            </span>
+          </div>
         </div>
 
         <div className="relative flex gap-3 my-2 items-center">
@@ -90,7 +95,12 @@ export function CccdMockupCard({
         <span className="text-[7px] text-fg font-body">
           MẶT SAU / BACK SIDE
         </span>
-        <span className="text-[8px] font-mono text-fg">MRZ ZONE CODE</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[8px] font-bold text-accent border border-accent/30 px-1.5 py-0.5 rounded bg-accent/10">
+            Bản dựng từ dữ liệu OCR
+          </span>
+          <span className="text-[8px] font-mono text-fg">MRZ ZONE CODE</span>
+        </div>
       </div>
 
       <div className="relative flex gap-4 my-2 items-center">

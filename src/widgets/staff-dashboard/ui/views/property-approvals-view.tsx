@@ -18,6 +18,11 @@ import {
 import { Textarea } from '@/shared/ui/textarea'
 import { Button } from '@/shared/ui/button'
 import { useCan } from '@/shared/lib/permissions'
+import {
+  mapApartmentStatus,
+  APARTMENT_STATUS_LABELS,
+  type ApartmentModerationStatus,
+} from './lib/apartment-moderation'
 
 // Khớp RejectApartmentDto.rejectedReason (@MinLength(10)) ở backend.
 const REJECT_REASON_MIN_LENGTH = 10
@@ -30,8 +35,10 @@ interface Property {
   landlord: string
   phone: string
   documents: string[]
-  status: 'pending' | 'approved' | 'rejected'
+  status: ApartmentModerationStatus
   vrUrl: string
+  images360: string[]
+  gallery: string[]
 }
 
 interface BackendApartmentResponse {
@@ -45,6 +52,7 @@ interface BackendApartmentResponse {
   images360?: string[]
   gallery?: string[]
   vrUrl?: string
+  documents?: string[]
   landlord?: {
     fullName: string
     phone: string
@@ -66,13 +74,6 @@ export function PropertyApprovalsView(): React.ReactElement {
 
   const mapProperty = React.useCallback(
     (apt: BackendApartmentResponse): Property => {
-      let mappedStatus: 'pending' | 'approved' | 'rejected' = 'pending'
-      if (apt.status === 'available') {
-        mappedStatus = 'approved'
-      } else if (apt.status === 'rejected' || apt.status === 'unavailable') {
-        mappedStatus = 'rejected'
-      }
-
       return {
         id: apt.id || '',
         title: apt.title || '',
@@ -80,12 +81,11 @@ export function PropertyApprovalsView(): React.ReactElement {
         price: apt.price || 'Chưa cập nhật',
         landlord: apt.landlord?.fullName || 'Chủ nhà TH PropTech',
         phone: apt.landlord?.phone || 'Chưa cung cấp',
-        documents: [
-          'Giấy chứng nhận quyền sở hữu nhà ở',
-          'Bản quét hồ sơ pháp lý căn hộ',
-        ],
-        status: mappedStatus,
-        vrUrl: apt.vrUrl || 'https://panoramas.example.com/tour',
+        documents: apt.documents || [],
+        status: mapApartmentStatus(apt.status),
+        vrUrl: apt.vrUrl || '',
+        images360: apt.images360 || [],
+        gallery: apt.gallery || [],
       }
     },
     []
@@ -95,8 +95,8 @@ export function PropertyApprovalsView(): React.ReactElement {
     setLoading(true)
     setError(null)
     try {
-      // GET /apartments là danh sách công khai (chỉ 'available'), nên hàng chờ
-      // duyệt và bài bị từ chối phải lấy từ các endpoint dành cho staff/admin.
+      // GET /apartments là danh sách công khai (chỉ 'available' và 'rented'),
+      // nên hàng chờ duyệt và bài bị từ chối lấy từ các endpoint dành cho staff/admin.
       const [pending, approved, rejected] = await Promise.all([
         apiClient.get<BackendApartmentResponse[]>(
           '/apartments/pending?format=web'
@@ -134,12 +134,24 @@ export function PropertyApprovalsView(): React.ReactElement {
       setSelectedProp(null)
       toast.success('Đã phê duyệt tin đăng căn hộ thành công!')
     } catch (err) {
-      console.error('Failed to approve apartment:', err)
-      const message =
-        err instanceof Error
-          ? err.message
-          : 'Không thể phê duyệt căn hộ. Vui lòng thử lại.'
-      toast.error(message)
+      const errMessage = err instanceof Error ? err.message : String(err)
+      const isStatusError =
+        errMessage.includes('đang chờ duyệt') ||
+        errMessage.includes('400') ||
+        (err as { statusCode?: number })?.statusCode === 400 ||
+        (err as { code?: string })?.code === 'HTTP_400'
+
+      if (isStatusError) {
+        toast.error(
+          'Tin này đã được xử lý hoặc không còn ở trạng thái chờ duyệt.'
+        )
+        await loadProperties()
+        setSelectedProp(null)
+      } else {
+        toast.error(
+          errMessage || 'Không thể phê duyệt căn hộ. Vui lòng thử lại.'
+        )
+      }
     }
   }
 
@@ -157,18 +169,31 @@ export function PropertyApprovalsView(): React.ReactElement {
       setRejectReason('')
       toast.info('Đã từ chối tin đăng căn hộ.')
     } catch (err) {
-      console.error('Failed to reject apartment:', err)
-      const message =
-        err instanceof Error
-          ? err.message
-          : 'Không thể từ chối căn hộ. Vui lòng thử lại.'
-      toast.error(message)
+      const errMessage = err instanceof Error ? err.message : String(err)
+      const isStatusError =
+        errMessage.includes('đang chờ duyệt') ||
+        errMessage.includes('400') ||
+        (err as { statusCode?: number })?.statusCode === 400 ||
+        (err as { code?: string })?.code === 'HTTP_400'
+
+      if (isStatusError) {
+        toast.error(
+          'Tin này đã được xử lý hoặc không còn ở trạng thái chờ duyệt.'
+        )
+        await loadProperties()
+        setShowRejectDialog(false)
+        setSelectedProp(null)
+        setRejectReason('')
+      } else {
+        toast.error(errMessage || 'Không thể từ chối căn hộ. Vui lòng thử lại.')
+      }
     }
   }
 
-  const filteredProps = properties.filter(
-    p => filter === 'all' || p.status === filter
-  )
+  const filteredProps = properties.filter(p => {
+    if (filter === 'all') return true
+    return p.status === filter
+  })
 
   if (loading) {
     return (
@@ -180,7 +205,7 @@ export function PropertyApprovalsView(): React.ReactElement {
 
   return (
     <div className="space-y-6">
-      <ListingReviewQueue />
+      <ListingReviewQueue hideWhenEmpty />
       {/* Title & Filter headers */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -192,7 +217,7 @@ export function PropertyApprovalsView(): React.ReactElement {
             hiển thị lên hệ thống.
           </p>
         </div>
-        <div className="flex rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
+        <div className="flex flex-wrap rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
           <button
             type="button"
             aria-pressed={filter === 'all'}
@@ -254,19 +279,17 @@ export function PropertyApprovalsView(): React.ReactElement {
                     {prop.id}
                   </span>
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
                       prop.status === 'approved'
                         ? 'bg-accent-2/10 text-accent-2'
                         : prop.status === 'rejected'
                           ? 'bg-accent/10 text-accent'
-                          : 'bg-accent-3/10 text-accent-3'
+                          : prop.status === 'pending'
+                            ? 'bg-accent-3/10 text-accent-3'
+                            : 'bg-muted/10 text-muted'
                     }`}
                   >
-                    {prop.status === 'approved'
-                      ? 'Đã duyệt'
-                      : prop.status === 'rejected'
-                        ? 'Bị từ chối'
-                        : 'Chờ duyệt'}
+                    {APARTMENT_STATUS_LABELS[prop.status] ?? 'Không rõ'}
                   </span>
                 </div>
                 <h3 className="mt-3 text-sm font-bold text-fg leading-snug font-marketing line-clamp-1">
@@ -301,8 +324,9 @@ export function PropertyApprovalsView(): React.ReactElement {
               </div>
               <div className="px-5 pb-5 pt-1.5 border-t border-line/30 bg-surface-muted/10">
                 <button
+                  type="button"
                   onClick={() => setSelectedProp(prop)}
-                  className="w-full py-2 bg-fg/5 hover:bg-fg/10 text-fg text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                  className="w-full py-2 bg-fg/5 hover:bg-fg/10 text-fg text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <svg
                     width="14"
@@ -332,8 +356,12 @@ export function PropertyApprovalsView(): React.ReactElement {
           />
 
           <AdminCard className="relative z-10 flex flex-col lg:flex-row w-full max-w-5xl h-[85vh] shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Left side: VR 360 Preview (Simulated interactive container) */}
-            <VrPreviewPanel />
+            {/* Left side: VR 360 / Media Preview */}
+            <VrPreviewPanel
+              images360={selectedProp.images360}
+              gallery={selectedProp.gallery}
+              vrUrl={selectedProp.vrUrl}
+            />
 
             {/* Right side: Property Details and Document Verification */}
             <div className="w-full lg:w-[420px] flex flex-col h-full bg-surface overflow-hidden">
@@ -348,6 +376,7 @@ export function PropertyApprovalsView(): React.ReactElement {
                   </h2>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setSelectedProp(null)}
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-subtle hover:bg-fg/5 hover:text-fg transition-colors"
                 >
@@ -395,62 +424,40 @@ export function PropertyApprovalsView(): React.ReactElement {
                   <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
                     Hồ sơ pháp lý đính kèm
                   </h4>
-                  <div className="mt-2.5 space-y-2">
-                    {selectedProp.documents.map((doc, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2 p-2.5 bg-bg/40 border border-line rounded-lg text-xs hover:bg-bg/60 transition-colors"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          className="text-primary shrink-0"
+                  {selectedProp.documents &&
+                  selectedProp.documents.length > 0 ? (
+                    <div className="mt-2.5 space-y-2">
+                      {selectedProp.documents.map((doc, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 p-2.5 bg-bg/40 border border-line rounded-lg text-xs hover:bg-bg/60 transition-colors"
                         >
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                          <polyline points="14 2 14 8 20 8" />
-                        </svg>
-                        <span className="font-semibold text-fg truncate flex-1">
-                          {doc}
-                        </span>
-                        <span className="text-[10px] text-accent-2 font-medium bg-accent-2/10 px-1.5 py-0.5 rounded">
-                          PDF
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="border-t border-line/60 pt-4">
-                  <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
-                    Trạng thái kiểm duyệt ảnh 360°
-                  </h4>
-                  <div className="mt-2.5 p-3.5 bg-accent-2/5 border border-accent-2/10 rounded-lg text-xs flex gap-2.5">
-                    <svg
-                      className="text-accent-2 mt-0.5 shrink-0"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                    >
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
-                    <div>
-                      <p className="font-semibold text-accent-2">
-                        Ảnh quét đạt tiêu chuẩn
-                      </p>
-                      <p className="text-[10px] text-muted mt-0.5">
-                        Không phát hiện méo ảnh, đủ độ sáng, các điểm di chuyển
-                        liên kết chính xác.
-                      </p>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="text-primary shrink-0"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          <span className="font-semibold text-fg truncate flex-1">
+                            {doc}
+                          </span>
+                          <span className="text-[10px] text-accent-2 font-medium bg-accent-2/10 px-1.5 py-0.5 rounded">
+                            PDF
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  ) : (
+                    <div className="mt-2.5 p-3 rounded-lg bg-surface-muted/30 border border-line/60 text-xs text-muted italic">
+                      Chưa có hồ sơ pháp lý đính kèm trong hệ thống
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -459,12 +466,14 @@ export function PropertyApprovalsView(): React.ReactElement {
                 <div className="p-4 border-t border-line bg-surface-muted/20 space-y-2">
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       onClick={() => setShowRejectDialog(true)}
                       className="flex-1 py-2.5 bg-surface border border-accent hover:bg-accent/5 text-accent text-xs font-semibold rounded-lg transition-colors"
                     >
                       Từ chối duyệt
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleApprove(selectedProp.id)}
                       className="flex-1 py-2.5 bg-accent-2 hover:bg-accent-2/95 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
                     >

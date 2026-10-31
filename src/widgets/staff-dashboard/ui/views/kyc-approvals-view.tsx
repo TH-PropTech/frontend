@@ -214,7 +214,7 @@ export function KycApprovalsView(): React.ReactElement {
             <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           )}
         </label>
-        <div className="flex rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
+        <div className="flex flex-wrap rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
           <button
             type="button"
             aria-pressed={filter === 'all'}
@@ -261,86 +261,147 @@ export function KycApprovalsView(): React.ReactElement {
           onRetry={() => void loadRecords()}
         />
       ) : (
-        /* Records table */
-        <AdminCard
-          className={`overflow-hidden transition-opacity duration-200 ${isSearching ? 'opacity-60' : 'opacity-100'}`}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-surface-muted/30 border-b border-line text-muted uppercase tracking-wider font-semibold font-body">
-                  <th className="p-4">Mã hồ sơ</th>
-                  <th className="p-4">Họ và tên</th>
-                  <th className="p-4">Số CCCD</th>
-                  <th className="p-4">Tỷ lệ khớp OCR</th>
-                  <th className="p-4">Ngày gửi</th>
-                  <th className="p-4">Trạng thái</th>
-                  <th className="p-4 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line/60">
-                {filteredRecords.map(record => (
-                  <tr
-                    key={record.id}
-                    className="hover:bg-bg/10 transition-colors"
+        <>
+          {/* Mobile Card View (screens < md) */}
+          <div className="space-y-3 md:hidden">
+            {filteredRecords.map(record => (
+              <AdminCard key={record.id} className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs font-bold text-fg">
+                    {formatRecordCode(record.id)}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                      record.status === 'approved'
+                        ? 'bg-accent-2/10 text-accent-2'
+                        : record.status === 'rejected'
+                          ? 'bg-accent/10 text-accent'
+                          : 'bg-accent-3/10 text-accent-3'
+                    }`}
                   >
-                    <td className="p-4 font-mono font-bold text-fg">
-                      {formatRecordCode(record.id)}
-                    </td>
-                    <td className="p-4 font-semibold text-fg">{record.name}</td>
-                    <td className="p-4 font-mono">{record.cccdNumber}</td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-fg">
-                          {record.ocrScore === null
-                            ? 'Không có dữ liệu'
-                            : `${record.ocrScore}%`}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-muted">{record.submittedAt}</td>
-                    <td className="p-4">
-                      <span
-                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                          record.status === 'approved'
-                            ? 'bg-accent-2/10 text-accent-2'
-                            : record.status === 'rejected'
-                              ? 'bg-accent/10 text-accent'
-                              : 'bg-accent-3/10 text-accent-3'
-                        }`}
-                      >
-                        {record.status === 'approved'
-                          ? 'Đã duyệt'
-                          : record.status === 'rejected'
-                            ? 'Đã từ chối'
-                            : 'Chờ duyệt'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedRecord(record)}
-                        className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded-lg transition-colors cursor-pointer"
-                      >
-                        Đối chiếu & Duyệt
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredRecords.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="p-8 text-center text-muted font-medium"
-                    >
-                      Chưa có hồ sơ nào trong mục này.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                    {record.status === 'approved'
+                      ? 'Đã duyệt'
+                      : record.status === 'rejected'
+                        ? 'Đã từ chối'
+                        : 'Chờ duyệt'}
+                  </span>
+                </div>
+                <div>
+                  <p className="font-semibold text-sm text-fg">{record.name}</p>
+                  <p className="font-mono text-xs text-muted mt-0.5">
+                    CCCD: {record.cccdNumber}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between text-xs text-subtle border-t border-line/60 pt-2">
+                  <span>
+                    Khớp OCR:{' '}
+                    <strong className="text-fg font-semibold">
+                      {record.ocrScore === null
+                        ? 'Chưa có'
+                        : `${record.ocrScore}%`}
+                    </strong>
+                  </span>
+                  <span>{record.submittedAt}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRecord(record)}
+                  className="w-full min-h-11 py-2 bg-fg/5 hover:bg-fg/10 text-fg rounded-lg text-xs font-semibold transition-colors flex items-center justify-center cursor-pointer"
+                >
+                  {canApprove ? 'Đối chiếu & Duyệt' : 'Xem hồ sơ'}
+                </button>
+              </AdminCard>
+            ))}
+            {filteredRecords.length === 0 && (
+              <AdminCard className="p-8 text-center text-muted font-medium text-xs">
+                Chưa có hồ sơ nào trong mục này.
+              </AdminCard>
+            )}
           </div>
-        </AdminCard>
+
+          {/* Records table (screens >= md) */}
+          <AdminCard
+            className={`overflow-hidden hidden md:block transition-opacity duration-200 ${isSearching ? 'opacity-60' : 'opacity-100'}`}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-surface-muted/30 border-b border-line text-muted uppercase tracking-wider font-semibold font-body">
+                    <th className="p-4">Mã hồ sơ</th>
+                    <th className="p-4">Họ và tên</th>
+                    <th className="p-4">Số CCCD</th>
+                    <th className="p-4">Tỷ lệ khớp OCR</th>
+                    <th className="p-4">Ngày gửi</th>
+                    <th className="p-4">Trạng thái</th>
+                    <th className="p-4 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line/60">
+                  {filteredRecords.map(record => (
+                    <tr
+                      key={record.id}
+                      className="hover:bg-bg/10 transition-colors"
+                    >
+                      <td className="p-4 font-mono font-bold text-fg">
+                        {formatRecordCode(record.id)}
+                      </td>
+                      <td className="p-4 font-semibold text-fg">
+                        {record.name}
+                      </td>
+                      <td className="p-4 font-mono">{record.cccdNumber}</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-fg">
+                            {record.ocrScore === null
+                              ? 'Chưa có'
+                              : `${record.ocrScore}%`}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-muted">{record.submittedAt}</td>
+                      <td className="p-4">
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                            record.status === 'approved'
+                              ? 'bg-accent-2/10 text-accent-2'
+                              : record.status === 'rejected'
+                                ? 'bg-accent/10 text-accent'
+                                : 'bg-accent-3/10 text-accent-3'
+                          }`}
+                        >
+                          {record.status === 'approved'
+                            ? 'Đã duyệt'
+                            : record.status === 'rejected'
+                              ? 'Đã từ chối'
+                              : 'Chờ duyệt'}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRecord(record)}
+                          className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded-lg transition-colors cursor-pointer"
+                        >
+                          {canApprove ? 'Đối chiếu & Duyệt' : 'Xem hồ sơ'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredRecords.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="p-8 text-center text-muted font-medium"
+                      >
+                        Chưa có hồ sơ nào trong mục này.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </AdminCard>
+        </>
       )}
 
       {selectedRecord && (

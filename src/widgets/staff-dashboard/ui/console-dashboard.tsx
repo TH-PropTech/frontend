@@ -108,6 +108,18 @@ function renderView(
   }
 }
 
+const VIEWS_WITH_OWN_TITLE = new Set([
+  'home',
+  'overview',
+  'properties',
+  'apartments',
+  'kyc',
+  'schedules',
+  'community',
+  'support',
+  'safety',
+])
+
 /**
  * Bảng điều khiển dùng chung cho quản trị viên (`/admin`) và nhân viên (`/staff`): cùng một menu trái, nhân viên
  * chỉ thấy các mục vận hành chưa bị admin ẩn.
@@ -329,13 +341,13 @@ export function ConsoleDashboard({
 
       {/* ═══ MAIN ═══ */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        <header className="h-16 bg-surface border-b border-line px-6 flex items-center justify-between sticky top-0 z-30 shrink-0">
-          <div className="flex items-center gap-4">
+        <header className="min-h-16 bg-surface border-b border-line px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shrink-0 gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               type="button"
               aria-label="Mở menu"
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-fg/5 text-fg rounded-lg transition-colors"
+              className="lg:hidden p-2 hover:bg-fg/5 text-fg rounded-lg transition-colors shrink-0 min-h-11 min-w-11 flex items-center justify-center"
             >
               <svg
                 width="20"
@@ -350,26 +362,33 @@ export function ConsoleDashboard({
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </button>
-            <h1 className="text-base font-bold text-fg font-marketing">
+            <h1
+              className={`text-base font-bold text-fg font-marketing truncate min-w-0 ${
+                activeTab && VIEWS_WITH_OWN_TITLE.has(activeTab)
+                  ? 'hidden sm:block'
+                  : ''
+              }`}
+            >
               {activeItem?.label ?? 'Bảng điều khiển'}
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {isAdmin ? (
-              <span className="text-[10px] font-bold text-accent-3 bg-accent-3/15 px-2.5 py-1 rounded-full border border-accent-3/30">
-                Role: Quản trị viên
+              <span className="text-[10px] font-bold text-accent-3 bg-accent-3/15 px-2.5 py-1 rounded-full border border-accent-3/30 shrink-0 whitespace-nowrap">
+                <span className="hidden sm:inline">Role: </span>Quản trị viên
               </span>
             ) : (
-              <span className="text-[10px] font-bold text-accent bg-accent/15 px-2.5 py-1 rounded-full border border-accent/30">
-                Role: Nhân viên vận hành
+              <span className="text-[10px] font-bold text-accent bg-accent/15 px-2.5 py-1 rounded-full border border-accent/30 shrink-0 whitespace-nowrap">
+                <span className="hidden sm:inline">Role: </span>Nhân viên vận
+                hành
               </span>
             )}
             <Link
               href="/"
-              className="text-xs font-semibold text-muted hover:text-fg transition-colors flex items-center gap-1.5"
+              className="text-xs font-semibold text-muted hover:text-fg transition-colors flex items-center gap-1.5 shrink-0 px-2 py-1.5 rounded-lg min-h-11"
             >
-              Trang chủ
+              <span className="hidden sm:inline">Trang chủ</span>
               <svg
                 width="12"
                 height="12"
@@ -377,6 +396,7 @@ export function ConsoleDashboard({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2.5"
+                className="shrink-0"
               >
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
@@ -385,7 +405,7 @@ export function ConsoleDashboard({
             <button
               type="button"
               onClick={handleLogout}
-              className="text-xs font-semibold text-danger hover:bg-danger/10 transition-colors flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+              className="text-xs font-semibold text-danger hover:bg-danger/10 transition-colors flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shrink-0 whitespace-nowrap min-h-11"
             >
               <svg
                 width="13"
@@ -394,17 +414,18 @@ export function ConsoleDashboard({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2.5"
+                className="shrink-0"
               >
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
-              Đăng xuất
+              <span>Đăng xuất</span>
             </button>
           </div>
         </header>
 
-        <main className="flex-grow p-4 sm:p-6 lg:p-8">
+        <main className="flex-grow p-4 sm:p-6 lg:p-8 pb-24 sm:pb-24">
           <div className="max-w-6xl mx-auto">
             {activeTab ? (
               <PermissionsProvider permissions={isAdmin ? null : permissionMap}>

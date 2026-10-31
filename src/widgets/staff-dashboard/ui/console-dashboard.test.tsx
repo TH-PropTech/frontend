@@ -26,10 +26,17 @@ vi.mock('next/link', () => ({
   default: ({
     children,
     href,
+    className,
+    ...rest
   }: {
     children: React.ReactNode
     href: string
-  }) => <a href={href}>{children}</a>,
+    className?: string
+  }) => (
+    <a href={href} className={className} {...rest}>
+      {children}
+    </a>
+  ),
 }))
 vi.mock('@/shared/ui/logo', () => ({ Logo: () => <span>logo</span> }))
 vi.mock('@/shared/ui/app-toast', () => ({
@@ -201,7 +208,13 @@ describe('staff view', () => {
     expect(
       screen.queryByRole('button', { name: /Tuỳ chỉnh menu nhân viên/ })
     ).toBeNull()
-    expect(screen.getByText('Role: Nhân viên vận hành')).toBeVisible()
+    expect(
+      screen.getByText(
+        (_, el) =>
+          el?.textContent?.replace(/\s+/g, ' ').trim() ===
+          'Role: Nhân viên vận hành'
+      )
+    ).toBeVisible()
   })
 
   it('hides the items the admin turned off', async () => {
@@ -339,7 +352,12 @@ describe('admin view', () => {
     expect(
       menu.getByRole('button', { name: 'Ma trận Phân quyền' })
     ).toBeVisible()
-    expect(screen.getByText('Role: Quản trị viên')).toBeVisible()
+    expect(
+      screen.getByText(
+        (_, el) =>
+          el?.textContent?.replace(/\s+/g, ' ').trim() === 'Role: Quản trị viên'
+      )
+    ).toBeVisible()
   })
 
   it('navigates to the chosen section', async () => {
@@ -420,5 +438,40 @@ describe('admin view', () => {
     await session.click(within(dialog).getByRole('button', { name: 'Lưu' }))
     await waitFor(() => expect(appToast.error).toHaveBeenCalled())
     expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  describe('responsive layout & touch targets', () => {
+    it('applies responsive classes and touch target sizes to header & main container', () => {
+      navigation.pathname = '/admin/fabric-audit'
+      renderConsole(STAFF)
+
+      const banner = screen.getByRole('banner')
+      expect(banner).toHaveClass('min-h-16')
+      expect(banner).toHaveClass('flex')
+      expect(banner.className).not.toMatch(
+        /\b(hidden\s+lg:block|lg:block\s+flex)\b/
+      )
+
+      const logoutBtn = screen.getByRole('button', { name: /Đăng xuất/i })
+      expect(logoutBtn).toHaveClass('min-h-11')
+      expect(logoutBtn).toHaveClass('whitespace-nowrap')
+      expect(logoutBtn).toHaveClass('shrink-0')
+
+      const homeLink = screen.getByRole('link', { name: /Trang chủ/i })
+      expect(homeLink).toHaveClass('min-h-11')
+
+      const mainEl = screen.getByRole('main')
+      expect(mainEl).toHaveClass('pb-24')
+    })
+
+    it('hides header title on mobile when the view has its own title', async () => {
+      navigation.pathname = '/admin/overview'
+      renderConsole(ADMIN)
+
+      const heading = screen.getByRole('heading', { level: 1 })
+      expect(heading).toHaveClass('truncate')
+      expect(heading).toHaveClass('hidden')
+      expect(heading).toHaveClass('sm:block')
+    })
   })
 })

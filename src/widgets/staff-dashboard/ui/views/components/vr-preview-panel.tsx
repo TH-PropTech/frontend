@@ -1,286 +1,134 @@
 'use client'
 
 import * as React from 'react'
+import Image from 'next/image'
+import { Camera, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
 
-export function VrPreviewPanel(): React.ReactElement {
-  const [vrZoom, setVrZoom] = React.useState(100)
-  const [vrRotation, setVrRotation] = React.useState(0)
+export interface VrPreviewPanelProps {
+  images360?: string[]
+  gallery?: string[]
+  vrUrl?: string
+}
+
+export function VrPreviewPanel({
+  images360 = [],
+  gallery = [],
+  vrUrl,
+}: VrPreviewPanelProps = {}): React.ReactElement {
+  const displayImages = images360.length > 0 ? images360 : gallery
+  const [activeIdx, setActiveIdx] = React.useState(0)
+
+  const has360 = images360.length > 0
+  const activeImage =
+    displayImages.length > 0
+      ? displayImages[activeIdx % displayImages.length]
+      : null
 
   return (
-    <div className="relative flex-1 bg-neutral-900 flex flex-col justify-between p-4 overflow-hidden border-r border-line">
-      {/* VR controls top */}
-      <div className="relative z-10 flex justify-between items-center">
-        <span className="text-xs font-bold text-white bg-black/60 px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-          GIẢ LẬP VR 360° SCANNER
+    <div className="relative flex-1 bg-surface-muted/40 flex flex-col justify-between overflow-hidden border-r border-line min-h-[300px]">
+      {/* Top Header */}
+      <div className="relative z-10 flex justify-between items-center p-4 bg-surface/80 backdrop-blur-sm border-b border-line">
+        <span className="text-xs font-semibold text-fg flex items-center gap-1.5">
+          <Camera className="w-4 h-4 text-primary" />
+          {has360 ? (
+            <>
+              Ảnh 360° ({activeIdx + 1}/{displayImages.length})
+            </>
+          ) : (
+            'Thẩm định ảnh 360°'
+          )}
         </span>
-        <div className="flex gap-1">
-          <button
-            type="button"
-            aria-label="Thu nhỏ"
-            onClick={() => setVrZoom(z => Math.max(50, z - 10))}
-            className="h-8 w-8 bg-black/60 hover:bg-black/85 text-white rounded-lg flex items-center justify-center border border-white/10"
+
+        {vrUrl ? (
+          <a
+            href={vrUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-primary hover:underline flex items-center gap-1 font-medium bg-primary/10 px-2.5 py-1 rounded-md"
           >
-            -
-          </button>
-          <button
-            type="button"
-            aria-label="Phóng to"
-            onClick={() => setVrZoom(z => Math.min(150, z + 10))}
-            className="h-8 w-8 bg-black/60 hover:bg-black/85 text-white rounded-lg flex items-center justify-center border border-white/10"
-          >
-            +
-          </button>
-        </div>
+            Mở liên kết VR ngoài
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        ) : null}
       </div>
 
-      {/* Panoramic Scene Container */}
-      <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-        <div
-          className="relative transition-transform duration-300 ease-out select-none cursor-grab active:cursor-grabbing"
-          style={{
-            width: '1800px',
-            height: '100%',
-            transform: `translateX(${vrRotation}px) scale(${vrZoom / 100})`,
-          }}
-        >
-          {/* Custom Simulated VR Scene */}
-          <svg
-            className="w-full h-full opacity-80"
-            viewBox="0 0 1800 600"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <defs>
-              <linearGradient id="vr-sky" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#1e293b" />
-                <stop offset="50%" stopColor="#0f172a" />
-                <stop offset="100%" stopColor="#1e1b4b" />
-              </linearGradient>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#vr-sky)" />
-            {/* Grids and lines simulating 3D spatial scanning */}
-            <path
-              d="M0 300h1800M900 0v600M450 0v600M1350 0v600"
-              stroke="#334155"
-              strokeWidth="1"
-              strokeDasharray="5,5"
+      {/* Main viewer / empty state */}
+      <div className="relative flex-1 flex items-center justify-center p-4 overflow-hidden">
+        {has360 && activeImage ? (
+          <div className="relative w-full h-full min-h-[250px] flex items-center justify-center">
+            <Image
+              src={activeImage}
+              alt={`Ảnh 360 độ ${activeIdx + 1}`}
+              fill
+              unoptimized
+              className="max-h-full max-w-full object-contain"
             />
-
-            {/* Living Room Area */}
-            <g transform="translate(100, 150)" className="text-white">
-              <rect
-                x="50"
-                y="50"
-                width="300"
-                height="200"
-                fill="none"
-                stroke="#64748b"
-                strokeWidth="2"
-              />
-              <line
-                x1="50"
-                y1="50"
-                x2="0"
-                y2="0"
-                stroke="#475569"
-                strokeWidth="2"
-              />
-              <line
-                x1="350"
-                y1="50"
-                x2="400"
-                y2="0"
-                stroke="#475569"
-                strokeWidth="2"
-              />
-              <line
-                x1="50"
-                y1="250"
-                x2="0"
-                y2="300"
-                stroke="#475569"
-                strokeWidth="2"
-              />
-              <line
-                x1="350"
-                y1="250"
-                x2="400"
-                y2="300"
-                stroke="#475569"
-                strokeWidth="2"
-              />
-              <text
-                x="120"
-                y="150"
-                fill="#94a3b8"
-                fontSize="22"
-                fontFamily="serif"
-                fontWeight="bold"
-              >
-                PHÒNG KHÁCH (VR)
-              </text>
-              {/* Sofa */}
-              <rect
-                x="90"
-                y="180"
-                width="220"
-                height="60"
-                rx="10"
-                fill="#3b82f6"
-                fillOpacity="0.2"
-                stroke="#3b82f6"
-                strokeWidth="2"
-              />
-            </g>
-
-            {/* Bedroom Area */}
-            <g transform="translate(700, 150)">
-              <rect
-                x="50"
-                y="50"
-                width="300"
-                height="200"
-                fill="none"
-                stroke="#64748b"
-                strokeWidth="2"
-              />
-              <line
-                x1="50"
-                y1="50"
-                x2="0"
-                y2="0"
-                stroke="#475569"
-                strokeWidth="2"
-              />
-              <line
-                x1="350"
-                y1="50"
-                x2="400"
-                y2="0"
-                stroke="#475569"
-                strokeWidth="2"
-              />
-              <text
-                x="135"
-                y="150"
-                fill="#94a3b8"
-                fontSize="22"
-                fontFamily="serif"
-                fontWeight="bold"
-              >
-                PHÒNG NGỦ 1
-              </text>
-              {/* Bed */}
-              <rect
-                x="100"
-                y="120"
-                width="200"
-                height="120"
-                rx="5"
-                fill="#10b981"
-                fillOpacity="0.2"
-                stroke="#10b981"
-                strokeWidth="2"
-              />
-            </g>
-
-            {/* Kitchen Area */}
-            <g transform="translate(1300, 150)">
-              <rect
-                x="50"
-                y="50"
-                width="300"
-                height="200"
-                fill="none"
-                stroke="#64748b"
-                strokeWidth="2"
-              />
-              <line
-                x1="50"
-                y1="50"
-                x2="0"
-                y2="0"
-                stroke="#475569"
-                strokeWidth="2"
-              />
-              <line
-                x1="350"
-                y1="50"
-                x2="400"
-                y2="0"
-                stroke="#475569"
-                strokeWidth="2"
-              />
-              <text
-                x="145"
-                y="150"
-                fill="#94a3b8"
-                fontSize="22"
-                fontFamily="serif"
-                fontWeight="bold"
-              >
-                KHU BẾP
-              </text>
-              {/* Kitchen table */}
-              <rect
-                x="80"
-                y="160"
-                width="240"
-                height="80"
-                rx="4"
-                fill="#f59e0b"
-                fillOpacity="0.2"
-                stroke="#f59e0b"
-                strokeWidth="2"
-              />
-            </g>
-          </svg>
-
-          {/* Hotspots */}
-          <div className="absolute left-[280px] top-[260px] flex flex-col items-center">
-            <span className="h-6 w-6 rounded-full bg-accent-2/70 animate-ping absolute" />
-            <span className="h-6 w-6 rounded-full bg-accent-2 flex items-center justify-center text-white text-[10px] font-bold relative border border-white shadow-md cursor-pointer">
-              i
-            </span>
-            <span className="bg-black/80 text-white text-[10px] px-2 py-0.5 rounded mt-1.5 border border-white/10 font-body">
-              Sofa da cao cấp
-            </span>
+            {displayImages.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveIdx(
+                      prev =>
+                        (prev - 1 + displayImages.length) % displayImages.length
+                    )
+                  }
+                  aria-label="Ảnh trước"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-fg/40 hover:bg-fg/60 text-white transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveIdx(prev => (prev + 1) % displayImages.length)
+                  }
+                  aria-label="Ảnh tiếp theo"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-fg/40 hover:bg-fg/60 text-white transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
-
-          <div className="absolute left-[880px] top-[220px] flex flex-col items-center">
-            <span className="h-6 w-6 rounded-full bg-accent-2/70 animate-ping absolute" />
-            <span className="h-6 w-6 rounded-full bg-accent-2 flex items-center justify-center text-white text-[10px] font-bold relative border border-white shadow-md cursor-pointer">
-              i
-            </span>
-            <span className="bg-black/80 text-white text-[10px] px-2 py-0.5 rounded mt-1.5 border border-white/10 font-body">
-              Giường ngủ King Size
-            </span>
+        ) : (
+          <div className="flex flex-col items-center justify-center text-center p-6 text-muted gap-2">
+            <Camera className="w-12 h-12 opacity-30 text-muted" />
+            <p className="text-sm font-semibold text-fg">Chưa có ảnh 360°</p>
+            <p className="text-xs text-subtle max-w-xs">
+              Tin đăng này chưa đính kèm ảnh chụp không gian 360° hoặc liên kết
+              VR tham quan thực tế.
+            </p>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* VR Rotation controls bottom */}
-      <div className="relative z-10 flex justify-between items-center bg-black/60 border border-white/10 p-2.5 rounded-lg">
-        <span className="text-[10px] text-white/50 font-body">
-          Kéo chuột hoặc nhấn các nút để xoay góc nhìn 360°
-        </span>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setVrRotation(r => r + 80)}
-            className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded transition-colors"
-          >
-            &larr; Xoay trái
-          </button>
-          <button
-            type="button"
-            onClick={() => setVrRotation(r => r - 80)}
-            className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded transition-colors"
-          >
-            Xoay phải &rarr;
-          </button>
+      {/* Thumbnail strip if multiple 360 images */}
+      {displayImages.length > 1 && (
+        <div className="flex gap-1.5 p-2 overflow-x-auto border-t border-line bg-surface/60">
+          {displayImages.map((src, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setActiveIdx(idx)}
+              aria-label={`Chọn ảnh 360 số ${idx + 1}`}
+              className={`relative shrink-0 w-14 h-10 rounded overflow-hidden border-2 transition-all ${
+                idx === activeIdx
+                  ? 'border-primary'
+                  : 'border-transparent opacity-60 hover:opacity-100'
+              }`}
+            >
+              <Image
+                src={src}
+                alt={`Ảnh nhỏ ${idx + 1}`}
+                fill
+                unoptimized
+                className="w-full h-full object-cover"
+              />
+            </button>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   )
 }
