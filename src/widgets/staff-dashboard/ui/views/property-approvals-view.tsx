@@ -6,6 +6,17 @@ import { VrPreviewPanel } from './components/vr-preview-panel'
 import { toast } from 'sonner'
 import { ListingReviewQueue } from '@/features/listing-freshness'
 import { AdminCard } from '@/shared/ui/admin-card'
+import { AdminErrorState } from '@/shared/ui/admin-error-state'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/shared/ui/dialog'
+import { Textarea } from '@/shared/ui/textarea'
+import { Button } from '@/shared/ui/button'
 import { useCan } from '@/shared/lib/permissions'
 import {
   mapApartmentStatus,
@@ -53,6 +64,7 @@ export function PropertyApprovalsView(): React.ReactElement {
   const canApprove = can('approve', 'Apartment')
   const [properties, setProperties] = React.useState<Property[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
   const [selectedProp, setSelectedProp] = React.useState<Property | null>(null)
   const [rejectReason, setRejectReason] = React.useState('')
   const [showRejectDialog, setShowRejectDialog] = React.useState(false)
@@ -81,6 +93,7 @@ export function PropertyApprovalsView(): React.ReactElement {
 
   const loadProperties = React.useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       // GET /apartments là danh sách công khai (chỉ 'available' và 'rented'),
       // nên hàng chờ duyệt và bài bị từ chối lấy từ các endpoint dành cho staff/admin.
@@ -94,7 +107,13 @@ export function PropertyApprovalsView(): React.ReactElement {
         ),
       ])
       setProperties([...pending, ...approved, ...rejected].map(mapProperty))
-    } catch {
+    } catch (err) {
+      console.error('Failed to load apartments for moderation:', err)
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Không thể tải danh sách tin đăng. Vui lòng thử lại.'
+      )
       toast.error('Không thể tải danh sách tin đăng. Vui lòng thử lại.')
     } finally {
       setLoading(false)
@@ -201,29 +220,33 @@ export function PropertyApprovalsView(): React.ReactElement {
         <div className="flex flex-wrap rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
           <button
             type="button"
+            aria-pressed={filter === 'all'}
             onClick={() => setFilter('all')}
-            className={`px-3 py-1.5 rounded-md transition-all ${filter === 'all' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
+            className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'all' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Tất cả
           </button>
           <button
             type="button"
+            aria-pressed={filter === 'pending'}
             onClick={() => setFilter('pending')}
-            className={`px-3 py-1.5 rounded-md transition-all ${filter === 'pending' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
+            className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'pending' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Chờ duyệt ({properties.filter(p => p.status === 'pending').length})
           </button>
           <button
             type="button"
+            aria-pressed={filter === 'approved'}
             onClick={() => setFilter('approved')}
-            className={`px-3 py-1.5 rounded-md transition-all ${filter === 'approved' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
+            className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'approved' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Đã duyệt
           </button>
           <button
             type="button"
+            aria-pressed={filter === 'rejected'}
             onClick={() => setFilter('rejected')}
-            className={`px-3 py-1.5 rounded-md transition-all ${filter === 'rejected' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
+            className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'rejected' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Đã từ chối
           </button>
@@ -231,82 +254,98 @@ export function PropertyApprovalsView(): React.ReactElement {
       </div>
 
       {/* Grid List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProps.map(prop => (
-          <AdminCard
-            key={prop.id}
-            className="overflow-hidden flex flex-col justify-between"
-          >
-            <div className="p-5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold font-display px-2.5 py-0.5 rounded bg-fg/5 text-muted uppercase">
-                  {prop.id}
-                </span>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    prop.status === 'approved'
-                      ? 'bg-accent-2/10 text-accent-2'
-                      : prop.status === 'rejected'
-                        ? 'bg-accent/10 text-accent'
-                        : prop.status === 'pending'
-                          ? 'bg-accent-3/10 text-accent-3'
-                          : 'bg-muted/10 text-muted'
-                  }`}
-                >
-                  {APARTMENT_STATUS_LABELS[prop.status] ?? 'Không rõ'}
-                </span>
-              </div>
-              <h3 className="mt-3 text-sm font-bold text-fg leading-snug font-marketing line-clamp-1">
-                {prop.title}
-              </h3>
-              <p className="text-xs text-subtle mt-1 flex items-center gap-1">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-                {prop.address}
-              </p>
-              <div className="mt-4 border-t border-line/50 pt-3 flex justify-between items-center text-xs">
-                <div>
-                  <span className="text-subtle block">Giá thuê</span>
-                  <span className="font-bold text-fg">{prop.price}</span>
+      {loading ? (
+        <div className="py-16 text-center rounded-xl border border-dashed border-line bg-surface-muted/30">
+          <p className="text-xs text-muted font-medium">
+            Đang tải danh sách tin đăng...
+          </p>
+        </div>
+      ) : error ? (
+        <AdminErrorState
+          title="Lỗi tải danh sách tin đăng"
+          message={error}
+          onRetry={loadProperties}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredProps.map(prop => (
+            <AdminCard
+              key={prop.id}
+              className="overflow-hidden flex flex-col justify-between"
+            >
+              <div className="p-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold font-display px-2.5 py-0.5 rounded bg-fg/5 text-muted uppercase">
+                    {prop.id}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                      prop.status === 'approved'
+                        ? 'bg-accent-2/10 text-accent-2'
+                        : prop.status === 'rejected'
+                          ? 'bg-accent/10 text-accent'
+                          : prop.status === 'pending'
+                            ? 'bg-accent-3/10 text-accent-3'
+                            : 'bg-muted/10 text-muted'
+                    }`}
+                  >
+                    {APARTMENT_STATUS_LABELS[prop.status] ?? 'Không rõ'}
+                  </span>
                 </div>
-                <div className="text-right">
-                  <span className="text-subtle block">Chủ nhà</span>
-                  <span className="font-semibold text-fg">{prop.landlord}</span>
+                <h3 className="mt-3 text-sm font-bold text-fg leading-snug font-marketing line-clamp-1">
+                  {prop.title}
+                </h3>
+                <p className="text-xs text-subtle mt-1 flex items-center gap-1">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  {prop.address}
+                </p>
+                <div className="mt-4 border-t border-line/50 pt-3 flex justify-between items-center text-xs">
+                  <div>
+                    <span className="text-subtle block">Giá thuê</span>
+                    <span className="font-bold text-fg">{prop.price}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-subtle block">Chủ nhà</span>
+                    <span className="font-semibold text-fg">
+                      {prop.landlord}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="px-5 pb-5 pt-1.5 border-t border-line/30 bg-surface-muted/10">
-              <button
-                type="button"
-                onClick={() => setSelectedProp(prop)}
-                className="w-full py-2 bg-fg/5 hover:bg-fg/10 text-fg text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
+              <div className="px-5 pb-5 pt-1.5 border-t border-line/30 bg-surface-muted/10">
+                <button
+                  type="button"
+                  onClick={() => setSelectedProp(prop)}
+                  className="w-full py-2 bg-fg/5 hover:bg-fg/10 text-fg text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                Thẩm định & Duyệt
-              </button>
-            </div>
-          </AdminCard>
-        ))}
-      </div>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  Thẩm định & Duyệt
+                </button>
+              </div>
+            </AdminCard>
+          ))}
+        </div>
+      )}
 
       {/* Inspect Drawer/Modal */}
       {selectedProp && (
@@ -398,8 +437,9 @@ export function PropertyApprovalsView(): React.ReactElement {
                             height="16"
                             viewBox="0 0 24 24"
                             fill="none"
-                            stroke="#d04a1e"
+                            stroke="currentColor"
                             strokeWidth="2"
+                            className="text-primary shrink-0"
                           >
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                             <polyline points="14 2 14 8 20 8" />
@@ -448,58 +488,62 @@ export function PropertyApprovalsView(): React.ReactElement {
       )}
 
       {/* Reject dialog */}
-      {showRejectDialog && selectedProp && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-fg/50 backdrop-blur-sm"
-            onClick={() => setShowRejectDialog(false)}
-          />
-          <AdminCard className="relative z-10 w-full max-w-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-5">
-              <h3 className="text-base font-bold text-fg font-marketing">
-                Lý do từ chối tin đăng
-              </h3>
-              <p className="text-xs text-muted mt-1">
-                Nêu rõ lý do để chủ nhà nhận được thông báo phản hồi và chỉnh
-                sửa lại.
-              </p>
-              <textarea
-                value={rejectReason}
-                onChange={e => setRejectReason(e.target.value)}
-                placeholder="Ví dụ: Giấy tờ sở hữu bị mờ hoặc ảnh quét 360° có chất lượng kém..."
-                className="w-full h-24 p-3 mt-3 text-xs border border-line rounded-lg focus:outline-none focus:border-accent bg-bg/25 resize-none"
-                required
-              />
-              <p className="text-[11px] text-muted mt-1">
-                Tối thiểu {REJECT_REASON_MIN_LENGTH} ký tự (
-                {rejectReason.trim().length}/{REJECT_REASON_MIN_LENGTH}).
-              </p>
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowRejectDialog(false)
-                    setRejectReason('')
-                  }}
-                  className="px-4 py-2 border border-line text-muted hover:text-fg text-xs font-semibold rounded-lg transition-colors"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleReject(selectedProp.id)}
-                  disabled={
-                    rejectReason.trim().length < REJECT_REASON_MIN_LENGTH
-                  }
-                  className="px-4 py-2 bg-accent hover:bg-accent/95 text-white text-xs font-semibold rounded-lg shadow-sm disabled:opacity-50 transition-colors"
-                >
-                  Xác nhận từ chối
-                </button>
-              </div>
-            </div>
-          </AdminCard>
-        </div>
-      )}
+      <Dialog
+        open={showRejectDialog && !!selectedProp}
+        onOpenChange={open => {
+          if (!open) {
+            setShowRejectDialog(false)
+            setRejectReason('')
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Lý do từ chối tin đăng</DialogTitle>
+            <DialogDescription>
+              Nêu rõ lý do để chủ nhà nhận được thông báo phản hồi và chỉnh sửa
+              lại.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2 space-y-2">
+            <Textarea
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              placeholder="Ví dụ: Giấy tờ sở hữu bị mờ hoặc ảnh quét 360° có chất lượng kém..."
+              rows={4}
+              className="resize-none text-xs"
+            />
+            <p className="text-[11px] text-muted">
+              Tối thiểu {REJECT_REASON_MIN_LENGTH} ký tự (
+              {rejectReason.trim().length}/{REJECT_REASON_MIN_LENGTH}).
+            </p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowRejectDialog(false)
+                setRejectReason('')
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                if (selectedProp) void handleReject(selectedProp.id)
+              }}
+              disabled={rejectReason.trim().length < REJECT_REASON_MIN_LENGTH}
+            >
+              Xác nhận từ chối
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

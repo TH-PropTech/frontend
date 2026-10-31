@@ -193,7 +193,7 @@ describe('staff view', () => {
     renderConsole(STAFF)
     const menu = within(nav())
     expect(
-      await menu.findByRole('button', { name: 'Fabric Audit Center' })
+      await menu.findByRole('button', { name: 'Kiểm toán lưu vết' })
     ).toBeVisible()
     expect(
       menu.getByRole('button', { name: 'Yêu cầu thiết kế 3D' })
@@ -221,7 +221,7 @@ describe('staff view', () => {
     mockApi({ hidden: ['community'] })
     renderConsole(STAFF)
     const menu = within(nav())
-    await menu.findByRole('button', { name: 'Fabric Audit Center' })
+    await menu.findByRole('button', { name: 'Kiểm toán lưu vết' })
     expect(
       menu.queryByRole('button', { name: 'Duyệt bài cộng đồng' })
     ).toBeNull()
@@ -232,7 +232,7 @@ describe('staff view', () => {
     renderConsole(STAFF)
     expect(screen.getByText('Đang tải menu...')).toBeVisible()
     expect(
-      within(nav()).queryByRole('button', { name: 'Fabric Audit Center' })
+      within(nav()).queryByRole('button', { name: 'Kiểm toán lưu vết' })
     ).toBeNull()
   })
 
@@ -268,7 +268,7 @@ describe('staff view', () => {
     mockApi({ denied: ['read:Kyc', 'read:CommunityPost'] })
     renderConsole(STAFF)
     const menu = within(nav())
-    await menu.findByRole('button', { name: 'Fabric Audit Center' })
+    await menu.findByRole('button', { name: 'Kiểm toán lưu vết' })
     expect(
       menu.queryByRole('button', { name: 'Xác minh định danh (KYC)' })
     ).toBeNull()
@@ -317,7 +317,7 @@ describe('staff routes', () => {
   it('leaves non-section admin routes such as contracts alone', async () => {
     navigation.pathname = '/admin/contracts'
     renderConsole(STAFF)
-    await within(nav()).findByRole('button', { name: 'Fabric Audit Center' })
+    await within(nav()).findByRole('button', { name: 'Kiểm toán lưu vết' })
     expect(navigation.replace).not.toHaveBeenCalled()
   })
 
@@ -325,7 +325,7 @@ describe('staff routes', () => {
     navigation.pathname = '/staff/overview'
     const session = renderConsole(STAFF)
     await session.click(
-      await within(nav()).findByRole('button', { name: 'Fabric Audit Center' })
+      await within(nav()).findByRole('button', { name: 'Kiểm toán lưu vết' })
     )
     expect(navigation.push).toHaveBeenCalledWith('/staff/fabric-audit')
     expect(navigation.replace).not.toHaveBeenCalled()
@@ -334,7 +334,7 @@ describe('staff routes', () => {
   it('does not redirect admin away from /admin', async () => {
     navigation.pathname = '/admin/overview'
     renderConsole(ADMIN)
-    await within(nav()).findByRole('button', { name: 'Fabric Audit Center' })
+    await within(nav()).findByRole('button', { name: 'Kiểm toán lưu vết' })
     expect(navigation.replace).not.toHaveBeenCalled()
   })
 })
@@ -364,7 +364,7 @@ describe('admin view', () => {
     navigation.pathname = '/admin/overview'
     const session = renderConsole(ADMIN)
     await session.click(
-      within(nav()).getByRole('button', { name: 'Fabric Audit Center' })
+      within(nav()).getByRole('button', { name: 'Kiểm toán lưu vết' })
     )
     expect(navigation.push).toHaveBeenCalledWith('/admin/fabric-audit')
   })
@@ -373,7 +373,7 @@ describe('admin view', () => {
     renderConsole(ADMIN)
     expect(screen.getByTestId('fabric-audit-center')).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Fabric Audit Center' })
+      screen.getByRole('heading', { level: 1, name: 'Kiểm toán lưu vết' })
     ).toBeInTheDocument()
   })
 

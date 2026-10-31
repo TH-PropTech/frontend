@@ -13,7 +13,7 @@ export function FabricAuditView(): React.ReactElement {
       fallback={
         <div
           role="status"
-          aria-label="Đang tải Fabric Audit Center"
+          aria-label="Đang tải Kiểm toán lưu vết"
           className="h-40 animate-pulse rounded-xl bg-surface-muted"
         />
       }

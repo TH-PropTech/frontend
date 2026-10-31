@@ -375,11 +375,11 @@ export function ConsoleDashboard({
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {isAdmin ? (
-              <span className="text-[10px] font-bold text-[#e9a23b] bg-[#fbedcf] px-2.5 py-1 rounded-full border border-[#e9a23b]/20 shrink-0 whitespace-nowrap">
+              <span className="text-[10px] font-bold text-accent-3 bg-accent-3/15 px-2.5 py-1 rounded-full border border-accent-3/30 shrink-0 whitespace-nowrap">
                 <span className="hidden sm:inline">Role: </span>Quản trị viên
               </span>
             ) : (
-              <span className="text-[10px] font-bold text-[#c65a3a] bg-[#f5e3dc] px-2.5 py-1 rounded-full border border-[#c65a3a]/20 shrink-0 whitespace-nowrap">
+              <span className="text-[10px] font-bold text-accent bg-accent/15 px-2.5 py-1 rounded-full border border-accent/30 shrink-0 whitespace-nowrap">
                 <span className="hidden sm:inline">Role: </span>Nhân viên vận
                 hành
               </span>

@@ -151,6 +151,7 @@ export const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'pending', label: 'Chờ duyệt' },
   { value: 'unavailable', label: 'Đang ẩn' },
   { value: 'rejected', label: 'Đã từ chối' },
+  { value: 'rented', label: 'Đã cho thuê' },
   { value: 'expired', label: 'Hết hạn' },
 ]
 
@@ -158,9 +159,17 @@ export const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
 
 export function formatPrice(price: number | undefined | null): string {
   if (price == null || isNaN(price)) return 'Chưa có giá'
+  if (price >= 1_000_000_000) {
+    const billions = price / 1_000_000_000
+    const formatted =
+      billions % 1 === 0 ? billions.toFixed(0) : billions.toFixed(1)
+    return `${formatted} tỷ/tháng`
+  }
   if (price >= 1_000_000) {
     const millions = price / 1_000_000
-    return `${millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)} triệu/tháng`
+    const formatted =
+      millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)
+    return `${formatted} triệu/tháng`
   }
   return `${price.toLocaleString('vi-VN')} đ/tháng`
 }

@@ -168,7 +168,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   },
   {
     id: 'fabric-audit',
-    label: 'Fabric Audit Center',
+    label: 'Kiểm toán lưu vết',
     icon: icon(Blocks),
     group: 'operations',
     audience: 'staff',

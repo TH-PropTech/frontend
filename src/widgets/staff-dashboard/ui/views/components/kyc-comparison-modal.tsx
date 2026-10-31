@@ -6,6 +6,7 @@ import type { KycRecord } from '../kyc-approvals-view'
 import { CccdMockupCard } from './cccd-mockup-card'
 import { apiClient } from '@/shared/api/api-client'
 import { AdminCard } from '@/shared/ui/admin-card'
+import { formatRecordCode } from '../../../model/admin-labels'
 import { isValidCitizenId } from '@/shared/lib/citizen-id'
 
 interface KycComparisonModalProps {
@@ -28,8 +29,21 @@ export function KycComparisonModal({
   const backCardUrl = useProtectedKycImage(selectedRecord.id, 'back-card')
   const selfieUrl = useProtectedKycImage(selectedRecord.id, 'selfie')
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="kyc-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8"
+    >
       <div
         className="absolute inset-0 bg-fg/40 backdrop-blur-sm"
         onClick={onClose}
@@ -39,9 +53,12 @@ export function KycComparisonModal({
         <div className="flex items-center justify-between border-b border-border bg-surface-muted/30 px-6 py-4">
           <div>
             <span className="font-display text-[10px] font-bold text-primary">
-              {selectedRecord.id}
+              {formatRecordCode(selectedRecord.id)}
             </span>
-            <h2 className="mt-0.5 font-marketing text-sm font-bold text-fg">
+            <h2
+              id="kyc-modal-title"
+              className="mt-0.5 font-marketing text-sm font-bold text-fg"
+            >
               Xác minh KYC: {selectedRecord.name}
             </h2>
           </div>

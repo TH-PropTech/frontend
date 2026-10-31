@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import Image from 'next/image'
 import { apiClient } from '@/shared/api/api-client'
 import { toast } from 'sonner'
 import {
@@ -13,6 +14,7 @@ import {
   Bath,
   LayoutGrid,
 } from 'lucide-react'
+import { AdminErrorState } from '@/shared/ui/admin-error-state'
 import { DetailDrawer } from './components/apartment-management/detail-drawer'
 import { StatusBadge } from './components/apartment-management/status-badge'
 import {
@@ -46,10 +48,13 @@ function ApartmentCard({
       {/* Thumbnail */}
       <div className="relative h-40 bg-[color:var(--surface-muted)] overflow-hidden">
         {thumb ? (
-          <img
+          <Image
             src={thumb}
             alt={apt.title}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover"
+            unoptimized
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-[color:var(--muted)]">
@@ -131,9 +136,11 @@ function StatusFilterBar({
         const isActive = activeFilter === opt.value
         return (
           <button
+            type="button"
             key={opt.value}
+            aria-pressed={isActive}
             onClick={() => onChange(opt.value)}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer ${
               isActive
                 ? 'bg-[color:var(--primary)] text-[color:var(--on-control)] shadow-sm'
                 : 'text-[color:var(--muted)] hover:text-[color:var(--fg)]'
@@ -159,18 +166,23 @@ function StatusFilterBar({
 export function ApartmentManagementView(): React.ReactElement {
   const [apartments, setApartments] = React.useState<StaffApartment[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
   const [filter, setFilter] = React.useState<FilterStatus>('all')
   const [search, setSearch] = React.useState('')
   const [selected, setSelected] = React.useState<StaffApartment | null>(null)
 
   const loadApartments = React.useCallback(async (): Promise<void> => {
     setLoading(true)
+    setError(null)
     try {
       // GET /apartments là danh sách công khai (chỉ tin đang hiển thị); màn quản lý cần mọi trạng thái.
       const data = await apiClient.get<StaffApartment[]>('/apartments/manage')
       setApartments(data)
     } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : 'Không thể tải danh sách căn hộ'
       console.warn('Không thể tải danh sách căn hộ:', err)
+      setError(msg)
       toast.error('Không thể tải danh sách căn hộ')
     } finally {
       setLoading(false)
@@ -178,26 +190,9 @@ export function ApartmentManagementView(): React.ReactElement {
   }, [])
 
   React.useEffect(() => {
-    let isMounted = true
-    apiClient
-      .get<StaffApartment[]>('/apartments/manage')
-      .then(data => {
-        if (isMounted) {
-          setApartments(data)
-          setLoading(false)
-        }
-      })
-      .catch(err => {
-        console.warn('Không thể tải danh sách căn hộ:', err)
-        if (isMounted) {
-          toast.error('Không thể tải danh sách căn hộ')
-          setLoading(false)
-        }
-      })
-    return () => {
-      isMounted = false
-    }
-  }, [])
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadApartments()
+  }, [loadApartments])
 
   const handleStatusChange = (id: string, status: ApartmentStatus): void => {
     setApartments(prev => prev.map(a => (a.id === id ? { ...a, status } : a)))
@@ -220,19 +215,33 @@ export function ApartmentManagementView(): React.ReactElement {
   }
 
   const handleApprove = async (id: string): Promise<void> => {
-    await apiClient.patch(`/apartments/${id}/approve`, {})
-    handleStatusChange(id, 'available')
-    setSelected(null)
-    toast.success('Đã phê duyệt tin đăng căn hộ!')
+    try {
+      await apiClient.patch(`/apartments/${id}/approve`, {})
+      handleStatusChange(id, 'available')
+      setSelected(null)
+      toast.success('Đã phê duyệt tin đăng căn hộ!')
+    } catch (err: unknown) {
+      console.error('Failed to approve apartment:', err)
+      toast.error(
+        err instanceof Error ? err.message : 'Không thể phê duyệt tin đăng'
+      )
+    }
   }
 
   const handleReject = async (id: string, reason: string): Promise<void> => {
-    await apiClient.patch(`/apartments/${id}/reject`, {
-      rejectedReason: reason,
-    })
-    handleStatusChange(id, 'rejected')
-    setSelected(null)
-    toast.info('Đã từ chối tin đăng căn hộ.')
+    try {
+      await apiClient.patch(`/apartments/${id}/reject`, {
+        rejectedReason: reason,
+      })
+      handleStatusChange(id, 'rejected')
+      setSelected(null)
+      toast.info('Đã từ chối tin đăng căn hộ.')
+    } catch (err: unknown) {
+      console.error('Failed to reject apartment:', err)
+      toast.error(
+        err instanceof Error ? err.message : 'Không thể từ chối tin đăng'
+      )
+    }
   }
 
   // Derived: status counts
@@ -330,7 +339,15 @@ export function ApartmentManagementView(): React.ReactElement {
         </div>
       )}
 
-      {!loading && filtered.length === 0 && (
+      {error && !loading && (
+        <AdminErrorState
+          title="Lỗi tải danh sách căn hộ"
+          message={error}
+          onRetry={() => void loadApartments()}
+        />
+      )}
+
+      {!loading && !error && filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center h-48 text-[color:var(--muted)]">
           <Building2 className="w-10 h-10 mb-3 opacity-30" />
           <p className="text-sm font-semibold">Không có căn hộ nào</p>
@@ -340,7 +357,7 @@ export function ApartmentManagementView(): React.ReactElement {
         </div>
       )}
 
-      {!loading && filtered.length > 0 && (
+      {!loading && !error && filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map(apt => (
             <ApartmentCard

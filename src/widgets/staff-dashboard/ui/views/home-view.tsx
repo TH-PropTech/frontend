@@ -11,7 +11,7 @@ interface HomeViewProps {
 }
 
 export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
-  const [userName, setUserName] = React.useState('Culi Vận Hành #04')
+  const [userName, setUserName] = React.useState('bạn')
   const { kycPendingCount, apartmentsPendingCount } = useStaffWorkSummary()
   const audit = useAuditOverview()
 
@@ -112,7 +112,6 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
               }}
             />
           </div>
-
           <div className="border-t border-line pt-3 flex justify-between items-center text-[10px] text-muted font-mono relative z-10">
             <span>{fabricStatusText}</span>
           </div>
@@ -131,9 +130,9 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
               <button
                 type="button"
                 onClick={() => onNavigateTab('properties')}
-                className="w-full p-3 bg-bg/40 border border-line hover:border-primary hover:bg-primary-soft/30 rounded-xl text-left transition-all duration-200 flex items-center gap-3 group"
+                className="w-full p-3 bg-bg/40 border border-line hover:border-primary hover:bg-primary-soft/30 rounded-xl text-left transition-all duration-200 flex items-center gap-3 group cursor-pointer"
               >
-                <div className="h-8 w-8 rounded-lg bg-[#c65a3a]/10 border border-[#c65a3a]/25 text-primary flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
                   <svg
                     width="16"
                     height="16"
@@ -161,9 +160,9 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
               <button
                 type="button"
                 onClick={() => onNavigateTab('kyc')}
-                className="w-full p-3 bg-bg/40 border border-line hover:border-accent-2 hover:bg-accent-2/10 rounded-xl text-left transition-all duration-200 flex items-center gap-3 group"
+                className="w-full p-3 bg-bg/40 border border-line hover:border-accent-2 hover:bg-accent-2/10 rounded-xl text-left transition-all duration-200 flex items-center gap-3 group cursor-pointer"
               >
-                <div className="h-8 w-8 rounded-lg bg-[#6b8e4e]/10 border border-[#6b8e4e]/20 text-[#6b8e4e] flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-lg bg-accent-2/10 border border-accent-2/20 text-accent-2 flex items-center justify-center shrink-0">
                   <svg
                     width="16"
                     height="16"
@@ -191,7 +190,7 @@ export function HomeView({ onNavigateTab }: HomeViewProps): React.ReactElement {
               <button
                 type="button"
                 onClick={() => onNavigateTab('community')}
-                className="w-full p-3 bg-bg/40 border border-line hover:border-primary hover:bg-primary-soft/30 rounded-xl text-left transition-all duration-200 flex items-center gap-3 group"
+                className="w-full p-3 bg-bg/40 border border-line hover:border-primary hover:bg-primary-soft/30 rounded-xl text-left transition-all duration-200 flex items-center gap-3 group cursor-pointer"
               >
                 <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
                   <svg

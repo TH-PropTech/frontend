@@ -263,6 +263,7 @@ describe('PublicServicesAdminTab (API-backed)', () => {
       ).toBeInTheDocument()
 
       fireEvent.click(screen.getByTestId('btn-delete-REG-RES-01'))
+      fireEvent.click(screen.getByRole('button', { name: 'Xóa' }))
       await waitFor(() =>
         expect(screen.queryByTestId('regulation-card-REG-RES-01')).toBeNull()
       )

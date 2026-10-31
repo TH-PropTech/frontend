@@ -41,6 +41,19 @@ describe('OverviewView data loading', () => {
     expect(apiClient.get).not.toHaveBeenCalled()
   })
 
+  it('does not display OK or 0 on cards when operations/stats fails', async () => {
+    vi.mocked(apiClient.get).mockRejectedValue(new Error('Lỗi máy chủ nội bộ'))
+    const { container } = render(<OverviewView />)
+
+    await act(async () => {
+      vi.runOnlyPendingTimers()
+    })
+
+    expect(container.textContent).toContain('Lỗi máy chủ nội bộ')
+    expect(container.textContent).not.toContain('OK')
+    expect(container.textContent).not.toMatch(/[A-Z]{3,}(_[A-Z0-9]+){2,}/)
+  })
+
   it('renders confirmation rate accurately without negative badge when all are pending', async () => {
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
       if (url === '/operations/stats') {
