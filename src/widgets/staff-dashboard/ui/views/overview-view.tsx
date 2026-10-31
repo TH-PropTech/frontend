@@ -14,6 +14,7 @@ import {
   Activity,
   Cpu,
   Layers,
+  AlertCircle,
 } from 'lucide-react'
 import { FilterDropdown } from '@/shared/ui/filter-dropdown'
 import { DateRangePicker } from '@/shared/ui/date-range-picker'
@@ -214,13 +215,10 @@ function BlockchainBanner(): React.ReactElement {
       </div>
       <div className="flex flex-wrap gap-2 relative z-10">
         <span className="flex items-center gap-1.5 text-[10px] font-bold text-primary bg-primary-soft border border-primary/20 px-3 py-1.5 rounded-full">
-          <Cpu className="h-3 w-3" /> Fabric Network
+          <Cpu className="h-3 w-3" /> Lưu vết chống sửa đổi
         </span>
         <span className="flex items-center gap-1.5 text-[10px] font-bold text-success bg-success/10 border border-success/20 px-3 py-1.5 rounded-full">
-          <Layers className="h-3 w-3" /> Smart Contract
-        </span>
-        <span className="flex items-center gap-1.5 text-[10px] font-bold text-muted bg-surface-muted border border-border px-3 py-1.5 rounded-full">
-          <Activity className="h-3 w-3" /> Live
+          <Layers className="h-3 w-3" /> Hợp đồng điện tử
         </span>
       </div>
       {/* Decorative bg */}
@@ -376,15 +374,16 @@ export function OverviewView(): React.ReactElement {
                 fetchStats()
                 fetchChartData(days)
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-lg text-muted hover:text-fg hover:border-border-strong transition-colors bg-surface"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold border border-border rounded-lg text-muted hover:text-fg hover:border-border-strong transition-colors bg-surface cursor-pointer"
             >
               <RefreshCw className="h-3 w-3" />
               Làm mới
             </button>
             <button
               type="button"
+              aria-expanded={showCharts}
               onClick={() => setShowCharts(prev => !prev)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all duration-200"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all duration-200 cursor-pointer"
               style={
                 showCharts
                   ? {
@@ -407,6 +406,20 @@ export function OverviewView(): React.ReactElement {
             </button>
           </div>
         </div>
+
+        {statsError && (
+          <div className="flex items-center gap-2 text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
+            <AlertCircle className="h-4 w-4 shrink-0 text-danger" />
+            <span>{statsError}</span>
+            <button
+              type="button"
+              onClick={fetchStats}
+              className="ml-auto font-bold underline cursor-pointer"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
 
         {/* Filter bar */}
         <AdminCard className="p-4">
@@ -455,17 +468,33 @@ export function OverviewView(): React.ReactElement {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <StatCard
               title="Tổng lịch hẹn"
-              value={loadingStats ? <Skeleton /> : (stats?.bookings.total ?? 0)}
-              subtext="Tất cả trạng thái"
+              value={
+                loadingStats ? (
+                  <Skeleton />
+                ) : statsError ? (
+                  '—'
+                ) : (
+                  (stats?.bookings.total ?? '—')
+                )
+              }
+              subtext={
+                statsError ? 'Không thể tải dữ liệu' : 'Tất cả trạng thái'
+              }
               icon={<CalendarCheck2 className="h-4 w-4" />}
               color="primary"
             />
             <StatCard
               title="Chờ xác nhận"
               value={
-                loadingStats ? <Skeleton /> : (stats?.bookings.pending ?? 0)
+                loadingStats ? (
+                  <Skeleton />
+                ) : statsError ? (
+                  '—'
+                ) : (
+                  (stats?.bookings.pending ?? '—')
+                )
               }
-              subtext="Cần xử lý sớm"
+              subtext={statsError ? 'Không thể tải dữ liệu' : 'Cần xử lý sớm'}
               icon={<Clock className="h-4 w-4" />}
               trend={
                 stats && stats.bookings.pending > 5
@@ -477,16 +506,32 @@ export function OverviewView(): React.ReactElement {
             <StatCard
               title="Đã xác nhận"
               value={
-                loadingStats ? <Skeleton /> : (stats?.bookings.confirmed ?? 0)
+                loadingStats ? (
+                  <Skeleton />
+                ) : statsError ? (
+                  '—'
+                ) : (
+                  (stats?.bookings.confirmed ?? '—')
+                )
               }
-              subtext="Đã được duyệt"
+              subtext={statsError ? 'Không thể tải dữ liệu' : 'Đã được duyệt'}
               icon={<ShieldCheck className="h-4 w-4" />}
               color="success"
             />
             <StatCard
               title="Hoàn thành"
-              value={loadingStats ? <Skeleton /> : `${completionRate}%`}
-              subtext="Tỷ lệ xác nhận / tổng"
+              value={
+                loadingStats ? (
+                  <Skeleton />
+                ) : statsError || !stats ? (
+                  '—'
+                ) : (
+                  `${completionRate}%`
+                )
+              }
+              subtext={
+                statsError ? 'Không thể tải dữ liệu' : 'Tỷ lệ xác nhận / tổng'
+              }
               icon={<TrendingUp className="h-4 w-4" />}
               trend={
                 stats
@@ -509,57 +554,84 @@ export function OverviewView(): React.ReactElement {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <StatCard
               title="KYC chờ duyệt"
-              value={loadingStats ? <Skeleton /> : (stats?.kyc.pending ?? 0)}
-              subtext={`Tổng ${stats?.kyc.total ?? 0} hồ sơ`}
+              value={
+                loadingStats ? (
+                  <Skeleton />
+                ) : statsError ? (
+                  '—'
+                ) : (
+                  (stats?.kyc.pending ?? '—')
+                )
+              }
+              subtext={
+                statsError
+                  ? 'Không thể tải dữ liệu'
+                  : `Tổng ${stats?.kyc.total ?? 0} hồ sơ`
+              }
               icon={<ShieldCheck className="h-4 w-4" />}
               trend={
-                stats && stats.kyc.pending > 0
-                  ? { value: `${stats.kyc.pending} chờ`, type: 'down' }
-                  : { value: 'OK', type: 'up' }
+                stats
+                  ? stats.kyc.pending > 0
+                    ? { value: `${stats.kyc.pending} chờ`, type: 'down' }
+                    : { value: 'Ổn định', type: 'up' }
+                  : undefined
               }
               color="warning"
             />
             <StatCard
               title="Căn hộ chờ duyệt"
               value={
-                loadingStats ? <Skeleton /> : (stats?.apartments.pending ?? 0)
+                loadingStats ? (
+                  <Skeleton />
+                ) : statsError ? (
+                  '—'
+                ) : (
+                  (stats?.apartments.pending ?? '—')
+                )
               }
-              subtext={`${stats?.apartments.available ?? 0} đang cho thuê`}
+              subtext={
+                statsError
+                  ? 'Không thể tải dữ liệu'
+                  : `${stats?.apartments.available ?? 0} đang cho thuê`
+              }
               icon={<Building2 className="h-4 w-4" />}
               trend={
-                stats && stats.apartments.pending > 0
-                  ? { value: `${stats.apartments.pending} chờ`, type: 'down' }
-                  : { value: 'OK', type: 'up' }
+                stats
+                  ? stats.apartments.pending > 0
+                    ? { value: `${stats.apartments.pending} chờ`, type: 'down' }
+                    : { value: 'Ổn định', type: 'up' }
+                  : undefined
               }
               color="primary"
             />
             <StatCard
               title="Ticket hỗ trợ mở"
-              value={loadingStats ? <Skeleton /> : (stats?.tickets.open ?? 0)}
-              subtext={`${stats?.tickets.inProgress ?? 0} đang xử lý`}
+              value={
+                loadingStats ? (
+                  <Skeleton />
+                ) : statsError ? (
+                  '—'
+                ) : (
+                  (stats?.tickets.open ?? '—')
+                )
+              }
+              subtext={
+                statsError
+                  ? 'Không thể tải dữ liệu'
+                  : `${stats?.tickets.inProgress ?? 0} đang xử lý`
+              }
               icon={<HelpCircle className="h-4 w-4" />}
               trend={
-                stats && stats.tickets.open > 3
-                  ? { value: 'Cần xử lý', type: 'down' }
-                  : { value: 'OK', type: 'up' }
+                stats
+                  ? stats.tickets.open > 3
+                    ? { value: 'Cần xử lý', type: 'down' }
+                    : { value: 'Ổn định', type: 'up' }
+                  : undefined
               }
               color={stats && stats.tickets.open > 3 ? 'danger' : 'success'}
             />
           </div>
         </div>
-
-        {statsError && (
-          <div className="flex items-center gap-2 text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
-            <span>⚠ {statsError}</span>
-            <button
-              type="button"
-              onClick={fetchStats}
-              className="ml-auto font-bold underline"
-            >
-              Thử lại
-            </button>
-          </div>
-        )}
 
         {/* Booking charts (toggleable) */}
         <div
@@ -567,11 +639,12 @@ export function OverviewView(): React.ReactElement {
         >
           {chartError ? (
             <div className="flex items-center gap-2 text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg px-4 py-3">
-              <span>⚠ {chartError}</span>
+              <AlertCircle className="h-4 w-4 shrink-0 text-danger" />
+              <span>{chartError}</span>
               <button
                 type="button"
                 onClick={() => fetchChartData(days)}
-                className="ml-auto font-bold underline"
+                className="ml-auto font-bold underline cursor-pointer"
               >
                 Thử lại
               </button>

@@ -59,6 +59,14 @@ export function DetailDrawer({
   const trimmedVrUrl = vrUrl.trim()
   const isVrUnchanged = trimmedVrUrl === (apartment.vrUrl ?? '')
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   // Link VR Tour do nhân viên gắn sau khi chụp; chủ nhà không nhập.
   const handleSaveVr = async (): Promise<void> => {
     setIsSavingVr(true)
@@ -143,7 +151,12 @@ export function DetailDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="apartment-detail-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
+    >
       <div
         className="absolute inset-0 bg-[color:var(--fg)]/40 backdrop-blur-sm"
         onClick={onClose}
@@ -206,7 +219,10 @@ export function DetailDrawer({
                 </span>
                 <StatusBadge status={apartment.status} />
               </div>
-              <h2 className="text-sm font-bold text-[color:var(--fg)] mt-1 leading-snug line-clamp-2">
+              <h2
+                id="apartment-detail-title"
+                className="text-sm font-bold text-[color:var(--fg)] mt-1 leading-snug line-clamp-2"
+              >
                 {apartment.title}
               </h2>
             </div>

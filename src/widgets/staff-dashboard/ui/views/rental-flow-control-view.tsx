@@ -91,10 +91,15 @@ export function RentalFlowControlView(): React.ReactElement {
       setError(null)
       try {
         const data = await getRentalFlowProfiles()
-        setProfiles(data)
-        if (data.length > 0) {
-          const idToSelect = targetId || selectedProfileId || data[0]?.profileId
-          const matched = data.find(p => p.profileId === idToSelect) || data[0]
+        const unique = Array.from(
+          new Map(data.map(p => [p.profileId, p])).values()
+        )
+        setProfiles(unique)
+        if (unique.length > 0) {
+          const idToSelect =
+            targetId || selectedProfileId || unique[0]?.profileId
+          const matched =
+            unique.find(p => p.profileId === idToSelect) || unique[0]
           if (matched && viewMode === 'split') {
             applyProfileToWorkingState(matched)
           }
@@ -246,7 +251,7 @@ export function RentalFlowControlView(): React.ReactElement {
         <div>
           <h2 className="text-xl font-bold text-fg flex items-center gap-2.5">
             <Sliders className="w-6 h-6 text-primary" />
-            Điều khiển Quy trình Thuê (Rental Flow Control)
+            Điều khiển Quy trình Thuê
           </h2>
           <p className="text-sm text-muted mt-1.5">
             Quản trị phiên bản biểu mẫu nộp hồ sơ, kiểm soát điều khoản pháp lý
@@ -374,8 +379,8 @@ export function RentalFlowControlView(): React.ReactElement {
                       </TableHeader>
                       <TableBody>
                         {filteredProfiles.length > 0 ? (
-                          filteredProfiles.map(prof => (
-                            <TableRow key={prof.profileId}>
+                          filteredProfiles.map((prof, idx) => (
+                            <TableRow key={`${prof.profileId}-${idx}`}>
                               <TableCell className="font-semibold">
                                 {prof.name}
                               </TableCell>
@@ -386,14 +391,14 @@ export function RentalFlowControlView(): React.ReactElement {
                                 {prof.status === 'published' ? (
                                   <Badge
                                     variant="outline"
-                                    className="text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
+                                    className="text-success bg-success/10 border-success/20"
                                   >
                                     v{prof.version}
                                   </Badge>
                                 ) : (
                                   <Badge
                                     variant="outline"
-                                    className="text-amber-600 bg-amber-500/10 border-amber-500/20"
+                                    className="text-warning bg-warning/10 border-warning/20"
                                   >
                                     Rev {prof.draftRevision}
                                   </Badge>
@@ -453,12 +458,12 @@ export function RentalFlowControlView(): React.ReactElement {
                     </CardHeader>
                     <CardContent className="p-3 space-y-2 max-h-[800px] overflow-y-auto">
                       {filteredProfiles.length > 0 ? (
-                        filteredProfiles.map(prof => {
+                        filteredProfiles.map((prof, idx) => {
                           const isSelected =
                             prof.profileId === selectedProfileId
                           return (
                             <button
-                              key={prof.profileId}
+                              key={`${prof.profileId}-${idx}`}
                               type="button"
                               onClick={() => applyProfileToWorkingState(prof)}
                               className={`w-full text-left p-3 rounded-xl border transition-all ${
@@ -474,7 +479,7 @@ export function RentalFlowControlView(): React.ReactElement {
                                 {prof.status === 'published' ? (
                                   <Badge
                                     variant="outline"
-                                    className="text-[10px] py-0 px-1.5 text-emerald-600 bg-emerald-500/10 border-emerald-500/20 whitespace-nowrap shrink-0"
+                                    className="text-[10px] py-0 px-1.5 text-success bg-success/10 border-success/20 whitespace-nowrap shrink-0"
                                   >
                                     v{prof.version} Đã xuất bản
                                   </Badge>

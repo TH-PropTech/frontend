@@ -470,9 +470,11 @@ export function LegalTermsAdminTab(): React.ReactElement {
             <div className="space-y-1">
               <span className="text-muted block">Ngày công bố</span>
               <span className="font-semibold text-fg block">
-                {published.publishedAt
-                  ? formatDateTime(published.publishedAt)
-                  : 'N/A'}
+                {published.publishedAt ? (
+                  formatDateTime(published.publishedAt)
+                ) : (
+                  <span className="italic text-muted">Chưa cập nhật</span>
+                )}
               </span>
               {(published.effectiveFrom ?? published.publishedAt) ? (
                 <span className="text-muted block">

@@ -233,6 +233,14 @@ export function ApartmentEditDialog({
     packagesForm.setValue('priceMonthly', Number.isFinite(price) ? price : 0)
   }, [values.priceMonthly, packagesForm])
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   const handleChange = (key: EditableKey, value: string): void => {
     setValues(prev => ({ ...prev, [key]: value }))
   }
@@ -312,7 +320,12 @@ export function ApartmentEditDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="apartment-edit-dialog-title"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6"
+    >
       <div
         className="absolute inset-0 bg-[color:var(--fg)]/50 backdrop-blur-sm"
         onClick={onClose}
@@ -323,7 +336,10 @@ export function ApartmentEditDialog({
         className="relative z-10 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[var(--shadow-lg)]"
       >
         <div className="flex items-center justify-between border-b border-[color:var(--border)] px-5 py-4">
-          <h3 className="text-sm font-bold text-[color:var(--fg)]">
+          <h3
+            id="apartment-edit-dialog-title"
+            className="text-sm font-bold text-[color:var(--fg)]"
+          >
             Chỉnh sửa thông tin căn hộ
           </h3>
           <button

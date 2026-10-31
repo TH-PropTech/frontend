@@ -1,9 +1,17 @@
 'use client'
 
 import * as React from 'react'
+import Image from 'next/image'
 import { apiClient } from '@/shared/api/api-client'
 import type { CommunityPost } from '../community-view'
 import { AdminCard } from '@/shared/ui/admin-card'
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
+import { appToast } from '@/shared/ui/app-toast'
+import {
+  getTopicLabel,
+  getAuthorRoleLabel,
+  formatRecordCode,
+} from '../../../model/admin-labels'
 
 interface Comment {
   id: string
@@ -43,6 +51,18 @@ export function CommunityPostDetailModal({
 }: CommunityPostDetailModalProps): React.ReactElement | null {
   const [comments, setComments] = React.useState<Comment[]>([])
   const [loadingComments, setLoadingComments] = React.useState(false)
+  const [commentToDelete, setCommentToDelete] = React.useState<string | null>(
+    null
+  )
+
+  React.useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   React.useEffect(() => {
     if (!isOpen) {
@@ -62,9 +82,7 @@ export function CommunityPostDetailModal({
           parentId: c.parentId || null,
           authorName: c.authorName || 'Người dùng TH PropTech',
           authorRole: c.authorRole || 'tenant',
-          authorAvatar:
-            c.authorAvatar ||
-            'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde',
+          authorAvatar: c.authorAvatar || '',
           content: c.content || '',
           createdAt: formatTimeAgo(c.createdAt),
         }))
@@ -79,36 +97,21 @@ export function CommunityPostDetailModal({
     loadPostComments()
   }, [isOpen, post.id, formatTimeAgo])
 
-  const handleDeleteComment = async (commentId: string): Promise<void> => {
-    if (
-      typeof window !== 'undefined' &&
-      !window.confirm('Bạn có chắc chắn muốn gỡ bình luận này?')
-    ) {
-      return
-    }
+  const handleConfirmDeleteComment = async (): Promise<void> => {
+    if (!commentToDelete) return
     try {
-      await apiClient.delete(`/community/comments/${commentId}`)
+      await apiClient.delete(`/community/comments/${commentToDelete}`)
       setComments(prev =>
-        prev.filter(c => c.id !== commentId && c.parentId !== commentId)
+        prev.filter(
+          c => c.id !== commentToDelete && c.parentId !== commentToDelete
+        )
       )
+      appToast.success('Đã gỡ bình luận thành công.')
     } catch (err) {
       console.error('Failed to delete comment:', err)
-      if (typeof window !== 'undefined') {
-        window.alert('Không thể gỡ bình luận. Vui lòng thử lại.')
-      }
-    }
-  }
-
-  const getTopicLabel = (topic: string): string => {
-    switch (topic) {
-      case 'qa':
-        return 'Hỏi đáp'
-      case 'review':
-        return 'Đánh giá'
-      case 'roommate':
-        return 'Ở ghép'
-      default:
-        return topic
+      appToast.error('Không thể gỡ bình luận. Vui lòng thử lại.')
+    } finally {
+      setCommentToDelete(null)
     }
   }
 
@@ -119,11 +122,22 @@ export function CommunityPostDetailModal({
         <div
           className={`flex gap-3 items-start ${depth > 0 ? 'ml-6 border-l border-line/80 pl-4' : ''}`}
         >
-          <img
-            src={comment.authorAvatar}
-            alt=""
-            className="w-7 h-7 rounded-full object-cover mt-0.5"
-          />
+          {comment.authorAvatar ? (
+            <div className="relative w-7 h-7 rounded-full overflow-hidden shrink-0 mt-0.5">
+              <Image
+                src={comment.authorAvatar}
+                alt={comment.authorName || 'Avatar'}
+                fill
+                sizes="28px"
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold mt-0.5 shrink-0">
+              {(comment.authorName || 'U').charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="flex-1 bg-surface-muted/30 border border-line/50 rounded-xl p-3">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
@@ -140,12 +154,7 @@ export function CommunityPostDetailModal({
                         : 'bg-primary/10 text-primary'
                   }`}
                 >
-                  {comment.authorRole === 'staff' ||
-                  comment.authorRole === 'admin'
-                    ? 'Đội ngũ TH'
-                    : comment.authorRole === 'landlord'
-                      ? 'Chủ nhà'
-                      : 'Người thuê'}
+                  {getAuthorRoleLabel(comment.authorRole)}
                 </span>
               </div>
               <span className="text-[10px] text-muted">
@@ -157,7 +166,8 @@ export function CommunityPostDetailModal({
             </p>
             <div className="mt-2 flex justify-end">
               <button
-                onClick={() => handleDeleteComment(comment.id)}
+                type="button"
+                onClick={() => setCommentToDelete(comment.id)}
                 className="text-[10px] font-bold text-accent hover:underline cursor-pointer"
               >
                 Gỡ bình luận
@@ -173,7 +183,12 @@ export function CommunityPostDetailModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="community-post-detail-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
       <div
         className="absolute inset-0 bg-fg/50 backdrop-blur-xs"
         onClick={onClose}
@@ -182,7 +197,10 @@ export function CommunityPostDetailModal({
         {/* Header */}
         <div className="p-5 border-b border-line flex items-center justify-between">
           <div>
-            <h3 className="text-base font-bold text-fg font-marketing">
+            <h3
+              id="community-post-detail-title"
+              className="text-base font-bold text-fg font-marketing"
+            >
               Chi tiết bài viết & Bình luận
             </h3>
             <p className="text-xs text-muted mt-0.5">
@@ -190,6 +208,7 @@ export function CommunityPostDetailModal({
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="text-muted hover:text-fg font-semibold cursor-pointer text-sm"
           >
@@ -204,13 +223,14 @@ export function CommunityPostDetailModal({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold font-display px-2 py-0.5 rounded bg-fg/5 text-muted uppercase">
-                  {post.id}
+                  {formatRecordCode(post.id)}
                 </span>
                 <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                   {getTopicLabel(post.topic)}
                 </span>
               </div>
               <button
+                type="button"
                 onClick={async () => {
                   await onDeletePost(post.id)
                 }}
@@ -230,17 +250,28 @@ export function CommunityPostDetailModal({
             </div>
             <div className="border-t border-line/45 pt-3 flex justify-between items-center text-[10px] text-muted">
               <div className="flex items-center gap-2">
-                <img
-                  src={post.authorAvatar}
-                  alt=""
-                  className="h-5 w-5 rounded-full object-cover"
-                />
+                {post.authorAvatar ? (
+                  <div className="relative h-5 w-5 rounded-full overflow-hidden shrink-0">
+                    <Image
+                      src={post.authorAvatar}
+                      alt={post.authorName || 'Avatar'}
+                      fill
+                      sizes="20px"
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                ) : (
+                  <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold shrink-0">
+                    {(post.authorName || 'U').charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <span className="font-semibold text-fg">
                     {post.authorName}
                   </span>
                   <span className="ml-1.5 uppercase">
-                    {post.authorRole === 'tenant' ? 'Người thuê' : 'Chủ nhà'}
+                    {getAuthorRoleLabel(post.authorRole)}
                   </span>
                 </div>
               </div>
@@ -272,6 +303,17 @@ export function CommunityPostDetailModal({
           </div>
         </div>
       </AdminCard>
+
+      {/* Delete Comment Confirmation Dialog */}
+      <ConfirmDialog
+        open={!!commentToDelete}
+        onOpenChange={open => !open && setCommentToDelete(null)}
+        title="Gỡ bình luận"
+        description="Bạn có chắc chắn muốn gỡ bình luận này khỏi bài viết? Hành động này không thể hoàn tác."
+        confirmText="Gỡ bình luận"
+        variant="danger"
+        onConfirm={handleConfirmDeleteComment}
+      />
     </div>
   )
 }

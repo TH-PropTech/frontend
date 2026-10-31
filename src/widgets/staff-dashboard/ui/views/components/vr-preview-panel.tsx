@@ -16,12 +16,16 @@ export function VrPreviewPanel(): React.ReactElement {
         </span>
         <div className="flex gap-1">
           <button
+            type="button"
+            aria-label="Thu nhỏ"
             onClick={() => setVrZoom(z => Math.max(50, z - 10))}
             className="h-8 w-8 bg-black/60 hover:bg-black/85 text-white rounded-lg flex items-center justify-center border border-white/10"
           >
             -
           </button>
           <button
+            type="button"
+            aria-label="Phóng to"
             onClick={() => setVrZoom(z => Math.min(150, z + 10))}
             className="h-8 w-8 bg-black/60 hover:bg-black/85 text-white rounded-lg flex items-center justify-center border border-white/10"
           >
@@ -262,12 +266,14 @@ export function VrPreviewPanel(): React.ReactElement {
         </span>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => setVrRotation(r => r + 80)}
             className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded transition-colors"
           >
             &larr; Xoay trái
           </button>
           <button
+            type="button"
             onClick={() => setVrRotation(r => r - 80)}
             className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded transition-colors"
           >

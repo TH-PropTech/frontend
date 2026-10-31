@@ -25,6 +25,7 @@ import {
   type LegalSource,
   type LegalSourceInput,
 } from '@/features/contracts'
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import {
   LegalSourceForm,
   type LegalSourceFormValues,
@@ -85,6 +86,8 @@ export function LegalSourcesAdminTab(): React.ReactElement {
   )
   const [isSaving, setIsSaving] = React.useState(false)
   const [formError, setFormError] = React.useState<string | null>(null)
+  const [deletingSource, setDeletingSource] =
+    React.useState<LegalSource | null>(null)
 
   React.useEffect(() => {
     let active = true
@@ -141,16 +144,16 @@ export function LegalSourcesAdminTab(): React.ReactElement {
     }
   }
 
-  const handleDelete = async (source: LegalSource) => {
-    if (!window.confirm(`Xoá nguồn [${source.code}] "${source.title}"?`)) {
-      return
-    }
+  const handleConfirmDelete = async () => {
+    if (!deletingSource) return
     try {
-      await deleteLegalSource(source.key)
-      setSources(list => list.filter(s => s.key !== source.key))
-      notify(`Đã xoá nguồn [${source.code}]`)
+      await deleteLegalSource(deletingSource.key)
+      setSources(list => list.filter(s => s.key !== deletingSource.key))
+      notify(`Đã xoá nguồn [${deletingSource.code}]`)
     } catch (err) {
       notify(getLegalAdminErrorMessage(err), 'error')
+    } finally {
+      setDeletingSource(null)
     }
   }
 
@@ -396,7 +399,7 @@ export function LegalSourcesAdminTab(): React.ReactElement {
                   type="button"
                   aria-label={`Xoá ${source.code}`}
                   data-testid={`btn-delete-source-${source.key}`}
-                  onClick={() => void handleDelete(source)}
+                  onClick={() => setDeletingSource(source)}
                   className="p-1 rounded text-[var(--muted)] hover:text-[var(--danger)]"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -448,6 +451,20 @@ export function LegalSourcesAdminTab(): React.ReactElement {
       <PublicServiceDetailModal
         source={preview}
         onClose={() => setPreview(null)}
+      />
+
+      <ConfirmDialog
+        open={!!deletingSource}
+        onOpenChange={open => !open && setDeletingSource(null)}
+        title="Xoá nguồn pháp lý"
+        description={
+          deletingSource
+            ? `Bạn có chắc chắn muốn xoá nguồn [${deletingSource.code}] "${deletingSource.title}"?`
+            : undefined
+        }
+        confirmText="Xoá"
+        variant="danger"
+        onConfirm={handleConfirmDelete}
       />
     </div>
   )

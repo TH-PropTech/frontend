@@ -1,10 +1,20 @@
 'use client'
 
 import * as React from 'react'
+import Image from 'next/image'
 import { apiClient } from '@/shared/api/api-client'
 import { CommunityPostDetailModal } from './components/community-post-detail-modal'
 import { AdminCard } from '@/shared/ui/admin-card'
+import { AdminErrorState } from '@/shared/ui/admin-error-state'
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
+import { appToast } from '@/shared/ui/app-toast'
 import { useCan } from '@/shared/lib/permissions'
+import {
+  getTopicLabel,
+  getPostStatusLabel,
+  getAuthorRoleLabel,
+  formatRecordCode,
+} from '../../model/admin-labels'
 
 export interface CommunityPost {
   id: string
@@ -35,6 +45,7 @@ interface BackendPostResponse {
   commentsCount?: number
   images?: string[]
   status?: 'pending' | 'approved' | 'rejected'
+  rejectReason?: string
   createdAt?: string
 }
 
@@ -63,25 +74,38 @@ export function CommunityView(): React.ReactElement {
   const canDelete = can('delete', 'CommunityPost')
   const [posts, setPosts] = React.useState<CommunityPost[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
   const [selectedPost, setSelectedPost] = React.useState<CommunityPost | null>(
     null
   )
   const [rejectReason, setRejectReason] = React.useState('')
   const [showRejectDialog, setShowRejectDialog] = React.useState(false)
+  const [postToDelete, setPostToDelete] = React.useState<string | null>(null)
   const [filter, setFilter] = React.useState<
     'all' | 'pending' | 'approved' | 'rejected'
   >('pending')
   const [activeDetailPost, setActiveDetailPost] =
     React.useState<CommunityPost | null>(null)
 
+  React.useEffect(() => {
+    if (!showRejectDialog) return
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') {
+        setShowRejectDialog(false)
+        setSelectedPost(null)
+        setRejectReason('')
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showRejectDialog])
+
   const mapPost = React.useCallback((p: BackendPostResponse): CommunityPost => {
-    return {
+    const post: CommunityPost = {
       id: p._id || p.id || '',
       authorName: p.authorName || 'Người dùng TH PropTech',
       authorRole: p.authorRole || 'tenant',
-      authorAvatar:
-        p.authorAvatar ||
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde',
+      authorAvatar: p.authorAvatar || '',
       title: p.title || '',
       content: p.content || '',
       projectName: p.projectName || '',
@@ -89,23 +113,55 @@ export function CommunityView(): React.ReactElement {
       status: p.status || 'pending',
       createdAt: formatTimeAgo(p.createdAt),
     }
+    if (p.rejectReason) {
+      post.rejectReason = p.rejectReason
+    }
+    return post
   }, [])
 
   const loadPosts = React.useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
-      const [pendingData, approvedData] = await Promise.all([
-        apiClient
-          .get<BackendPostResponse[]>('/community/posts/pending')
-          .catch(() => []),
-        apiClient
-          .get<BackendPostResponse[]>('/community/posts')
-          .catch(() => []),
+      const [pendingRes, approvedRes, rejectedRes] = await Promise.allSettled([
+        apiClient.get<BackendPostResponse[]>('/community/posts/pending'),
+        apiClient.get<BackendPostResponse[]>('/community/posts'),
+        apiClient.get<BackendPostResponse[]>('/community/posts/rejected'),
       ])
-      const mapped = [...pendingData.map(mapPost), ...approvedData.map(mapPost)]
+
+      const isAllFailed =
+        pendingRes.status === 'rejected' &&
+        approvedRes.status === 'rejected' &&
+        rejectedRes.status === 'rejected'
+
+      if (isAllFailed) {
+        const primaryError =
+          pendingRes.reason instanceof Error
+            ? pendingRes.reason.message
+            : 'Không thể kết nối đến máy chủ'
+        throw new Error(primaryError)
+      }
+
+      const pendingData =
+        pendingRes.status === 'fulfilled' ? pendingRes.value : []
+      const approvedData =
+        approvedRes.status === 'fulfilled' ? approvedRes.value : []
+      const rejectedData =
+        rejectedRes.status === 'fulfilled' ? rejectedRes.value : []
+
+      const mapped = [
+        ...pendingData.map(mapPost),
+        ...approvedData.map(mapPost),
+        ...rejectedData.map(mapPost),
+      ]
       setPosts(mapped)
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to load community posts for moderation:', err)
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Không thể tải danh sách bài viết cộng đồng'
+      )
     } finally {
       setLoading(false)
     }
@@ -116,22 +172,18 @@ export function CommunityView(): React.ReactElement {
     loadPosts()
   }, [loadPosts])
 
-  const handleDeletePost = async (postId: string): Promise<void> => {
-    if (
-      typeof window !== 'undefined' &&
-      !window.confirm('Bạn có chắc chắn muốn gỡ bài viết này?')
-    ) {
-      return
-    }
+  const handleConfirmDeletePost = async (): Promise<void> => {
+    if (!postToDelete) return
     try {
-      await apiClient.delete(`/community/posts/${postId}`)
-      setPosts(prev => prev.filter(p => p.id !== postId))
+      await apiClient.delete(`/community/posts/${postToDelete}`)
+      setPosts(prev => prev.filter(p => p.id !== postToDelete))
       setActiveDetailPost(null)
+      appToast.success('Đã gỡ bài viết thành công.')
     } catch (err) {
       console.error('Failed to delete post:', err)
-      if (typeof window !== 'undefined') {
-        window.alert('Không thể gỡ bài viết. Vui lòng thử lại.')
-      }
+      appToast.error('Không thể gỡ bài viết. Vui lòng thử lại.')
+    } finally {
+      setPostToDelete(null)
     }
   }
 
@@ -144,45 +196,32 @@ export function CommunityView(): React.ReactElement {
         prev.map(p => (p.id === id ? { ...p, status: 'approved' } : p))
       )
       setSelectedPost(null)
+      appToast.success('Đã duyệt bài viết thành công.')
     } catch (err) {
       console.error('Failed to approve post:', err)
-      if (typeof window !== 'undefined') {
-        window.alert('Không thể duyệt bài viết. Vui lòng thử lại.')
-      }
+      appToast.error('Không thể duyệt bài viết. Vui lòng thử lại.')
     }
   }
 
   const handleReject = async (id: string): Promise<void> => {
     try {
+      const reason = rejectReason.trim()
       await apiClient.patch(`/community/posts/${id}/status`, {
         status: 'rejected',
+        rejectReason: reason,
       })
       setPosts(prev =>
         prev.map(p =>
-          p.id === id ? { ...p, status: 'rejected', rejectReason } : p
+          p.id === id ? { ...p, status: 'rejected', rejectReason: reason } : p
         )
       )
       setShowRejectDialog(false)
       setSelectedPost(null)
       setRejectReason('')
+      appToast.success('Đã từ chối bài viết thành công.')
     } catch (err) {
       console.error('Failed to reject post:', err)
-      if (typeof window !== 'undefined') {
-        window.alert('Không thể từ chối bài viết. Vui lòng thử lại.')
-      }
-    }
-  }
-
-  const getTopicLabel = (topic: string): string => {
-    switch (topic) {
-      case 'qa':
-        return 'Hỏi đáp'
-      case 'review':
-        return 'Đánh giá'
-      case 'roommate':
-        return 'Ở ghép'
-      default:
-        return topic
+      appToast.error('Không thể từ chối bài viết. Vui lòng thử lại.')
     }
   }
 
@@ -205,24 +244,32 @@ export function CommunityView(): React.ReactElement {
         </div>
         <div className="flex rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
           <button
+            type="button"
+            aria-pressed={filter === 'all'}
             onClick={() => setFilter('all')}
             className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'all' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Tất cả
           </button>
           <button
+            type="button"
+            aria-pressed={filter === 'pending'}
             onClick={() => setFilter('pending')}
             className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'pending' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Chờ duyệt ({posts.filter(p => p.status === 'pending').length})
           </button>
           <button
+            type="button"
+            aria-pressed={filter === 'approved'}
             onClick={() => setFilter('approved')}
             className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'approved' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Đã duyệt
           </button>
           <button
+            type="button"
+            aria-pressed={filter === 'rejected'}
             onClick={() => setFilter('rejected')}
             className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'rejected' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
@@ -238,6 +285,12 @@ export function CommunityView(): React.ReactElement {
             Đang tải danh sách bài viết...
           </p>
         </div>
+      ) : error ? (
+        <AdminErrorState
+          title="Lỗi tải bài viết cộng đồng"
+          message={error}
+          onRetry={loadPosts}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredPosts.map(post => (
@@ -249,7 +302,7 @@ export function CommunityView(): React.ReactElement {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold font-display px-2 py-0.5 rounded bg-fg/5 text-muted uppercase">
-                      {post.id}
+                      {formatRecordCode(post.id)}
                     </span>
                     <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                       {getTopicLabel(post.topic)}
@@ -264,11 +317,7 @@ export function CommunityView(): React.ReactElement {
                           : 'bg-accent-3/10 text-accent-3'
                     }`}
                   >
-                    {post.status === 'approved'
-                      ? 'Đã duyệt'
-                      : post.status === 'rejected'
-                        ? 'Bị từ chối'
-                        : 'Chờ duyệt'}
+                    {getPostStatusLabel(post.status)}
                   </span>
                 </div>
 
@@ -292,20 +341,28 @@ export function CommunityView(): React.ReactElement {
 
                 <div className="border-t border-line/50 pt-3 flex justify-between items-center text-xs text-muted">
                   <div className="flex items-center gap-2">
-                    {}
-                    <img
-                      src={post.authorAvatar}
-                      alt=""
-                      className="h-6 w-6 rounded-full object-cover"
-                    />
+                    {post.authorAvatar ? (
+                      <div className="relative h-6 w-6 rounded-full overflow-hidden shrink-0">
+                        <Image
+                          src={post.authorAvatar}
+                          alt={post.authorName || 'Avatar'}
+                          fill
+                          sizes="24px"
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0">
+                        {(post.authorName || 'U').charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div>
                       <span className="font-semibold text-fg block leading-none">
                         {post.authorName}
                       </span>
                       <span className="text-[10px] block mt-0.5 uppercase">
-                        {post.authorRole === 'tenant'
-                          ? 'Người thuê'
-                          : 'Chủ nhà'}
+                        {getAuthorRoleLabel(post.authorRole)}
                       </span>
                     </div>
                   </div>
@@ -316,6 +373,7 @@ export function CommunityView(): React.ReactElement {
               {post.status === 'pending' && canApprove && (
                 <div className="mt-4 pt-3 border-t border-line/30 flex gap-2">
                   <button
+                    type="button"
                     onClick={() => {
                       setSelectedPost(post)
                       setShowRejectDialog(true)
@@ -325,6 +383,7 @@ export function CommunityView(): React.ReactElement {
                     Từ chối
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleApprove(post.id)}
                     className="flex-1 py-2 bg-success hover:bg-success/90 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
                   >
@@ -336,12 +395,14 @@ export function CommunityView(): React.ReactElement {
               {post.status === 'approved' && canDelete && (
                 <div className="mt-4 pt-3 border-t border-line/30 flex gap-2">
                   <button
-                    onClick={() => handleDeletePost(post.id)}
+                    type="button"
+                    onClick={() => setPostToDelete(post.id)}
                     className="flex-1 py-2 border border-accent bg-white hover:bg-accent/5 text-accent text-xs font-semibold rounded-lg transition-colors cursor-pointer"
                   >
                     Gỡ bài
                   </button>
                   <button
+                    type="button"
                     onClick={() => setActiveDetailPost(post)}
                     className="flex-1 py-2 bg-primary hover:bg-primary/90 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
                   >
@@ -377,7 +438,12 @@ export function CommunityView(): React.ReactElement {
 
       {/* Reject dialog */}
       {showRejectDialog && selectedPost && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reject-post-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
           <div
             className="absolute inset-0 bg-fg/50 backdrop-blur-xs"
             onClick={() => {
@@ -388,7 +454,10 @@ export function CommunityView(): React.ReactElement {
           />
           <AdminCard className="relative z-10 w-full max-w-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-5">
-              <h3 className="text-base font-bold text-fg font-marketing">
+              <h3
+                id="reject-post-dialog-title"
+                className="text-base font-bold text-fg font-marketing"
+              >
                 Lý do từ chối bài viết
               </h3>
               <p className="text-xs text-muted mt-1">
@@ -404,6 +473,7 @@ export function CommunityView(): React.ReactElement {
               />
               <div className="flex justify-end gap-2 mt-4">
                 <button
+                  type="button"
                   onClick={() => {
                     setShowRejectDialog(false)
                     setSelectedPost(null)
@@ -414,6 +484,7 @@ export function CommunityView(): React.ReactElement {
                   Hủy
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleReject(selectedPost.id)}
                   disabled={!rejectReason.trim()}
                   className="px-4 py-2 bg-accent hover:bg-accent/95 text-white text-xs font-semibold rounded-lg shadow-sm disabled:opacity-50 transition-colors cursor-pointer"
@@ -426,13 +497,26 @@ export function CommunityView(): React.ReactElement {
         </div>
       )}
 
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={!!postToDelete}
+        onOpenChange={open => !open && setPostToDelete(null)}
+        title="Gỡ bài viết"
+        description="Bạn có chắc chắn muốn gỡ bài viết này khỏi bảng tin cộng đồng? Hành động này không thể hoàn tác."
+        confirmText="Gỡ bài"
+        variant="danger"
+        onConfirm={handleConfirmDeletePost}
+      />
+
       {/* Detail & Comments Modal */}
       {activeDetailPost && (
         <CommunityPostDetailModal
           isOpen={!!activeDetailPost}
           onClose={() => setActiveDetailPost(null)}
           post={activeDetailPost}
-          onDeletePost={handleDeletePost}
+          onDeletePost={async (postId: string) => {
+            setPostToDelete(postId)
+          }}
           formatTimeAgo={formatTimeAgo}
         />
       )}

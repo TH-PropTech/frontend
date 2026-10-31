@@ -36,4 +36,35 @@ describe('AdminWalletsView', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
     expect(screen.queryByText(/ví giải ngân/i)).not.toBeInTheDocument()
   })
+
+  it('renders pagination buttons when total exceeds limit', async () => {
+    const { getLandlordWallets } = await import('../api/admin-wallets-api')
+    vi.mocked(getLandlordWallets).mockResolvedValueOnce({
+      items: [
+        {
+          userId: 'u1',
+          name: 'Chủ nhà B',
+          email: 'b@example.com',
+          wallet: {
+            userId: 'u1',
+            status: 'unlinked',
+            simulation: false,
+            bank: null,
+            accountHolder: null,
+            accountNumberMasked: null,
+            accountNumber: null,
+            linkedAt: null,
+          },
+        },
+      ],
+      total: 30,
+      page: 1,
+      limit: 20,
+    })
+
+    render(<AdminWalletsView />)
+    expect(await screen.findByText('Trang 1 / 2')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sau' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Trước' })).toBeDisabled()
+  })
 })

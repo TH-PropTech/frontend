@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { Box, Search } from 'lucide-react'
 import { apiClient } from '@/shared/api/api-client'
+import { AdminErrorState } from '@/shared/ui/admin-error-state'
 import {
   ApartmentDesignsManager,
   type DesignableApartment,
@@ -22,20 +23,20 @@ export function ApartmentDesignsView(): React.ReactElement {
   const [query, setQuery] = React.useState('')
   const [selected, setSelected] = React.useState<ManagedApartment | null>(null)
 
-  React.useEffect(() => {
-    let active = true
-    void apiClient
-      .get<ManagedApartment[]>('/apartments/manage')
-      .then(list => {
-        if (active) setApartments(list)
-      })
-      .catch(() => {
-        if (active) setFailed(true)
-      })
-    return () => {
-      active = false
+  const load = React.useCallback(async () => {
+    setFailed(false)
+    try {
+      const list = await apiClient.get<ManagedApartment[]>('/apartments/manage')
+      setApartments(list)
+    } catch {
+      setFailed(true)
     }
   }, [])
+
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load()
+  }, [load])
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -75,9 +76,11 @@ export function ApartmentDesignsView(): React.ReactElement {
       </label>
 
       {failed ? (
-        <p className="rounded-2xl border border-border p-6 text-sm text-muted">
-          Không tải được danh sách căn hộ.
-        </p>
+        <AdminErrorState
+          title="Lỗi tải danh sách thiết kế 3D"
+          message="Không thể tải danh sách căn hộ để quản lý thiết kế 3D."
+          onRetry={load}
+        />
       ) : apartments === null ? (
         <p className="p-6 text-sm text-muted">Đang tải...</p>
       ) : filtered.length === 0 ? (
@@ -98,7 +101,7 @@ export function ApartmentDesignsView(): React.ReactElement {
                 <p className="truncate text-xs text-muted">
                   {apartment.location}
                 </p>
-                <p className="mt-1 text-[11px] text-subtle">
+                <p className="mt-1 text-[11px] text-muted">
                   {apartment.bedrooms} phòng ngủ · {apartment.bathrooms} phòng
                   vệ sinh · {apartment.area} m²
                 </p>

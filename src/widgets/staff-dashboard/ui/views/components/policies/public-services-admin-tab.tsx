@@ -1,6 +1,7 @@
 'use client'
 
 import { OptionSelect } from '@/shared/ui/option-select'
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog'
 import * as React from 'react'
 import {
   AlertCircle,
@@ -145,6 +146,8 @@ export function PublicServicesAdminTab(): React.ReactElement {
 
   // Modals & Drawers
   const [editingRegulation, setEditingRegulation] =
+    React.useState<PlatformRegulation | null>(null)
+  const [deletingReg, setDeletingReg] =
     React.useState<PlatformRegulation | null>(null)
   const [isAddModalOpen, setIsAddModalOpen] = React.useState(false)
   const [detailSource, setDetailSource] = React.useState<LegalSource | null>(
@@ -299,20 +302,19 @@ export function PublicServicesAdminTab(): React.ReactElement {
     }
   }
 
-  const handleDelete = async (reg: PlatformRegulation) => {
-    if (
-      !window.confirm(
-        `Bạn có chắc chắn muốn xóa quy định [${reg.code}] khỏi danh mục nền tảng?`
-      )
-    ) {
-      return
-    }
+  const handleConfirmDelete = async () => {
+    if (!deletingReg) return
     try {
-      await deletePlatformRegulation(reg.id)
-      setRegulations(list => list.filter(r => r.id !== reg.id))
-      showNotification(`Đã xóa quy định [${reg.code}] thành công`, 'info')
+      await deletePlatformRegulation(deletingReg.id)
+      setRegulations(list => list.filter(r => r.id !== deletingReg.id))
+      showNotification(
+        `Đã xóa quy định [${deletingReg.code}] thành công`,
+        'info'
+      )
     } catch (err) {
       showNotification(getLegalAdminErrorMessage(err), 'error')
+    } finally {
+      setDeletingReg(null)
     }
   }
 
@@ -903,7 +905,7 @@ export function PublicServicesAdminTab(): React.ReactElement {
                       {/* Delete */}
                       <button
                         type="button"
-                        onClick={() => void handleDelete(reg)}
+                        onClick={() => setDeletingReg(reg)}
                         data-testid={`btn-delete-${reg.code}`}
                         aria-label="Xóa quy định"
                         className="p-1 rounded text-[var(--muted)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10"
@@ -1303,6 +1305,20 @@ export function PublicServicesAdminTab(): React.ReactElement {
       <PublicServiceDetailModal
         source={detailSource}
         onClose={() => setDetailSource(null)}
+      />
+
+      <ConfirmDialog
+        open={!!deletingReg}
+        onOpenChange={open => !open && setDeletingReg(null)}
+        title="Xóa quy định nền tảng"
+        description={
+          deletingReg
+            ? `Bạn có chắc chắn muốn xóa quy định [${deletingReg.code}] khỏi danh mục nền tảng?`
+            : undefined
+        }
+        confirmText="Xóa"
+        variant="danger"
+        onConfirm={handleConfirmDelete}
       />
     </div>
   )

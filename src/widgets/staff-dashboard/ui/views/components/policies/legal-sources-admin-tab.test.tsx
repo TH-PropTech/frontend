@@ -192,6 +192,7 @@ describe('LegalSourcesAdminTab', () => {
     await renderLoaded()
 
     fireEvent.click(screen.getByTestId('btn-delete-source-1.004194'))
+    fireEvent.click(screen.getByRole('button', { name: 'Xoá' }))
 
     expect(await screen.findByTestId('legal-sources-notice')).toHaveTextContent(
       'REG-RES-01'
@@ -204,6 +205,7 @@ describe('LegalSourcesAdminTab', () => {
     await renderLoaded()
 
     fireEvent.click(screen.getByTestId('btn-delete-source-housing-law-2023'))
+    fireEvent.click(screen.getByRole('button', { name: 'Xoá' }))
 
     await waitFor(() =>
       expect(

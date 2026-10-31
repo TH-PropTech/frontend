@@ -5,7 +5,19 @@ import { KycComparisonModal } from './components/kyc-comparison-modal'
 import { apiClient } from '@/shared/api/api-client'
 import { toast } from 'sonner'
 import { AdminCard } from '@/shared/ui/admin-card'
+import { AdminErrorState } from '@/shared/ui/admin-error-state'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/shared/ui/dialog'
+import { Textarea } from '@/shared/ui/textarea'
+import { Button } from '@/shared/ui/button'
 import { useCan } from '@/shared/lib/permissions'
+import { formatRecordCode } from '../../model/admin-labels'
 
 export interface KycRecord {
   id: string
@@ -55,15 +67,25 @@ export function KycApprovalsView(): React.ReactElement {
   const canApprove = can('approve', 'Kyc')
   const [records, setRecords] = React.useState<KycRecord[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [isSearching, setIsSearching] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
   const [selectedRecord, setSelectedRecord] = React.useState<KycRecord | null>(
     null
   )
   const [rejectReason, setRejectReason] = React.useState('')
   const [showRejectDialog, setShowRejectDialog] = React.useState(false)
   const [search, setSearch] = React.useState('')
+  const [debouncedSearch, setDebouncedSearch] = React.useState('')
   const [filter, setFilter] = React.useState<
     'all' | 'pending' | 'approved' | 'rejected'
   >('pending')
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [search])
 
   const mapKycRecord = React.useCallback((k: BackendKycResponse): KycRecord => {
     let mappedStatus: 'pending' | 'approved' | 'rejected' = 'pending'
@@ -76,7 +98,7 @@ export function KycApprovalsView(): React.ReactElement {
     return {
       id: k._id || '',
       name: k.fullName || 'Chưa cập nhật',
-      email: k.user?.email || 'N/A',
+      email: k.user?.email || 'Chưa cập nhật',
       cccdNumber: k.idCardNumber || '',
       dob: k.dateOfBirth || '',
       gender: k.gender || '',
@@ -91,10 +113,11 @@ export function KycApprovalsView(): React.ReactElement {
   }, [])
 
   const loadRecords = React.useCallback(async () => {
-    setLoading(true)
+    setIsSearching(true)
+    setError(null)
     try {
       const query = new URLSearchParams({ limit: '100' })
-      if (search.trim()) query.set('search', search.trim())
+      if (debouncedSearch.trim()) query.set('search', debouncedSearch.trim())
       const data = await apiClient.get<BackendKycListResult>(
         `/kyc?${query.toString()}`
       )
@@ -103,14 +126,18 @@ export function KycApprovalsView(): React.ReactElement {
       }
     } catch (err) {
       console.error('Failed to load KYC records:', err)
+      const msg =
+        err instanceof Error ? err.message : 'Không thể tải danh sách hồ sơ KYC'
+      setError(msg)
     } finally {
       setLoading(false)
+      setIsSearching(false)
     }
-  }, [mapKycRecord, search])
+  }, [mapKycRecord, debouncedSearch])
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadRecords()
+    void loadRecords()
   }, [loadRecords])
 
   const handleVerify = async (id: string): Promise<void> => {
@@ -132,11 +159,12 @@ export function KycApprovalsView(): React.ReactElement {
   }
 
   const handleReject = async (id: string): Promise<void> => {
-    if (!rejectReason.trim()) return
+    const trimmed = rejectReason.trim()
+    if (!trimmed) return
     try {
       await apiClient.patch(`/kyc/${id}/review`, {
         status: 'rejected',
-        rejectedReason: rejectReason,
+        rejectedReason: trimmed,
       })
       setRecords(prev =>
         prev.map(r => (r.id === id ? { ...r, status: 'rejected' } : r))
@@ -154,17 +182,10 @@ export function KycApprovalsView(): React.ReactElement {
       toast.error(message)
     }
   }
+
   const filteredRecords = records.filter(
     r => filter === 'all' || r.status === filter
   )
-
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6">
@@ -187,116 +208,141 @@ export function KycApprovalsView(): React.ReactElement {
             value={search}
             onChange={event => setSearch(event.target.value)}
             placeholder="Tìm theo tên hoặc số CCCD"
-            className="min-w-52 bg-transparent text-fg outline-none placeholder:text-subtle"
+            className="min-w-52 bg-transparent text-fg outline-none placeholder:text-muted"
           />
+          {isSearching && (
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          )}
         </label>
         <div className="flex rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
           <button
+            type="button"
+            aria-pressed={filter === 'all'}
             onClick={() => setFilter('all')}
-            className={`px-3 py-1.5 rounded-md transition-all ${filter === 'all' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
+            className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'all' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Tất cả
           </button>
           <button
+            type="button"
+            aria-pressed={filter === 'pending'}
             onClick={() => setFilter('pending')}
-            className={`px-3 py-1.5 rounded-md transition-all ${filter === 'pending' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
+            className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'pending' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Chờ duyệt ({records.filter(r => r.status === 'pending').length})
           </button>
           <button
+            type="button"
+            aria-pressed={filter === 'approved'}
             onClick={() => setFilter('approved')}
-            className={`px-3 py-1.5 rounded-md transition-all ${filter === 'approved' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
+            className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'approved' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Đã xác minh
           </button>
           <button
+            type="button"
+            aria-pressed={filter === 'rejected'}
             onClick={() => setFilter('rejected')}
-            className={`px-3 py-1.5 rounded-md transition-all ${filter === 'rejected' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
+            className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${filter === 'rejected' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Đã từ chối
           </button>
         </div>
       </div>
 
-      {/* Records table */}
-      <AdminCard className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-surface-muted/30 border-b border-line text-muted uppercase tracking-wider font-semibold font-body">
-                <th className="p-4">Mã hồ sơ</th>
-                <th className="p-4">Họ và tên</th>
-                <th className="p-4">Số CCCD</th>
-                <th className="p-4">Tỷ lệ khớp OCR</th>
-                <th className="p-4">Ngày gửi</th>
-                <th className="p-4">Trạng thái</th>
-                <th className="p-4 text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line/60">
-              {filteredRecords.map(record => (
-                <tr
-                  key={record.id}
-                  className="hover:bg-bg/10 transition-colors"
-                >
-                  <td className="p-4 font-mono font-bold text-fg">
-                    {record.id}
-                  </td>
-                  <td className="p-4 font-semibold text-fg">{record.name}</td>
-                  <td className="p-4 font-mono">{record.cccdNumber}</td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-fg">
-                        {record.ocrScore === null
-                          ? 'Không có dữ liệu'
-                          : `${record.ocrScore}%`}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-subtle">{record.submittedAt}</td>
-                  <td className="p-4">
-                    <span
-                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                        record.status === 'approved'
-                          ? 'bg-accent-2/10 text-accent-2'
-                          : record.status === 'rejected'
-                            ? 'bg-accent/10 text-accent'
-                            : 'bg-accent-3/10 text-accent-3'
-                      }`}
-                    >
-                      {record.status === 'approved'
-                        ? 'Đã duyệt'
-                        : record.status === 'rejected'
-                          ? 'Đã từ chối'
-                          : 'Đang chờ'}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <button
-                      onClick={() => setSelectedRecord(record)}
-                      className="px-3 py-1.5 bg-fg/5 hover:bg-fg/10 text-fg rounded-md font-semibold transition-colors"
-                    >
-                      {canApprove ? 'Đối chiếu & Duyệt' : 'Xem hồ sơ'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredRecords.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="p-8 text-center text-subtle font-body"
-                  >
-                    Không có hồ sơ KYC nào phù hợp với bộ lọc này.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {loading && !records.length ? (
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
-      </AdminCard>
+      ) : error && !records.length ? (
+        <AdminErrorState
+          title="Lỗi tải hồ sơ KYC"
+          message={error}
+          onRetry={() => void loadRecords()}
+        />
+      ) : (
+        /* Records table */
+        <AdminCard
+          className={`overflow-hidden transition-opacity duration-200 ${isSearching ? 'opacity-60' : 'opacity-100'}`}
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-surface-muted/30 border-b border-line text-muted uppercase tracking-wider font-semibold font-body">
+                  <th className="p-4">Mã hồ sơ</th>
+                  <th className="p-4">Họ và tên</th>
+                  <th className="p-4">Số CCCD</th>
+                  <th className="p-4">Tỷ lệ khớp OCR</th>
+                  <th className="p-4">Ngày gửi</th>
+                  <th className="p-4">Trạng thái</th>
+                  <th className="p-4 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line/60">
+                {filteredRecords.map(record => (
+                  <tr
+                    key={record.id}
+                    className="hover:bg-bg/10 transition-colors"
+                  >
+                    <td className="p-4 font-mono font-bold text-fg">
+                      {formatRecordCode(record.id)}
+                    </td>
+                    <td className="p-4 font-semibold text-fg">{record.name}</td>
+                    <td className="p-4 font-mono">{record.cccdNumber}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-fg">
+                          {record.ocrScore === null
+                            ? 'Không có dữ liệu'
+                            : `${record.ocrScore}%`}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4 text-muted">{record.submittedAt}</td>
+                    <td className="p-4">
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                          record.status === 'approved'
+                            ? 'bg-accent-2/10 text-accent-2'
+                            : record.status === 'rejected'
+                              ? 'bg-accent/10 text-accent'
+                              : 'bg-accent-3/10 text-accent-3'
+                        }`}
+                      >
+                        {record.status === 'approved'
+                          ? 'Đã duyệt'
+                          : record.status === 'rejected'
+                            ? 'Đã từ chối'
+                            : 'Chờ duyệt'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRecord(record)}
+                        className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Đối chiếu & Duyệt
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredRecords.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="p-8 text-center text-muted font-medium"
+                    >
+                      Chưa có hồ sơ nào trong mục này.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </AdminCard>
+      )}
 
-      {/* Side-by-Side Comparison Workspace Modal */}
       {selectedRecord && (
         <KycComparisonModal
           selectedRecord={selectedRecord}
@@ -308,49 +354,57 @@ export function KycApprovalsView(): React.ReactElement {
       )}
 
       {/* Reject Reason input dialog */}
-      {showRejectDialog && selectedRecord && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-fg/50 backdrop-blur-sm"
-            onClick={() => setShowRejectDialog(false)}
-          />
-          <AdminCard className="relative z-10 w-full max-w-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-5">
-              <h3 className="text-base font-bold text-fg font-marketing">
-                Lý do từ chối hồ sơ KYC
-              </h3>
-              <p className="text-xs text-muted mt-1">
-                Nêu rõ lý do để người dùng chụp lại tài liệu rõ ràng hơn.
-              </p>
-              <textarea
-                value={rejectReason}
-                onChange={e => setRejectReason(e.target.value)}
-                placeholder="Ví dụ: Ảnh mặt sau của thẻ CCCD bị lóa sáng mất phần mã MRZ..."
-                className="w-full h-24 p-3 mt-3 text-xs border border-line rounded-lg focus:outline-none focus:border-accent bg-bg/25 resize-none"
-                required
-              />
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  onClick={() => {
-                    setShowRejectDialog(false)
-                    setRejectReason('')
-                  }}
-                  className="px-4 py-2 border border-line text-muted hover:text-fg text-xs font-semibold rounded-lg transition-colors"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={() => handleReject(selectedRecord.id)}
-                  disabled={!rejectReason.trim()}
-                  className="px-4 py-2 bg-accent hover:bg-accent/95 text-white text-xs font-semibold rounded-lg shadow-sm disabled:opacity-50 transition-colors"
-                >
-                  Xác nhận từ chối
-                </button>
-              </div>
-            </div>
-          </AdminCard>
-        </div>
-      )}
+      <Dialog
+        open={showRejectDialog && !!selectedRecord}
+        onOpenChange={open => {
+          if (!open) {
+            setShowRejectDialog(false)
+            setRejectReason('')
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Lý do từ chối hồ sơ KYC</DialogTitle>
+            <DialogDescription>
+              Nêu rõ lý do để người dùng chụp lại tài liệu rõ ràng hơn.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2 space-y-2">
+            <Textarea
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              placeholder="Ví dụ: Ảnh mặt sau của thẻ CCCD bị lóa sáng mất phần mã MRZ..."
+              rows={4}
+              className="resize-none text-xs"
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowRejectDialog(false)
+                setRejectReason('')
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                if (selectedRecord) void handleReject(selectedRecord.id)
+              }}
+              disabled={!rejectReason.trim()}
+            >
+              Xác nhận từ chối
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

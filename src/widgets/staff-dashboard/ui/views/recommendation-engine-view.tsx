@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Cpu, Sparkles, BookOpen } from 'lucide-react'
+import { Cpu, Sparkles } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
 import { EngineConfigForm } from '@/features/recommendation-engine-config'
@@ -36,13 +36,6 @@ export function RecommendationEngineView(): React.ReactElement {
             </div>
 
             <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-              <Badge
-                variant="secondary"
-                className="gap-1.5 py-1 px-2.5 text-xs font-normal"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-primary" />
-                <span>Đề tài KLTN</span>
-              </Badge>
               <Badge
                 variant="outline"
                 className="gap-1.5 py-1 px-2.5 text-xs text-primary border-primary/30 bg-primary-soft/40 font-semibold"

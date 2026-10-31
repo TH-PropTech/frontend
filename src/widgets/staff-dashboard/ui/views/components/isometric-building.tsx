@@ -11,60 +11,60 @@ export function IsometricBuilding(): React.ReactElement {
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        {/* Orange Gradients */}
+        {/* Orange / Primary Gradients */}
         <linearGradient id="orange-top" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#fffdf9" />
-          <stop offset="100%" stopColor="#f5e3dc" />
+          <stop offset="0%" stopColor="var(--surface)" />
+          <stop offset="100%" stopColor="var(--primary-soft)" />
         </linearGradient>
         <linearGradient id="orange-left" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e37253" />
-          <stop offset="100%" stopColor="#c65a3a" />
+          <stop offset="0%" stopColor="var(--primary)" />
+          <stop offset="100%" stopColor="var(--primary-hover)" />
         </linearGradient>
         <linearGradient id="orange-right" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#c65a3a" />
-          <stop offset="100%" stopColor="#9f3f2a" />
+          <stop offset="0%" stopColor="var(--primary-hover)" />
+          <stop offset="100%" stopColor="var(--primary-hover)" />
         </linearGradient>
 
-        {/* Green Gradients */}
+        {/* Green / Success Gradients */}
         <linearGradient id="green-top" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#fffdf9" />
-          <stop offset="100%" stopColor="#e8f0df" />
+          <stop offset="0%" stopColor="var(--surface)" />
+          <stop offset="100%" stopColor="var(--success-soft)" />
         </linearGradient>
         <linearGradient id="green-left" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#82ad5f" />
-          <stop offset="100%" stopColor="#6b8e4e" />
+          <stop offset="0%" stopColor="var(--success)" />
+          <stop offset="100%" stopColor="var(--success)" />
         </linearGradient>
         <linearGradient id="green-right" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#6b8e4e" />
-          <stop offset="100%" stopColor="#526f3b" />
+          <stop offset="0%" stopColor="var(--success)" />
+          <stop offset="100%" stopColor="var(--success)" />
         </linearGradient>
 
-        {/* Gold Gradients */}
+        {/* Gold / Accent Gradients */}
         <linearGradient id="gold-top" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#fffdf9" />
-          <stop offset="100%" stopColor="#fcebd4" />
+          <stop offset="0%" stopColor="var(--surface)" />
+          <stop offset="100%" stopColor="var(--accent-soft)" />
         </linearGradient>
         <linearGradient id="gold-left" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f7cd99" />
-          <stop offset="100%" stopColor="#f2b66d" />
+          <stop offset="0%" stopColor="var(--accent)" />
+          <stop offset="100%" stopColor="var(--accent)" />
         </linearGradient>
         <linearGradient id="gold-right" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f2b66d" />
-          <stop offset="100%" stopColor="#c79354" />
+          <stop offset="0%" stopColor="var(--accent)" />
+          <stop offset="100%" stopColor="var(--warning)" />
         </linearGradient>
 
         {/* Base Gradients */}
         <linearGradient id="base-top" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#fffdf9" />
-          <stop offset="100%" stopColor="#f4eee7" />
+          <stop offset="0%" stopColor="var(--surface)" />
+          <stop offset="100%" stopColor="var(--surface-muted)" />
         </linearGradient>
         <linearGradient id="base-left" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e3d8d0" />
-          <stop offset="100%" stopColor="#c9b8ae" />
+          <stop offset="0%" stopColor="var(--border)" />
+          <stop offset="100%" stopColor="var(--border-strong)" />
         </linearGradient>
         <linearGradient id="base-right" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#c9b8ae" />
-          <stop offset="100%" stopColor="#a49389" />
+          <stop offset="0%" stopColor="var(--border-strong)" />
+          <stop offset="100%" stopColor="var(--subtle)" />
         </linearGradient>
       </defs>
 
@@ -74,7 +74,7 @@ export function IsometricBuilding(): React.ReactElement {
         cy="340"
         rx="150"
         ry="35"
-        fill="#2b211e"
+        fill="var(--fg)"
         fillOpacity="0.05"
       />
 
@@ -86,21 +86,21 @@ export function IsometricBuilding(): React.ReactElement {
         <path
           d="M 280, 270 L 400, 320 L 280, 370 L 160, 320 Z"
           fill="url(#base-top)"
-          stroke="#e3d8d0"
+          stroke="var(--border)"
           strokeWidth="1.5"
         />
         {/* Left face */}
         <path
           d="M 160, 320 L 280, 370 L 280, 385 L 160, 335 Z"
           fill="url(#base-left)"
-          stroke="#c9b8ae"
+          stroke="var(--border-strong)"
           strokeWidth="1"
         />
         {/* Right face */}
         <path
           d="M 280, 370 L 400, 320 L 400, 335 L 280, 385 Z"
           fill="url(#base-right)"
-          stroke="#a49389"
+          stroke="var(--subtle)"
           strokeWidth="1"
         />
       </g>
@@ -113,7 +113,7 @@ export function IsometricBuilding(): React.ReactElement {
         <path
           d="M 190, 215 L 280, 260 L 280, 300 L 190, 255 Z"
           fill="url(#orange-left)"
-          stroke="#c65a3a"
+          stroke="var(--primary)"
           strokeWidth="0.75"
           className="transition-all duration-200 group-hover:opacity-90"
         />
@@ -121,7 +121,7 @@ export function IsometricBuilding(): React.ReactElement {
         <path
           d="M 280, 260 L 370, 215 L 370, 255 L 280, 300 Z"
           fill="url(#orange-right)"
-          stroke="#9f3f2a"
+          stroke="var(--primary-hover)"
           strokeWidth="0.75"
           className="transition-all duration-200 group-hover:opacity-90"
         />
@@ -129,7 +129,7 @@ export function IsometricBuilding(): React.ReactElement {
         <path
           d="M 280, 170 L 370, 215 L 280, 260 L 190, 215 Z"
           fill="url(#orange-top)"
-          stroke="#c65a3a"
+          stroke="var(--primary)"
           strokeWidth="1.5"
           className="transition-all duration-200 group-hover:opacity-95"
         />
@@ -137,7 +137,7 @@ export function IsometricBuilding(): React.ReactElement {
         {/* Grid details on top face */}
         <path
           d="M 280, 190 L 340, 220 M 280, 210 L 310, 225 M 280, 230 L 280, 250"
-          stroke="#c65a3a"
+          stroke="var(--primary)"
           strokeWidth="0.5"
           strokeOpacity="0.4"
         />
@@ -145,12 +145,12 @@ export function IsometricBuilding(): React.ReactElement {
         {/* Left Leader Line & Tag */}
         <path
           d="M 190, 235 L 130, 205 L 90, 205"
-          stroke="#c65a3a"
+          stroke="var(--primary)"
           strokeWidth="1.2"
           strokeDasharray="3,3"
           className="transition-all duration-200 opacity-60 group-hover:opacity-100"
         />
-        <circle cx="190" cy="235" r="2.5" fill="#c65a3a" />
+        <circle cx="190" cy="235" r="2.5" fill="var(--primary)" />
         <text
           x="83"
           y="198"
@@ -160,7 +160,7 @@ export function IsometricBuilding(): React.ReactElement {
           textAnchor="end"
           className="transition-all duration-200 group-hover:fill-primary"
         >
-          SMART CONTRACT
+          HỢP ĐỒNG ĐIỆN TỬ
         </text>
         <text
           x="83"
@@ -170,7 +170,7 @@ export function IsometricBuilding(): React.ReactElement {
           fontWeight="semibold"
           textAnchor="end"
         >
-          2 Hợp đồng mới
+          Lưu vết chống sửa đổi
         </text>
       </g>
 
@@ -182,7 +182,7 @@ export function IsometricBuilding(): React.ReactElement {
         <path
           d="M 210, 140 L 280, 175 L 280, 210 L 210, 175 Z"
           fill="url(#green-left)"
-          stroke="#6b8e4e"
+          stroke="var(--success)"
           strokeWidth="0.75"
           className="transition-all duration-200 group-hover:opacity-90"
         />
@@ -190,7 +190,7 @@ export function IsometricBuilding(): React.ReactElement {
         <path
           d="M 280, 175 L 350, 140 L 350, 175 L 280, 210 Z"
           fill="url(#green-right)"
-          stroke="#526f3b"
+          stroke="var(--success)"
           strokeWidth="0.75"
           className="transition-all duration-200 group-hover:opacity-90"
         />
@@ -198,7 +198,7 @@ export function IsometricBuilding(): React.ReactElement {
         <path
           d="M 280, 105 L 350, 140 L 280, 175 L 210, 140 Z"
           fill="url(#green-top)"
-          stroke="#6b8e4e"
+          stroke="var(--success)"
           strokeWidth="1.5"
           className="transition-all duration-200 group-hover:opacity-95"
         />
@@ -208,19 +208,19 @@ export function IsometricBuilding(): React.ReactElement {
           cx="280"
           cy="140"
           r="4.5"
-          fill="#6b8e4e"
+          fill="var(--success)"
           className="animate-pulse"
         />
 
         {/* Right Leader Line & Tag */}
         <path
           d="M 350, 158 L 410, 125 L 440, 125"
-          stroke="#6b8e4e"
+          stroke="var(--success)"
           strokeWidth="1.2"
           strokeDasharray="3,3"
           className="transition-all duration-200 opacity-60 group-hover:opacity-100"
         />
-        <circle cx="350" cy="158" r="2.5" fill="#6b8e4e" />
+        <circle cx="350" cy="158" r="2.5" fill="var(--success)" />
         <text
           x="447"
           y="117"
@@ -230,17 +230,17 @@ export function IsometricBuilding(): React.ReactElement {
           textAnchor="start"
           className="transition-all duration-200 group-hover:fill-accent-2"
         >
-          VR 360 ROOM
+          KHÔNG GIAN VR 360
         </text>
         <text
           x="447"
           y="130"
-          fill="#6b8e4e"
+          fill="var(--success)"
           fontSize="8.5"
           fontWeight="semibold"
           textAnchor="start"
         >
-          Chất lượng đạt chuẩn
+          Không gian đa chiều
         </text>
       </g>
 
@@ -252,7 +252,7 @@ export function IsometricBuilding(): React.ReactElement {
         <path
           d="M 230, 75 L 280, 100 L 280, 130 L 230, 105 Z"
           fill="url(#gold-left)"
-          stroke="#f2b66d"
+          stroke="var(--accent)"
           strokeWidth="0.75"
           className="transition-all duration-200 group-hover:opacity-90"
         />
@@ -260,7 +260,7 @@ export function IsometricBuilding(): React.ReactElement {
         <path
           d="M 280, 100 L 330, 75 L 330, 105 L 280, 130 Z"
           fill="url(#gold-right)"
-          stroke="#c79354"
+          stroke="var(--warning)"
           strokeWidth="0.75"
           className="transition-all duration-200 group-hover:opacity-90"
         />
@@ -268,7 +268,7 @@ export function IsometricBuilding(): React.ReactElement {
         <path
           d="M 280, 50 L 330, 75 L 280, 100 L 230, 75 Z"
           fill="url(#gold-top)"
-          stroke="#f2b66d"
+          stroke="var(--accent)"
           strokeWidth="1.5"
           className="transition-all duration-200 group-hover:opacity-95"
         />
@@ -279,28 +279,28 @@ export function IsometricBuilding(): React.ReactElement {
           y1="50"
           x2="280"
           y2="20"
-          stroke="#f2b66d"
+          stroke="var(--accent)"
           strokeWidth="1.5"
         />
         <circle
           cx="280"
           cy="18"
           r="3.5"
-          fill="#f2b66d"
+          fill="var(--accent)"
           className="animate-ping"
           style={{ animationDuration: '3s' }}
         />
-        <circle cx="280" cy="18" r="2.5" fill="#f2b66d" />
+        <circle cx="280" cy="18" r="2.5" fill="var(--accent)" />
 
         {/* Left Leader Line & Tag */}
         <path
           d="M 230, 90 L 160, 60 L 90, 60"
-          stroke="#f2b66d"
+          stroke="var(--accent)"
           strokeWidth="1.2"
           strokeDasharray="3,3"
           className="transition-all duration-200 opacity-60 group-hover:opacity-100"
         />
-        <circle cx="230" cy="90" r="2.5" fill="#f2b66d" />
+        <circle cx="230" cy="90" r="2.5" fill="var(--accent)" />
         <text
           x="83"
           y="52"
@@ -310,17 +310,17 @@ export function IsometricBuilding(): React.ReactElement {
           textAnchor="end"
           className="transition-all duration-200 group-hover:fill-accent-2"
         >
-          KYC HUB
+          XÁC THỰC KYC
         </text>
         <text
           x="83"
           y="65"
-          fill="#c79354"
+          fill="var(--warning)"
           fontSize="8.5"
           fontWeight="semibold"
           textAnchor="end"
         >
-          2 hồ sơ chờ duyệt
+          Xác thực danh tính
         </text>
       </g>
     </svg>
