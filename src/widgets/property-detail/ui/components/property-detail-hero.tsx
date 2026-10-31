@@ -4,6 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import {
+  formatRentPrice,
   getRentalAvailabilityPresentation,
   type ApartmentItem,
 } from '@/entities/properties'
@@ -157,7 +158,7 @@ export function PropertyDetailHero({
           <span
             role="status"
             aria-label={`Tình trạng thuê: ${availability.label}`}
-            className={`rounded-full px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider border backdrop-blur-sm ${
+            className={`rounded-full px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider border backdrop-blur-sm ${
               availability.status === 'available'
                 ? 'bg-success-soft/60 text-success border-success/25'
                 : availability.status === 'reserved'
@@ -170,7 +171,7 @@ export function PropertyDetailHero({
             {availability.label}
           </span>
           {property.isVerified && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-widest text-success bg-success-soft/80 border border-success/20 px-3 py-1 rounded-full backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-widest text-success bg-success-soft/80 border border-success/20 px-3 py-1 rounded-full backdrop-blur-sm">
               <svg
                 className="h-3 w-3"
                 fill="none"
@@ -198,7 +199,7 @@ export function PropertyDetailHero({
             <span className="font-mono font-extrabold text-fg">
               #{shortListingId}
             </span>
-            <span className="text-[10px] font-semibold">
+            <span className="text-[11px] font-semibold">
               {copied ? 'Đã chép' : 'Sao chép'}
             </span>
           </button>
@@ -214,7 +215,7 @@ export function PropertyDetailHero({
             Giá thuê căn hộ:
           </span>
           <span className="text-3xl font-black text-primary tabular-nums">
-            {property.price}
+            {formatRentPrice(property.priceNum, property.price)}
           </span>
         </div>
 
@@ -225,7 +226,7 @@ export function PropertyDetailHero({
               key={spec.label}
               className="bg-white/60 border border-border/80 p-3 rounded-xl shadow-sm"
             >
-              <span className="text-[10px] uppercase font-bold text-muted tracking-wider block">
+              <span className="text-[11px] uppercase font-bold text-muted tracking-wider block">
                 {spec.label}
               </span>
               <p

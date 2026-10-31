@@ -154,7 +154,7 @@ export function BookingWidget({
         <div>
           <Label
             htmlFor="fullName"
-            className="text-[10px] uppercase font-bold text-muted tracking-wider block mb-1"
+            className="text-[11px] uppercase font-bold text-muted tracking-wider block mb-1"
           >
             Họ và tên *
           </Label>
@@ -174,7 +174,7 @@ export function BookingWidget({
         <div>
           <Label
             htmlFor="phone"
-            className="text-[10px] uppercase font-bold text-muted tracking-wider block mb-1"
+            className="text-[11px] uppercase font-bold text-muted tracking-wider block mb-1"
           >
             Số điện thoại *
           </Label>
@@ -194,7 +194,7 @@ export function BookingWidget({
         <div>
           <Label
             htmlFor="visit-date-trigger"
-            className="text-[10px] uppercase font-bold text-muted tracking-wider block mb-1"
+            className="text-[11px] uppercase font-bold text-muted tracking-wider block mb-1"
           >
             Ngày xem phòng *
           </Label>
@@ -244,25 +244,25 @@ export function BookingWidget({
 
           {/* Quick date chips */}
           <div className="flex flex-wrap items-center gap-1 pt-1.5">
-            <span className="text-[10px] text-subtle">Chọn nhanh:</span>
+            <span className="text-[11px] text-subtle">Chọn nhanh:</span>
             <button
               type="button"
               onClick={() => handleQuickDate(0)}
-              className="rounded-md border border-border bg-surface-muted/60 px-2 py-0.5 text-[10px] font-medium text-fg hover:border-primary hover:text-primary transition"
+              className="rounded-md border border-border bg-surface-muted/60 px-2 py-0.5 text-[11px] font-medium text-fg hover:border-primary hover:text-primary transition"
             >
               Hôm nay
             </button>
             <button
               type="button"
               onClick={() => handleQuickDate(1)}
-              className="rounded-md border border-border bg-surface-muted/60 px-2 py-0.5 text-[10px] font-medium text-fg hover:border-primary hover:text-primary transition"
+              className="rounded-md border border-border bg-surface-muted/60 px-2 py-0.5 text-[11px] font-medium text-fg hover:border-primary hover:text-primary transition"
             >
               Ngày mai
             </button>
             <button
               type="button"
               onClick={() => handleQuickDate(3)}
-              className="rounded-md border border-border bg-surface-muted/60 px-2 py-0.5 text-[10px] font-medium text-fg hover:border-primary hover:text-primary transition"
+              className="rounded-md border border-border bg-surface-muted/60 px-2 py-0.5 text-[11px] font-medium text-fg hover:border-primary hover:text-primary transition"
             >
               Sau 3 ngày
             </button>
@@ -272,7 +272,7 @@ export function BookingWidget({
         <div>
           <Label
             htmlFor="visitTime-trigger"
-            className="text-[10px] uppercase font-bold text-muted tracking-wider block mb-1"
+            className="text-[11px] uppercase font-bold text-muted tracking-wider block mb-1"
           >
             Khung giờ
           </Label>
@@ -320,7 +320,7 @@ export function BookingWidget({
         <div>
           <Label
             htmlFor="notes"
-            className="text-[10px] uppercase font-bold text-muted tracking-wider block mb-1"
+            className="text-[11px] uppercase font-bold text-muted tracking-wider block mb-1"
           >
             Ghi chú yêu cầu
           </Label>

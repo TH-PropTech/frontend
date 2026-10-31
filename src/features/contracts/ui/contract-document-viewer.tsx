@@ -626,16 +626,6 @@ export function ContractDocumentViewer({
                   {getContractStatusLabel(status)}
                 </span>
               </p>
-              {document?.lockedHash && (
-                <p className="text-[11px] text-[var(--muted)] mt-1.5 truncate max-w-md mx-auto">
-                  <span>Mã toàn vẹn hợp đồng:</span>{' '}
-                  <span className="font-mono font-semibold text-[var(--fg)]">
-                    {document.lockedHash.length > 20
-                      ? `${document.lockedHash.slice(0, 10)}...${document.lockedHash.slice(-8)}`
-                      : document.lockedHash}
-                  </span>
-                </p>
-              )}
             </div>
           ) : null}
 

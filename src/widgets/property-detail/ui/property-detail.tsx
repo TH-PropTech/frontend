@@ -306,7 +306,7 @@ export function PropertyDetail(): React.ReactElement {
           <section className="mx-auto max-w-6xl px-6 pt-3 md:px-10">
             <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-3xl p-4 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
               <div className="space-y-1.5 text-center md:text-left">
-                <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full text-[10px] font-bold text-[#c65a3a] uppercase tracking-wider animate-pulse">
+                <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full text-[11px] font-bold text-[#c65a3a] uppercase tracking-wider animate-pulse">
                   Tính năng mới
                 </div>
                 <h4 className="font-marketing text-base font-bold text-fg">
@@ -339,9 +339,15 @@ export function PropertyDetail(): React.ReactElement {
                 <span className="h-2 w-2 rounded-full bg-primary" />
                 Mô tả chi tiết căn hộ
               </h3>
-              <p className="font-body text-sm text-muted leading-relaxed whitespace-pre-line text-left">
-                {property.description}
-              </p>
+              {property.description?.trim() ? (
+                <p className="font-body text-sm text-muted leading-relaxed whitespace-pre-line text-left">
+                  {property.description}
+                </p>
+              ) : (
+                <p className="font-body text-sm italic text-muted text-left">
+                  Chưa cập nhật
+                </p>
+              )}
 
               {property.projectName && (
                 <div className="mt-6 p-4 rounded-2xl bg-surface-muted/50 border border-border flex items-center justify-between">
@@ -437,7 +443,7 @@ export function PropertyDetail(): React.ReactElement {
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="border border-border rounded-2xl p-4 bg-surface-muted/30">
-                  <span className="text-[9px] font-bold text-muted uppercase tracking-wider block">
+                  <span className="text-[11px] font-bold text-muted uppercase tracking-wider block">
                     Đơn giá điện
                   </span>
                   <p className="font-body text-xs font-bold text-fg mt-1">
@@ -445,7 +451,7 @@ export function PropertyDetail(): React.ReactElement {
                   </p>
                 </div>
                 <div className="border border-border rounded-2xl p-4 bg-surface-muted/30">
-                  <span className="text-[9px] font-bold text-muted uppercase tracking-wider block">
+                  <span className="text-[11px] font-bold text-muted uppercase tracking-wider block">
                     Đơn giá nước
                   </span>
                   <p className="font-body text-xs font-bold text-fg mt-1">
@@ -453,7 +459,7 @@ export function PropertyDetail(): React.ReactElement {
                   </p>
                 </div>
                 <div className="border border-border rounded-2xl p-4 bg-surface-muted/30">
-                  <span className="text-[9px] font-bold text-muted uppercase tracking-wider block">
+                  <span className="text-[11px] font-bold text-muted uppercase tracking-wider block">
                     Mạng Internet
                   </span>
                   <p className="font-body text-xs font-bold text-fg mt-1">
@@ -474,6 +480,11 @@ export function PropertyDetail(): React.ReactElement {
                 <span className="h-2 w-2 rounded-full bg-accent animate-pulse-subtle" />
                 Tiện ích tích hợp
               </h3>
+              {property.amenities.length === 0 && (
+                <p className="font-body text-sm italic text-muted text-left">
+                  Chưa cập nhật
+                </p>
+              )}
               <ul className="grid grid-cols-1 gap-2.5">
                 {property.amenities.map((item, idx) => (
                   <li
@@ -527,7 +538,7 @@ export function PropertyDetail(): React.ReactElement {
                         {property.landlord.fullName}
                       </h4>
                       {property.landlord.kycStatus === 'verified' && (
-                        <span className="inline-flex items-center gap-1 bg-success-soft text-success text-[9px] font-bold px-2 py-0.5 rounded-full border border-success/20">
+                        <span className="inline-flex items-center gap-1 bg-success-soft text-success text-[11px] font-bold px-2 py-0.5 rounded-full border border-success/20">
                           <CheckCircle2 className="h-2.5 w-2.5 text-success animate-pulse" />
                           Đã KYC
                         </span>
@@ -565,7 +576,7 @@ export function PropertyDetail(): React.ReactElement {
         >
           {/* Section Header */}
           <div className="space-y-2 text-left border-b border-border/80 pb-5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary-soft text-primary border border-primary/20">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-primary-soft text-primary border border-primary/20">
               <Sparkles className="h-3 w-3" />
               <span>PropTech Intelligence Suite</span>
             </div>

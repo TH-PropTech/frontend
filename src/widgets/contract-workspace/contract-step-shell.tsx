@@ -41,7 +41,6 @@ function stateLabel(state: ContractStepState): string {
 
 export function ContractStepShell({
   contractId,
-  contractCode,
   contractStatus,
   step,
   activeStep,
@@ -77,7 +76,7 @@ export function ContractStepShell({
             {currentStep?.label ?? 'Hợp đồng'}
           </h1>
           <p className="mt-1 text-xs text-[var(--muted)]">
-            {contractCode} · Trạng thái: {contractStatus}
+            Trạng thái: {contractStatus}
           </p>
         </div>
         <span className="rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">

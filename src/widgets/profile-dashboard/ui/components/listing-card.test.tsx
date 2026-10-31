@@ -70,13 +70,13 @@ describe('ListingCard', () => {
   it('shows the VND price in millions', () => {
     renderCard(buildItem({ priceMonthly: 15_000_000 }))
 
-    expect(screen.getByText('15 triệu/tháng')).toBeTruthy()
+    expect(screen.getByText('15.000.000 ₫/tháng')).toBeTruthy()
   })
 
   it('keeps decimals for non-round prices', () => {
     renderCard(buildItem({ priceMonthly: 12_500_000 }))
 
-    expect(screen.getByText('12,5 triệu/tháng')).toBeTruthy()
+    expect(screen.getByText('12.500.000 ₫/tháng')).toBeTruthy()
   })
 
   it('offers renew on an expired listing and shows its badge', () => {

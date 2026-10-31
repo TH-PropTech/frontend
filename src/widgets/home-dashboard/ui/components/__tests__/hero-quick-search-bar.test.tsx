@@ -216,4 +216,13 @@ describe('HeroQuickSearchBar Component - 5 Dimensions Suite', () => {
     fireEvent.click(screen.getByTestId('quick-search-submit-button'))
     expect(pushMock).toHaveBeenCalledWith('/properties?bedrooms=4')
   })
+
+  // Class contract: jsdom không áp CSS nên chỉ kiểm tra class kích thước.
+  it('chip gợi ý đạt vùng chạm 40px và chữ 12px; nhãn trường tối thiểu 11px', () => {
+    const { container } = render(<HeroQuickSearchBar />)
+    const chip = screen.getByTestId('suggestion-chip-Sài Gòn')
+    expect(chip.className).toContain('min-h-10')
+    expect(chip.className).toContain('text-xs')
+    expect(container.innerHTML).not.toMatch(/text-\[(8|9|10)px\]/)
+  })
 })

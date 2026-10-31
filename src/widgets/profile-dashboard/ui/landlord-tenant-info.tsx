@@ -4,48 +4,33 @@ import * as React from 'react'
 import { Card } from '@/shared/ui/card'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
-import {
-  User,
-  Phone,
-  Calendar,
-  Award,
-  Eye,
-  Heart,
-  Megaphone,
-  Edit,
-} from 'lucide-react'
-import { DEMO_TENANT_INFO, DEMO_PROPERTY_STATS } from '../model/mock-data'
+import { User, Phone, Calendar, Award, Megaphone, Edit } from 'lucide-react'
 import type { TenantInfo } from '../model/types'
 
 interface LandlordTenantInfoProps {
-  propertyId: string
   status: 'Đang thuê' | 'Đang chờ cọc' | 'Trống'
   price: number
-  /** Dữ liệu backend: khách thuê hiện tại lấy từ hợp đồng, không dùng số liệu demo. */
-  live?: boolean
+  /** Khách thuê hiện tại lấy từ hợp đồng (backend). */
   liveInfo?: TenantInfo | undefined
 }
 
 export function LandlordTenantInfo({
-  propertyId,
   status,
   price,
-  live = false,
   liveInfo,
 }: LandlordTenantInfoProps): React.ReactElement {
   if (status === 'Đang thuê') {
-    if (live && !liveInfo) return <></>
-    const info = liveInfo ??
-      DEMO_TENANT_INFO[propertyId] ?? {
-        name: 'Khách thuê demo',
-        phone: '0900 000 000',
-        startDate: '10/06/2026',
-        duration: '12 tháng',
-        endDate: '10/06/2027',
-        paymentStatus: 'Đúng hạn',
-        creditScore: '750/850',
-        creditRank: 'Hạng Vàng',
-      }
+    if (!liveInfo) {
+      return (
+        <Card className="bg-white border border-border rounded-3xl p-6 shadow-sm text-left space-y-2">
+          <h4 className="font-marketing text-sm font-bold text-fg">
+            Khách thuê hiện tại
+          </h4>
+          <p className="text-xs italic text-muted">Chưa có dữ liệu</p>
+        </Card>
+      )
+    }
+    const info = liveInfo
 
     return (
       <Card className="bg-white border border-border rounded-3xl p-6 shadow-sm text-left space-y-4">
@@ -80,16 +65,6 @@ export function LandlordTenantInfo({
           <div className="space-y-2.5">
             <div className="flex items-center gap-2">
               <Award className="h-4 w-4 text-subtle" />
-              <span className="text-muted font-medium">Hạng tín dụng:</span>
-              <Badge
-                variant="outline"
-                className="text-[10px] font-bold bg-secondary-soft text-secondary border-secondary/15"
-              >
-                {info.creditRank} ({info.creditScore})
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2">
-              <Award className="h-4 w-4 text-subtle" />
               <span className="text-muted font-medium">
                 Tình trạng đóng tiền:
               </span>
@@ -115,11 +90,7 @@ export function LandlordTenantInfo({
     )
   }
 
-  // If properties are empty or waiting for deposits
-  // chưa có số liệu lượt xem / yêu thích thật từ backend nên chỉ hiện ở chế độ demo
-  const stats = live
-    ? null
-    : (DEMO_PROPERTY_STATS[propertyId] ?? { views: 45, favorites: 4 })
+  // Chưa có API lượt xem / yêu thích nên không hiển thị số liệu.
   return (
     <Card className="bg-white border border-border rounded-3xl p-6 shadow-sm text-left space-y-4">
       <div className="space-y-1">
@@ -137,38 +108,6 @@ export function LandlordTenantInfo({
             : 'Căn hộ đang được niêm yết trên sàn giao dịch và sẵn sàng tiếp nhận khách hàng mới.'}
         </p>
       </div>
-
-      {stats && (
-        <div className="grid grid-cols-2 gap-4 border-y border-border/50 py-4">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-surface-muted flex items-center justify-center text-subtle">
-              <Eye className="h-4.5 w-4.5" />
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-[10px] text-muted font-bold uppercase block">
-                Lượt xem tin
-              </span>
-              <span className="text-sm font-bold text-fg font-mono">
-                {stats.views}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-surface-muted flex items-center justify-center text-subtle">
-              <Heart className="h-4.5 w-4.5 text-danger" />
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-[10px] text-muted font-bold uppercase block">
-                Lượt yêu thích
-              </span>
-              <span className="text-sm font-bold text-fg font-mono">
-                {stats.favorites}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-wrap gap-2.5 pt-1">
         <Button className="rounded-full bg-primary hover:bg-primary-hover text-white text-xs font-bold px-5 h-9 cursor-pointer flex items-center gap-1.5 shadow-sm">

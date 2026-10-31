@@ -219,7 +219,7 @@ export function Footer(): React.ReactElement {
               {TECH_BADGES.map(({ icon: Icon, label }) => (
                 <span
                   key={label}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-muted"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-muted"
                 >
                   <Icon className="h-3 w-3 text-primary" aria-hidden="true" />
                   {label}
@@ -229,7 +229,7 @@ export function Footer(): React.ReactElement {
 
             {/* Payment Partner */}
             <div className="mt-6 border-t border-border/60 pt-4">
-              <span className="font-display text-[10px] font-bold uppercase tracking-wider text-muted block mb-2">
+              <span className="font-display text-[11px] font-bold uppercase tracking-wider text-muted block mb-2">
                 Đối tác liên kết thanh toán
               </span>
               <div className="flex items-center gap-2">
@@ -347,7 +347,7 @@ export function Footer(): React.ReactElement {
               <IconFacebook className="h-4 w-4" />
             </a>
             <span className="hidden h-4 w-px bg-border sm:block" />
-            <span className="font-mono text-[10px] text-subtle">v1.0.0</span>
+            <span className="font-mono text-[11px] text-subtle">v1.0.0</span>
           </div>
         </div>
       </div>

@@ -33,7 +33,7 @@ const STAGE_LABELS: Record<ContractActiveStep, string> = {
 
 const LEDGER_LABELS: Record<ContractLedgerSummary['status'], string> = {
   'not-requested': 'Chưa lưu vết',
-  pending: 'Đang chờ lưu vết',
+  pending: 'Lưu vết: đang chờ ghi nhận',
   processing: 'Đang lưu vết',
   'confirmed-simulation': 'Đã ghi nhận',
   'confirmed-fabric': 'Đã lưu vết chống sửa đổi',
@@ -135,7 +135,7 @@ export function ContractSummaryCard({
           ...(viewerRole === 'tenant'
             ? [
                 {
-                  label: 'Phí dịch vụ tenant',
+                  label: 'Phí dịch vụ khách thuê',
                   value: financialSummary.tenantServiceFee,
                   primary: false,
                 },
@@ -177,9 +177,6 @@ export function ContractSummaryCard({
             </div>
           )}
           <div>
-            <p className="font-mono text-xs font-bold text-[var(--fg)]">
-              {contract.code}
-            </p>
             <h2 className="text-sm font-bold text-[var(--fg)]">
               {property.title}
             </h2>

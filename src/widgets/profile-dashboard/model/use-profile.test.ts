@@ -134,4 +134,35 @@ describe('useProfile', () => {
     expect(result.current.role).toBe('landlord')
     expect(result.current.activeTab).toBe('listings')
   })
+
+  const waitForMount = async (): Promise<void> => {
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 10))
+    })
+  }
+
+  it('mở ở vai trò khách thuê khi tài khoản có cả hai vai trò (tenant + landlord)', async () => {
+    localStorage.setItem(
+      'user',
+      JSON.stringify({ roles: ['tenant', 'landlord'] })
+    )
+    const { result } = renderHook(() => useProfile())
+    await waitForMount()
+    expect(result.current.role).toBe('tenant')
+  })
+
+  it('mở ở vai trò chủ nhà khi tài khoản chỉ có vai trò landlord', async () => {
+    localStorage.setItem('user', JSON.stringify({ roles: ['landlord'] }))
+    const { result } = renderHook(() => useProfile())
+    await waitForMount()
+    expect(result.current.role).toBe('landlord')
+  })
+
+  it('tham số role trên URL ghi đè vai trò mặc định', async () => {
+    localStorage.setItem('user', JSON.stringify({ roles: ['landlord'] }))
+    window.history.replaceState({}, '', '/profile?role=tenant')
+    const { result } = renderHook(() => useProfile())
+    await waitForMount()
+    expect(result.current.role).toBe('tenant')
+  })
 })

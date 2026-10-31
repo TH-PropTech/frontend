@@ -231,7 +231,16 @@ export function PublicServiceCitationPanel({
 
   const checklist =
     checklistState.status === 'ready' ? checklistState.data : null
-  const sources = sourcesState.status === 'ready' ? sourcesState.data : []
+  const sources = React.useMemo(
+    () =>
+      sourcesState.status === 'ready'
+        ? // Dữ liệu cũ có thể trùng key: giữ bản đầu tiên để không lỗi key React.
+          sourcesState.data.filter(
+            (s, i, all) => all.findIndex(o => o.key === s.key) === i
+          )
+        : [],
+    [sourcesState]
+  )
   const procedures = sources.filter(s => s.kind === 'procedure')
   const legalTexts = sources.filter(s => s.kind === 'legal_text')
   const isLoading =

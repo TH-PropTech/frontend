@@ -7,7 +7,7 @@ interface ContractPageRouteProps {
 }
 
 export const metadata: Metadata = {
-  title: 'Không gian hợp đồng & Ký số e-Consent | TH-PropTech',
+  title: 'Không gian hợp đồng & Ký xác nhận | TH-PropTech',
   description:
     'Không gian làm việc hợp đồng thuê căn hộ: Đối soát điều khoản, thanh toán cọc an toàn, đối soát sinh trắc học và ký số Smart OTP.',
 }

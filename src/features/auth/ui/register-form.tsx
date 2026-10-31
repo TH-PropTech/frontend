@@ -174,7 +174,7 @@ export function RegisterForm(): React.ReactElement {
           value={otp}
           onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
           required
-          className="text-center tracking-widest text-lg font-bold"
+          className="min-h-11 text-center tracking-widest text-lg font-bold"
           icon={
             <svg
               width="18"
@@ -196,7 +196,7 @@ export function RegisterForm(): React.ReactElement {
           type="submit"
           size="lg"
           loading={isLoading}
-          className="w-full mt-1"
+          className="min-h-11 w-full mt-1"
         >
           Xác nhận & Hoàn tất
         </Button>
@@ -246,6 +246,7 @@ export function RegisterForm(): React.ReactElement {
         {/* Name row */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
+            className="min-h-11"
             label="Họ và tên"
             type="text"
             placeholder="Nguyễn Văn A"
@@ -270,6 +271,7 @@ export function RegisterForm(): React.ReactElement {
             }
           />
           <Input
+            className="min-h-11"
             label="Số điện thoại"
             type="tel"
             placeholder="0912 345 678"
@@ -295,6 +297,7 @@ export function RegisterForm(): React.ReactElement {
         </div>
 
         <Input
+          className="min-h-11"
           label="Email"
           type="email"
           placeholder="email@example.com"
@@ -321,6 +324,7 @@ export function RegisterForm(): React.ReactElement {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
+            className="min-h-11"
             label="Mật khẩu"
             type="password"
             placeholder="Tối thiểu 8 ký tự"
@@ -346,6 +350,7 @@ export function RegisterForm(): React.ReactElement {
             }
           />
           <Input
+            className="min-h-11"
             label="Xác nhận mật khẩu"
             type="password"
             placeholder="Nhập lại mật khẩu"
@@ -384,7 +389,7 @@ export function RegisterForm(): React.ReactElement {
             <button
               type="button"
               onClick={() => setShowTerms(true)}
-              className="font-medium text-primary hover:text-primary-hover underline focus:outline-none"
+              className="inline-flex min-h-11 items-center font-medium text-primary hover:text-primary-hover underline focus:outline-none"
             >
               Điều khoản sử dụng
             </button>{' '}
@@ -392,7 +397,7 @@ export function RegisterForm(): React.ReactElement {
             <button
               type="button"
               onClick={() => setShowPrivacy(true)}
-              className="font-medium text-primary hover:text-primary-hover underline focus:outline-none"
+              className="inline-flex min-h-11 items-center font-medium text-primary hover:text-primary-hover underline focus:outline-none"
             >
               Chính sách bảo mật
             </button>
@@ -403,7 +408,7 @@ export function RegisterForm(): React.ReactElement {
           type="submit"
           size="lg"
           loading={isLoading}
-          className="w-full mt-1"
+          className="min-h-11 w-full mt-1"
         >
           Tạo tài khoản
         </Button>
@@ -412,7 +417,7 @@ export function RegisterForm(): React.ReactElement {
           Đã có tài khoản?{' '}
           <Link
             href={'/login' as Route}
-            className="font-semibold text-primary hover:text-primary-hover transition-colors"
+            className="inline-flex min-h-11 items-center font-semibold text-primary hover:text-primary-hover transition-colors"
           >
             Đăng nhập
           </Link>

@@ -155,8 +155,6 @@ export function buildPortfolio(
       duration: months ? `${months} tháng` : '—',
       endDate: fmtDate(contract.endDate),
       paymentStatus: 'Chưa có dữ liệu',
-      creditScore: '—',
-      creditRank: '—',
     }
     contractSummary[l.id] = {
       code: contract.contractCode,

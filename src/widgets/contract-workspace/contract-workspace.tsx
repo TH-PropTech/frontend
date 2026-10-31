@@ -35,6 +35,7 @@ import {
   FabricLedgerEvidenceCard,
   ContractAmendmentTimeline,
   ContractSummaryCard,
+  ContractTechnicalDetails,
   NextActionBanner,
   getContractStatusLabel,
   resolveContractActiveStep,
@@ -212,38 +213,37 @@ export function ContractWorkspace({
           </Link>
           <span className="text-[var(--border)] hidden sm:inline">|</span>
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="font-bold font-mono text-[var(--fg)]">
-              {contract.code}
-            </span>
             <Badge
               variant="outline"
-              className="text-[10px] font-bold uppercase text-[var(--primary)] bg-[var(--surface-muted)]"
+              className="text-[11px] font-bold uppercase text-[var(--primary)] bg-[var(--surface-muted)]"
             >
               {getContractStatusLabel(contract.status)}
             </Badge>
             {isSimulation ? (
               <Badge
                 variant="outline"
-                className="text-[10px] font-bold text-[var(--warning)] bg-[var(--surface-muted)]"
+                className="text-[11px] font-bold text-[var(--warning)] bg-[var(--surface-muted)]"
               >
                 Chế độ thử nghiệm
               </Badge>
-            ) : (
-              <Badge
-                variant="outline"
-                className="text-[10px] font-bold text-[var(--success)] bg-[var(--surface-muted)]"
-              >
-                Lưu vết thật
-              </Badge>
-            )}
+            ) : null}
           </div>
         </div>
-
-        <div className="text-xs text-[var(--muted)]">
-          Bản sửa đổi:{' '}
-          <strong className="text-[var(--fg)]">{`v${document.revision}`}</strong>
-        </div>
       </div>
+
+      <ContractTechnicalDetails
+        items={[
+          { label: 'Mã hợp đồng', value: contract.code },
+          { label: 'Bản sửa đổi', value: `v${document.revision}` },
+          {
+            label: 'Chế độ lưu vết',
+            value: isSimulation ? 'Thử nghiệm' : 'Lưu vết thật',
+          },
+          ...(document.lockedHash
+            ? [{ label: 'Mã xác thực nội dung', value: document.lockedHash }]
+            : []),
+        ]}
+      />
 
       <ContractSummaryCard
         contract={contract}
@@ -353,7 +353,7 @@ export function ContractWorkspace({
       <div
         role="tablist"
         aria-label="Các phần của hợp đồng"
-        className="sticky top-0 z-30 -mx-3 flex items-center gap-1.5 overflow-x-auto border-b border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-xs font-medium no-scrollbar sm:-mx-6 sm:px-6 lg:hidden"
+        className="sticky top-0 z-30 -mx-3 flex items-center gap-1 overflow-x-auto border-b border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-xs font-medium no-scrollbar sm:-mx-6 sm:px-6 lg:hidden"
       >
         {MOBILE_TABS.map(tab => (
           <button
@@ -363,7 +363,7 @@ export function ContractWorkspace({
             id={`contract-tab-${tab.key}`}
             aria-selected={activeMobileTab === tab.key}
             onClick={() => setActiveMobileTab(tab.key)}
-            className={`min-h-11 shrink-0 whitespace-nowrap rounded-lg px-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] ${
+            className={`min-h-11 min-w-fit flex-1 shrink-0 whitespace-nowrap rounded-lg px-2.5 text-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] ${
               activeMobileTab === tab.key
                 ? 'bg-[var(--primary)] text-white font-semibold shadow-sm'
                 : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-muted)]'

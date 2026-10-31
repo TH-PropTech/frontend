@@ -40,13 +40,13 @@ const SIGNING_STEPS = [
   {
     num: 2,
     title: 'Xác thực sinh trắc học',
-    desc: 'Hệ thống xác minh danh tính qua eKYC để đảm bảo tính pháp lý của chữ ký.',
+    desc: 'Hệ thống đối chiếu khuôn mặt của bạn với giấy tờ đã xác minh để đảm bảo chữ ký đúng người.',
     icon: BadgeCheck,
   },
   {
     num: 3,
-    title: 'Ký số SmartCA',
-    desc: 'Ký điện tử an toàn — hợp đồng được lưu bất biến trên Hyperledger Fabric.',
+    title: 'Ký số',
+    desc: 'Ký điện tử an toàn — nội dung hợp đồng được lưu vết chống sửa đổi.',
     icon: ShieldCheck,
   },
 ]
@@ -298,8 +298,8 @@ export function ContractInvitePanel({
         />
         <p className="leading-relaxed">
           <strong className="text-fg">Hợp đồng số được bảo vệ pháp lý:</strong>{' '}
-          Sau khi hai bên ký số, toàn bộ nội dung được lưu trữ bất biến trên sổ
-          cái Hyperledger Fabric và có hiệu lực theo Nghị định 96/2024/NĐ-CP.
+          Sau khi hai bên ký số, toàn bộ nội dung được lưu vết chống sửa đổi và
+          có hiệu lực theo Nghị định 96/2024/NĐ-CP.
         </p>
       </section>
 

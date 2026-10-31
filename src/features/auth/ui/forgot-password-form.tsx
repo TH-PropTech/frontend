@@ -112,7 +112,7 @@ export function ForgotPasswordForm(): React.ReactElement {
           value={otp}
           onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
           required
-          className="text-center tracking-widest text-lg font-bold"
+          className="min-h-11 text-center tracking-widest text-lg font-bold"
           icon={
             <svg
               width="18"
@@ -131,6 +131,7 @@ export function ForgotPasswordForm(): React.ReactElement {
         />
 
         <Input
+          className="min-h-11"
           label="Mật khẩu mới"
           type="password"
           placeholder="Tối thiểu 8 ký tự"
@@ -156,6 +157,7 @@ export function ForgotPasswordForm(): React.ReactElement {
         />
 
         <Input
+          className="min-h-11"
           label="Xác nhận mật khẩu mới"
           type="password"
           placeholder="Nhập lại mật khẩu mới"
@@ -179,7 +181,12 @@ export function ForgotPasswordForm(): React.ReactElement {
           }
         />
 
-        <Button type="submit" size="lg" loading={isLoading} className="w-full">
+        <Button
+          type="submit"
+          size="lg"
+          loading={isLoading}
+          className="min-h-11 w-full"
+        >
           Xác thực & Đặt lại mật khẩu
         </Button>
 
@@ -218,6 +225,7 @@ export function ForgotPasswordForm(): React.ReactElement {
       )}
 
       <Input
+        className="min-h-11"
         label="Email"
         type="email"
         placeholder="email@example.com"
@@ -243,13 +251,18 @@ export function ForgotPasswordForm(): React.ReactElement {
         }
       />
 
-      <Button type="submit" size="lg" loading={isLoading} className="w-full">
+      <Button
+        type="submit"
+        size="lg"
+        loading={isLoading}
+        className="min-h-11 w-full"
+      >
         Gửi mã OTP khôi phục
       </Button>
 
       <Link
         href={'/login' as Route}
-        className="text-center text-sm font-medium text-primary hover:text-primary-hover transition-colors"
+        className="inline-flex min-h-11 items-center justify-center text-center text-sm font-medium text-primary hover:text-primary-hover transition-colors"
       >
         ← Quay lại đăng nhập
       </Link>

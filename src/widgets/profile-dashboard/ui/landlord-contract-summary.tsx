@@ -10,16 +10,15 @@ import {
   Clock,
   ShieldAlert,
 } from 'lucide-react'
-import { DEMO_CONTRACT_SUMMARY } from '../model/mock-data'
 import type { ContractSummary } from '../model/types'
 
 interface LandlordContractSummaryProps {
-  /** Hợp đồng thật; bỏ trống = hợp đồng demo. */
-  summary?: ContractSummary | undefined
+  /** Hợp đồng thật từ backend. */
+  summary: ContractSummary
 }
 
 export function LandlordContractSummary({
-  summary = DEMO_CONTRACT_SUMMARY,
+  summary,
 }: LandlordContractSummaryProps): React.ReactElement {
   return (
     <Card className="bg-white border border-border rounded-3xl p-6 shadow-sm text-left space-y-4">

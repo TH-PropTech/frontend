@@ -146,7 +146,7 @@ export function ContractStatusTimeline({
         : isActive
           ? txHash
             ? 'Đã kích hoạt & lưu vết hợp đồng'
-            : 'Đã kích hoạt (Đang chờ lưu vết)'
+            : 'Đã kích hoạt, lưu vết đang chờ ghi nhận'
           : 'Kích hoạt sau khi hai bên ký',
     state: isTerminated ? 'failed' : isActive ? 'completed' : 'upcoming',
     icon: isTerminated ? AlertTriangle : CheckCircle2,

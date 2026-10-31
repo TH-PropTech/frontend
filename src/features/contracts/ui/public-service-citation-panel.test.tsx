@@ -71,6 +71,25 @@ describe('PublicServiceCitationPanel', () => {
     expect(legalSourcesApi.getContractPanelSources).toHaveBeenCalledTimes(1)
   })
 
+  it('khử trùng nguồn theo key và không phát cảnh báo key trùng', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const dup = PANEL_SOURCES[0]!
+    vi.mocked(legalSourcesApi.getContractPanelSources).mockResolvedValue([
+      ...PANEL_SOURCES,
+      dup,
+    ])
+    render(<PublicServiceCitationPanel contractId="contract-123" />)
+
+    expect(await screen.findAllByTestId(`link-source-${dup.key}`)).toHaveLength(
+      1
+    )
+    const keyWarnings = errorSpy.mock.calls.filter(c =>
+      String(c[0]).includes('same key')
+    )
+    expect(keyWarnings).toHaveLength(0)
+    errorSpy.mockRestore()
+  })
+
   it('groups procedures and legal texts separately', async () => {
     render(<PublicServiceCitationPanel contractId="contract-123" />)
 
