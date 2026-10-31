@@ -17,7 +17,13 @@ const TYPE_LABELS: Record<ListingReviewCase['type'], string> = {
   similar_content: 'Nội dung tương tự',
 }
 
-export function ListingReviewQueue(): React.ReactElement {
+interface ListingReviewQueueProps {
+  hideWhenEmpty?: boolean
+}
+
+export function ListingReviewQueue({
+  hideWhenEmpty = false,
+}: ListingReviewQueueProps = {}): React.ReactElement | null {
   const queryClient = useQueryClient()
   const queue = useQuery({
     queryKey: ['listing-review-queue', 'pending'],
@@ -57,9 +63,13 @@ export function ListingReviewQueue(): React.ReactElement {
     )
   }
   if (!queue.data?.items.length) {
+    if (hideWhenEmpty) {
+      return null
+    }
     return (
-      <div className="rounded-2xl border border-border bg-surface p-5 text-sm text-muted">
-        Không có tín hiệu cần kiểm tra.
+      <div className="rounded-2xl border border-border bg-surface p-4 text-xs text-muted">
+        <p className="font-semibold text-fg">Tín hiệu độ mới tin đăng</p>
+        <p className="mt-0.5">Không có tín hiệu cần kiểm tra.</p>
       </div>
     )
   }

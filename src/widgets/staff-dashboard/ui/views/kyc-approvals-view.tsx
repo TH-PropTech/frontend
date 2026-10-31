@@ -190,26 +190,30 @@ export function KycApprovalsView(): React.ReactElement {
             className="min-w-52 bg-transparent text-fg outline-none placeholder:text-subtle"
           />
         </label>
-        <div className="flex rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
+        <div className="flex flex-wrap rounded-lg border border-line p-1 bg-surface-muted/30 text-xs gap-1 font-semibold self-start">
           <button
+            type="button"
             onClick={() => setFilter('all')}
             className={`px-3 py-1.5 rounded-md transition-all ${filter === 'all' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Tất cả
           </button>
           <button
+            type="button"
             onClick={() => setFilter('pending')}
             className={`px-3 py-1.5 rounded-md transition-all ${filter === 'pending' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Chờ duyệt ({records.filter(r => r.status === 'pending').length})
           </button>
           <button
+            type="button"
             onClick={() => setFilter('approved')}
             className={`px-3 py-1.5 rounded-md transition-all ${filter === 'approved' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
             Đã xác minh
           </button>
           <button
+            type="button"
             onClick={() => setFilter('rejected')}
             className={`px-3 py-1.5 rounded-md transition-all ${filter === 'rejected' ? 'bg-primary text-on-control shadow-sm' : 'text-muted hover:text-fg'}`}
           >
@@ -218,8 +222,63 @@ export function KycApprovalsView(): React.ReactElement {
         </div>
       </div>
 
-      {/* Records table */}
-      <AdminCard className="overflow-hidden">
+      {/* Mobile Card View (screens < md) */}
+      <div className="space-y-3 md:hidden">
+        {filteredRecords.map(record => (
+          <AdminCard key={record.id} className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-fg">
+                {record.id}
+              </span>
+              <span
+                className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                  record.status === 'approved'
+                    ? 'bg-accent-2/10 text-accent-2'
+                    : record.status === 'rejected'
+                      ? 'bg-accent/10 text-accent'
+                      : 'bg-accent-3/10 text-accent-3'
+                }`}
+              >
+                {record.status === 'approved'
+                  ? 'Đã duyệt'
+                  : record.status === 'rejected'
+                    ? 'Đã từ chối'
+                    : 'Đang chờ'}
+              </span>
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-fg">{record.name}</p>
+              <p className="font-mono text-xs text-muted mt-0.5">
+                CCCD: {record.cccdNumber}
+              </p>
+            </div>
+            <div className="flex items-center justify-between text-xs text-subtle border-t border-line/60 pt-2">
+              <span>
+                Khớp OCR:{' '}
+                <strong className="text-fg font-semibold">
+                  {record.ocrScore === null ? 'Chưa có' : `${record.ocrScore}%`}
+                </strong>
+              </span>
+              <span>{record.submittedAt}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedRecord(record)}
+              className="w-full min-h-11 py-2 bg-fg/5 hover:bg-fg/10 text-fg rounded-lg text-xs font-semibold transition-colors flex items-center justify-center"
+            >
+              {canApprove ? 'Đối chiếu & Duyệt' : 'Xem hồ sơ'}
+            </button>
+          </AdminCard>
+        ))}
+        {filteredRecords.length === 0 && (
+          <AdminCard className="p-8 text-center text-subtle font-body text-xs">
+            Không có hồ sơ KYC nào phù hợp với bộ lọc này.
+          </AdminCard>
+        )}
+      </div>
+
+      {/* Records table (screens >= md) */}
+      <AdminCard className="overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
@@ -248,7 +307,7 @@ export function KycApprovalsView(): React.ReactElement {
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-fg">
                         {record.ocrScore === null
-                          ? 'Không có dữ liệu'
+                          ? 'Chưa có'
                           : `${record.ocrScore}%`}
                       </span>
                     </div>
@@ -273,6 +332,7 @@ export function KycApprovalsView(): React.ReactElement {
                   </td>
                   <td className="p-4 text-right">
                     <button
+                      type="button"
                       onClick={() => setSelectedRecord(record)}
                       className="px-3 py-1.5 bg-fg/5 hover:bg-fg/10 text-fg rounded-md font-semibold transition-colors"
                     >

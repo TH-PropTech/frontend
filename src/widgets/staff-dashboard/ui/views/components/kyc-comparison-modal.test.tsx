@@ -17,7 +17,7 @@ const record: KycRecord = {
   id: 'kyc-001',
   name: 'Nguyễn Văn Đức',
   email: 'duc@example.com',
-  cccdNumber: '035098009',
+  cccdNumber: '035098001234',
   dob: '11.02.1998',
   gender: 'Nam',
   hometown: 'Hà Nam',
@@ -40,12 +40,54 @@ describe('KycComparisonModal', () => {
 
     expect(screen.getByText('Mặt trước CCCD')).toBeInTheDocument()
     expect(screen.getByText('Mặt sau CCCD')).toBeInTheDocument()
-    expect(screen.getByText('Không có điểm OCR')).toBeInTheDocument()
+    expect(screen.getByText('Chưa có điểm OCR')).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Yêu cầu chụp lại' })
     ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Xác nhận KYC' })
+    ).toBeInTheDocument()
+    // Shows label indicating fallback mockups are used
+    expect(
+      screen.getAllByText('Bản dựng từ dữ liệu OCR').length
+    ).toBeGreaterThanOrEqual(1)
+  })
+
+  it('displays "Hình ảnh CCCD" header when no selfie is available', () => {
+    render(
+      <KycComparisonModal
+        selectedRecord={record}
+        onClose={vi.fn()}
+        onVerify={vi.fn().mockResolvedValue(undefined)}
+        onShowReject={vi.fn()}
+      />
+    )
+    expect(
+      screen.getByRole('heading', { level: 3, name: 'Hình ảnh CCCD' })
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/& selfie chân dung/i)).toBeNull()
+  })
+
+  it('warns when CCCD number is not 12 numeric digits', () => {
+    const invalidRecord: KycRecord = {
+      ...record,
+      cccdNumber: '03509800s',
+    }
+    render(
+      <KycComparisonModal
+        selectedRecord={invalidRecord}
+        onClose={vi.fn()}
+        onVerify={vi.fn().mockResolvedValue(undefined)}
+        onShowReject={vi.fn()}
+      />
+    )
+
+    expect(
+      screen.getByText('Số CCCD không đúng định dạng 12 chữ số')
+    ).toBeInTheDocument()
+    // Review controls remain available
+    expect(
+      screen.getByRole('button', { name: 'Yêu cầu chụp lại' })
     ).toBeInTheDocument()
   })
 
