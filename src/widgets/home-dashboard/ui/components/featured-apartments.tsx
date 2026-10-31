@@ -248,7 +248,7 @@ export function FeaturedApartments({
                 <div className="absolute left-3.5 top-3.5 flex flex-wrap gap-1.5 z-10">
                   {isAiRecommended ? (
                     <span
-                      className={`rounded-full px-2.5 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider text-white shadow-sm flex items-center gap-1 ${getScoreBg(
+                      className={`rounded-full px-2.5 py-0.5 font-display text-[11px] font-bold uppercase tracking-wider text-white shadow-sm flex items-center gap-1 ${getScoreBg(
                         apt.match_score
                       )}`}
                     >
@@ -256,13 +256,13 @@ export function FeaturedApartments({
                       {apt.match_score}% Khớp
                     </span>
                   ) : (
-                    <span className="rounded-full bg-[#9F3F2A] px-2.5 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider text-white shadow-sm flex items-center gap-1">
+                    <span className="rounded-full bg-[#9F3F2A] px-2.5 py-0.5 font-display text-[11px] font-bold uppercase tracking-wider text-white shadow-sm flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-white" />
                       Nổi bật
                     </span>
                   )}
                   {apt.hasVr && (
-                    <span className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 font-mono text-[10px] font-bold text-white shadow-sm flex items-center gap-1">
+                    <span className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 font-mono text-[11px] font-bold text-white shadow-sm flex items-center gap-1">
                       <Eye className="w-3 h-3 text-emerald-400" />
                       VR 360°
                     </span>
@@ -282,7 +282,7 @@ export function FeaturedApartments({
               {/* Card Content Area */}
               <div className="p-5 flex-1 flex flex-col justify-between space-y-3.5">
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-mono font-bold tracking-widest text-[#9F3F2A] uppercase block">
+                  <span className="text-[11px] font-mono font-bold tracking-widest text-[#9F3F2A] uppercase block">
                     {apt.district} • {apt.rooms} Phòng ngủ
                   </span>
                   <h3 className="font-display text-base font-bold text-fg group-hover:text-[#9F3F2A] transition-colors line-clamp-1">
@@ -310,7 +310,7 @@ export function FeaturedApartments({
                 {/* Pricing & Footer Actions */}
                 <div className="flex items-center justify-between pt-3 border-t border-[#E3D8D0]/40">
                   <div>
-                    <span className="block font-body text-[10px] text-[#8A7968]">
+                    <span className="block font-body text-[11px] text-[#8A7968]">
                       Giá thuê
                     </span>
                     <span className="font-display text-base sm:text-lg font-bold text-[#9F3F2A]">

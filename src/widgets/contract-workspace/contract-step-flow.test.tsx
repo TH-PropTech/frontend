@@ -188,7 +188,7 @@ describe('ContractStepFlow', () => {
 
     render(<ContractStepFlow contractId="contract-1" step="deposit" />)
 
-    expect(screen.getByTestId('contract-summary-card')).toHaveTextContent(
+    expect(screen.getByTestId('contract-summary-card')).not.toHaveTextContent(
       'HD-001'
     )
     expect(

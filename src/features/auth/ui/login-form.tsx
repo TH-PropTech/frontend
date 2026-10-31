@@ -224,6 +224,7 @@ export function LoginForm(): React.ReactElement {
         {loginMode === 'password' && (
           <>
             <Input
+              className="min-h-11"
               label="Email hoặc Tên tài khoản"
               type="text"
               placeholder="email@example.com hoặc admin"
@@ -250,6 +251,7 @@ export function LoginForm(): React.ReactElement {
 
             <div className="flex flex-col gap-1.5">
               <Input
+                className="min-h-11"
                 label="Mật khẩu"
                 type="password"
                 placeholder="••••••••"
@@ -276,7 +278,7 @@ export function LoginForm(): React.ReactElement {
               <div className="flex justify-end">
                 <Link
                   href={'/forgot-password' as Route}
-                  className="text-xs font-medium text-primary hover:text-primary-hover transition-colors"
+                  className="inline-flex min-h-11 items-center text-xs font-medium text-primary hover:text-primary-hover transition-colors"
                 >
                   Quên mật khẩu?
                 </Link>
@@ -287,7 +289,7 @@ export function LoginForm(): React.ReactElement {
               type="submit"
               size="lg"
               loading={isLoading}
-              className="w-full mt-1"
+              className="min-h-11 w-full mt-1"
             >
               Đăng nhập
             </Button>
@@ -300,7 +302,7 @@ export function LoginForm(): React.ReactElement {
                 setSuccessMsg('')
                 setLoginMode('passwordless-email')
               }}
-              className="text-xs font-semibold text-primary hover:text-primary-hover transition-colors flex items-center justify-center gap-1.5 mt-1 hover:underline"
+              className="min-h-11 text-xs font-semibold text-primary hover:text-primary-hover transition-colors flex items-center justify-center gap-1.5 mt-1 hover:underline"
             >
               <svg
                 width="14"
@@ -335,6 +337,7 @@ export function LoginForm(): React.ReactElement {
             </div>
 
             <Input
+              className="min-h-11"
               label="Email hoặc Tên tài khoản"
               type="text"
               placeholder="operator@th-proptech.vn"
@@ -362,7 +365,7 @@ export function LoginForm(): React.ReactElement {
               type="submit"
               size="lg"
               loading={isLoading}
-              className="w-full mt-2"
+              className="min-h-11 w-full mt-2"
             >
               Tiếp tục
             </Button>
@@ -418,7 +421,7 @@ export function LoginForm(): React.ReactElement {
               value={twoFactorCode}
               onChange={e => setTwoFactorCode(e.target.value)}
               required
-              className="text-center tracking-widest text-lg font-bold"
+              className="min-h-11 text-center tracking-widest text-lg font-bold"
               icon={
                 <svg
                   width="18"
@@ -440,7 +443,7 @@ export function LoginForm(): React.ReactElement {
               type="submit"
               size="lg"
               loading={isLoading}
-              className="w-full mt-2"
+              className="min-h-11 w-full mt-2"
             >
               Xác minh & Đăng nhập
             </Button>
@@ -465,7 +468,7 @@ export function LoginForm(): React.ReactElement {
             Chưa có tài khoản?{' '}
             <Link
               href={'/register' as Route}
-              className="font-semibold text-primary hover:text-primary-hover transition-colors"
+              className="inline-flex min-h-11 items-center font-semibold text-primary hover:text-primary-hover transition-colors"
             >
               Đăng ký ngay
             </Link>
@@ -476,7 +479,7 @@ export function LoginForm(): React.ReactElement {
           <button
             type="button"
             onClick={() => setShowFeeModal(true)}
-            className="text-xs font-medium text-muted hover:text-primary transition-colors inline-flex items-center gap-1"
+            className="text-xs font-medium text-muted hover:text-primary transition-colors inline-flex min-h-11 items-center gap-1"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

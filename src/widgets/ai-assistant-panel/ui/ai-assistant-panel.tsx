@@ -3,6 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import {
   Send,
   X,
@@ -22,6 +23,11 @@ import { env } from '@/shared/config/env'
 
 import { AiMascot } from './ai-mascot'
 import { ChatMarkdown } from './chat-markdown'
+import { formatRentPrice } from '@/entities/properties/model/format-rent-price'
+import {
+  getMascotPlacement,
+  MASCOT_PLACEMENT_CLASSES,
+} from './mascot-placement'
 import {
   chatErrorFromCode,
   chatErrorFromStatus,
@@ -111,6 +117,7 @@ type ChatMetadata = Pick<
 
 export function AiAssistantPanel(): React.ReactElement {
   const [isOpen, setIsOpen] = React.useState(false)
+  const placement = getMascotPlacement(usePathname())
   const [messages, setMessages] = React.useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = React.useState('')
   const [isTyping, setIsTyping] = React.useState(false)
@@ -297,15 +304,12 @@ export function AiAssistantPanel(): React.ReactElement {
 
   // Removed getFontSizeClass to use static text-sm
 
-  const formatPrice = (price: number) => {
-    if (price >= 1000000) {
-      return (price / 1000000).toLocaleString('vi-VN') + ' triệu/tháng'
-    }
-    return price.toLocaleString('vi-VN') + ' đồng/tháng'
-  }
+  const formatPrice = (price: number) => formatRentPrice(price / 1_000_000)
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 font-sans">
+    <div
+      className={`fixed z-50 font-sans ${MASCOT_PLACEMENT_CLASSES[placement]}`}
+    >
       {/* Toggle Button */}
       {!isOpen && (
         <button

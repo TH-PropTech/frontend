@@ -69,7 +69,7 @@ describe('ContractSummaryCard', () => {
     )
 
     const card = screen.getByTestId('contract-summary-card')
-    expect(card).toHaveTextContent('HD-2026-001')
+    expect(card).not.toHaveTextContent('HD-2026-001')
     expect(card).toHaveTextContent('Căn hộ Sunrise City')
     expect(card).toHaveTextContent('Trần Văn Thuê')
     expect(card).toHaveTextContent('Lê Thị Chủ')
@@ -96,7 +96,7 @@ describe('ContractSummaryCard', () => {
     ).toBeInTheDocument()
     expect(
       within(screen.getByTestId('summary-ledger-status')).getByText(
-        'Đang chờ lưu vết (mô phỏng)'
+        'Lưu vết: đang chờ ghi nhận (mô phỏng)'
       )
     ).toBeInTheDocument()
   })
@@ -161,7 +161,7 @@ describe('ContractSummaryCard', () => {
     expect(screen.getByTestId('contract-summary-card')).toHaveTextContent(
       '1.100.000'
     )
-    expect(screen.queryByText('Phí dịch vụ tenant')).not.toBeInTheDocument()
+    expect(screen.queryByText('Phí dịch vụ khách thuê')).not.toBeInTheDocument()
   })
 
   it('lists the prepaid rent recorded in the contract, and nothing for legacy contracts', () => {

@@ -3,11 +3,7 @@ import type {
   BlockchainLog,
   RentalBill,
   MaintenanceTicket,
-  TenantInfo,
   Appointment,
-  ContractSummary,
-  TenantReview,
-  LandlordAlert,
   EventType,
   EventLabelConfig,
 } from './types'
@@ -255,19 +251,6 @@ export const DEMO_SESSIONS = [
 
 // --- Landlord-specific mock data ---
 
-export const DEMO_TENANT_INFO: Record<string, TenantInfo> = {
-  'prop-1': {
-    name: 'Nguyễn Văn A',
-    phone: '0901 234 567',
-    startDate: '10/06/2026',
-    duration: '12 tháng',
-    endDate: '10/06/2027',
-    paymentStatus: 'Đúng hạn 100%',
-    creditScore: '780/850',
-    creditRank: 'Hạng Vàng',
-  },
-}
-
 export const DEMO_APPOINTMENTS: Appointment[] = [
   {
     id: 'apt-1',
@@ -290,58 +273,3 @@ export const DEMO_APPOINTMENTS: Appointment[] = [
     status: 'pending',
   },
 ]
-
-export const DEMO_CONTRACT_SUMMARY: ContractSummary = {
-  code: 'CTR-2026-0048',
-  duration: '12 tháng',
-  startDate: '10/06/2026',
-  endDate: '10/06/2027',
-  monthlyRent: 18000000,
-  deposit: 18000000,
-  paymentDay: 5,
-  latePenalty: '1%/ngày (tối đa 10%)',
-  daysRemaining: 364,
-}
-
-export const DEMO_TENANT_REVIEW: TenantReview = {
-  author: 'Nguyễn Văn A',
-  date: '08/06/2026',
-  comment:
-    'Chủ nhà rất nhiệt tình và chuyên nghiệp, xử lý sự cố vòi nước rò rỉ trong vòng 2 giờ đồng hồ. Phòng sạch sẽ, đúng như mô tả.',
-  ratings: {
-    responsiveness: 5.0,
-    quality: 4.5,
-    maintenance: 4.8,
-    commitment: 5.0,
-  },
-  overall: 4.8,
-}
-
-export const DEMO_LANDLORD_ALERTS: LandlordAlert[] = [
-  {
-    id: 'alert-1',
-    type: 'danger',
-    message: 'Chờ khách nộp cọc đã 3 ngày',
-    propertyName: 'Studio #204',
-  },
-  {
-    id: 'alert-2',
-    type: 'warning',
-    message: '1 yêu cầu bảo trì đang chờ phê duyệt',
-    propertyName: 'Căn hộ #102',
-  },
-  {
-    id: 'alert-3',
-    type: 'info',
-    message: '2 lịch hẹn xem nhà mới chờ xác nhận',
-    propertyName: '',
-  },
-]
-
-export const DEMO_PROPERTY_STATS: Record<
-  string,
-  { views: number; favorites: number }
-> = {
-  'prop-2': { views: 89, favorites: 12 },
-  'prop-3': { views: 142, favorites: 18 },
-}

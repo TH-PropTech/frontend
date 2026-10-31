@@ -546,21 +546,15 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
       {role === 'landlord' && (
         <>
           <LandlordTenantInfo
-            propertyId={activePropertyId}
             status={activeProperty.status}
             price={activeProperty.price}
-            live={portfolio.isLive}
             liveInfo={portfolio.tenantInfo[activePropertyId]}
           />
           {activeProperty.status === 'Đang thuê' &&
-            (!portfolio.isLive ||
-              portfolio.contractSummary[activePropertyId]) && (
+            portfolio.isLive &&
+            portfolio.contractSummary[activePropertyId] && (
               <LandlordContractSummary
-                summary={
-                  portfolio.isLive
-                    ? portfolio.contractSummary[activePropertyId]
-                    : undefined
-                }
+                summary={portfolio.contractSummary[activePropertyId]}
               />
             )}
           <LandlordAppointments

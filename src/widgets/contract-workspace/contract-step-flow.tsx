@@ -92,7 +92,7 @@ function getNextLabel(step: ContractRouteStep, disabled: boolean): string {
   if (step === 'document') return 'Khóa bản PDF để tiếp tục'
   if (step === 'deposit') return 'Hoàn tất đặt cọc để tiếp tục'
   if (step === 'signing') return 'Chờ đủ hai chữ ký'
-  return 'Đang chờ lưu vết hợp đồng'
+  return 'Chờ ghi nhận lưu vết hợp đồng'
 }
 
 /** Bản độc lập: tự tải dữ liệu hợp đồng (dùng ngoài nhóm route có provider, và trong test). */

@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { Card } from '@/shared/ui/card'
+import { maskIdNumber } from '@/shared/lib/mask-id-number'
 import { UseProfileReturn } from '../model/use-profile'
 import { LandlordHeaderWallet } from './landlord-header-wallet'
 import {
@@ -11,7 +12,6 @@ import {
   Briefcase,
   ShieldCheck,
   AlertCircle,
-  TrendingUp,
   Copy,
   CreditCard,
 } from 'lucide-react'
@@ -145,28 +145,15 @@ export function ProfileHeader({
                   </span>
                 )}
               </Badge>
-              <Badge
-                variant="secondary"
-                className="cursor-help py-0.5"
-                title={
-                  role === 'tenant'
-                    ? 'Lịch sử thanh toán cọc và thuê nhà đúng hạn 100%'
-                    : 'Thời gian phản hồi và phê duyệt bảo trì trung bình dưới 2 giờ'
-                }
-              >
-                <TrendingUp className="h-3 w-3 mr-1" />
-                Điểm tín dụng:{' '}
-                {role === 'tenant'
-                  ? '780/850 (Hạng Vàng)'
-                  : '820/850 (Hạng Kim Cương)'}
-              </Badge>
             </div>
             <p className="font-body text-xs text-muted">
               Email: <span className="text-fg font-medium">{userEmail}</span>
             </p>
             {isKycVerified ? (
               <div className="flex items-center gap-1.5 font-body text-xs text-muted">
-                <span>CCCD: {kycForm.cccdNumber}</span>
+                <span>
+                  CCCD: {maskIdNumber(kycForm.cccdNumber) ?? 'Đã xác thực'}
+                </span>
                 <Badge
                   variant="outline"
                   className="text-[11px] font-medium py-0.5 bg-success-soft text-success border-success/20"

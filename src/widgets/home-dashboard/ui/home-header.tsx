@@ -102,11 +102,11 @@ export function HomeHeader(): React.ReactElement {
           : 'bg-gradient-to-b from-black/40 to-transparent py-5 text-white'
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 sm:px-6 md:px-10">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 md:px-10">
         <Link
           href="/"
           onClick={() => handleTabClick('/')}
-          className="transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          className="shrink-0 transition-transform hover:scale-[1.02] active:scale-[0.98]"
         >
           <Logo size="md" variant={isLightHeader ? 'default' : 'white'} />
         </Link>
@@ -138,7 +138,7 @@ export function HomeHeader(): React.ReactElement {
           })}
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-4">
           {user ? (
             <Link
               href={'/properties/favorites' as Route}
@@ -159,7 +159,7 @@ export function HomeHeader(): React.ReactElement {
                 <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
               </svg>
               {favorites.length > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-white shadow-sm animate-pulse-subtle">
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[11px] font-bold text-white shadow-sm animate-pulse-subtle">
                   {favorites.length}
                 </span>
               )}
@@ -188,7 +188,7 @@ export function HomeHeader(): React.ReactElement {
           {user && <NotificationBell isLightHeader={isLightHeader} />}
 
           {user ? (
-            <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-1.5 sm:flex sm:gap-3">
               <Link
                 href={'/profile' as Route}
                 onClick={() => handleTabClick('/profile')}
@@ -234,7 +234,7 @@ export function HomeHeader(): React.ReactElement {
                   setUser(null)
                   window.location.href = '/'
                 }}
-                className={`h-[44px] rounded-full px-5 py-2.5 text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 ${
+                className={`h-[44px] shrink-0 whitespace-nowrap rounded-full px-3 py-2.5 text-xs font-bold shadow-sm transition-all sm:px-5 sm:text-sm hover:-translate-y-0.5 active:translate-y-0 ${
                   isLightHeader
                     ? 'bg-surface-muted text-muted hover:bg-surface-muted/80'
                     : 'bg-white/10 text-white border border-white/15 hover:bg-white/20'

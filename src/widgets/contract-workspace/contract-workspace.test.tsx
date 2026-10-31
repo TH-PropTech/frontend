@@ -586,6 +586,39 @@ describe('ContractWorkspace', () => {
       )
     })
 
+    it('đưa mã kỹ thuật vào khối "Chi tiết kỹ thuật" đóng sẵn, phần chính không rò rỉ từ cấm', async () => {
+      render(
+        <ContractWorkspace contractId="c-100" currentUserId="user-tenant" />
+      )
+
+      const details = await screen.findByTestId(
+        'contract-meta-technical-details'
+      )
+      expect(details.hasAttribute('open')).toBe(false)
+      expect(within(details).getByText('HD-2026-100')).toBeInTheDocument()
+
+      const summary = screen.getByTestId('contract-summary-card')
+      expect(summary).not.toHaveTextContent('HD-2026-100')
+      expect(summary.textContent).not.toMatch(/Phí dịch vụ tenant|tenant/i)
+      expect(summary.textContent).not.toMatch(/[A-Z]{3,}(_[A-Z0-9]+){2,}/)
+      expect(within(details).getByText('Thử nghiệm')).toBeInTheDocument()
+      expect(screen.queryByText('Lưu vết thật')).not.toBeInTheDocument()
+    })
+
+    it('thanh tab hợp đồng co nhãn vừa 390px và vẫn cuộn ngang được', async () => {
+      render(
+        <ContractWorkspace contractId="c-100" currentUserId="user-tenant" />
+      )
+      const tablist = await screen.findByRole('tablist', {
+        name: 'Các phần của hợp đồng',
+      })
+      expect(tablist.className).toContain('overflow-x-auto')
+      for (const tab of within(tablist).getAllByRole('tab')) {
+        expect(tab.className).toContain('px-2.5')
+        expect(tab.className).toContain('min-h-11')
+      }
+    })
+
     it('đặt thẻ tóm tắt và banner hành động kế tiếp ở đầu workspace', async () => {
       vi.mocked(contractsApi.getContractView).mockResolvedValue(
         draftFlowView([consentAction])

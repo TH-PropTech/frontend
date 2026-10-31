@@ -152,7 +152,9 @@ export function useProfile(): UseProfileReturn {
             roles?: string[]
             kycStatus?: 'not-started' | 'pending' | 'verified' | 'rejected'
           }
-          if (u.roles?.includes('landlord')) {
+          // Backend gán ['tenant', 'landlord'] cho cả khách thuê lẫn chủ nhà nên
+          // chỉ mở vai trò chủ nhà mặc định khi tài khoản không có vai trò khách thuê.
+          if (u.roles?.includes('landlord') && !u.roles.includes('tenant')) {
             setRole('landlord')
           }
           if (

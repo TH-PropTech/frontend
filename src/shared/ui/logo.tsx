@@ -9,7 +9,7 @@ interface LogoProps {
 
 const sizeMap = {
   sm: { img: 28, text: 'text-lg' },
-  md: { img: 36, text: 'text-xl' },
+  md: { img: 36, text: 'text-lg sm:text-xl' },
   lg: { img: 44, text: 'text-2xl' },
 } as const
 

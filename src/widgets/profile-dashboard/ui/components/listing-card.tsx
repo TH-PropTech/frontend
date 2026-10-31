@@ -10,6 +10,7 @@ import {
   type DesignRequestStatus,
 } from '@/features/design-requests'
 import { format } from 'date-fns'
+import { formatRentPrice } from '@/entities/properties/model/format-rent-price'
 import { vi } from 'date-fns/locale'
 import {
   Calendar,
@@ -36,8 +37,8 @@ export function ListingCard({
   isRenewing,
   designRequestStatus,
 }: ListingCardProps): React.ReactElement {
-  // priceMonthly là VND; hiển thị theo triệu/tháng.
-  const formattedPrice = (item.priceMonthly / 1_000_000).toLocaleString('vi-VN')
+  // priceMonthly là VND; formatRentPrice nhận đơn vị triệu đồng.
+  const formattedPrice = formatRentPrice(item.priceMonthly / 1_000_000)
 
   const getStatusBadge = () => {
     switch (item.status) {
@@ -109,7 +110,7 @@ export function ListingCard({
               {item.category}
             </span>
             <span className="text-sm font-bold text-primary">
-              {formattedPrice} triệu/tháng
+              {formattedPrice}
             </span>
           </div>
 

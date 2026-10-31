@@ -200,7 +200,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
             <div className="flex-1 min-w-0">
               <label
                 htmlFor="hero-quick-search-keyword"
-                className="block text-[10px] font-bold uppercase tracking-wider text-muted cursor-pointer"
+                className="block text-[11px] font-bold uppercase tracking-wider text-muted cursor-pointer"
               >
                 Từ khóa
               </label>
@@ -242,7 +242,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="block text-[10px] font-bold uppercase tracking-wider text-muted">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-muted">
                     Khu vực
                   </span>
                   <span className="block truncate text-xs sm:text-sm font-semibold text-fg">
@@ -297,7 +297,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
               <BadgeDollarSign className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-muted">
+              <span className="block text-[11px] font-bold uppercase tracking-wider text-muted">
                 Khoảng giá
               </span>
               <span className="block truncate text-xs sm:text-sm font-semibold text-fg">
@@ -360,7 +360,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
               <BedDouble className="h-4 w-4" />
             </div>
             <div className="flex-1 min-w-0">
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-muted">
+              <span className="block text-[11px] font-bold uppercase tracking-wider text-muted">
                 Loại phòng
               </span>
               <span className="block truncate text-xs sm:text-sm font-semibold text-fg">
@@ -448,7 +448,7 @@ export function HeroQuickSearchBar(): React.ReactElement {
                 executeSearch(NO_LOCATION, 'all', sug.bedrooms, '')
               }
             }}
-            className="rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/25 px-3 py-1 text-[11px] font-medium text-white transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            className="inline-flex min-h-10 items-center rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/25 px-3.5 py-2 text-xs font-medium text-white transition-all hover:scale-105 active:scale-95 cursor-pointer"
           >
             {sug.label}
           </button>

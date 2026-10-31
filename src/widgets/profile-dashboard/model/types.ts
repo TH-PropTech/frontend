@@ -224,8 +224,6 @@ export interface TenantInfo {
   duration: string
   endDate: string
   paymentStatus: string
-  creditScore: string
-  creditRank: string
 }
 
 export interface Appointment {
@@ -249,19 +247,6 @@ export interface ContractSummary {
   paymentDay: number
   latePenalty: string
   daysRemaining: number
-}
-
-export interface TenantReview {
-  author: string
-  date: string
-  comment: string
-  ratings: {
-    responsiveness: number
-    quality: number
-    maintenance: number
-    commitment: number
-  }
-  overall: number
 }
 
 export interface LandlordAlert {

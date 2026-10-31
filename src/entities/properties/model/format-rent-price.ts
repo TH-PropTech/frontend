@@ -10,21 +10,15 @@ function isUsable(value: number | undefined): value is number {
 }
 
 /**
- * Format a monthly rent expressed in millions of VND.
- * Large values are shown in "tỷ" with locale grouping instead of a raw number.
+ * Giá thuê tháng ở dạng đầy đủ, thống nhất cho danh sách và chi tiết: "500.000 ₫/tháng".
+ * Đầu vào tính bằng triệu đồng; không dùng "triệu"/"tỷ" để tránh lẫn định dạng.
  */
 export function formatRentPrice(
   priceInMillions: number | undefined,
   fallback = ''
 ): string {
   if (!isUsable(priceInMillions)) return fallback
-  if (priceInMillions >= MILLION_PER_BILLION) {
-    return `${formatNumber(priceInMillions / MILLION_PER_BILLION)} tỷ/tháng`
-  }
-  if (priceInMillions < 1) {
-    return `${formatNumber(Math.round(priceInMillions * VND_PER_MILLION))} đ/tháng`
-  }
-  return `${formatNumber(priceInMillions)} triệu/tháng`
+  return `${formatNumber(Math.round(priceInMillions * VND_PER_MILLION))} ₫/tháng`
 }
 
 /** Compact form for map markers, e.g. "14,5tr" or "100 tỷ". */

@@ -66,4 +66,17 @@ describe('PropertyDetailHero availability projection', () => {
       'Tình trạng thuê: Có người giữ chỗ'
     )
   })
+
+  it('hiển thị giá thuê dạng đầy đủ, không lẫn "triệu"', () => {
+    const { container } = render(<PropertyDetailHero property={property} />)
+    expect(container.textContent).toContain(
+      `${(12_000_000).toLocaleString('vi-VN')} ₫/tháng`
+    )
+    expect(container.textContent).not.toContain('triệu/tháng')
+  })
+
+  it('không dùng cỡ chữ dưới 11px (class contract)', () => {
+    const { container } = render(<PropertyDetailHero property={property} />)
+    expect(container.innerHTML).not.toMatch(/text-\[(8|9|10)px\]/)
+  })
 })
