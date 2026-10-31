@@ -6,6 +6,7 @@ import type { KycRecord } from '../kyc-approvals-view'
 import { CccdMockupCard } from './cccd-mockup-card'
 import { apiClient } from '@/shared/api/api-client'
 import { AdminCard } from '@/shared/ui/admin-card'
+import { isValidCitizenId } from '@/shared/lib/citizen-id'
 
 interface KycComparisonModalProps {
   selectedRecord: KycRecord
@@ -68,7 +69,7 @@ export function KycComparisonModal({
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
           <div className="min-w-0 flex-1 overflow-y-auto border-r border-border bg-bg/50 p-5 md:overflow-hidden">
             <h3 className="mb-3 font-body text-xs font-bold uppercase tracking-wider text-fg">
-              Hình ảnh CCCD & selfie chân dung
+              {selfieUrl ? 'Hình ảnh CCCD & selfie chân dung' : 'Hình ảnh CCCD'}
             </h3>
 
             <div className="grid grid-cols-2 gap-3">
@@ -115,12 +116,42 @@ export function KycComparisonModal({
                 <h3 className="font-body text-xs font-bold uppercase tracking-wider text-fg">
                   Dữ liệu trích xuất từ OCR
                 </h3>
-                <span className="shrink-0 rounded-full border border-success/30 bg-success-soft px-2.5 py-1 text-[11px] font-bold text-success">
+                <span
+                  className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                    selectedRecord.ocrScore === null
+                      ? 'border-border bg-surface-muted text-muted'
+                      : selectedRecord.ocrScore >= 80
+                        ? 'border-success/30 bg-success-soft text-success'
+                        : selectedRecord.ocrScore >= 50
+                          ? 'border-warning/30 bg-warning/10 text-warning'
+                          : 'border-danger/30 bg-danger/10 text-danger'
+                  }`}
+                >
                   {selectedRecord.ocrScore === null
-                    ? 'Không có điểm OCR'
+                    ? 'Chưa có điểm OCR'
                     : `Trùng khớp ${selectedRecord.ocrScore}%`}
                 </span>
               </div>
+
+              {!isValidCitizenId(selectedRecord.cccdNumber) && (
+                <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-xs font-semibold text-warning">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                    className="shrink-0"
+                  >
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  <span>Số CCCD không đúng định dạng 12 chữ số</span>
+                </div>
+              )}
 
               <div className="space-y-3">
                 <KycField

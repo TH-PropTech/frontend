@@ -2,7 +2,19 @@
 
 import * as React from 'react'
 
-export function IsometricBuilding(): React.ReactElement {
+export interface IsometricBuildingLabels {
+  contractLabel?: string | undefined
+  vrLabel?: string | undefined
+  kycLabel?: string | undefined
+}
+
+export interface IsometricBuildingProps {
+  labels?: IsometricBuildingLabels
+}
+
+export function IsometricBuilding({
+  labels,
+}: IsometricBuildingProps = {}): React.ReactElement {
   return (
     <svg
       className="w-full max-w-[480px] aspect-[1.2/1]"
@@ -162,16 +174,18 @@ export function IsometricBuilding(): React.ReactElement {
         >
           SMART CONTRACT
         </text>
-        <text
-          x="83"
-          y="210"
-          fill="var(--primary)"
-          fontSize="8.5"
-          fontWeight="semibold"
-          textAnchor="end"
-        >
-          2 Hợp đồng mới
-        </text>
+        {labels?.contractLabel ? (
+          <text
+            x="83"
+            y="210"
+            fill="var(--primary)"
+            fontSize="8.5"
+            fontWeight="semibold"
+            textAnchor="end"
+          >
+            {labels.contractLabel}
+          </text>
+        ) : null}
       </g>
 
       {/* ═══════════════════════════════════════
@@ -232,16 +246,18 @@ export function IsometricBuilding(): React.ReactElement {
         >
           VR 360 ROOM
         </text>
-        <text
-          x="447"
-          y="130"
-          fill="#6b8e4e"
-          fontSize="8.5"
-          fontWeight="semibold"
-          textAnchor="start"
-        >
-          Chất lượng đạt chuẩn
-        </text>
+        {labels?.vrLabel ? (
+          <text
+            x="447"
+            y="130"
+            fill="#6b8e4e"
+            fontSize="8.5"
+            fontWeight="semibold"
+            textAnchor="start"
+          >
+            {labels.vrLabel}
+          </text>
+        ) : null}
       </g>
 
       {/* ═══════════════════════════════════════
@@ -312,16 +328,18 @@ export function IsometricBuilding(): React.ReactElement {
         >
           KYC HUB
         </text>
-        <text
-          x="83"
-          y="65"
-          fill="#c79354"
-          fontSize="8.5"
-          fontWeight="semibold"
-          textAnchor="end"
-        >
-          2 hồ sơ chờ duyệt
-        </text>
+        {labels?.kycLabel ? (
+          <text
+            x="83"
+            y="65"
+            fill="#c79354"
+            fontSize="8.5"
+            fontWeight="semibold"
+            textAnchor="end"
+          >
+            {labels.kycLabel}
+          </text>
+        ) : null}
       </g>
     </svg>
   )

@@ -23,6 +23,7 @@ import { BookingStatusDoughnut } from './components/booking-status-doughnut'
 import { BookingTrendLineChart } from './components/booking-trend-line-chart'
 import { apiClient } from '@/shared/api/api-client'
 import { AdminCard } from '@/shared/ui/admin-card'
+import { computeConfirmationRate } from './lib/confirmation-rate'
 
 // ─── Backend types ─────────────────────────────────────────────────────────────
 
@@ -342,14 +343,7 @@ export function OverviewView(): React.ReactElement {
 
   const hasChartData = filteredTrend.some(p => p.bookings > 0)
 
-  const completionRate =
-    stats && stats.bookings.total > 0
-      ? Math.round(
-          ((stats.bookings.confirmed + stats.bookings.completed) /
-            stats.bookings.total) *
-            100
-        )
-      : 0
+  const confirmationResult = computeConfirmationRate(stats?.bookings)
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -484,18 +478,11 @@ export function OverviewView(): React.ReactElement {
               color="success"
             />
             <StatCard
-              title="Hoàn thành"
-              value={loadingStats ? <Skeleton /> : `${completionRate}%`}
-              subtext="Tỷ lệ xác nhận / tổng"
+              title="Tỷ lệ đã xác nhận"
+              value={loadingStats ? <Skeleton /> : confirmationResult.rateText}
+              subtext={confirmationResult.subtext}
               icon={<TrendingUp className="h-4 w-4" />}
-              trend={
-                stats
-                  ? {
-                      value: completionRate >= 60 ? 'Tốt' : 'Cần cải thiện',
-                      type: completionRate >= 60 ? 'up' : 'down',
-                    }
-                  : undefined
-              }
+              trend={confirmationResult.trend}
               color="info"
             />
           </div>

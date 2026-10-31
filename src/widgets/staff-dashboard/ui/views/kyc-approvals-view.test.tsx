@@ -82,13 +82,15 @@ describe('KycApprovalsView', () => {
   it('loads records, filters status, and searches by name or card number', async () => {
     render(<KycApprovalsView />)
 
-    expect(await screen.findByText('Nguyễn Văn A')).toBeInTheDocument()
+    expect((await screen.findAllByText('Nguyễn Văn A')).length).toBeGreaterThan(
+      0
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Tất cả' }))
-    expect(screen.getByText('Trần Thị B')).toBeInTheDocument()
+    expect(screen.getAllByText('Trần Thị B').length).toBeGreaterThan(0)
 
     fireEvent.click(screen.getByRole('button', { name: 'Đã xác minh' }))
     expect(screen.queryByText('Nguyễn Văn A')).not.toBeInTheDocument()
-    expect(screen.getByText('Trần Thị B')).toBeInTheDocument()
+    expect(screen.getAllByText('Trần Thị B').length).toBeGreaterThan(0)
 
     const search = screen.getByPlaceholderText('Tìm theo tên hoặc số CCCD')
     fireEvent.change(search, { target: { value: 'Nguyễn' } })
@@ -100,11 +102,39 @@ describe('KycApprovalsView', () => {
     })
   })
 
+  it('renders "Chưa có" when OCR score is null', async () => {
+    vi.mocked(apiClient.get).mockResolvedValueOnce({
+      items: [
+        {
+          ...response.items[0],
+          _id: 'kyc-no-ocr',
+          fullName: 'Lê Văn Null',
+          ocrMatchRate: null,
+        },
+      ],
+      total: 1,
+      page: 1,
+      limit: 100,
+      totalPages: 1,
+    })
+
+    render(<KycApprovalsView />)
+    expect((await screen.findAllByText('Lê Văn Null')).length).toBeGreaterThan(
+      0
+    )
+    expect(screen.getAllByText('Chưa có').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Không có dữ liệu')).not.toBeInTheDocument()
+  })
+
   it('opens the comparison workspace and approves a pending record', async () => {
     render(<KycApprovalsView />)
 
-    await screen.findByText('Nguyễn Văn A')
-    fireEvent.click(screen.getByRole('button', { name: 'Đối chiếu & Duyệt' }))
+    await screen.findAllByText('Nguyễn Văn A')
+    const [reviewBtn] = screen.getAllByRole('button', {
+      name: 'Đối chiếu & Duyệt',
+    })
+    expect(reviewBtn).toBeDefined()
+    fireEvent.click(reviewBtn!)
     expect(screen.getByText('Dữ liệu trích xuất từ OCR')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Xác nhận KYC' }))
@@ -119,8 +149,12 @@ describe('KycApprovalsView', () => {
   it('requires and submits a rejection reason', async () => {
     render(<KycApprovalsView />)
 
-    await screen.findByText('Nguyễn Văn A')
-    fireEvent.click(screen.getByRole('button', { name: 'Đối chiếu & Duyệt' }))
+    await screen.findAllByText('Nguyễn Văn A')
+    const [reviewBtn] = screen.getAllByRole('button', {
+      name: 'Đối chiếu & Duyệt',
+    })
+    expect(reviewBtn).toBeDefined()
+    fireEvent.click(reviewBtn!)
     fireEvent.click(screen.getByRole('button', { name: 'Yêu cầu chụp lại' }))
 
     fireEvent.change(
