@@ -9,6 +9,7 @@ import {
   getTemplateLabel,
   getFlowReasonLabel,
   getMoveOutPhaseLabel,
+  getPaymentMethodLabel,
   humanizeCode,
 } from './contract-labels'
 
@@ -63,5 +64,34 @@ describe('contract labels', () => {
     )
     expect(getFlowReasonLabel('SOMETHING_NEW_HERE')).not.toMatch(/[A-Z]{3,}_/)
     expect(getFlowReasonLabel(null)).toMatch(/Đang chờ/)
+  })
+
+  it('labels payment methods and humanizes unknown', () => {
+    expect(getPaymentMethodLabel('MOC_WALLET')).toBe('Ví Mộc')
+    expect(getPaymentMethodLabel('UNKNOWN_PAYMENT_GATEWAY')).toBe(
+      'Unknown payment gateway'
+    )
+  })
+
+  it('enforces leak check: no banned terms and no raw UPPER_SNAKE codes', () => {
+    const BANNED_TERMS = ['ký quỹ', 'PayOS', 'Techcombank', 'khóa bảo chứng']
+    const UPPER_SNAKE_REGEX = /[A-Z]{3,}(_[A-Z0-9]+){2,}/
+
+    const outputs = [
+      getLegalBasisLabel('DECREE_96_2024_APPENDIX_II_RESIDENTIAL_LEASE'),
+      getLegalProfileLabel('PRIVATE_CIVIL_APARTMENT_LEASE'),
+      getTemplateLabel('VN_INDIVIDUAL_RESIDENTIAL_LEASE'),
+      getLedgerStatusLabel('confirmed'),
+      getMoveOutPhaseLabel('awaiting-move-out'),
+      getPaymentMethodLabel('MOC_WALLET'),
+      getFlowReasonLabel('MOVE_OUT_HANDOVER_COMPLETED_IMMUTABLE'),
+    ]
+
+    for (const output of outputs) {
+      expect(output).not.toMatch(UPPER_SNAKE_REGEX)
+      for (const banned of BANNED_TERMS) {
+        expect(output.toLowerCase()).not.toContain(banned.toLowerCase())
+      }
+    }
   })
 })

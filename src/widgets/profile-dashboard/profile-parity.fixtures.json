@@ -1,0 +1,161 @@
+{
+  "version": "1.0.0",
+  "scenarios": [
+    {
+      "id": "draft-or-deposit-pending",
+      "description": "Hợp đồng mới tạo, chờ nộp cọc",
+      "contract": {
+        "_id": "ctr-001",
+        "contractCode": "CTR-2026-0001",
+        "status": "deposit-pending",
+        "monthlyRent": 12000000,
+        "deposit": 12000000,
+        "signedByTenant": false,
+        "signedByLandlord": false,
+        "startDate": "2026-11-01"
+      },
+      "expected": {
+        "progressPercent": 20,
+        "bills": [
+          {
+            "id": "BILL-DEP-CTR-2026-0001",
+            "title": "Tiền đặt cọc giữ chỗ căn hộ",
+            "amount": 12000000,
+            "status": "unpaid"
+          }
+        ],
+        "costBreakdown": []
+      }
+    },
+    {
+      "id": "deposit-paid",
+      "description": "Hợp đồng đã nhận cọc, chờ ký duyệt",
+      "contract": {
+        "_id": "ctr-002",
+        "contractCode": "CTR-2026-0002",
+        "status": "deposit-paid",
+        "monthlyRent": 10000000,
+        "deposit": 10000000,
+        "signedByTenant": false,
+        "signedByLandlord": false,
+        "startDate": "2026-11-01"
+      },
+      "expected": {
+        "progressPercent": 40,
+        "bills": [
+          {
+            "id": "BILL-DEP-CTR-2026-0002",
+            "title": "Tiền đặt cọc giữ chỗ căn hộ",
+            "amount": 10000000,
+            "status": "paid"
+          }
+        ],
+        "costBreakdown": []
+      }
+    },
+    {
+      "id": "awaiting-signature-both-signed",
+      "description": "Hợp đồng đã ký bởi 2 bên, chờ kích hoạt",
+      "contract": {
+        "_id": "ctr-003",
+        "contractCode": "CTR-2026-0003",
+        "status": "awaiting-signature",
+        "monthlyRent": 15000000,
+        "deposit": 15000000,
+        "signedByTenant": true,
+        "signedByLandlord": true,
+        "startDate": "2026-11-01"
+      },
+      "expected": {
+        "progressPercent": 60,
+        "bills": [
+          {
+            "id": "BILL-DEP-CTR-2026-0003",
+            "title": "Tiền đặt cọc giữ chỗ căn hộ",
+            "amount": 15000000,
+            "status": "paid"
+          }
+        ],
+        "costBreakdown": []
+      }
+    },
+    {
+      "id": "active-awaiting-handover",
+      "description": "Hợp đồng đã hiệu lực, đã trả tháng đầu, chờ bàn giao",
+      "contract": {
+        "_id": "ctr-004",
+        "contractCode": "CTR-2026-0004",
+        "status": "active",
+        "monthlyRent": 500000,
+        "deposit": 500000,
+        "signedByTenant": true,
+        "signedByLandlord": true,
+        "startDate": "2026-11-01",
+        "paymentDay": 5
+      },
+      "expected": {
+        "progressPercent": 80,
+        "bills": [
+          {
+            "id": "BILL-DEP-CTR-2026-0004",
+            "title": "Tiền đặt cọc giữ chỗ căn hộ",
+            "amount": 500000,
+            "status": "paid"
+          },
+          {
+            "id": "BILL-RENT-CTR-2026-0004",
+            "title": "Tiền thuê nhà định kỳ",
+            "amount": 500000,
+            "status": "paid"
+          }
+        ],
+        "costBreakdown": [
+          {
+            "key": "rent",
+            "label": "Tiền thuê",
+            "amount": 500000
+          }
+        ]
+      }
+    },
+    {
+      "id": "completed",
+      "description": "Hợp đồng đã hoàn tất bàn giao & kết thúc",
+      "contract": {
+        "_id": "ctr-005",
+        "contractCode": "CTR-2026-0005",
+        "status": "completed",
+        "monthlyRent": 8000000,
+        "deposit": 8000000,
+        "signedByTenant": true,
+        "signedByLandlord": true,
+        "startDate": "2026-11-01",
+        "paymentDay": 5
+      },
+      "expected": {
+        "progressPercent": 100,
+        "bills": [
+          {
+            "id": "BILL-DEP-CTR-2026-0005",
+            "title": "Tiền đặt cọc giữ chỗ căn hộ",
+            "amount": 8000000,
+            "status": "paid"
+          },
+          {
+            "id": "BILL-RENT-CTR-2026-0005",
+            "title": "Tiền thuê nhà định kỳ",
+            "amount": 8000000,
+            "status": "paid"
+          }
+        ],
+        "costBreakdown": [
+          {
+            "key": "rent",
+            "label": "Tiền thuê",
+            "amount": 8000000
+          }
+        ]
+      }
+    }
+  ]
+}

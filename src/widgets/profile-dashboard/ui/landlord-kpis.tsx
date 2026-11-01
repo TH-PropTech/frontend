@@ -6,17 +6,17 @@ import { Building2, TrendingUp, Banknote, AlertCircle } from 'lucide-react'
 import type { LandlordStats } from '../model/types'
 
 interface LandlordKpisProps {
-  /** Số liệu thật; bỏ trống = số demo. */
+  /** Số liệu thật; bỏ trống = số rỗng (0). */
   stats?: LandlordStats | undefined
-  /** Số sự cố chờ duyệt; null = chưa có dữ liệu. Bỏ trống = số demo. */
+  /** Số sự cố chờ duyệt; null hoặc undefined = chưa có dữ liệu ('—'). */
   pendingIssues?: number | null | undefined
 }
 
-const DEMO_STATS: LandlordStats = {
-  total: 3,
-  occupied: 2,
-  occupancyPct: 66.7,
-  monthlyRevenue: 36_000_000,
+const EMPTY_STATS: LandlordStats = {
+  total: 0,
+  occupied: 0,
+  occupancyPct: 0,
+  monthlyRevenue: 0,
 }
 
 const fmtRevenue = (vnd: number): string =>
@@ -25,8 +25,8 @@ const fmtRevenue = (vnd: number): string =>
     : `${vnd.toLocaleString('vi-VN')} VND`
 
 export function LandlordKpis({
-  stats = DEMO_STATS,
-  pendingIssues = 1,
+  stats = EMPTY_STATS,
+  pendingIssues = null,
 }: LandlordKpisProps): React.ReactElement {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-left">

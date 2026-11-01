@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useRouter } from 'next/navigation'
 import { Tabs, TabsContent } from '@/shared/ui/tabs'
 import { useProfile } from '../model/use-profile'
 import { ProfileHeader } from './profile-header'
@@ -18,10 +19,29 @@ import { ModalHandover } from './modal-handover'
 import { ModalContract } from './modal-contract'
 import { ModalHandoverArchive } from './modal-handover-archive'
 import { ProfileFeatureHub } from './profile-feature-hub'
+import { ProfileSkeleton } from './profile-skeleton'
 
 export function ProfileWidget(): React.ReactElement {
+  const router = useRouter()
   const profile = useProfile()
-  const { activeTab, setActiveTab, role } = profile
+  const { activeTab, setActiveTab, role, isInitialLoading } = profile
+
+  const [isUnauthenticated] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('accessToken')
+    }
+    return false
+  })
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('accessToken')) {
+      router.replace('/login')
+    }
+  }, [router])
+
+  if (isUnauthenticated || isInitialLoading) {
+    return <ProfileSkeleton />
+  }
 
   return (
     <>

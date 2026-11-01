@@ -5,7 +5,14 @@ import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { Card } from '@/shared/ui/card'
 import { UseProfileReturn } from '../model/use-profile'
-import { Wrench, UploadCloud, Clock, Hammer } from 'lucide-react'
+import {
+  Wrench,
+  UploadCloud,
+  Clock,
+  Hammer,
+  AlertCircle,
+  RefreshCw,
+} from 'lucide-react'
 
 interface TabMaintenanceProps {
   profile: UseProfileReturn
@@ -22,6 +29,8 @@ export function TabMaintenance({
     newTicketDesc,
     setNewTicketDesc,
     maintenanceTickets,
+    maintenanceStatus = 'ready',
+    retryMaintenance,
     handleApproveTicket,
   } = profile
 
@@ -92,7 +101,31 @@ export function TabMaintenance({
             ? 'Lịch sử yêu cầu sửa chữa'
             : 'Yêu cầu bảo trì từ khách thuê'}
         </h3>
-        {maintenanceTickets.length === 0 ? (
+        {maintenanceStatus === 'loading' ? (
+          <div className="py-12 flex flex-col items-center justify-center gap-2 text-center text-muted">
+            <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-xs">Đang tải danh sách bảo trì...</p>
+          </div>
+        ) : maintenanceStatus === 'error' ? (
+          <div className="py-10 border border-destructive/20 rounded-2xl flex flex-col items-center justify-center gap-3 text-center bg-destructive/5">
+            <AlertCircle className="h-7 w-7 text-destructive" />
+            <p className="text-xs font-semibold text-destructive">
+              Không thể tải danh sách yêu cầu bảo trì.
+            </p>
+            {retryMaintenance && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={retryMaintenance}
+                className="h-8 text-xs rounded-full gap-1.5"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Thử lại
+              </Button>
+            )}
+          </div>
+        ) : maintenanceTickets.length === 0 ? (
           <div className="py-12 border border-dashed border-border rounded-2xl flex flex-col items-center justify-center gap-2 text-center bg-surface-muted/10">
             <Wrench className="h-8 w-8 text-muted/50" />
             <p className="font-semibold text-fg text-sm">

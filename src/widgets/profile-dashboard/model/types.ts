@@ -17,6 +17,17 @@ export interface BlockchainLog {
   timestamp: string
   hash: string
   status: 'verified' | 'pending'
+  details?: { field: string; value: string }[]
+}
+
+export type ProfileDataStatus = 'loading' | 'error' | 'ready'
+
+export interface UserSession {
+  id: string
+  deviceLabel: string
+  ipMasked: string
+  lastActiveAt: string
+  isCurrent: boolean
 }
 
 export interface UseProfileReturn {
@@ -54,39 +65,13 @@ export interface UseProfileReturn {
   handleViewSignedContract: () => void
   showHandoverArchiveModal: boolean
   setShowHandoverArchiveModal: React.Dispatch<React.SetStateAction<boolean>>
-  hasPasskey: boolean
-  setHasPasskey: React.Dispatch<React.SetStateAction<boolean>>
-  activeSessions: Array<{
-    id: string
-    device: string
-    ip: string
-    location: string
-    lastActive: string
-  }>
-  setActiveSessions: React.Dispatch<
-    React.SetStateAction<
-      Array<{
-        id: string
-        device: string
-        ip: string
-        location: string
-        lastActive: string
-      }>
-    >
-  >
   notifChannels: {
     email: boolean
-    sms: boolean
-    telegram: boolean
-    zalo: boolean
     push: boolean
   }
   setNotifChannels: React.Dispatch<
     React.SetStateAction<{
       email: boolean
-      sms: boolean
-      telegram: boolean
-      zalo: boolean
       push: boolean
     }>
   >
@@ -143,6 +128,8 @@ export interface UseProfileReturn {
     }>
   >
   maintenanceTickets: MaintenanceTicket[]
+  maintenanceStatus?: ProfileDataStatus
+  retryMaintenance?: () => void
   portfolio: LandlordPortfolio
   tenantPortfolio: TenantPortfolio
   liveContract: ContractItem | null
@@ -155,7 +142,12 @@ export interface UseProfileReturn {
   contractSigned: boolean
   firstMonthPaid: boolean
   blockchainLogs: BlockchainLog[]
+  blockchainStatus?: ProfileDataStatus
+  retryBlockchain?: () => void
+  isInitialLoading: boolean
   bills: RentalBill[]
+  billsStatus?: ProfileDataStatus
+  retryBills?: () => void
   activeProperty: Property
   appointments: Appointment[]
   handleConnectWallet: () => void
@@ -194,7 +186,7 @@ export interface EventLabelConfig {
   /** Icon name: lucide-react on Web, Ionicons on Mobile */
   iconName: string
   /** Nội dung biên bản/chứng từ lưu trữ, hiển thị khi user mở xem chi tiết */
-  details: { field: string; value: string }[]
+  details?: { field: string; value: string }[]
 }
 
 export interface RentalBill {
@@ -204,6 +196,7 @@ export interface RentalBill {
   amount: number
   status: 'paid' | 'unpaid'
   txHash?: string
+  contractCode?: string
 }
 
 export interface MaintenanceTicket {
@@ -269,6 +262,8 @@ export interface LandlordPortfolio {
   isLive: boolean
   isLoading: boolean
   isError: boolean
+  status: ProfileDataStatus
+  retry: () => void
   properties: Property[]
   stats: LandlordStats
   tenantInfo: Record<string, TenantInfo>

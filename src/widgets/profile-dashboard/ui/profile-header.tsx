@@ -7,6 +7,7 @@ import { Card } from '@/shared/ui/card'
 import { maskIdNumber } from '@/shared/lib/mask-id-number'
 import { UseProfileReturn } from '../model/use-profile'
 import { LandlordHeaderWallet } from './landlord-header-wallet'
+import { ProfileEditForm } from './profile-edit-form'
 import {
   User,
   Briefcase,
@@ -14,6 +15,7 @@ import {
   AlertCircle,
   Copy,
   CreditCard,
+  Edit3,
 } from 'lucide-react'
 
 interface ProfileHeaderProps {
@@ -38,25 +40,31 @@ export function ProfileHeader({
   } = profile
 
   const [userInfo, setUserInfo] = React.useState<{
-    name?: string
-    email?: string
-  } | null>(null)
-
-  React.useEffect(() => {
+    name?: string | undefined
+    email?: string | undefined
+    phone?: string | undefined
+  } | null>(() => {
+    if (typeof window === 'undefined') return null
     try {
       const raw = localStorage.getItem('user')
       if (raw) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setUserInfo(JSON.parse(raw) as { name?: string; email?: string })
+        return JSON.parse(raw) as {
+          name?: string
+          email?: string
+          phone?: string
+        }
       }
     } catch {
       // ignore
     }
-  }, [])
+    return null
+  })
+  const [showEditModal, setShowEditModal] = React.useState(false)
 
   const userName =
     userInfo?.name || (role === 'tenant' ? 'Khách thuê' : 'Chủ nhà')
   const userEmail = userInfo?.email || ''
+  const userPhone = userInfo?.phone || ''
 
   return (
     <>
@@ -110,9 +118,18 @@ export function ProfileHeader({
             <div className="flex flex-wrap items-center gap-2">
               <h2
                 suppressHydrationWarning
-                className="font-marketing text-xl font-bold text-fg"
+                className="font-marketing text-xl font-bold text-fg flex items-center gap-2"
               >
-                {userName}
+                <span>{userName}</span>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(true)}
+                  className="p-1 rounded-full text-muted hover:text-primary transition-colors cursor-pointer"
+                  title="Chỉnh sửa thông tin cá nhân"
+                  aria-label="Chỉnh sửa thông tin cá nhân"
+                >
+                  <Edit3 className="h-4 w-4" />
+                </button>
               </h2>
               <Badge
                 variant="outline"
@@ -146,9 +163,16 @@ export function ProfileHeader({
                 )}
               </Badge>
             </div>
-            <p className="font-body text-xs text-muted">
-              Email: <span className="text-fg font-medium">{userEmail}</span>
-            </p>
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted font-body">
+              <p>
+                Email: <span className="text-fg font-medium">{userEmail}</span>
+              </p>
+              {userPhone && (
+                <p>
+                  SĐT: <span className="text-fg font-medium">{userPhone}</span>
+                </p>
+              )}
+            </div>
             {isKycVerified ? (
               <div className="flex items-center gap-1.5 font-body text-xs text-muted">
                 <span>
@@ -219,9 +243,9 @@ export function ProfileHeader({
                       <div className="pt-1 flex flex-col gap-0.5 text-[10px] text-muted font-mono">
                         <span>
                           Định danh:{' '}
-                          {role === 'tenant'
-                            ? 'org1.tenant.nguyen_van_a'
-                            : 'org1.landlord.le_hoang_minh'}
+                          {userEmail
+                            ? `org1.${role}.${userEmail.split('@')[0]}`
+                            : `org1.${role}.user`}
                         </span>
                         <span>Chứng thư: Chuẩn số X.509</span>
                       </div>
@@ -233,7 +257,7 @@ export function ProfileHeader({
               <div className="flex flex-col md:items-end gap-1">
                 <div className="flex items-center gap-2 text-xs text-muted">
                   <CreditCard className="h-4 w-4 text-subtle" />
-                  <span>Chưa liên kết tài khoản ngân hàng</span>
+                  <span>Chưa liên kết tài khoản ví</span>
                 </div>
                 {isKycVerified && (
                   <span className="text-[11px] text-success font-medium mt-0.5">
@@ -248,13 +272,27 @@ export function ProfileHeader({
               className="h-9 text-xs rounded-full px-5 font-bold shadow-sm transition-all flex items-center gap-1.5 self-start md:self-end"
             >
               <CreditCard className="h-3.5 w-3.5" />
-              {isWalletConnected
-                ? 'Hủy liên kết ngân hàng'
-                : 'Liên kết ngân hàng (PayOS)'}
+              {isWalletConnected ? 'Hủy liên kết ví' : 'Liên kết Ví Mộc'}
             </Button>
           </div>
         )}
       </Card>
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <ProfileEditForm
+          initialFullName={userInfo?.name || ''}
+          initialPhone={userInfo?.phone || ''}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={updated => {
+            setUserInfo(prev => ({
+              ...(prev ?? {}),
+              name: updated.fullName,
+              ...(updated.phone !== undefined ? { phone: updated.phone } : {}),
+            }))
+          }}
+        />
+      )}
     </>
   )
 }

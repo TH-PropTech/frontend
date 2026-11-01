@@ -1,16 +1,20 @@
 import * as React from 'react'
 import { toast } from 'sonner'
-import { DEMO_MAINTENANCE_TICKETS } from './mock-data'
-import { MaintenanceTicket, EventType } from './types'
+import { MaintenanceTicket, EventType, ProfileDataStatus } from './types'
 
 export function useProfileMaintenance(
   addBlockchainLog: (event: EventType, hash: string) => void
 ) {
-  const [maintenanceTickets, setMaintenanceTickets] = React.useState(
-    DEMO_MAINTENANCE_TICKETS
-  )
+  const [maintenanceTickets, setMaintenanceTickets] = React.useState<
+    MaintenanceTicket[]
+  >([])
+  const [status, setStatus] = React.useState<ProfileDataStatus>('ready')
   const [newTicketTitle, setNewTicketTitle] = React.useState('')
   const [newTicketDesc, setNewTicketDesc] = React.useState('')
+
+  const retry = React.useCallback(() => {
+    setStatus('ready')
+  }, [])
 
   const handleNewMaintenanceTicket = (e: React.FormEvent): void => {
     e.preventDefault()
@@ -50,6 +54,8 @@ export function useProfileMaintenance(
   return {
     maintenanceTickets,
     setMaintenanceTickets,
+    status,
+    retry,
     newTicketTitle,
     setNewTicketTitle,
     newTicketDesc,

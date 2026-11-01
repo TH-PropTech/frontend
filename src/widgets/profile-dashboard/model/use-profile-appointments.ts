@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { toast } from 'sonner'
 import { apiClient } from '@/shared/api/api-client'
-import { DEMO_APPOINTMENTS } from './mock-data'
 import { Appointment } from './types'
 
 interface BookingItem {
@@ -12,7 +11,7 @@ interface BookingItem {
   apartmentId?: string
   apartmentTitle?: string
   visitAt?: string
-  status?: 'pending' | 'confirmed' | 'rejected'
+  status?: 'pending' | 'confirmed' | 'rejected' | 'cancelled' | 'completed'
 }
 
 interface BookingResponse {
@@ -27,7 +26,7 @@ export function useProfileAppointments(role: 'tenant' | 'landlord' = 'tenant') {
     const token =
       typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
     if (!token) {
-      setAppointments(DEMO_APPOINTMENTS)
+      setAppointments([])
       return
     }
 
@@ -58,7 +57,7 @@ export function useProfileAppointments(role: 'tenant' | 'landlord' = 'tenant') {
       setAppointments(mapped)
     } catch (err) {
       console.error('Failed to fetch appointments:', err)
-      setAppointments(DEMO_APPOINTMENTS)
+      setAppointments([])
     } finally {
       setLoading(false)
     }
@@ -75,11 +74,7 @@ export function useProfileAppointments(role: 'tenant' | 'landlord' = 'tenant') {
     const token =
       typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
     if (!token) {
-      // Mock update
-      setAppointments(prev =>
-        prev.map(a => (a.id === id ? { ...a, status: 'confirmed' } : a))
-      )
-      toast.success('Đã xác nhận lịch hẹn xem nhà! (Chế độ Demo)')
+      toast.error('Vui lòng đăng nhập để thực hiện thao tác')
       return
     }
 
@@ -101,11 +96,7 @@ export function useProfileAppointments(role: 'tenant' | 'landlord' = 'tenant') {
     const token =
       typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
     if (!token) {
-      // Mock update
-      setAppointments(prev =>
-        prev.map(a => (a.id === id ? { ...a, status: 'rejected' } : a))
-      )
-      toast.info('Đã từ chối lịch hẹn xem nhà. (Chế độ Demo)')
+      toast.error('Vui lòng đăng nhập để thực hiện thao tác')
       return
     }
 
@@ -127,11 +118,7 @@ export function useProfileAppointments(role: 'tenant' | 'landlord' = 'tenant') {
     const token =
       typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
     if (!token) {
-      // Mock update
-      setAppointments(prev =>
-        prev.map(a => (a.id === id ? { ...a, status: 'cancelled' } : a))
-      )
-      toast.success('Đã hủy lịch hẹn xem nhà! (Chế độ Demo)')
+      toast.error('Vui lòng đăng nhập để thực hiện thao tác')
       return
     }
 
@@ -150,11 +137,7 @@ export function useProfileAppointments(role: 'tenant' | 'landlord' = 'tenant') {
     const token =
       typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
     if (!token) {
-      // Mock update
-      setAppointments(prev =>
-        prev.map(a => (a.id === id ? { ...a, status: 'completed' } : a))
-      )
-      toast.success('Đã đánh dấu lịch hẹn xem nhà hoàn tất! (Chế độ Demo)')
+      toast.error('Vui lòng đăng nhập để thực hiện thao tác')
       return
     }
 

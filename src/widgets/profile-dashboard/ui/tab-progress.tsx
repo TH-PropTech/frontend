@@ -202,14 +202,14 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
       {role === 'landlord' && (
         <>
           <LandlordKpis
-            stats={portfolio.isLive ? portfolio.stats : undefined}
-            pendingIssues={portfolio.isLive ? null : undefined}
+            stats={portfolio.stats}
+            pendingIssues={portfolio.alerts?.length ?? null}
           />
 
           {/* Landlord alert notifications */}
           <LandlordAlerts
             appointments={appointments}
-            alerts={portfolio.isLive ? portfolio.alerts : undefined}
+            alerts={portfolio.alerts}
           />
         </>
       )}
@@ -454,9 +454,7 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
                   : 'Xác nhận lịch hẹn xem nhà'}
               </h4>
               <p className="font-body text-xs text-muted">
-                {portfolio.isLive
-                  ? 'Lịch hẹn xem nhà đã hoàn tất.'
-                  : 'Lịch hẹn đã được xác nhận vào ngày 09/06/2026 lúc 14:00.'}
+                Lịch hẹn xem nhà đã hoàn tất.
               </p>
             </div>
           </div>
@@ -551,10 +549,9 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
             liveInfo={portfolio.tenantInfo[activePropertyId]}
           />
           {activeProperty.status === 'Đang thuê' &&
-            portfolio.isLive &&
-            portfolio.contractSummary[activePropertyId] && (
+            portfolio.contractSummary?.[activePropertyId] && (
               <LandlordContractSummary
-                summary={portfolio.contractSummary[activePropertyId]}
+                summary={portfolio.contractSummary[activePropertyId]!}
               />
             )}
           <LandlordAppointments

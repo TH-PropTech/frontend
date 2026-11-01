@@ -7,15 +7,10 @@ import { toast } from 'sonner'
 import type {
   Property,
   BlockchainLog,
+  RentalBill,
   EventType,
   UseProfileReturn,
 } from './types'
-import {
-  DEMO_PROPERTIES,
-  DEMO_BLOCKCHAIN_LOGS,
-  DEMO_BILLS,
-  DEMO_SESSIONS,
-} from './mock-data'
 import { useProfileMaintenance } from './use-profile-maintenance'
 import { useProfileAppointments } from './use-profile-appointments'
 import { useLandlordPortfolio } from './use-landlord-portfolio'
@@ -95,21 +90,14 @@ export function useProfile(): UseProfileReturn {
     [router, role, activeTab]
   )
   const [activePropertyId, setActivePropertyId] = React.useState('prop-1')
-  // Chủ nhà hoặc khách thuê đã đăng nhập: danh mục lấy từ backend; chưa đăng nhập giữ dữ liệu demo
   const portfolio = useLandlordPortfolio(role === 'landlord')
   const tenantPortfolio = useTenantPortfolio(role === 'tenant')
   const properties = React.useMemo(() => {
     if (role === 'landlord') {
-      return portfolio.isLive ? portfolio.properties : DEMO_PROPERTIES
+      return portfolio.properties
     }
-    return tenantPortfolio.isLive ? tenantPortfolio.properties : DEMO_PROPERTIES
-  }, [
-    role,
-    portfolio.isLive,
-    portfolio.properties,
-    tenantPortfolio.isLive,
-    tenantPortfolio.properties,
-  ])
+    return tenantPortfolio.properties
+  }, [role, portfolio.properties, tenantPortfolio.properties])
 
   // Modals
   const [showContractModal, setShowContractModal] = React.useState(false)
@@ -118,20 +106,15 @@ export function useProfile(): UseProfileReturn {
     React.useState(false)
 
   // Security
-  const [hasPasskey, setHasPasskey] = React.useState(false)
-  const [activeSessions, setActiveSessions] = React.useState(DEMO_SESSIONS)
   const [notifChannels, setNotifChannels] = React.useState({
     email: true,
-    sms: true,
-    telegram: false,
-    zalo: true,
     push: true,
   })
 
   // Wallet
   const [isWalletConnected, setIsWalletConnected] = React.useState(false)
   const [walletAddress, setWalletAddress] = React.useState('')
-  const [usdtBalance, setUsdtBalance] = React.useState(1000)
+  const [usdtBalance, setUsdtBalance] = React.useState(0)
 
   // KYC
   const [kycStatus, setKycStatus] = React.useState<
@@ -142,6 +125,7 @@ export function useProfile(): UseProfileReturn {
   const [isOcrLoading, setIsOcrLoading] = React.useState(false)
   const [kycForm, setKycForm] = React.useState(EMPTY_KYC)
   const [cccdUploaded, setCccdUploaded] = React.useState(false)
+  const [isAuthLoaded, setIsAuthLoaded] = React.useState(false)
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -167,6 +151,8 @@ export function useProfile(): UseProfileReturn {
         }
       } catch (e) {
         console.error(e)
+      } finally {
+        setIsAuthLoaded(true)
       }
 
       const params = new URLSearchParams(window.location.search)
@@ -263,9 +249,10 @@ export function useProfile(): UseProfileReturn {
   })
 
   // Blockchain & Bills
-  const [blockchainLogs, setBlockchainLogs] =
-    React.useState(DEMO_BLOCKCHAIN_LOGS)
-  const [bills, setBills] = React.useState(DEMO_BILLS)
+  const [localBlockchainLogs, setLocalBlockchainLogs] = React.useState<
+    BlockchainLog[]
+  >([])
+  const [bills, setBills] = React.useState<RentalBill[]>([])
 
   const addBlockchainLog = React.useCallback(
     (event: EventType, hash: string): void => {
@@ -276,13 +263,15 @@ export function useProfile(): UseProfileReturn {
         hash,
         status: 'verified',
       }
-      setBlockchainLogs(prev => [log, ...prev])
+      setLocalBlockchainLogs(prev => [log, ...prev])
     },
     []
   )
 
   const {
     maintenanceTickets,
+    status: maintenanceStatus,
+    retry: retryMaintenance,
     newTicketTitle,
     setNewTicketTitle,
     newTicketDesc,
@@ -346,29 +335,85 @@ export function useProfile(): UseProfileReturn {
   const effHandoverSigned = live ? live.handoverSigned : handoverSigned
   const effLeaseTerminated = live ? live.leaseTerminated : false
 
+  const blockchainLogs = React.useMemo(() => {
+    const logs: BlockchainLog[] = [...localBlockchainLogs]
+    if (liveContract) {
+      if (liveContract.contractHash) {
+        logs.push({
+          id: `LOG-${liveContract.contractCode}`,
+          event: 'LEASE_DEPLOYED',
+          timestamp: liveContract.startDate || '—',
+          hash: liveContract.contractHash,
+          status: 'verified',
+        })
+      }
+      if (liveContract.signedByTenant) {
+        logs.push({
+          id: `LOG-SIG-${liveContract.contractCode}`,
+          event: 'TENANT_SIGNED',
+          timestamp:
+            liveContract.tenantSignature?.signedAt ||
+            liveContract.startDate ||
+            '—',
+          hash:
+            liveContract.tenantSignature?.contentHash ||
+            liveContract.contractHash ||
+            `TX-SIG-${liveContract.contractCode}`,
+          status: 'verified',
+        })
+      }
+      if (
+        liveContract.deposit &&
+        [
+          'deposit-paid',
+          'awaiting-signature',
+          'active',
+          'completed',
+          'terminated',
+        ].includes(liveContract.status)
+      ) {
+        logs.push({
+          id: `LOG-DEP-${liveContract.contractCode}`,
+          event: 'DEPOSIT_CONFIRMED',
+          timestamp: liveContract.startDate || '—',
+          hash:
+            liveContract.contractHash || `TX-DEP-${liveContract.contractCode}`,
+          status: 'verified',
+        })
+      }
+    }
+    return logs
+  }, [liveContract, localBlockchainLogs])
+
+  const isInitialLoading =
+    !isAuthLoaded ||
+    (role === 'tenant' ? tenantPortfolio.isLoading : portfolio.isLoading)
+
   const effBills = React.useMemo(() => {
-    if (role === 'tenant' && tenantPortfolio.isLive) {
+    if (role === 'tenant') {
       return tenantPortfolio.bills
     }
     return bills
-  }, [role, tenantPortfolio.isLive, tenantPortfolio.bills, bills])
+  }, [role, tenantPortfolio.bills, bills])
+
+  const billsStatus =
+    role === 'tenant' ? tenantPortfolio.status : portfolio.status
+  const retryBills = role === 'tenant' ? tenantPortfolio.retry : portfolio.retry
 
   const handleConnectWallet = (): void => {
     if (isWalletConnected) {
       setIsWalletConnected(false)
       setWalletAddress('')
-      toast.info('Đã hủy liên kết tài khoản ngân hàng')
+      toast.info('Đã hủy liên kết ví')
       return
     }
     setIsWalletConnected(true)
     setWalletAddress(
-      role === 'tenant'
-        ? 'Techcombank - 19023456789012'
-        : 'TPBank - 04382910301'
+      role === 'tenant' ? 'Ví Mộc - VM1902345678' : 'Ví Mộc - VM0438291030'
     )
     setUsdtBalance(role === 'tenant' ? 50000000 : 150000000)
-    toast.success('Liên kết tài khoản ngân hàng thành công!', {
-      description: `Đã liên kết tài khoản ngân hàng qua cổng thanh toán TPBank/Techcombank (PayOS).`,
+    toast.success('Liên kết ví thành công!', {
+      description: 'Đã liên kết tài khoản qua cổng thanh toán Ví Mộc.',
     })
   }
 
@@ -376,8 +421,10 @@ export function useProfile(): UseProfileReturn {
     setIsOcrLoading(true)
     try {
       const data = await uploadAndProcessCccd(imageBase64, role)
-      setKycForm(data)
-      setCccdUploaded(true)
+      if (data) {
+        setKycForm(data)
+        setCccdUploaded(true)
+      }
     } finally {
       setIsOcrLoading(false)
     }
@@ -583,10 +630,6 @@ export function useProfile(): UseProfileReturn {
     handleViewSignedContract,
     showHandoverArchiveModal,
     setShowHandoverArchiveModal,
-    hasPasskey,
-    setHasPasskey,
-    activeSessions,
-    setActiveSessions,
     notifChannels,
     setNotifChannels,
     isWalletConnected,
@@ -608,6 +651,8 @@ export function useProfile(): UseProfileReturn {
     handoverChecks,
     setHandoverChecks,
     maintenanceTickets,
+    maintenanceStatus,
+    retryMaintenance,
     newTicketTitle,
     setNewTicketTitle,
     newTicketDesc,
@@ -616,8 +661,11 @@ export function useProfile(): UseProfileReturn {
     depositPaid: effDepositPaid,
     contractSigned: effContractSigned,
     firstMonthPaid: effFirstMonthPaid,
+    isInitialLoading,
     blockchainLogs,
     bills: effBills,
+    billsStatus,
+    retryBills,
     activeProperty,
     appointments,
     handleConnectWallet,

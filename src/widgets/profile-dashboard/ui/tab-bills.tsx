@@ -14,7 +14,13 @@ import {
 } from '@/shared/ui/table'
 import { UseProfileReturn } from '../model/use-profile'
 import { toast } from 'sonner'
-import { TrendingUp, Download, FileText, Copy } from 'lucide-react'
+import {
+  TrendingUp,
+  Download,
+  FileText,
+  RefreshCw,
+  AlertCircle,
+} from 'lucide-react'
 
 import { LandlordPayoutHistory } from './landlord-payout-history'
 import { LandlordWallet } from './landlord-wallet'
@@ -31,14 +37,24 @@ import {
   type CashflowFilter,
 } from '../model/landlord-cashflow'
 import { CashflowFilterChips, CashflowPager } from './landlord-cashflow-pager'
+import { buildMonthlyCostBreakdown } from '../model/cost-breakdown'
+import { formatDate } from '../lib/format-date'
+import { TechnicalDetails } from './components/technical-details'
 
 interface TabBillsProps {
   profile: UseProfileReturn
 }
 
 export function TabBills({ profile }: TabBillsProps): React.ReactElement {
-  const { role, bills, firstMonthPaid, handleCopyText, portfolio } = profile
-  // Chủ nhà đã đăng nhập: biểu đồ, bảng dòng tiền và xuất file lấy từ backend; còn lại giữ dữ liệu demo
+  const {
+    role,
+    bills,
+    handleCopyText,
+    portfolio,
+    liveContract,
+    billsStatus = 'ready',
+    retryBills,
+  } = profile
   const live = role === 'landlord' && portfolio.isLive
   const cashflow = useLandlordCashflow(portfolio)
   const [filter, setFilter] = React.useState<CashflowFilter>('all')
@@ -53,13 +69,23 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
   )
   const current = paginate(filtered, page)
 
+  const costBreakdown = React.useMemo(
+    () => buildMonthlyCostBreakdown(liveContract, bills),
+    [liveContract, bills]
+  )
+
   const handleExport = (): void => {
-    if (!live) {
+    if (role === 'tenant') {
+      if (bills.length === 0) {
+        toast.info('Chưa có hóa đơn nào để xuất biên lai.')
+        return
+      }
       toast.success('Báo cáo tài chính đã được xuất tải xuống!', {
         description: 'Tệp PDF hóa đơn tháng này đã được lưu vào thiết bị.',
       })
       return
     }
+
     if (cashflow.rows.length === 0) {
       toast.info('Chưa có khoản thu nào để xuất.')
       return
@@ -109,14 +135,14 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
             className="h-9 text-xs rounded-full px-4 border border-border flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
           >
             <Download className="h-3.5 w-3.5" />
-            {live ? 'Xuất CSV dòng tiền' : 'Xuất biên lai PDF'}
+            {role === 'landlord' ? 'Xuất CSV dòng tiền' : 'Xuất biên lai PDF'}
           </Button>
         </div>
 
         {/* SVG Chart Section */}
-        <div className="h-64 border border-border/60 bg-surface-muted/10 rounded-2xl flex items-center justify-center p-4">
+        <div className="min-h-64 border border-border/60 bg-surface-muted/10 rounded-2xl flex items-center justify-center p-4">
           {role === 'tenant' ? (
-            <TenantBillsChart />
+            <TenantBillsChart breakdown={costBreakdown} />
           ) : live ? (
             <LandlordRevenueChart series={cashflow.series} />
           ) : (
@@ -139,16 +165,10 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
               Cập nhật theo Hợp đồng điện tử • Giao dịch được xử lý tự động qua
               đối tác thanh toán và cổng ngân hàng liên kết
             </p>
-            {!live &&
-              !(role === 'tenant' && profile.tenantPortfolio?.isLive) && (
-                <Badge variant="outline" className="mt-2 w-fit">
-                  Demo
-                </Badge>
-              )}
           </div>
         </div>
 
-        {live && (
+        {role === 'landlord' && (
           <CashflowFilterChips
             value={filter}
             counts={counts}
@@ -176,7 +196,45 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
             </TableHeader>
             <TableBody>
               {role === 'tenant' ? (
-                bills.length === 0 ? (
+                billsStatus === 'loading' ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="py-12 text-center border-none"
+                    >
+                      <div className="flex flex-col items-center justify-center gap-2 text-muted">
+                        <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+                        <p className="text-xs">Đang tải danh sách hóa đơn...</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : billsStatus === 'error' ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="py-10 text-center border-none"
+                    >
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <AlertCircle className="h-7 w-7 text-destructive" />
+                        <p className="text-xs font-semibold text-destructive">
+                          Không thể tải danh sách hóa đơn.
+                        </p>
+                        {retryBills && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={retryBills}
+                            className="h-8 text-xs rounded-full gap-1.5"
+                          >
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Thử lại
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : bills.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={5}
@@ -205,7 +263,9 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                         {b.title}
                       </TableCell>
                       <TableCell className="p-4 text-muted border-none">
-                        {b.dueDate}
+                        {b.dueDate.includes('T') || b.dueDate.includes('-')
+                          ? formatDate(b.dueDate)
+                          : b.dueDate}
                       </TableCell>
                       <TableCell className="p-4 font-bold text-fg text-sm border-none">
                         {b.amount.toLocaleString('vi-VN')} VND
@@ -228,20 +288,20 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                         </Badge>
                       </TableCell>
                       <TableCell className="p-4 border-none">
-                        {b.txHash ? (
-                          <div className="flex items-center gap-1.5 font-mono text-primary max-w-[180px]">
-                            <span className="truncate" title={b.txHash}>
-                              {b.txHash}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleCopyText(b.txHash || '')}
-                              className="p-1 text-subtle hover:text-fg transition-colors inline-flex items-center justify-center rounded"
-                              title="Sao chép mã giao dịch"
-                              aria-label="Sao chép mã giao dịch"
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </button>
+                        {b.txHash || b.contractCode ? (
+                          <div className="flex flex-col gap-1 items-start">
+                            {b.contractCode && (
+                              <TechnicalDetails
+                                value={b.contractCode}
+                                label="Mã HĐ"
+                              />
+                            )}
+                            {b.txHash && (
+                              <TechnicalDetails
+                                value={b.txHash}
+                                label="Mã băm lưu vết"
+                              />
+                            )}
                           </div>
                         ) : (
                           <span className="text-muted/60 font-mono italic">
@@ -252,116 +312,18 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
                     </TableRow>
                   ))
                 )
-              ) : live ? (
+              ) : (
                 <LandlordCashflowRows
                   rows={current.items}
                   isLoading={cashflow.isLoading}
                   isError={cashflow.isError}
                   onCopy={handleCopyText}
                 />
-              ) : (
-                /* Landlord Bills/Income View */
-                <>
-                  <TableRow className="hover:bg-surface-muted/10 transition-colors">
-                    <TableCell className="p-4 font-semibold text-fg flex items-center gap-1.5 border-none h-12">
-                      <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse shrink-0" />
-                      Tiền đặt cọc nhận từ khách thuê
-                    </TableCell>
-                    <TableCell className="p-4 text-muted border-none">
-                      10/06/2026
-                    </TableCell>
-                    <TableCell className="p-4 font-bold text-fg text-sm border-none">
-                      18.000.000 VND
-                    </TableCell>
-                    <TableCell className="p-4 border-none">
-                      <Badge
-                        variant="outline"
-                        className="gap-1 py-0.5 bg-success-soft text-success border-success/20"
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                        Đã nhận cọc
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="p-4 border-none">
-                      <div className="flex items-center gap-1.5 font-mono text-primary max-w-[180px]">
-                        <span className="truncate">
-                          0x2d9a3b8e4f1a4e1272c41e8aa2206b7d
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleCopyText('0x2d9a3b8e4f1a4e1272c41e8aa2206b7d')
-                          }
-                          className="p-1 text-subtle hover:text-fg transition-colors inline-flex items-center justify-center rounded"
-                          title="Sao chép mã giao dịch"
-                          aria-label="Sao chép mã giao dịch"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="hover:bg-surface-muted/10 transition-colors">
-                    <TableCell className="p-4 font-semibold text-fg flex items-center gap-1.5 border-none h-12">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                      Tiền thuê nhà tháng 6/2026 (Giải tỏa về tài khoản)
-                    </TableCell>
-                    <TableCell className="p-4 text-muted border-none">
-                      {firstMonthPaid ? 'Vừa xong' : '05/07/2026'}
-                    </TableCell>
-                    <TableCell className="p-4 font-bold text-fg text-sm border-none">
-                      18.000.000 VND
-                    </TableCell>
-                    <TableCell className="p-4 border-none">
-                      <Badge
-                        variant="outline"
-                        className={`gap-1 py-0.5 ${
-                          firstMonthPaid
-                            ? 'bg-success-soft text-success border-success/20'
-                            : 'bg-destructive/10 text-destructive border-destructive/20'
-                        }`}
-                      >
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${firstMonthPaid ? 'bg-success' : 'bg-destructive'}`}
-                        />
-                        {firstMonthPaid
-                          ? 'Đã nhận tài khoản'
-                          : 'Chờ khách đóng'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="p-4 border-none">
-                      {firstMonthPaid ? (
-                        <div className="flex items-center gap-1.5 font-mono text-primary max-w-[180px]">
-                          <span className="truncate">
-                            0x3a2c91ba40fe93b8219c009d12d4109b
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleCopyText(
-                                '0x3a2c91ba40fe93b8219c009d12d4109b'
-                              )
-                            }
-                            className="p-1 text-subtle hover:text-fg transition-colors inline-flex items-center justify-center rounded"
-                            title="Sao chép mã giao dịch"
-                            aria-label="Sao chép mã giao dịch"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-muted/60 font-mono italic">
-                          N/A
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                </>
               )}
             </TableBody>
           </Table>
         </div>
-        {live && (
+        {role === 'landlord' && (
           <CashflowPager
             page={current.page}
             total={filtered.length}

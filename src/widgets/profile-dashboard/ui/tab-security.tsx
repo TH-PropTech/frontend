@@ -7,28 +7,36 @@ import { Switch } from '@/shared/ui/switch'
 import { UseProfileReturn } from '../model/use-profile'
 import { toast } from 'sonner'
 import {
-  Fingerprint,
   CheckCircle2,
   Smartphone,
   Bell,
   ShieldCheck,
   Copy,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react'
 import { apiClient } from '@/shared/api/api-client'
+import { useSessions } from '../model/use-sessions'
+import { useNotificationPreferences } from '../model/use-notification-preferences'
+import { formatDate } from '../lib/format-date'
 
 interface TabSecurityProps {
   profile: UseProfileReturn
 }
 
-export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
+export function TabSecurity({
+  profile: _profile,
+}: TabSecurityProps): React.ReactElement {
+  void _profile
   const {
-    hasPasskey,
-    setHasPasskey,
-    activeSessions,
-    setActiveSessions,
-    notifChannels,
-    setNotifChannels,
-  } = profile
+    sessions,
+    status: sessionsStatus,
+    retry: retrySessions,
+    revokeSession,
+  } = useSessions()
+
+  const { preferences: notifChannels, togglePreference } =
+    useNotificationPreferences()
 
   const [is2faEnabled, setIs2faEnabled] = React.useState(false)
   const [isSettingUp, setIsSettingUp] = React.useState(false)
@@ -49,7 +57,6 @@ export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
         )
         if (userDetails) {
           setIs2faEnabled(userDetails.twoFactorEnabled)
-          // Also sync with localStorage user info
           const stored = localStorage.getItem('user')
           if (stored) {
             const u = JSON.parse(stored)
@@ -62,7 +69,7 @@ export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
         console.error('Failed to fetch 2FA status:', err)
       }
     }
-    fetch2faStatus()
+    void fetch2faStatus()
   }, [])
 
   const handleStartSetup = async () => {
@@ -113,7 +120,6 @@ export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
   const handleCompleteSetup = () => {
     setIs2faEnabled(true)
     localStorage.setItem('is2faEnabled', 'true')
-    // Update local user object as well
     try {
       const stored = localStorage.getItem('user')
       if (stored) {
@@ -140,7 +146,6 @@ export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
         await apiClient.post('/two-factor/disable', {})
         setIs2faEnabled(false)
         localStorage.setItem('is2faEnabled', 'false')
-        // Update local user object as well
         try {
           const stored = localStorage.getItem('user')
           if (stored) {
@@ -164,44 +169,6 @@ export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
 
   return (
     <div className="space-y-8 mt-0 outline-none">
-      {/* Passkeys Configuration */}
-      <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
-        <div className="flex items-start gap-4 text-left">
-          <div className="h-10 w-10 rounded-full bg-primary-soft flex items-center justify-center text-primary shrink-0">
-            <Fingerprint className="h-5 w-5" />
-          </div>
-          <div className="space-y-1.5 flex-1">
-            <h3 className="font-marketing text-base font-bold text-fg">
-              Xác thực sinh trắc học (Passkeys / WebAuthn)
-            </h3>
-            <p className="text-xs text-muted leading-relaxed">
-              Passkeys cho phép đăng nhập và xác thực giao dịch an toàn bằng dấu
-              vân tay (Touch ID), khuôn mặt (Face ID) hoặc mã PIN thiết bị mà
-              không cần mật khẩu.
-            </p>
-            {hasPasskey ? (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-success-soft text-success border border-success/15 rounded-lg text-xs font-bold mt-2">
-                <CheckCircle2 className="h-4 w-4" />
-                Đã đăng ký thiết bị hiện tại làm khóa Passkey bảo mật.
-              </div>
-            ) : (
-              <Button
-                onClick={() => {
-                  setHasPasskey(true)
-                  toast.success('Đăng ký khóa Passkey thành công!', {
-                    description:
-                      'Thiết bị hiện tại đã được liên kết thông qua cơ chế sinh trắc học WebAuthn.',
-                  })
-                }}
-                className="h-9 text-xs rounded-full px-5 font-bold mt-2 cursor-pointer"
-              >
-                Thiết lập Passkey cho thiết bị này
-              </Button>
-            )}
-          </div>
-        </div>
-      </Card>
-
       {/* Two-Factor Authentication (2FA) Configuration */}
       <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
         <div className="flex items-start gap-4 text-left">
@@ -372,9 +339,9 @@ export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
                       </h4>
                     </div>
                     <p className="text-[11px] text-muted leading-relaxed">
-                      Lưu trữ các mã dự phòng này ở nơi an sau. Mỗi mã chỉ có
-                      thể sử dụng **một lần duy nhất** để đăng nhập nếu bạn bị
-                      mất thiết bị Authenticator.
+                      Lưu trữ các mã dự phòng này ở nơi an toàn. Mỗi mã chỉ có
+                      thể sử dụng một lần duy nhất để đăng nhập nếu bạn bị mất
+                      thiết bị Authenticator.
                     </p>
                     <div className="grid grid-cols-2 gap-2 p-3.5 bg-surface border border-border rounded-xl font-mono text-[11px] text-fg font-bold">
                       {backupCodes.map((code, idx) => (
@@ -425,50 +392,75 @@ export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
           </p>
         </div>
 
-        <div className="divide-y divide-border/60 border border-border rounded-2xl overflow-hidden bg-surface/20 text-left">
-          {activeSessions.map(s => (
-            <div
-              key={s.id}
-              className="flex justify-between items-center p-4 hover:bg-surface-muted/20 transition-all gap-4"
+        {sessionsStatus === 'loading' ? (
+          <div className="py-8 flex flex-col items-center justify-center gap-2 text-center text-muted">
+            <RefreshCw className="h-5 w-5 animate-spin text-primary" />
+            <p className="text-xs">Đang tải danh sách phiên đăng nhập...</p>
+          </div>
+        ) : sessionsStatus === 'error' ? (
+          <div className="py-6 border border-destructive/20 rounded-2xl flex flex-col items-center justify-center gap-2 text-center bg-destructive/5">
+            <AlertCircle className="h-6 w-6 text-destructive" />
+            <p className="text-xs font-semibold text-destructive">
+              Không thể tải danh sách phiên đăng nhập.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={retrySessions}
+              className="h-8 text-xs rounded-full gap-1.5"
             >
-              <div className="flex items-center gap-3">
-                <Smartphone
-                  className={`h-5 w-5 ${s.lastActive === 'Đang hoạt động' ? 'text-success' : 'text-subtle'}`}
-                />
-                <div className="space-y-0.5">
-                  <span className="text-xs font-bold text-fg block">
-                    {s.device}
-                  </span>
-                  <span className="text-[10px] text-muted block">
-                    IP: {s.ip} • Địa điểm: {s.location}
-                  </span>
+              <RefreshCw className="h-3.5 w-3.5" />
+              Thử lại
+            </Button>
+          </div>
+        ) : sessions.length === 0 ? (
+          <div className="py-8 text-center text-xs text-muted">
+            Không tìm thấy phiên đăng nhập nào.
+          </div>
+        ) : (
+          <div className="divide-y divide-border/60 border border-border rounded-2xl overflow-hidden bg-surface/20 text-left">
+            {sessions.map(s => (
+              <div
+                key={s.id}
+                className="flex justify-between items-center p-4 hover:bg-surface-muted/20 transition-all gap-4"
+              >
+                <div className="flex items-center gap-3">
+                  <Smartphone
+                    className={`h-5 w-5 ${s.isCurrent ? 'text-success' : 'text-subtle'}`}
+                  />
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-bold text-fg block">
+                      {s.deviceLabel}
+                    </span>
+                    <span className="text-[10px] text-muted block">
+                      IP: {s.ipMasked} • Hoạt động: {formatDate(s.lastActiveAt)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  {s.isCurrent ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] text-success font-semibold px-2 py-0.5 rounded-full bg-success-soft">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Thiết bị hiện tại
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => revokeSession(s.id)}
+                      className="text-[10px] text-danger hover:underline font-bold cursor-pointer border-none bg-transparent"
+                    >
+                      Đăng xuất thiết bị
+                    </button>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-mono text-muted">
-                  {s.lastActive}
-                </span>
-                {s.lastActive !== 'Đang hoạt động' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveSessions(prev => prev.filter(x => x.id !== s.id))
-                      toast.success('Đã thu hồi phiên đăng nhập!', {
-                        description: `Thiết bị ${s.device} đã bị đăng xuất khỏi tài khoản.`,
-                      })
-                    }}
-                    className="text-[10px] text-danger hover:underline font-bold cursor-pointer border-none bg-transparent"
-                  >
-                    Đăng xuất thiết bị
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
 
-      {/* Notification Config (using standard Switch components) */}
+      {/* Notification Config (only email & push, no fake channels) */}
       <Card className="bg-white border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
         <div className="space-y-1 text-left">
           <h3 className="font-marketing text-base font-bold text-fg flex items-center gap-2">
@@ -476,12 +468,12 @@ export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
             Quản lý nhận thông báo đa kênh (Notification Hub)
           </h3>
           <p className="text-xs text-muted">
-            Cấu hình các kênh để tự động gửi thông báo biến động giao dịch ký
-            quỹ, duyệt hợp đồng, hay sự cố thiết bị.
+            Cấu hình các kênh để tự động gửi thông báo thanh toán, duyệt hợp
+            đồng, hay sự cố thiết bị.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
           <div className="border border-border rounded-2xl p-4 flex items-center justify-between bg-surface/30">
             <div className="space-y-0.5">
               <span className="text-xs font-bold text-fg block">
@@ -493,69 +485,7 @@ export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
             </div>
             <Switch
               checked={notifChannels.email}
-              onCheckedChange={() =>
-                setNotifChannels({
-                  ...notifChannels,
-                  email: !notifChannels.email,
-                })
-              }
-            />
-          </div>
-
-          <div className="border border-border rounded-2xl p-4 flex items-center justify-between bg-surface/30">
-            <div className="space-y-0.5">
-              <span className="text-xs font-bold text-fg block">
-                Tin nhắn SMS
-              </span>
-              <span className="text-[10px] text-muted block">
-                Mã khóa phòng & OTP
-              </span>
-            </div>
-            <Switch
-              checked={notifChannels.sms}
-              onCheckedChange={() =>
-                setNotifChannels({ ...notifChannels, sms: !notifChannels.sms })
-              }
-            />
-          </div>
-
-          <div className="border border-border rounded-2xl p-4 flex items-center justify-between bg-surface/30">
-            <div className="space-y-0.5">
-              <span className="text-xs font-bold text-fg block">
-                Telegram Bot
-              </span>
-              <span className="text-[10px] text-muted block">
-                Thông báo nhanh tức thì
-              </span>
-            </div>
-            <Switch
-              checked={notifChannels.telegram}
-              onCheckedChange={() =>
-                setNotifChannels({
-                  ...notifChannels,
-                  telegram: !notifChannels.telegram,
-                })
-              }
-            />
-          </div>
-
-          <div className="border border-border rounded-2xl p-4 flex items-center justify-between bg-surface/30">
-            <div className="space-y-0.5">
-              <span className="text-xs font-bold text-fg block">
-                Zalo OA Message
-              </span>
-              <span className="text-[10px] text-muted block">
-                Tra cứu hóa đơn thuê
-              </span>
-            </div>
-            <Switch
-              checked={notifChannels.zalo}
-              onCheckedChange={() =>
-                setNotifChannels({
-                  ...notifChannels,
-                  zalo: !notifChannels.zalo,
-                })
-              }
+              onCheckedChange={() => togglePreference('email')}
             />
           </div>
 
@@ -570,12 +500,7 @@ export function TabSecurity({ profile }: TabSecurityProps): React.ReactElement {
             </div>
             <Switch
               checked={notifChannels.push}
-              onCheckedChange={() =>
-                setNotifChannels({
-                  ...notifChannels,
-                  push: !notifChannels.push,
-                })
-              }
+              onCheckedChange={() => togglePreference('push')}
             />
           </div>
         </div>

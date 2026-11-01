@@ -3,12 +3,14 @@
 import * as React from 'react'
 import { Badge } from '@/shared/ui/badge'
 import { Card } from '@/shared/ui/card'
+import { Button } from '@/shared/ui/button'
 import { UseProfileReturn } from '../model/use-profile'
-import { EVENT_LABELS } from '../model/mock-data'
+import { EVENT_LABELS } from '../model/event-labels'
 import type { EventType } from '../model/types'
+import { TechnicalDetails } from './components/technical-details'
+import { formatDate } from '../lib/format-date'
 import {
   Clock,
-  Copy,
   CheckCircle2,
   FileText,
   ChevronDown,
@@ -20,6 +22,8 @@ import {
   FileCheck2,
   Wrench,
   File,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react'
 
 interface TabBlockchainProps {
@@ -46,7 +50,11 @@ function getEventIcon(
 export function TabBlockchain({
   profile,
 }: TabBlockchainProps): React.ReactElement {
-  const { blockchainLogs, handleCopyText } = profile
+  const {
+    blockchainLogs,
+    blockchainStatus = 'ready',
+    retryBlockchain,
+  } = profile
   const [expandedId, setExpandedId] = React.useState<string | null>(null)
 
   const toggleExpand = (id: string): void => {
@@ -69,7 +77,31 @@ export function TabBlockchain({
         </div>
 
         {/* Timeline */}
-        {blockchainLogs.length === 0 ? (
+        {blockchainStatus === 'loading' ? (
+          <div className="py-12 flex flex-col items-center justify-center gap-2 text-center text-muted">
+            <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-xs">Đang tải nhật ký giao dịch...</p>
+          </div>
+        ) : blockchainStatus === 'error' ? (
+          <div className="py-10 border border-destructive/20 rounded-2xl flex flex-col items-center justify-center gap-3 text-center bg-destructive/5">
+            <AlertCircle className="h-7 w-7 text-destructive" />
+            <p className="text-xs font-semibold text-destructive">
+              Không thể tải nhật ký giao dịch.
+            </p>
+            {retryBlockchain && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={retryBlockchain}
+                className="h-8 text-xs rounded-full gap-1.5"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Thử lại
+              </Button>
+            )}
+          </div>
+        ) : blockchainLogs.length === 0 ? (
           <div className="py-12 border border-dashed border-border rounded-2xl flex flex-col items-center justify-center gap-2 text-center bg-surface-muted/10">
             <FileText className="h-8 w-8 text-muted/50" />
             <p className="font-semibold text-fg text-sm">
@@ -87,7 +119,7 @@ export function TabBlockchain({
               const label = config?.label ?? log.event
               const IconComponent = getEventIcon(config?.iconName ?? '')
               const isExpanded = expandedId === log.id
-              const details = config?.details ?? []
+              const details = log.details ?? []
 
               return (
                 <div key={log.id} className="relative pl-10 space-y-2 group">
@@ -108,42 +140,28 @@ export function TabBlockchain({
                       </div>
                       <span className="font-body text-[11px] text-muted flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5 text-subtle" />
-                        {log.timestamp}
+                        {log.timestamp.includes('T') ||
+                        log.timestamp.includes('-')
+                          ? formatDate(log.timestamp)
+                          : log.timestamp}
                       </span>
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                      <div className="flex items-center gap-2 font-mono text-[11px] text-muted overflow-hidden">
-                        <span className="shrink-0 text-[11px] font-sans text-subtle">
-                          Mã xác nhận:
-                        </span>
-                        <span
-                          className="truncate text-primary font-medium"
-                          title={log.hash}
-                        >
-                          {log.hash.substring(0, 12)}…
-                          {log.hash.substring(log.hash.length - 8)}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyText(log.hash)}
-                          className="p-1 text-subtle hover:text-fg transition-colors inline-flex items-center justify-center rounded shrink-0"
-                          title="Sao chép mã xác nhận"
-                          aria-label="Sao chép mã xác nhận"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                      <TechnicalDetails
+                        value={log.hash}
+                        label="Chi tiết kỹ thuật mã xác nhận"
+                      />
                       <Badge
                         variant="outline"
-                        className="gap-1 py-0.5 bg-success-soft text-success border-success/20"
+                        className="gap-1 py-0.5 bg-success-soft text-success border-success/20 shrink-0 self-start sm:self-center"
                       >
                         <CheckCircle2 className="h-3 w-3" />
                         Đã xác nhận
                       </Badge>
                     </div>
 
-                    {/* Nút xem chi tiết */}
+                    {/* Nút xem chi tiết (chỉ hiển thị khi log có payload details thật) */}
                     {details.length > 0 && (
                       <>
                         <button
