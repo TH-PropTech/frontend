@@ -834,23 +834,6 @@ export async function getSigningMethods(
   )
 }
 
-export interface SignSmartCaV2Input {
-  smartCaPassword: string
-  smartCaOtp: string
-  certificateSerial?: string
-}
-
-/** SmartCA v2 (tùy chọn): mật khẩu + OTP chỉ gửi một lần, không lưu ở client. */
-export async function signSmartCaV2(
-  contractId: string,
-  input: SignSmartCaV2Input
-): Promise<SmartCaSigningSession> {
-  return apiClient.post<SmartCaSigningSession>(
-    `/contracts/${contractId}/smartca/sign-v2`,
-    input
-  )
-}
-
 /** Dev/test: ký bỏ qua SmartCA (backend phải bật ENABLE_TEST_SIGN_BYPASS). */
 export async function testSignContract(
   contractId: string

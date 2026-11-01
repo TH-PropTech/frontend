@@ -7,7 +7,6 @@ const {
   createSmartCaSigningSession,
   getSmartCaCertificates,
   getSigningMethods,
-  signSmartCaV2,
   testSignContract,
   pollSmartCaSigningSession,
 } = vi.hoisted(() => ({
@@ -15,7 +14,6 @@ const {
   createSmartCaSigningSession: vi.fn(),
   getSmartCaCertificates: vi.fn(),
   getSigningMethods: vi.fn(),
-  signSmartCaV2: vi.fn(),
   testSignContract: vi.fn(),
   pollSmartCaSigningSession: vi.fn(),
 }))
@@ -30,7 +28,6 @@ vi.mock('../api/contracts-api', () => ({
   createSmartCaSigningSession,
   getSmartCaCertificates,
   getSigningMethods,
-  signSmartCaV2,
   testSignContract,
   pollSmartCaSigningSession,
 }))
@@ -253,44 +250,21 @@ describe('SigningCeremonyModal', () => {
       name: 'Chọn phương thức ký',
     })
     expect(group).toBeInTheDocument()
-    expect(screen.getAllByRole('radio')).toHaveLength(4)
+    expect(screen.getAllByRole('radio')).toHaveLength(3)
     expect(
       screen.getByRole('radio', { name: /xác nhận trên app/ })
     ).toBeChecked()
     expect(screen.queryByLabelText('Mật khẩu SmartCA')).not.toBeInTheDocument()
   })
 
-  it('signs with SmartCA v2 and clears the credentials after submitting', async () => {
-    signSmartCaV2.mockResolvedValue({ id: 's', status: 'signed' })
-    const onSigningSuccess = vi.fn()
-    render(
-      <SigningCeremonyModal {...props} onSigningSuccess={onSigningSuccess} />
-    )
-    fireEvent.click(
-      await screen.findByRole('radio', { name: /mật khẩu \+ OTP/ })
-    )
-    fireEvent.click(screen.getByLabelText('Xác nhận đồng thuận'))
-    fireEvent.change(screen.getByLabelText('Mật khẩu SmartCA'), {
-      target: { value: 'pw-secret' },
-    })
-    fireEvent.change(screen.getByLabelText('OTP SmartCA'), {
-      target: { value: '123456' },
-    })
-    fireEvent.click(
-      screen.getByRole('button', {
-        name: /Ký bằng SmartCA \(mật khẩu \+ OTP\)/,
-      })
-    )
+  it('hides SmartCA v2 even when the backend still returns it', async () => {
+    renderModal()
 
-    await waitFor(() =>
-      expect(signSmartCaV2).toHaveBeenCalledWith('c1', {
-        smartCaPassword: 'pw-secret',
-        smartCaOtp: '123456',
-      })
-    )
-    await waitFor(() => expect(onSigningSuccess).toHaveBeenCalled())
-    expect(screen.getByLabelText('Mật khẩu SmartCA')).toHaveValue('')
-    expect(screen.getByLabelText('OTP SmartCA')).toHaveValue('')
+    await screen.findByRole('radiogroup', { name: 'Chọn phương thức ký' })
+    expect(
+      screen.queryByRole('radio', { name: /mật khẩu + OTP/ })
+    ).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Mật khẩu SmartCA')).not.toBeInTheDocument()
   })
 
   it('does not show the dev sign option unless the backend returns it', async () => {

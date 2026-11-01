@@ -15,7 +15,6 @@ import { FaceVerifyCamera } from './face-verify-camera'
 import { SmartOtpStep } from './smart-otp-step'
 import { SignatureAnimation } from './signature-animation'
 import { SmartCaSigningPanel } from './smartca-signing-panel'
-import { SmartCaV2SignForm } from './smartca-v2-sign-form'
 import { describeSigningMethodReason } from '../lib/signing-method-reason'
 
 export interface SigningCeremonyModalProps {
@@ -200,8 +199,13 @@ export function SigningCeremonyModal({
                   />
                   <span>
                     Tôi xác nhận đã đọc, hiểu rõ toàn bộ nội dung hợp đồng và
-                    đồng ý tiến hành ký xác nhận điện tử bằng sinh trắc học và
-                    Smart OTP.
+                    đồng ý tiến hành ký xác nhận điện tử{' '}
+                    {methodsState.selected === 'biometric_smart_otp'
+                      ? 'bằng sinh trắc học và Smart OTP'
+                      : methodsState.selected === 'dev_sign'
+                        ? '(chế độ thử nghiệm)'
+                        : 'bằng VNPT SmartCA'}
+                    .
                   </span>
                 </label>
               </div>
@@ -287,17 +291,6 @@ export function SigningCeremonyModal({
 
                 {methodsState.selected === 'smartca_v1' ? (
                   <SmartCaSigningPanel
-                    key={smartCaPanelKey}
-                    contractId={contractId}
-                    disabled={!consentChecked}
-                    {...(onSigningSuccess
-                      ? { onSigned: onSigningSuccess }
-                      : {})}
-                  />
-                ) : null}
-
-                {methodsState.selected === 'smartca_v2' ? (
-                  <SmartCaV2SignForm
                     key={smartCaPanelKey}
                     contractId={contractId}
                     disabled={!consentChecked}
