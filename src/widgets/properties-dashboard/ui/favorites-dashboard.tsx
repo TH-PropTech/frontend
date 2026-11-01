@@ -8,13 +8,27 @@ import { apiClient } from '@/shared/api/api-client'
 import { ApartmentCard } from '@/widgets/properties-dashboard/ui/components/apartment-card'
 import { useFavorites } from '@/shared/lib/use-favorites'
 import { CompareModal } from '@/widgets/properties-dashboard/ui/components/compare-modal'
+import { Modal } from '@/shared/ui/modal'
 import { toast } from 'sonner'
 
+export type FavoritesSortOption =
+  | 'default'
+  | 'price-asc'
+  | 'price-desc'
+  | 'newest'
+
 export function FavoritesDashboard(): React.ReactElement {
-  const { favorites } = useFavorites()
+  const { favorites, clearFavorites } = useFavorites()
   const [apartments, setApartments] = React.useState<ApartmentItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [loadError, setLoadError] = React.useState<Error | null>(null)
+
+  // Sort state
+  const [sortBy, setSortBy] = React.useState<FavoritesSortOption>('default')
+
+  // Batch clear confirmation modal
+  const [showClearConfirm, setShowClearConfirm] = React.useState(false)
+  const [isClearing, setIsClearing] = React.useState(false)
 
   // Compare states
   const [compareIds, setCompareIds] = React.useState<string[]>([])
@@ -23,6 +37,33 @@ export function FavoritesDashboard(): React.ReactElement {
   const favoriteApartments = React.useMemo(() => {
     return apartments.filter(apt => favorites.includes(apt.id))
   }, [favorites, apartments])
+
+  const sortedFavoriteApartments = React.useMemo(() => {
+    const list = [...favoriteApartments]
+    switch (sortBy) {
+      case 'price-asc':
+        return list.sort((a, b) => (a.priceNum || 0) - (b.priceNum || 0))
+      case 'price-desc':
+        return list.sort((a, b) => (b.priceNum || 0) - (a.priceNum || 0))
+      case 'newest':
+        return list.sort((a, b) => {
+          const timeA = (a as unknown as { createdAt?: string }).createdAt
+            ? new Date(
+                (a as unknown as { createdAt?: string }).createdAt!
+              ).getTime()
+            : 0
+          const timeB = (b as unknown as { createdAt?: string }).createdAt
+            ? new Date(
+                (b as unknown as { createdAt?: string }).createdAt!
+              ).getTime()
+            : 0
+          if (timeA && timeB) return timeB - timeA
+          return favorites.indexOf(b.id) - favorites.indexOf(a.id)
+        })
+      default:
+        return list
+    }
+  }, [favoriteApartments, sortBy, favorites])
 
   const compareApartments = React.useMemo(() => {
     return favoriteApartments.filter(apt => compareIds.includes(apt.id))
@@ -40,6 +81,19 @@ export function FavoritesDashboard(): React.ReactElement {
         return [...prev, id]
       }
     })
+  }
+
+  const handleConfirmClearAll = async (): Promise<void> => {
+    setIsClearing(true)
+    try {
+      await clearFavorites()
+      setCompareIds([])
+      setShowClearConfirm(false)
+    } catch {
+      // toast error is dispatched by useFavorites
+    } finally {
+      setIsClearing(false)
+    }
   }
 
   React.useEffect(() => {
@@ -135,17 +189,65 @@ export function FavoritesDashboard(): React.ReactElement {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/60">
                   <h2 className="font-marketing text-sm font-extrabold text-fg uppercase tracking-wider flex items-center gap-2">
                     <span>Căn hộ đã lưu</span>
                     <span className="h-5 px-2 rounded-full bg-primary-soft text-primary text-[10px] font-bold flex items-center justify-center font-mono">
                       {favoriteApartments.length}
                     </span>
                   </h2>
+
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor="favorites-sort"
+                        className="text-xs text-muted font-medium hidden sm:inline-block"
+                      >
+                        Sắp xếp:
+                      </label>
+                      <select
+                        id="favorites-sort"
+                        aria-label="Sắp xếp căn hộ yêu thích"
+                        value={sortBy}
+                        onChange={e =>
+                          setSortBy(e.target.value as FavoritesSortOption)
+                        }
+                        className="text-xs font-semibold bg-white dark:bg-surface-muted border border-border rounded-lg px-2.5 py-1.5 text-fg focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                      >
+                        <option value="default">Mặc định</option>
+                        <option value="price-asc">Giá: Thấp đến cao</option>
+                        <option value="price-desc">Giá: Cao đến thấp</option>
+                        <option value="newest">Mới nhất</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowClearConfirm(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-danger/30 text-danger hover:bg-danger/10 text-xs font-semibold transition-colors cursor-pointer"
+                      title="Xóa tất cả căn hộ yêu thích"
+                      aria-label="Xóa tất cả"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      <span>Xóa tất cả</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {favoriteApartments.map(apt => (
+                  {sortedFavoriteApartments.map(apt => (
                     <ApartmentCard
                       key={apt.id}
                       apt={apt}
@@ -163,6 +265,39 @@ export function FavoritesDashboard(): React.ReactElement {
       </div>
 
       <Footer />
+
+      {/* Confirmation modal for clearing all favorites */}
+      <Modal
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        title="Xác nhận xóa tất cả yêu thích"
+        hideFooter={true}
+      >
+        <div className="space-y-4">
+          <p className="text-xs sm:text-sm text-muted leading-relaxed">
+            Bạn có chắc chắn muốn xóa tất cả căn hộ khỏi danh sách yêu thích
+            không? Thao tác này sẽ đồng bộ trên toàn bộ thiết bị của bạn.
+          </p>
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+            <button
+              type="button"
+              onClick={() => setShowClearConfirm(false)}
+              className="px-4 py-2 border border-border rounded-xl text-xs font-semibold text-fg hover:bg-surface-muted transition-colors cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              type="button"
+              data-testid="confirm-clear-all"
+              onClick={handleConfirmClearAll}
+              disabled={isClearing}
+              className="px-4 py-2 bg-danger hover:bg-danger/90 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {isClearing ? 'Đang xóa...' : 'Xác nhận xóa'}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Floating Compare Action Bar for Guest and Authenticated Users */}
       {compareIds.length >= 2 && (

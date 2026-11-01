@@ -10,6 +10,7 @@ import { apiClient } from '@/shared/api/api-client'
 import { toast } from 'sonner'
 import { FeePolicyModal } from './auth-modals'
 import { loginSchema } from '../model/auth-validation'
+import { syncGuestFavorites } from '@/shared/lib/use-favorites'
 
 type LoginMode = 'password' | 'passwordless-email' | 'two-factor'
 
@@ -92,6 +93,9 @@ export function LoginForm(): React.ReactElement {
         localStorage.setItem('refreshToken', successResp.refreshToken)
         localStorage.setItem('user', JSON.stringify(successResp.user))
 
+        // Reconcile guest favorites into cloud
+        syncGuestFavorites().catch(() => undefined)
+
         setSuccessMsg('Đăng nhập thành công! Đang chuyển hướng...')
         toast.success('Đăng nhập thành công!', {
           description: `Chào mừng quay trở lại, ${successResp.user.name}!`,
@@ -170,6 +174,9 @@ export function LoginForm(): React.ReactElement {
         localStorage.setItem('accessToken', response.accessToken)
         localStorage.setItem('refreshToken', response.refreshToken)
         localStorage.setItem('user', JSON.stringify(response.user))
+
+        // Reconcile guest favorites into cloud
+        syncGuestFavorites().catch(() => undefined)
 
         setSuccessMsg('Xác thực 2FA thành công! Đang chuyển hướng...')
         toast.success('Xác thực 2FA thành công!')
