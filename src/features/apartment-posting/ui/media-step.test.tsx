@@ -90,15 +90,19 @@ describe('MediaStep', () => {
   })
 
   it('uploads the chosen photos and appends the returned urls', async () => {
-    upload.mockResolvedValue(['https://res.cloudinary.com/x/a.jpg'])
-    const form = renderStep(['https://res.cloudinary.com/x/old.jpg'])
+    upload.mockResolvedValue([
+      'https://thproptech-bucket.s3.ap-southeast-1.amazonaws.com/apartments/a.jpg',
+    ])
+    const form = renderStep([
+      'https://thproptech-bucket.s3.ap-southeast-1.amazonaws.com/apartments/old.jpg',
+    ])
 
     pickFiles(1)
 
     await waitFor(() =>
       expect(form.current().getValues('gallery')).toEqual([
-        'https://res.cloudinary.com/x/old.jpg',
-        'https://res.cloudinary.com/x/a.jpg',
+        'https://thproptech-bucket.s3.ap-southeast-1.amazonaws.com/apartments/old.jpg',
+        'https://thproptech-bucket.s3.ap-southeast-1.amazonaws.com/apartments/a.jpg',
       ])
     )
     expect(upload).toHaveBeenCalledTimes(1)
