@@ -121,12 +121,14 @@ describe('mapPost', () => {
         images: [
           'blob:http://localhost:3000/abc',
           'file:///tmp/a.jpg',
-          'https://res.cloudinary.com/demo/a.jpg',
+          'https://thproptech-bucket.s3.ap-southeast-1.amazonaws.com/apartments/a.jpg',
         ],
       }),
       'u1'
     )
-    expect(post.images).toEqual(['https://res.cloudinary.com/demo/a.jpg'])
+    expect(post.images).toEqual([
+      'https://thproptech-bucket.s3.ap-southeast-1.amazonaws.com/apartments/a.jpg',
+    ])
   })
 
   it('keeps the backend status and renders the creation time relatively', () => {
