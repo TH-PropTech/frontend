@@ -113,7 +113,7 @@ export function ApartmentCard({
               <span
                 role="status"
                 aria-label={`Tình trạng thuê: ${availability.label}`}
-                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${availabilityClasses[availability.status]}`}
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${availabilityClasses[availability.status]}`}
               >
                 {availability.label}
               </span>
