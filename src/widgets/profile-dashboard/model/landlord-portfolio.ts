@@ -1,3 +1,4 @@
+import { formatDate } from '../lib/format-date'
 import type { ContractItem, ContractStatus } from '@/features/contracts'
 import type { LandlordApartmentItem } from '@/features/apartment-posting'
 import type {
@@ -28,9 +29,21 @@ export const EMPTY_STATS: LandlordStats = {
   monthlyRevenue: 0,
 }
 
-const fmtDate = (iso: string): string => {
-  const d = new Date(iso)
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('vi-VN')
+export function computeTenantPaymentStatus(contract: ContractItem): string {
+  if (['active', 'completed'].includes(contract.status)) {
+    return 'Đã đóng'
+  }
+  if (['deposit-paid', 'awaiting-signature'].includes(contract.status)) {
+    return 'Đã nộp cọc'
+  }
+  if (
+    ['deposit-pending', 'fully-signed-pending-deposit'].includes(
+      contract.status
+    )
+  ) {
+    return 'Chờ nộp cọc'
+  }
+  return 'Chưa có dữ liệu'
 }
 
 const monthsBetween = (a: string, b: string): number => {
@@ -105,7 +118,7 @@ const ALERT_BY_STATUS: Partial<
 
 type BuiltPortfolio = Omit<
   LandlordPortfolio,
-  'isLive' | 'isLoading' | 'isError'
+  'isLive' | 'isLoading' | 'isError' | 'status' | 'retry'
 >
 
 /** Gộp tin đăng + hợp đồng của chủ nhà thành danh mục căn hộ, số liệu và cảnh báo. */
@@ -151,16 +164,16 @@ export function buildPortfolio(
     tenantInfo[l.id] = {
       name: contract.tenantName || 'Khách thuê',
       phone: contract.tenantPhone || 'Chưa có số điện thoại',
-      startDate: fmtDate(contract.startDate),
+      startDate: formatDate(contract.startDate),
       duration: months ? `${months} tháng` : '—',
-      endDate: fmtDate(contract.endDate),
-      paymentStatus: 'Chưa có dữ liệu',
+      endDate: formatDate(contract.endDate),
+      paymentStatus: computeTenantPaymentStatus(contract),
     }
     contractSummary[l.id] = {
       code: contract.contractCode,
       duration: months ? `${months} tháng` : '—',
-      startDate: fmtDate(contract.startDate),
-      endDate: fmtDate(contract.endDate),
+      startDate: formatDate(contract.startDate),
+      endDate: formatDate(contract.endDate),
       monthlyRent: contract.monthlyRent,
       deposit: contract.deposit,
       paymentDay: contract.paymentDay,

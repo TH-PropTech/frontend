@@ -233,8 +233,8 @@ export function Footer(): React.ReactElement {
                 Đối tác liên kết thanh toán
               </span>
               <div className="flex items-center gap-2">
-                <div className="inline-flex items-center justify-center rounded-md bg-[#E01E26] px-2 py-0.5 text-white font-display font-black text-[11px] tracking-tight uppercase">
-                  Techcombank
+                <div className="inline-flex items-center justify-center rounded-md bg-primary px-2 py-0.5 text-white font-display font-black text-[11px] tracking-tight uppercase">
+                  Ví Mộc
                 </div>
               </div>
             </div>

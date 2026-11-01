@@ -4,6 +4,14 @@ import * as React from 'react'
 import { ProfileWidget } from './profile-widget'
 import * as useProfileModule from '../model/use-profile'
 
+const replaceMock = vi.fn()
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    replace: replaceMock,
+    push: vi.fn(),
+  }),
+}))
+
 vi.mock('../model/use-profile', () => ({
   useProfile: vi.fn(),
 }))
@@ -63,14 +71,10 @@ describe('ProfileWidget', () => {
     handleViewSignedContract: vi.fn(),
     showHandoverArchiveModal: false,
     setShowHandoverArchiveModal: vi.fn(),
-    hasPasskey: false,
-    setHasPasskey: vi.fn(),
-    handleRegisterPasskey: vi.fn(),
-    handleLoginPasskey: vi.fn(),
     showKycModal: false,
     setShowKycModal: vi.fn(),
-    kycStatus: 'unverified' as const,
-    kycData: {
+    kycStatus: 'not-started' as const,
+    kycForm: {
       fullName: '',
       cccdNumber: '',
       dob: '',
@@ -81,28 +85,26 @@ describe('ProfileWidget', () => {
       issueDate: '',
       placeOfIssue: '',
     },
-    handleKycSubmit: vi.fn(),
-    isScanning: false,
-    handleOcrScan: vi.fn(),
-    sessions: [],
-    handleRevokeSession: vi.fn(),
-    unreadCount: 0,
-    notifications: [],
-    handleMarkAsRead: vi.fn(),
-    handleMarkAllAsRead: vi.fn(),
     activeProperty: null,
-    contract: null,
-    handoverDoc: null,
+    isInitialLoading: false,
     bills: [],
     maintenanceTickets: [],
     blockchainLogs: [],
-    depositRefund: null,
-    isProcessing: false,
-    handleProcessAction: vi.fn(),
   }
 
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorage.setItem('accessToken', 'test-token')
+  })
+
+  it('redirects to /login when unauthenticated', () => {
+    localStorage.removeItem('accessToken')
+    vi.mocked(useProfileModule.useProfile).mockReturnValue(
+      baseProfile as unknown as ReturnType<typeof useProfileModule.useProfile>
+    )
+
+    render(<ProfileWidget />)
+    expect(replaceMock).toHaveBeenCalledWith('/login')
   })
 
   it('does not render landlord tabs when role is tenant', () => {
@@ -148,5 +150,18 @@ describe('ProfileWidget', () => {
     fireEvent.pointerDown(tenantTab, { button: 0, ctrlKey: false })
     fireEvent.keyDown(tenantTab, { key: 'Enter', code: 'Enter' })
     expect(setActiveTabMock).toHaveBeenCalledWith('rental-applications')
+  })
+
+  it('renders skeleton and does not flash empty state or defaults when isInitialLoading is true', () => {
+    vi.mocked(useProfileModule.useProfile).mockReturnValue({
+      ...baseProfile,
+      isInitialLoading: true,
+    } as unknown as ReturnType<typeof useProfileModule.useProfile>)
+
+    const { container } = render(<ProfileWidget />)
+    expect(screen.queryByTestId('tab-progress')).toBeNull()
+    expect(screen.queryByTestId('profile-header')).toBeNull()
+    expect(container.textContent).not.toContain('Chưa có căn hộ nào')
+    expect(container.textContent).not.toContain('Đăng nhập')
   })
 })

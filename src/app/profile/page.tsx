@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { HomeHeader } from '@/widgets/home-dashboard/ui/home-header'
 import { Footer } from '@/shared/ui/footer'
-import { ProfileWidget } from '@/widgets/profile-dashboard'
+import { ProfileWidget, ProfileSkeleton } from '@/widgets/profile-dashboard'
 
 export default function ProfilePage() {
   return (
@@ -23,11 +23,7 @@ export default function ProfilePage() {
 
         <main className="w-full pt-24 pb-12">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-            <React.Suspense
-              fallback={
-                <div className="h-96 animate-pulse rounded-3xl bg-surface-muted" />
-              }
-            >
+            <React.Suspense fallback={<ProfileSkeleton />}>
               <ProfileWidget />
             </React.Suspense>
           </div>

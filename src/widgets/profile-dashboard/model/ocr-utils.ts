@@ -1,32 +1,30 @@
 import { toast } from 'sonner'
 
-export function getMockKycForm(role: 'tenant' | 'landlord') {
-  return {
-    fullName: role === 'tenant' ? 'NGUYỄN VĂN A' : 'LÊ HOÀNG MINH',
-    cccdNumber: role === 'tenant' ? '038096001234' : '012093005678',
-    dob: role === 'tenant' ? '15/08/1996' : '20/12/1985',
-    address:
-      role === 'tenant'
-        ? '720A Điện Biên Phủ, Phường 22, Bình Thạnh, TP.HCM'
-        : '100 Nguyễn Hữu Cảnh, Phường 22, Bình Thạnh, TP.HCM',
-    gender: 'Nam',
-    nationality: 'Việt Nam',
-    placeOfOrigin: role === 'tenant' ? 'Hải Phòng' : 'Hà Nội',
-    issueDate: '20/03/2021',
-    placeOfIssue: 'CỤC CSQLHC VỀ TTXH',
-  }
+export interface OcrKycForm {
+  fullName: string
+  cccdNumber: string
+  dob: string
+  address: string
+  gender: string
+  nationality: string
+  placeOfOrigin: string
+  issueDate: string
+  placeOfIssue: string
 }
 
 export async function uploadAndProcessCccd(
   imageBase64: string | undefined,
-  role: 'tenant' | 'landlord'
-) {
-  // Always wait for 2.5 seconds to show OCR progress analysis animation
-  await new Promise(resolve => setTimeout(resolve, 2500))
+  _role?: 'tenant' | 'landlord'
+): Promise<OcrKycForm | null> {
+  void _role
+  // Always wait for 1.5 seconds to show OCR progress analysis animation
+  await new Promise(resolve => setTimeout(resolve, 1500))
 
   if (!imageBase64) {
-    toast.success('Trích xuất OCR CCCD thành công!')
-    return getMockKycForm(role)
+    toast.error(
+      'Không tìm thấy hình ảnh căn cước. Vui lòng thử lại hoặc tự nhập thông tin.'
+    )
+    return null
   }
 
   try {
@@ -50,15 +48,17 @@ export async function uploadAndProcessCccd(
         gender: result.Gender || 'Nam',
         nationality: result.Nationality || 'Việt Nam',
         placeOfOrigin: result.Place_of_origin || '',
-        issueDate: '20/03/2021',
-        placeOfIssue: 'CỤC CSQLHC VỀ TTXH',
+        issueDate: result.Issue_date || '20/03/2021',
+        placeOfIssue: result.Place_of_issue || 'CỤC CSQLHC VỀ TTXH',
       }
     } else {
-      throw new Error('Dữ liệu không hợp lệ từ API')
+      throw new Error('Dữ liệu không hợp lệ từ máy chủ OCR')
     }
   } catch (err) {
-    console.error('Fallback to mock OCR data due to error:', err)
-    toast.success('Trích xuất OCR CCCD thành công (Mock)!')
-    return getMockKycForm(role)
+    console.error('OCR processing error:', err)
+    toast.error(
+      'Không thể trích xuất thông tin từ ảnh CCCD. Vui lòng tự nhập thông tin thủ công.'
+    )
+    return null
   }
 }

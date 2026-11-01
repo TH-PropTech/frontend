@@ -7,7 +7,7 @@ import {
   type ContractItem,
   type ContractStatus,
 } from '@/features/contracts'
-import type { Property, RentalBill } from './types'
+import type { Property, RentalBill, ProfileDataStatus } from './types'
 
 export interface TenantPortfolio {
   contracts: ContractItem[]
@@ -17,7 +17,11 @@ export interface TenantPortfolio {
   isLive: boolean
   isLoading: boolean
   isError: boolean
+  status: ProfileDataStatus
+  retry: () => void
 }
+
+const NOOP_RETRY = () => {}
 
 const EMPTY_PORTFOLIO: TenantPortfolio = {
   contracts: [],
@@ -27,6 +31,8 @@ const EMPTY_PORTFOLIO: TenantPortfolio = {
   isLive: false,
   isLoading: false,
   isError: false,
+  status: 'ready',
+  retry: NOOP_RETRY,
 }
 
 function mapContractStatus(status: ContractStatus): Property['status'] {
@@ -69,21 +75,23 @@ export function contractToBills(c: ContractItem): RentalBill[] {
 
   bills.push({
     id: `BILL-DEP-${c.contractCode}`,
-    title: `Tiền đặt cọc giữ chỗ căn hộ (${c.contractCode})`,
+    title: 'Tiền đặt cọc giữ chỗ căn hộ',
     dueDate: c.startDate || new Date().toISOString().split('T')[0] || '',
     amount: c.deposit,
     status: depositPaid ? 'paid' : 'unpaid',
+    contractCode: c.contractCode,
     ...(c.contractHash ? { txHash: c.contractHash } : {}),
   })
 
   if (['active', 'completed', 'terminated'].includes(c.status)) {
-    const paymentDay = c.paymentDay || 5
+    const paymentDay = c.paymentDay || 1
     bills.push({
       id: `BILL-RENT-${c.contractCode}`,
-      title: `Tiền thuê nhà định kỳ (${c.contractCode})`,
+      title: 'Tiền thuê nhà định kỳ',
       dueDate: `Ngày ${paymentDay} hàng tháng`,
       amount: c.monthlyRent,
       status: 'paid',
+      contractCode: c.contractCode,
       ...(c.contractHash ? { txHash: c.contractHash } : {}),
     })
   }
@@ -129,15 +137,37 @@ export function useTenantPortfolio(enabled: boolean): TenantPortfolio {
     data: contractsData,
     isLoading,
     isError,
+    refetch,
   } = useQuery({
     queryKey: ['my-contracts'],
     queryFn: getMyContracts,
     enabled: live,
   })
 
+  const retry = React.useCallback(() => {
+    void refetch()
+  }, [refetch])
+
   return React.useMemo(() => {
-    if (!live || !contractsData) {
+    if (!live) {
       return EMPTY_PORTFOLIO
+    }
+
+    const status: ProfileDataStatus = isLoading
+      ? 'loading'
+      : isError
+        ? 'error'
+        : 'ready'
+
+    if (isLoading || isError || !contractsData) {
+      return {
+        ...EMPTY_PORTFOLIO,
+        isLive: true,
+        isLoading,
+        isError,
+        status,
+        retry,
+      }
     }
 
     const contracts = contractsData
@@ -151,8 +181,10 @@ export function useTenantPortfolio(enabled: boolean): TenantPortfolio {
       properties,
       bills,
       isLive: true,
-      isLoading,
-      isError,
+      isLoading: false,
+      isError: false,
+      status: 'ready',
+      retry,
     }
-  }, [live, contractsData, isLoading, isError])
+  }, [live, contractsData, isLoading, isError, retry])
 }

@@ -311,54 +311,8 @@ export function useKycFlow(profile: UseProfileReturn) {
       if (result.success && result.data) setRecommendations(result.data)
       else throw new Error('API recommend error')
     } catch (e) {
-      console.error('Recommend API error, using fallback recommendations', e)
-      setRecommendations([
-        {
-          id: 1,
-          name: 'Vinhomes Central Park',
-          district: 'Bình Thạnh',
-          rent_price: 18000000,
-          rooms: 2,
-          has_gym: true,
-          has_parking: true,
-          match_score: 92,
-          confidence: '95.6%',
-          contributions: {
-            location: 95,
-            finance: 90,
-            amenities: 95,
-            demographics: 90,
-          },
-          reasons: [
-            'Đúng khu vực Bình Thạnh bạn yêu cầu',
-            'Giá thuê 18tr/tháng tối ưu cho thu nhập 25tr',
-            'Đáp ứng trọn vẹn yêu cầu Gym & Bãi đỗ xe',
-            'Khu vực sinh sống lý tưởng cho độ tuổi 30',
-          ],
-        },
-        {
-          id: 2,
-          name: 'Masteri Thảo Điền',
-          district: 'Quận 2',
-          rent_price: 22000000,
-          rooms: 2,
-          has_gym: true,
-          has_parking: true,
-          match_score: 76,
-          confidence: '88.2%',
-          contributions: {
-            location: 60,
-            finance: 70,
-            amenities: 95,
-            demographics: 80,
-          },
-          reasons: [
-            'Khu vực Quận 2 giáp ranh đi lại thuận tiện',
-            'Giá thuê chiếm 88% ngân sách tối đa mong muốn',
-            'Đáp ứng trọn vẹn yêu cầu Gym & Bãi đỗ xe',
-          ],
-        },
-      ])
+      console.error('Recommend API error:', e)
+      setRecommendations([])
     } finally {
       setShowResults(true)
     }

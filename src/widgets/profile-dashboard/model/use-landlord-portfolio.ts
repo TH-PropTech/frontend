@@ -4,14 +4,13 @@ import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getMyListings } from '@/features/apartment-posting'
 import { getMyContracts } from '@/features/contracts'
-import type { LandlordPortfolio } from './types'
+import type { LandlordPortfolio, ProfileDataStatus } from './types'
 import { EMPTY_STATS, buildPortfolio } from './landlord-portfolio'
 
 const EMPTY = buildPortfolio([], [])
 
 /**
- * Tải căn hộ + hợp đồng của chủ nhà từ backend. Chỉ chạy khi vai trò là chủ nhà và đã có accessToken;
- * chưa đăng nhập thì `isLive = false` để giao diện giữ dữ liệu demo như trước.
+ * Tải căn hộ + hợp đồng của chủ nhà từ backend với 3 trạng thái: loading, error, ready.
  */
 export function useLandlordPortfolio(enabled: boolean): LandlordPortfolio {
   const [hasToken, setHasToken] = React.useState(false)
@@ -35,6 +34,21 @@ export function useLandlordPortfolio(enabled: boolean): LandlordPortfolio {
     enabled: live,
   })
 
+  const retry = React.useCallback(() => {
+    void listings.refetch()
+    void contracts.refetch()
+  }, [listings, contracts])
+
+  const isLoading = live && (listings.isLoading || contracts.isLoading)
+  const isError = live && (listings.isError || contracts.isError)
+  const status: ProfileDataStatus = !live
+    ? 'ready'
+    : isLoading
+      ? 'loading'
+      : isError
+        ? 'error'
+        : 'ready'
+
   const built = React.useMemo(
     () =>
       listings.data && contracts.data
@@ -45,9 +59,11 @@ export function useLandlordPortfolio(enabled: boolean): LandlordPortfolio {
 
   return {
     ...built,
-    stats: live ? built.stats : EMPTY_STATS,
+    stats: live && !isError ? built.stats : EMPTY_STATS,
     isLive: live,
-    isLoading: live && (listings.isLoading || contracts.isLoading),
-    isError: live && (listings.isError || contracts.isError),
+    isLoading: !!isLoading,
+    isError: !!isError,
+    status,
+    retry,
   }
 }

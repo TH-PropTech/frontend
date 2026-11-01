@@ -159,3 +159,14 @@ const MOVE_OUT_PHASE_LABELS: Record<string, string> = {
 export function getMoveOutPhaseLabel(phase: string): string {
   return MOVE_OUT_PHASE_LABELS[phase] ?? humanizeCode(phase)
 }
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  MOC_WALLET: 'Ví Mộc',
+  MOMOBANK: 'Ví MoMo',
+  VNPAY: 'VNPAY',
+  BANK_TRANSFER: 'Chuyển khoản ngân hàng',
+}
+
+export function getPaymentMethodLabel(method: string): string {
+  return PAYMENT_METHOD_LABELS[method] ?? humanizeCode(method)
+}

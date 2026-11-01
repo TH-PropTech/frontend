@@ -96,7 +96,7 @@ const FEATURES = [
   },
   { icon: <IconShield />, text: 'Hợp đồng ghi nhận Blockchain' },
   { icon: <IconBot />, text: 'Trợ lý AI tư vấn 24/7' },
-  { icon: <IconBank />, text: 'Đối tác liên kết với ngân hàng Techcombank' },
+  { icon: <IconBank />, text: 'Đối tác thanh toán an toàn qua Ví Mộc' },
 ]
 
 export function AuthBrandingPanel(): React.ReactElement {
