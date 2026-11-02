@@ -68,6 +68,9 @@ vi.mock('@/features/payment-history', () => ({
 vi.mock('@/features/design-requests', () => ({
   StaffDesignRequestsView: () => <div data-testid="design-requests-view" />,
 }))
+vi.mock('@/features/contracts', () => ({
+  AdminContractRecords: () => <div data-testid="contract-records-view" />,
+}))
 vi.mock('./views/overview-view', () => ({
   OverviewView: () => <div data-testid="overview-view" />,
 }))
@@ -176,6 +179,18 @@ describe('nav registry', () => {
       noOverview[0]?.id
     )
     expect(resolveConsoleTab('/admin/x', [])).toBeNull()
+  })
+
+  it('contract records is an operations section for both staff and admin', () => {
+    expect(visibleNavItems(false, []).map(i => i.id)).toContain(
+      'contract-records'
+    )
+    expect(visibleNavItems(true, []).map(i => i.id)).toContain(
+      'contract-records'
+    )
+    expect(
+      resolveConsoleTab('/admin/contract-records', visibleNavItems(false, []))
+    ).toBe('contract-records')
   })
 
   it('design requests is a staff section but permissions is admin only', () => {
@@ -294,6 +309,38 @@ describe('staff view', () => {
     expect(
       within(nav()).getByRole('button', { name: 'Xác minh định danh (KYC)' })
     ).toBeVisible()
+  })
+
+  it('lists the contract records item for staff', async () => {
+    renderConsole(STAFF)
+    expect(
+      await within(nav()).findByRole('button', { name: 'Hồ sơ hợp đồng' })
+    ).toBeVisible()
+  })
+
+  it('hides contract records from staff who lost read:Contract', async () => {
+    mockApi({ denied: ['read:Contract'] })
+    renderConsole(STAFF)
+    await within(nav()).findByRole('button', { name: 'Kiểm toán lưu vết' })
+    expect(
+      within(nav()).queryByRole('button', { name: 'Hồ sơ hợp đồng' })
+    ).toBeNull()
+  })
+
+  it('keeps contract records visible to admin whatever the permission matrix says', async () => {
+    mockApi({ denied: ['read:Contract'] })
+    renderConsole(ADMIN)
+    expect(
+      within(nav()).getByRole('button', { name: 'Hồ sơ hợp đồng' })
+    ).toBeVisible()
+  })
+
+  it('opens the contract records section', async () => {
+    navigation.pathname = '/admin/contract-records'
+    renderConsole(STAFF)
+    expect(
+      await screen.findByTestId('contract-records-view')
+    ).toBeInTheDocument()
   })
 
   it('opens the design requests section', async () => {

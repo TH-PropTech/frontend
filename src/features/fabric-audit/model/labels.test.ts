@@ -44,7 +44,7 @@ describe('state views', () => {
   })
 
   it('covers every finding category, status and run status', () => {
-    expect(findingCategoryLabel('hash_schema_mismatch')).toMatch(/hash/i)
+    expect(findingCategoryLabel('hash_schema_mismatch')).toMatch(/mã băm/i)
     expect(findingCategoryLabel('unverifiable')).toBeTruthy()
     expect(findingStatusView('open').tone).toBe('warning')
     expect(findingStatusView('resolved').tone).toBe('success')
@@ -55,9 +55,9 @@ describe('state views', () => {
   })
 
   it('labels identity roles, explorer reasons and run error codes', () => {
-    expect(identityRoleLabel('writer')).toBe('Writer')
-    expect(identityRoleLabel('reader')).toBe('Reader')
-    expect(identityRoleLabel('operator')).toBe('Operator')
+    expect(identityRoleLabel('writer')).toBe('Ghi sổ')
+    expect(identityRoleLabel('reader')).toBe('Đọc sổ')
+    expect(identityRoleLabel('operator')).toBe('Vận hành')
     expect(explorerReasonLabel('EXPLORER_NOT_CONFIGURED')).toMatch(/cấu hình/)
     expect(explorerReasonLabel('EXPLORER_DEGRADED')).toMatch(/suy giảm/)
     expect(explorerReasonLabel('NOT_COMMITTED_ON_FABRIC')).toMatch(/Fabric/)

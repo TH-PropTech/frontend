@@ -219,7 +219,7 @@ describe('AuditEventDetailSheet', () => {
     expect(await screen.findByTestId('detail-failure')).toHaveTextContent(
       'TERMINAL_CONFLICT'
     )
-    expect(screen.getByText('Thất bại (terminal)')).toBeInTheDocument()
+    expect(screen.getByText('Thất bại hẳn')).toBeInTheDocument()
   })
 
   it('closes from the sheet close control', async () => {

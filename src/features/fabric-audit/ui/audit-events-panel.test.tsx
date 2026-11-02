@@ -127,7 +127,7 @@ describe('AuditEventsPanel table', () => {
     expect(rows).toHaveLength(3)
     expect(rows[0]).toHaveTextContent('Đang chờ')
     expect(rows[1]).toHaveTextContent('Quyết toán nhận nhà')
-    expect(rows[1]).toHaveTextContent('Thất bại (terminal)')
+    expect(rows[1]).toHaveTextContent('Thất bại hẳn')
     expect(rows[1]).toHaveTextContent('TERMINAL_CONFLICT')
     expect(rows[2]).toHaveTextContent('Đã xác nhận')
     expect(rows[2]).toHaveTextContent('Đã xác minh')

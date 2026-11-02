@@ -12,11 +12,14 @@ import {
 interface EvidencePackageDownloadProps {
   contractId: string
   disabled?: boolean
+  /** Nút gọn, không kéo giãn, dùng trong dòng bảng. */
+  compact?: boolean
 }
 
 export function EvidencePackageDownload({
   contractId,
   disabled = false,
+  compact = false,
 }: EvidencePackageDownloadProps): React.ReactElement {
   const [isDownloading, setIsDownloading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -47,7 +50,7 @@ export function EvidencePackageDownload({
         onClick={() => void handleDownload()}
         disabled={disabled || isDownloading}
         aria-busy={isDownloading}
-        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-[var(--surface-muted)] border border-[var(--border)] text-[var(--fg)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors disabled:opacity-50"
+        className={`${compact ? 'inline-flex whitespace-nowrap px-3 py-1.5' : 'w-full inline-flex px-4 py-2'} items-center justify-center gap-2 text-xs font-semibold rounded-lg bg-[var(--surface-muted)] border border-[var(--border)] text-[var(--fg)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors disabled:opacity-50`}
       >
         {isDownloading ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />

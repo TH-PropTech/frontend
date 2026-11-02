@@ -67,7 +67,7 @@ describe('FabricAuditCenter authorization', () => {
       signIn([role])
       renderWithQuery(<FabricAuditCenter />)
       expect(await screen.findByRole('alert')).toHaveTextContent(
-        'không có quyền xem Fabric Audit Center'
+        'không có quyền xem trung tâm kiểm toán lưu vết'
       )
       expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
       expectNoAuditRequests()
@@ -84,7 +84,9 @@ describe('FabricAuditCenter authorization', () => {
   it('lets staff read the overview', async () => {
     signIn(['staff'])
     renderWithQuery(<FabricAuditCenter />)
-    expect(await screen.findByText('Fabric trực tiếp')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Đang ghi lên sổ cái thật')
+    ).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Tổng quan' })).toHaveAttribute(
       'aria-selected',
       'true'
@@ -115,7 +117,7 @@ describe('FabricAuditCenter URL synchronization', () => {
     const user = userEvent.setup()
     signIn(['admin'])
     renderWithQuery(<FabricAuditCenter />)
-    await screen.findByText('Fabric trực tiếp')
+    await screen.findByText('Đang ghi lên sổ cái thật')
     await user.click(screen.getByRole('tab', { name: 'Sự kiện' }))
     expect(navigation.replace).toHaveBeenLastCalledWith(
       '/admin/fabric-audit?tab=events',

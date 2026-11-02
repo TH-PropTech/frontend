@@ -117,7 +117,7 @@ describe('ReconciliationPanel audit-only mode (staff)', () => {
       name: 'Phát hiện đối soát',
     })
     expect(
-      within(findings).getByText('Lỗi chuyển terminal')
+      within(findings).getByText('Lỗi chuyển không thể thử lại')
     ).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: /Sửa phát hiện/ })

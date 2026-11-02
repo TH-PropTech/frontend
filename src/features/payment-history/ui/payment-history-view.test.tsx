@@ -52,8 +52,8 @@ describe('PaymentHistoryView', () => {
     const row = screen.getByTestId('payment-row-TX-1')
     expect(within(row).getByText('Nguyễn Văn A')).toBeInTheDocument()
     expect(within(row).getByText('Trần Thị B')).toBeInTheDocument()
-    expect(within(row).getByText('succeeded')).toBeInTheDocument()
-    expect(within(row).getByText('paid-out')).toBeInTheDocument()
+    expect(within(row).getByText('Thành công')).toBeInTheDocument()
+    expect(within(row).getByText('Đã chuyển')).toBeInTheDocument()
   })
 
   it('shows reconciliation anomalies when present', async () => {
@@ -94,7 +94,9 @@ describe('PaymentHistoryView', () => {
 
     expect(api.recheckAdminPayment).toHaveBeenCalledWith('TX-1')
     expect(
-      await within(screen.getByTestId('payment-row-TX-1')).findByText('failed')
+      await within(screen.getByTestId('payment-row-TX-1')).findByText(
+        'Thất bại'
+      )
     ).toBeInTheDocument()
     expect(api.getAdminPayments).toHaveBeenCalledTimes(callsBeforeClick)
   })

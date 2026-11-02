@@ -6,11 +6,13 @@ describe('ledgerEventLabel', () => {
     ['contract.activated', 'Kích hoạt hợp đồng'],
     ['createContract', 'Kích hoạt hợp đồng'],
     ['deposit.paid', 'Thanh toán đặt cọc'],
+    ['deposit.released', 'Giải ngân tiền cọc'],
+    ['deposit.refunded', 'Hoàn trả tiền cọc'],
     ['payment.paid', 'Thanh toán'],
     ['contract.amendment-effective', 'Phụ lục có hiệu lực'],
     ['contract.terminated', 'Chấm dứt hợp đồng'],
-    ['governance.published', 'Phát hành governance snapshot'],
-    ['GOVERNANCE_SNAPSHOT_PUBLISHED', 'Phát hành governance snapshot'],
+    ['governance.published', 'Phát hành bản chốt quản trị'],
+    ['GOVERNANCE_SNAPSHOT_PUBLISHED', 'Phát hành bản chốt quản trị'],
     ['move-in.settled', 'Quyết toán nhận nhà'],
     ['MOVE_IN_SETTLED', 'Quyết toán nhận nhà'],
     ['handover.completed', 'Bàn giao nhận nhà'],
@@ -48,7 +50,7 @@ describe('ledgerAggregateLabel', () => {
     expect(ledgerAggregateLabel('payment')).toBe('Thanh toán')
     expect(ledgerAggregateLabel('contract-amendment')).toBe('Phụ lục')
     expect(ledgerAggregateLabel('governance-snapshot')).toBe(
-      'Governance snapshot'
+      'Bản chốt quản trị'
     )
     expect(ledgerAggregateLabel('move-in-settlement')).toBe(
       'Quyết toán nhận nhà'

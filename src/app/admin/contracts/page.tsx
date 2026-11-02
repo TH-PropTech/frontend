@@ -1,5 +1,5 @@
-import { AdminContractList } from '@/features/contracts'
+import { AdminContractRecords } from '@/features/contracts'
 
 export default function AdminContractsPage(): React.ReactElement {
-  return <AdminContractList />
+  return <AdminContractRecords />
 }

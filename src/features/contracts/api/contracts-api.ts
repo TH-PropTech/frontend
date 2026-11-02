@@ -655,6 +655,58 @@ export async function getMyContracts(): Promise<ContractItem[]> {
   return apiClient.get<ContractItem[]>('/contracts')
 }
 
+/** Một dòng hồ sơ hợp đồng trong danh sách Admin/Staff (không chứa dữ liệu cá nhân nhạy cảm). */
+export interface ContractRecordItem {
+  id: string
+  contractCode: string
+  propertyId: string
+  propertyTitle: string
+  landlordId: string
+  landlordName: string | null
+  tenantId: string
+  tenantName: string | null
+  startDate: string
+  endDate: string
+  status: ContractStatus
+  createdAt: string
+  /** Revision PDF canonical mới nhất; null khi chưa có bản PDF. */
+  latestRevision: number | null
+  hasSigned: boolean
+}
+
+export interface ContractRecordsPage {
+  items: ContractRecordItem[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+export interface ContractRecordsQuery {
+  property?: string
+  tenant?: string
+  landlord?: string
+  status?: ContractStatus | ''
+  from?: string
+  to?: string
+  page?: number
+  pageSize?: number
+}
+
+/** Tra cứu hồ sơ hợp đồng (Admin/Staff): chỉ gửi các bộ lọc có giá trị. */
+export async function getContractRecords(
+  query: ContractRecordsQuery = {}
+): Promise<ContractRecordsPage> {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(query)) {
+    if (value === undefined || value === null || value === '') continue
+    params.set(key, String(value).trim())
+  }
+  const search = params.toString()
+  return apiClient.get<ContractRecordsPage>(
+    search ? `/contracts/records?${search}` : '/contracts/records'
+  )
+}
+
 export async function getContract(contractId: string): Promise<ContractItem> {
   return apiClient.get<ContractItem>(`/contracts/${contractId}`)
 }
