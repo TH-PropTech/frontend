@@ -33,7 +33,7 @@ const TAB_LABELS: Record<AuditTab, string> = {
   overview: 'Tổng quan',
   events: 'Sự kiện',
   reconciliation: 'Đối soát',
-  governance: 'Governance',
+  governance: 'Quản trị',
 }
 
 const USER_STORAGE_KEY = 'user'
@@ -90,11 +90,11 @@ function Workspace({
         <div>
           <h2 className="flex items-center gap-2 text-lg font-bold text-fg">
             <ShieldCheck className="h-5 w-5 text-primary" aria-hidden="true" />
-            Fabric Audit Center
+            Trung tâm kiểm toán lưu vết
           </h2>
           <p className="text-xs text-muted">
-            Giám sát sức khỏe Fabric, độ phủ bằng chứng và khôi phục có kiểm
-            soát.
+            Theo dõi tình trạng ghi lưu vết, độ phủ bằng chứng và khôi phục có
+            kiểm soát.
           </p>
         </div>
         <p className="rounded-full border border-border bg-surface-muted px-3 py-1 text-[11px] font-semibold text-muted">
@@ -172,7 +172,7 @@ export function FabricAuditCenter(): React.ReactElement {
   if (!capability.canRead) {
     return (
       <AdminCard role="alert" className="p-5 text-sm text-muted">
-        Bạn không có quyền xem Fabric Audit Center.
+        Bạn không có quyền xem trung tâm kiểm toán lưu vết.
       </AdminCard>
     )
   }

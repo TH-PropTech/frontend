@@ -87,6 +87,13 @@ const money = (n: number): string => `${n.toLocaleString('vi-VN')} đ`
 const dateTime = (iso: string | null): string =>
   iso ? new Date(iso).toLocaleString('vi-VN') : '—'
 
+const STATUS_LABELS: Record<string, string> = Object.fromEntries(
+  STATUS_OPTIONS.map(o => [o.value, o.label])
+)
+const PAYOUT_STATUS_LABELS: Record<string, string> = Object.fromEntries(
+  PAYOUT_STATUS_OPTIONS.map(o => [o.value, o.label])
+)
+
 function attemptStatusBadge(
   status: AdminPaymentRow['attemptStatus']
 ): React.ReactElement {
@@ -99,7 +106,7 @@ function attemptStatusBadge(
   }
   return (
     <Badge className={map[status] ?? ''} variant="outline">
-      {status}
+      {STATUS_LABELS[status] ?? status}
     </Badge>
   )
 }
@@ -183,7 +190,7 @@ function payoutStatusBadge(
   }
   return (
     <Badge className={map[payout.status] ?? ''} variant="outline">
-      {payout.status}
+      {PAYOUT_STATUS_LABELS[payout.status] ?? payout.status}
     </Badge>
   )
 }
@@ -338,20 +345,22 @@ export function PaymentHistoryView(): React.ReactElement {
           Chưa có giao dịch nào khớp bộ lọc.
         </p>
       ) : (
-        <div className="rounded-xl border border-line bg-surface overflow-hidden">
-          <Table data-testid="payment-history-table">
+        <div className="overflow-hidden rounded-xl border border-line bg-surface">
+          <Table data-testid="payment-history-table" className="min-w-[1100px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Thời gian</TableHead>
-                <TableHead>Mã GD</TableHead>
-                <TableHead>Cổng</TableHead>
-                <TableHead>Số tiền</TableHead>
-                <TableHead>Người trả</TableHead>
-                <TableHead>Chủ nhà nhận</TableHead>
-                <TableHead>Trạng thái cổng</TableHead>
-                <TableHead>Đối soát</TableHead>
-                <TableHead>Trạng thái chuyển tiền</TableHead>
-                <TableHead>Bất thường</TableHead>
+                <TableHead className="whitespace-nowrap">Thời gian</TableHead>
+                <TableHead className="whitespace-nowrap">Mã GD</TableHead>
+                <TableHead className="whitespace-nowrap">Cổng</TableHead>
+                <TableHead className="whitespace-nowrap">Số tiền</TableHead>
+                <TableHead className="whitespace-nowrap">Người trả</TableHead>
+                <TableHead className="whitespace-nowrap">
+                  Chủ nhà nhận
+                </TableHead>
+                <TableHead className="whitespace-nowrap">Trạng thái</TableHead>
+                <TableHead className="whitespace-nowrap">Đối soát</TableHead>
+                <TableHead className="whitespace-nowrap">Chuyển tiền</TableHead>
+                <TableHead className="whitespace-nowrap">Bất thường</TableHead>
                 <TableHead aria-label="Hành động" />
               </TableRow>
             </TableHeader>
@@ -361,21 +370,32 @@ export function PaymentHistoryView(): React.ReactElement {
                   key={row.txRef}
                   data-testid={`payment-row-${row.txRef}`}
                 >
-                  <TableCell>{dateTime(row.createdAt)}</TableCell>
-                  <TableCell className="font-mono text-[11px]">
+                  <TableCell className="whitespace-nowrap">
+                    {dateTime(row.createdAt)}
+                  </TableCell>
+                  <TableCell
+                    className="max-w-40 truncate font-mono text-[11px]"
+                    title={row.txRef}
+                  >
                     {row.txRef}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {PROVIDER_LABELS[row.provider] ?? row.provider}
                   </TableCell>
-                  <TableCell>{money(row.amount)}</TableCell>
-                  <TableCell>{row.payer?.name ?? '—'}</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {money(row.amount)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {row.payer?.name ?? '—'}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {row.payeeRole === 'platform'
                       ? 'Sàn thu phí'
                       : (row.landlord?.name ?? '—')}
                   </TableCell>
-                  <TableCell>{attemptStatusBadge(row.attemptStatus)}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {attemptStatusBadge(row.attemptStatus)}
+                  </TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       {reconcileCell(row.gateway)}

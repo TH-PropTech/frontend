@@ -98,24 +98,16 @@ export function RuntimeCard({
   const { runtime } = overview
   return (
     <SectionCard
-      title="Trạng thái Fabric"
+      title="Trạng thái ghi lưu vết"
       icon={<ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />}
     >
       <StateBadge view={runtimeStateView(runtime.state)} />
       {runtime.state === 'simulation' ? (
         <p className="text-xs text-warning">
-          Dữ liệu mô phỏng — không phải bằng chứng Fabric.
+          Dữ liệu mô phỏng — không phải bằng chứng thật trên sổ cái.
         </p>
       ) : null}
       <Row label="Kết nối">{CONNECTION_LABELS[runtime.connectionState]}</Row>
-      <Row label="Chaincode">
-        {runtime.abiVersion === null ? '—' : `ABI v${runtime.abiVersion}`}
-      </Row>
-      <Row label="Schema bằng chứng">
-        {runtime.evidenceSchemaVersions.length > 0
-          ? runtime.evidenceSchemaVersions.map(v => `v${v}`).join(', ')
-          : '—'}
-      </Row>
       {runtime.errorCodes.length > 0 ? (
         <ul className="flex flex-wrap gap-1.5" aria-label="Mã cảnh báo">
           {runtime.errorCodes.map(code => (
@@ -144,15 +136,15 @@ export function LedgerCard({
       title="Sổ cái"
       icon={<Blocks className="h-4 w-4 text-primary" aria-hidden="true" />}
     >
-      <Row label="Chiều cao khối" testId="ledger-height">
+      <Row label="Số khối trên sổ cái" testId="ledger-height">
         {simulated
-          ? 'Không có khối Fabric trong chế độ mô phỏng'
+          ? 'Không có khối thật trong chế độ mô phỏng'
           : ledger.height === null
             ? 'Không khả dụng'
             : `#${ledger.height}`}
       </Row>
       {!simulated && ledger.currentBlockHash ? (
-        <Row label="Hash khối hiện tại">
+        <Row label="Mã băm khối hiện tại">
           <span
             data-testid="ledger-block-hash"
             title={ledger.currentBlockHash}
@@ -162,9 +154,11 @@ export function LedgerCard({
           </span>
         </Row>
       ) : null}
-      <Row label="Quan sát lúc" testId="ledger-observed-at">
-        {simulated ? '—' : formatDateTime(ledger.observedAt)}
-      </Row>
+      {!simulated && ledger.observedAt ? (
+        <Row label="Quan sát lúc" testId="ledger-observed-at">
+          {formatDateTime(ledger.observedAt)}
+        </Row>
+      ) : null}
     </SectionCard>
   )
 }
@@ -178,19 +172,21 @@ export function ServicesCard({
   const reason = explorerReasonLabel(explorer.reason)
   return (
     <SectionCard
-      title="Worker và Explorer"
+      title="Dịch vụ ghi sổ"
       icon={<Activity className="h-4 w-4 text-primary" aria-hidden="true" />}
     >
-      <Row label="Worker ghi sổ cái" testId="worker-state">
+      <Row label="Tiến trình ghi sổ" testId="worker-state">
         <StateBadge view={WORKER_VIEWS[worker.state]} />
       </Row>
-      <Row label="Explorer" testId="explorer-state">
-        {explorer.available ? (
-          <StateBadge view={EXPLORER_VIEWS[explorer.state]} />
-        ) : (
-          (reason ?? <StateBadge view={EXPLORER_VIEWS[explorer.state]} />)
-        )}
-      </Row>
+      {explorer.state === 'disabled' ? null : (
+        <Row label="Explorer" testId="explorer-state">
+          {explorer.available ? (
+            <StateBadge view={EXPLORER_VIEWS[explorer.state]} />
+          ) : (
+            (reason ?? <StateBadge view={EXPLORER_VIEWS[explorer.state]} />)
+          )}
+        </Row>
+      )}
     </SectionCard>
   )
 }
@@ -200,7 +196,7 @@ const OUTBOX_COUNTS = [
   { key: 'processing', label: 'Đang xử lý' },
   { key: 'retryable', label: 'Chờ thử lại' },
   { key: 'succeeded', label: 'Thành công' },
-  { key: 'terminalFailure', label: 'Thất bại terminal' },
+  { key: 'terminalFailure', label: 'Thất bại hẳn' },
 ] as const
 
 const OUTBOX_TEST_IDS = {
@@ -256,7 +252,7 @@ export function OutboxCard({
         <div className="flex flex-wrap items-center justify-between gap-2">
           {failureAge ? (
             <p className="text-xs text-danger">
-              Lỗi terminal cũ nhất:{' '}
+              Lỗi cũ nhất:{' '}
               <span data-testid="outbox-terminal-age">{failureAge}</span>
             </p>
           ) : null}
@@ -279,7 +275,7 @@ export function IdentityCard({
   const { identityWarnings } = overview
   return (
     <SectionCard
-      title="Danh tính Fabric"
+      title="Chứng chỉ ghi sổ"
       icon={<KeyRound className="h-4 w-4 text-primary" aria-hidden="true" />}
     >
       {identityWarnings.length === 0 ? (

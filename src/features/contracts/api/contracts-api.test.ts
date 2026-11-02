@@ -4,6 +4,7 @@ import {
   downloadContractArtifact,
   downloadContractEvidencePackage,
   getContractLedgerEvidence,
+  getContractRecords,
   issueSigningGrant,
   lockContractContent,
   saveContractContent,
@@ -196,5 +197,37 @@ describe('contracts API', () => {
     expect(apiClient.getFile).toHaveBeenCalledWith(
       '/contracts/a%2Fb/evidence-package'
     )
+  })
+})
+
+describe('getContractRecords', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('calls the admin records endpoint without a query string when no filter is set', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ items: [], total: 0 })
+    await getContractRecords()
+    expect(apiClient.get).toHaveBeenCalledWith('/contracts/records')
+  })
+
+  it('sends only the filters that have a value and trims them', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ items: [], total: 0 })
+    await getContractRecords({
+      property: '  Sunrise ',
+      tenant: '',
+      status: 'active',
+      from: '2026-01-01',
+      page: 2,
+      pageSize: 20,
+    })
+    const url = vi.mocked(apiClient.get).mock.calls[0]?.[0] as string
+    const params = new URLSearchParams(url.split('?')[1])
+    expect(url.startsWith('/contracts/records?')).toBe(true)
+    expect(Object.fromEntries(params)).toEqual({
+      property: 'Sunrise',
+      status: 'active',
+      from: '2026-01-01',
+      page: '2',
+      pageSize: '20',
+    })
   })
 })

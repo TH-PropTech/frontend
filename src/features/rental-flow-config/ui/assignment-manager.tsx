@@ -23,6 +23,8 @@ import {
 } from '../api/rental-flow-api'
 import { ImpactAnalysisModal } from './impact-analysis-modal'
 
+const ASSIGNMENTS_PAGE_SIZE = 10
+
 interface AssignmentManagerProps {
   publishedProfiles: RentalFlowProfile[]
   onAssignmentCreated?: () => void
@@ -36,6 +38,9 @@ export function AssignmentManager({
     []
   )
   const [loading, setLoading] = React.useState(false)
+  const [scopeFilter, setScopeFilter] = React.useState('ALL')
+  const [statusFilter, setStatusFilter] = React.useState('ALL')
+  const [page, setPage] = React.useState(1)
   const [error, setError] = React.useState<string | null>(null)
   const [isImpactModalOpen, setIsImpactModalOpen] = React.useState(false)
 
@@ -59,6 +64,26 @@ export function AssignmentManager({
 
   const effectiveProfileId =
     selectedProfileId || publishedProfiles[0]?.profileId || ''
+
+  const filteredAssignments = React.useMemo(
+    () =>
+      assignments.filter(
+        asgn =>
+          (scopeFilter === 'ALL' || asgn.scope === scopeFilter) &&
+          (statusFilter === 'ALL' ||
+            (statusFilter === 'ACTIVE') === !asgn.supersededAt)
+      ),
+    [assignments, scopeFilter, statusFilter]
+  )
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredAssignments.length / ASSIGNMENTS_PAGE_SIZE)
+  )
+  const currentPage = Math.min(page, totalPages)
+  const pageAssignments = filteredAssignments.slice(
+    (currentPage - 1) * ASSIGNMENTS_PAGE_SIZE,
+    currentPage * ASSIGNMENTS_PAGE_SIZE
+  )
 
   const fetchAssignments = React.useCallback(async () => {
     setLoading(true)
@@ -302,6 +327,40 @@ export function AssignmentManager({
 
       {/* Assignment Table */}
       <div className="bg-surface rounded-xl border border-border overflow-hidden">
+        <div className="flex flex-wrap items-center gap-3 border-b border-border p-3">
+          <div className="w-44">
+            <OptionSelect
+              value={scopeFilter}
+              onChange={value => {
+                setScopeFilter(value)
+                setPage(1)
+              }}
+              options={[
+                { value: 'ALL', label: 'Mọi phạm vi' },
+                { value: 'GLOBAL', label: 'GLOBAL' },
+                { value: 'DURATION', label: 'DURATION' },
+                { value: 'PACKAGE', label: 'PACKAGE' },
+              ]}
+            />
+          </div>
+          <div className="w-44">
+            <OptionSelect
+              value={statusFilter}
+              onChange={value => {
+                setStatusFilter(value)
+                setPage(1)
+              }}
+              options={[
+                { value: 'ALL', label: 'Mọi trạng thái' },
+                { value: 'ACTIVE', label: 'Đang hiệu lực' },
+                { value: 'SUPERSEDED', label: 'Đã bị thay thế' },
+              ]}
+            />
+          </div>
+          <span className="ml-auto text-[11px] text-muted">
+            {filteredAssignments.length} bản ghi
+          </span>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
@@ -322,14 +381,14 @@ export function AssignmentManager({
                     Đang tải danh sách phân bổ...
                   </td>
                 </tr>
-              ) : assignments.length === 0 ? (
+              ) : filteredAssignments.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-muted">
-                    Chưa có cấu hình gán nào trong hệ thống.
+                    Không có cấu hình gán nào khớp bộ lọc.
                   </td>
                 </tr>
               ) : (
-                assignments.map(asgn => {
+                pageAssignments.map(asgn => {
                   const isSuperseded = Boolean(asgn.supersededAt)
                   return (
                     <tr
@@ -355,14 +414,14 @@ export function AssignmentManager({
                       </td>
                       <td className="py-3 px-4">
                         <span className="font-semibold text-fg">
-                          {asgn.targetProfile.profileId}
+                          {asgn.profileRef.profileId}
                         </span>
                         <span className="ml-1.5 text-[10px] text-muted">
-                          v{asgn.targetProfile.version}
+                          v{asgn.profileRef.version}
                         </span>
                       </td>
                       <td className="py-3 px-4 font-mono text-[10px] text-muted truncate max-w-[120px]">
-                        {asgn.targetProfile.contentHash.slice(0, 16)}...
+                        {asgn.profileRef.contentHash.slice(0, 16)}...
                       </td>
                       <td className="py-3 px-4 text-muted">
                         {new Date(asgn.effectiveAt).toLocaleString('vi-VN')}
@@ -387,6 +446,31 @@ export function AssignmentManager({
             </tbody>
           </table>
         </div>
+        {totalPages > 1 ? (
+          <div className="flex items-center justify-between border-t border-border p-3 text-xs">
+            <span className="text-muted">
+              Trang {currentPage}/{totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={currentPage <= 1}
+                onClick={() => setPage(currentPage - 1)}
+                className="rounded-lg border border-border px-3 py-1.5 font-semibold text-fg transition-colors hover:border-primary disabled:opacity-50"
+              >
+                Trước
+              </button>
+              <button
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() => setPage(currentPage + 1)}
+                className="rounded-lg border border-border px-3 py-1.5 font-semibold text-fg transition-colors hover:border-primary disabled:opacity-50"
+              >
+                Sau
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Precedence Resolution Tester */}

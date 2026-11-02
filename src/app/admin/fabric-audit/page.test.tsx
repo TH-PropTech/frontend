@@ -53,7 +53,7 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('/admin/fabric-audit route', () => {
   it('is a thin page: it only declares metadata and renders no data itself', () => {
-    expect(metadata.title).toBe('Fabric Audit Center')
+    expect(metadata.title).toBe('Trung tâm kiểm toán lưu vết')
     expect(FabricAuditPage()).toBeNull()
   })
 

@@ -3,7 +3,6 @@
 import * as React from 'react'
 import {
   Sliders,
-  Layers,
   CheckCircle2,
   Eye,
   Send,
@@ -27,7 +26,6 @@ import {
 } from '@/features/rental-flow-config/api/rental-flow-api'
 import { StepEditors } from '@/features/rental-flow-config/ui/flow-step-editors'
 import { FlowPreviewDrawer } from '@/features/rental-flow-config/ui/flow-preview-drawer'
-import { AssignmentManager } from '@/features/rental-flow-config/ui/assignment-manager'
 
 // Shared UI Components
 import { Button } from '@/shared/ui/button'
@@ -234,10 +232,6 @@ export function RentalFlowControlView(): React.ReactElement {
     }
   }
 
-  const publishedProfiles = profiles.filter(
-    p => p.status === 'published' || p.isSystemDefault
-  )
-
   const filteredProfiles = profiles.filter(
     p =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -272,18 +266,6 @@ export function RentalFlowControlView(): React.ReactElement {
           >
             <Sliders className="w-4 h-4" />
             <span className="whitespace-nowrap">Hồ sơ Quy trình</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveMainTab('assignments')}
-            className={`flex items-center gap-2 px-4 py-2.5 md:py-2 text-sm font-semibold rounded-lg transition-all flex-1 md:flex-none justify-center ${
-              activeMainTab === 'assignments'
-                ? 'bg-surface text-fg shadow-sm border border-border/50'
-                : 'text-muted hover:text-fg'
-            }`}
-          >
-            <Layers className="w-4 h-4" />
-            <span className="whitespace-nowrap">Phân bổ & Kích hoạt</span>
           </button>
         </div>
       </div>
@@ -627,14 +609,6 @@ export function RentalFlowControlView(): React.ReactElement {
             </>
           )}
         </div>
-      )}
-
-      {/* ═══ TAB 2: ASSIGNMENTS & ROUTING ═══ */}
-      {activeMainTab === 'assignments' && (
-        <AssignmentManager
-          publishedProfiles={publishedProfiles}
-          onAssignmentCreated={fetchProfiles}
-        />
       )}
 
       {/* Live Preview Drawer */}

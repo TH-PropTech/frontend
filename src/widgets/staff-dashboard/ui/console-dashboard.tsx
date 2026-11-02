@@ -11,6 +11,7 @@ import { LayoutProfileEditor } from '@/features/contract-layouts'
 import { FeeRevenueReport, FeeScheduleEditor } from '@/features/platform-fees'
 import { AdminWalletsView } from '@/features/admin-wallets'
 import { StaffDesignRequestsView } from '@/features/design-requests'
+import { AdminContractRecords } from '@/features/contracts'
 import { HomeView } from './views/home-view'
 import { OverviewView } from './views/overview-view'
 import { PropertyApprovalsView } from './views/property-approvals-view'
@@ -68,6 +69,8 @@ function renderView(
       return <KycApprovalsView />
     case 'schedules':
       return <SchedulesView />
+    case 'contract-records':
+      return <AdminContractRecords />
     case 'safety-reports':
       return <SafetyReportsView />
     case 'support-tickets':

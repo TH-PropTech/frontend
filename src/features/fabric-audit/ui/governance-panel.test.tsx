@@ -67,7 +67,7 @@ describe('GovernancePanel list', () => {
     })
     const rows = within(table).getAllByRole('row').slice(1)
     expect(rows[0]).toHaveTextContent('Mô phỏng')
-    expect(rows[1]).toHaveTextContent('Thất bại (terminal)')
+    expect(rows[1]).toHaveTextContent('Thất bại hẳn')
   })
 
   it('shows an error with retry and an explicit empty state', async () => {

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Fabric Audit Center',
+  title: 'Trung tâm kiểm toán lưu vết',
   description:
     'Giám sát sức khỏe Hyperledger Fabric, độ phủ bằng chứng và đối soát sổ cái dành cho quản trị viên và nhân viên vận hành.',
 }

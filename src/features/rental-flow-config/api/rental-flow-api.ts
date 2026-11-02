@@ -73,14 +73,14 @@ export interface RentalFlowAssignment {
   assignmentId: string
   scope: 'GLOBAL' | 'DURATION' | 'PACKAGE'
   scopeValue?: string | null
-  targetProfile: {
+  profileRef: {
     profileId: string
     version: number
     contentHash: string
   }
   effectiveAt: string
   supersededAt?: string | null
-  activatedBy: string
+  createdBy?: string | null
   createdAt: string
 }
 

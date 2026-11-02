@@ -35,7 +35,9 @@ describe('AuditOverviewPanel states', () => {
 
     overviewWith({})
     await user.click(screen.getByRole('button', { name: 'Thử lại' }))
-    expect(await screen.findByText('Fabric trực tiếp')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Đang ghi lên sổ cái thật')
+    ).toBeInTheDocument()
     expect(api.getAuditOverview).toHaveBeenCalledTimes(2)
   })
 
@@ -49,12 +51,14 @@ describe('AuditOverviewPanel states', () => {
 })
 
 describe('AuditOverviewPanel runtime truthfulness', () => {
-  it('labels live Fabric with the connection state and schema versions', async () => {
+  it('labels live Fabric with the connection state and hides technical versions', async () => {
     overviewWith({})
     renderWithQuery(<AuditOverviewPanel />)
-    expect(await screen.findByText('Fabric trực tiếp')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Đang ghi lên sổ cái thật')
+    ).toBeInTheDocument()
     expect(screen.getByText('Đã kết nối')).toBeInTheDocument()
-    expect(screen.getByText(/ABI v2/)).toBeInTheDocument()
+    expect(screen.queryByText(/ABI v2/)).not.toBeInTheDocument()
   })
 
   it('labels simulation and never presents a block as Fabric proof', async () => {
@@ -75,11 +79,13 @@ describe('AuditOverviewPanel runtime truthfulness', () => {
     renderWithQuery(<AuditOverviewPanel />)
 
     expect(await screen.findByText('Chế độ mô phỏng')).toBeInTheDocument()
-    expect(screen.getByText(/không phải bằng chứng Fabric/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/không phải bằng chứng thật trên sổ cái/)
+    ).toBeInTheDocument()
     expect(screen.queryByText('#77')).not.toBeInTheDocument()
     expect(screen.queryByText(/dddddddd/)).not.toBeInTheDocument()
     expect(screen.getByTestId('ledger-height')).toHaveTextContent(
-      'Không có khối Fabric'
+      'Không có khối thật'
     )
   })
 
@@ -133,7 +139,8 @@ describe('AuditOverviewPanel ledger', () => {
     expect(await screen.findByTestId('ledger-height')).toHaveTextContent(
       'Không khả dụng'
     )
-    expect(screen.getByText('Fabric trực tiếp')).toBeInTheDocument()
+    expect(screen.getByText('Đang ghi lên sổ cái thật')).toBeInTheDocument()
+    expect(screen.queryByTestId('ledger-observed-at')).not.toBeInTheDocument()
   })
 })
 
@@ -157,9 +164,9 @@ describe('AuditOverviewPanel identity expiry', () => {
 
     const warnings = await screen.findAllByTestId('identity-warning')
     expect(warnings).toHaveLength(2)
-    expect(warnings[0]).toHaveTextContent('Operator')
+    expect(warnings[0]).toHaveTextContent('Vận hành')
     expect(warnings[0]).toHaveTextContent('sắp hết hạn')
-    expect(warnings[1]).toHaveTextContent('Writer')
+    expect(warnings[1]).toHaveTextContent('Ghi sổ')
     expect(warnings[1]).toHaveTextContent('đã hết hạn')
     expect(document.body.textContent).not.toMatch(/BEGIN CERTIFICATE/)
   })
@@ -246,8 +253,21 @@ describe('AuditOverviewPanel delivery and recovery', () => {
     expect(await screen.findByTestId('worker-state')).toHaveTextContent(
       'Suy giảm'
     )
-    expect(screen.getByTestId('explorer-state')).toHaveTextContent(
-      'Explorer chưa được cấu hình'
+    expect(screen.queryByTestId('explorer-state')).not.toBeInTheDocument()
+  })
+
+  it('shows the Explorer reason when it is enabled but unavailable', async () => {
+    overviewWith({
+      explorer: {
+        enabled: true,
+        state: 'degraded',
+        available: false,
+        reason: 'EXPLORER_DEGRADED',
+      },
+    })
+    renderWithQuery(<AuditOverviewPanel />)
+    expect(await screen.findByTestId('explorer-state')).toHaveTextContent(
+      'Explorer đang suy giảm'
     )
   })
 

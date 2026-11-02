@@ -22,7 +22,7 @@ type Runtime = 'simulation' | 'live' | 'degraded' | 'unavailable'
 
 const RUNTIME: Record<Runtime, StateView> = {
   simulation: { label: 'Chế độ mô phỏng', tone: 'warning' },
-  live: { label: 'Fabric trực tiếp', tone: 'success' },
+  live: { label: 'Đang ghi lên sổ cái thật', tone: 'success' },
   degraded: { label: 'Suy giảm', tone: 'warning' },
   unavailable: { label: 'Không khả dụng', tone: 'danger' },
 }
@@ -32,7 +32,7 @@ const DELIVERY: Record<AuditDeliveryState, StateView> = {
   processing: { label: 'Đang xử lý', tone: 'info' },
   retryable: { label: 'Chờ thử lại', tone: 'warning' },
   confirmed: { label: 'Đã xác nhận', tone: 'success' },
-  failed: { label: 'Thất bại (terminal)', tone: 'danger' },
+  failed: { label: 'Thất bại hẳn', tone: 'danger' },
 }
 
 const VERIFICATION: Record<AuditVerificationState, StateView> = {
@@ -56,10 +56,10 @@ const DEPENDENCY: Record<
 const FINDING_CATEGORY: Record<FindingCategory, string> = {
   missing_delivery_work: 'Thiếu tác vụ chuyển lên sổ cái',
   retryable_delivery_failure: 'Lỗi chuyển có thể thử lại',
-  terminal_delivery_failure: 'Lỗi chuyển terminal',
+  terminal_delivery_failure: 'Lỗi chuyển không thể thử lại',
   missing_local_projection: 'Thiếu bản chiếu cục bộ',
   missing_ledger_evidence: 'Thiếu bằng chứng trên sổ cái',
-  hash_schema_mismatch: 'Sai lệch hash/schema',
+  hash_schema_mismatch: 'Sai lệch mã băm hoặc lược đồ',
   orphan_local_projection: 'Bản chiếu cục bộ mồ côi',
   orphan_ledger_evidence: 'Bằng chứng sổ cái mồ côi',
   unverifiable: 'Không thể xác minh',
@@ -88,13 +88,13 @@ const GOVERNANCE_LEDGER: Record<GovernanceLedgerStatus, StateView> = {
   pending: { label: 'Đang chờ ghi', tone: 'info' },
   'confirmed-fabric': { label: 'Đã ghi lên Fabric', tone: 'success' },
   'confirmed-simulation': { label: 'Mô phỏng', tone: 'warning' },
-  'failed-terminal': { label: 'Thất bại (terminal)', tone: 'danger' },
+  'failed-terminal': { label: 'Thất bại hẳn', tone: 'danger' },
 }
 
 const IDENTITY_ROLES: Record<'writer' | 'reader' | 'operator', string> = {
-  writer: 'Writer',
-  reader: 'Reader',
-  operator: 'Operator',
+  writer: 'Ghi sổ',
+  reader: 'Đọc sổ',
+  operator: 'Vận hành',
 }
 
 const EXPLORER_REASONS: Record<string, string> = {
