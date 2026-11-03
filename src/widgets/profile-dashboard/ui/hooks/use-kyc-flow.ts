@@ -7,6 +7,7 @@ import { KYC_MAINTENANCE_MESSAGE } from '@/shared/config/kyc-maintenance'
 import { UseProfileReturn } from '../../model/use-profile'
 import { extractKycBack, extractKycFront, submitKyc } from '../../api/kyc-api'
 import { attachMediaStream, base64ToBlob } from '../../lib/kyc-media'
+import { attemptOcr, describeOcrIssues } from '../../lib/kyc-ocr-issues'
 import { useKycSelfie } from './use-kyc-selfie'
 
 export interface Recommendation {
@@ -26,16 +27,6 @@ export interface Recommendation {
     demographics: number
   }
   reasons: string[]
-}
-
-/** OCR is a convenience: a failed read must never block the user from filling the form. */
-async function attemptOcr<T>(run: () => Promise<T>): Promise<T | null> {
-  try {
-    return await run()
-  } catch (error) {
-    console.warn('KYC OCR failed, falling back to manual entry', error)
-    return null
-  }
 }
 
 export function useKycFlow(profile: UseProfileReturn) {
@@ -201,8 +192,10 @@ export function useKycFlow(profile: UseProfileReturn) {
       const frontBlob = base64ToBlob(frontPreview)
       const backBlob = base64ToBlob(backPreview)
       // Sequential on purpose: the eKYC service handles one image at a time.
-      const front = await attemptOcr(() => extractKycFront(frontBlob))
-      const back = await attemptOcr(() => extractKycBack(backBlob))
+      const frontAttempt = await attemptOcr(() => extractKycFront(frontBlob))
+      const backAttempt = await attemptOcr(() => extractKycBack(backBlob))
+      const front = frontAttempt.value
+      const back = backAttempt.value
       const extractedAddress = front?.address ?? back?.data?.address ?? ''
 
       setKycForm({
@@ -218,12 +211,11 @@ export function useKycFlow(profile: UseProfileReturn) {
       })
 
       detectDistrict(extractedAddress)
-      if (front && back) {
+      const issues = describeOcrIssues(frontAttempt, backAttempt)
+      if (issues.length === 0) {
         toast.success('Trích xuất thông tin OCR thành công!')
       } else {
-        toast.warning(
-          'Không đọc tự động được toàn bộ thông tin. Bạn có thể nhập hoặc chỉnh ở bước xác nhận.'
-        )
+        issues.forEach(message => toast.warning(message, { duration: 10000 }))
       }
       setCurrentStep(2)
     } finally {
