@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { CalendarDays, X } from 'lucide-react'
-import { format, isValid, parseISO } from 'date-fns'
+import { format, isValid, parseISO, startOfMonth } from 'date-fns'
 import { vi } from 'date-fns/locale'
 
 import { cn } from '@/shared/lib/utils'
@@ -21,6 +21,10 @@ interface DatePickerProps {
   disabled?: boolean
   clearable?: boolean
   className?: string
+  /** Ngày sớm nhất được chọn; mặc định chỉ giới hạn danh sách năm từ 1990. */
+  minDate?: Date
+  /** Ngày muộn nhất được chọn; mặc định chỉ giới hạn danh sách năm đến 2050. */
+  maxDate?: Date
 }
 
 /**
@@ -36,6 +40,8 @@ export function DatePicker({
   disabled,
   clearable = true,
   className,
+  minDate,
+  maxDate,
 }: DatePickerProps): React.ReactElement {
   const inputId =
     id ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
@@ -71,9 +77,21 @@ export function DatePicker({
             mode="single"
             locale={vi}
             captionLayout="dropdown"
-            startMonth={new Date(1990, 0)}
-            endMonth={new Date(2050, 11)}
-            {...(selected ? { defaultMonth: selected } : {})}
+            startMonth={minDate ? startOfMonth(minDate) : new Date(1990, 0)}
+            endMonth={maxDate ? startOfMonth(maxDate) : new Date(2050, 11)}
+            {...(minDate || maxDate
+              ? {
+                  disabled: [
+                    ...(minDate ? [{ before: minDate }] : []),
+                    ...(maxDate ? [{ after: maxDate }] : []),
+                  ],
+                }
+              : {})}
+            {...(selected
+              ? { defaultMonth: selected }
+              : maxDate
+                ? { defaultMonth: maxDate }
+                : {})}
             selected={selected}
             onSelect={date => {
               onChange(date ? format(date, 'yyyy-MM-dd') : '')

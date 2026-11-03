@@ -3,6 +3,19 @@
 import * as React from 'react'
 import { FileText, BadgeCheck, Brain, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { DatePicker } from '@/shared/ui/date-picker'
+import { OptionSelect, type SelectOption } from '@/shared/ui/option-select'
+import { dmyToIso, isoToDmy, parseDmy } from '../../lib/kyc-date'
+import { validateKycForm } from '../../lib/kyc-form-validation'
+import { KycAddressField } from './kyc-address-field'
+
+const INPUT_CLASS =
+  'w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold'
+const MIN_BIRTH_DATE = new Date(1900, 0, 1)
+const GENDER_OPTIONS: SelectOption[] = [
+  { value: 'Nam', label: 'Nam' },
+  { value: 'Nữ', label: 'Nữ' },
+]
 
 interface KycStep2Props {
   kycForm: {
@@ -55,6 +68,20 @@ export function KycStep2({
   setCurrentStep,
   handleConfirmAndSubmitKyc,
 }: KycStep2Props): React.ReactElement {
+  // Errors appear only after the first submit attempt, then stay live while the user fixes them.
+  const [attempted, setAttempted] = React.useState(false)
+  const today = React.useMemo(() => new Date(), [])
+  const errors = attempted ? validateKycForm(kycForm) : {}
+  const hasErrors = Object.keys(errors).length > 0
+
+  const handleSubmit = (): void => {
+    if (Object.keys(validateKycForm(kycForm)).length > 0) {
+      setAttempted(true)
+      return
+    }
+    handleConfirmAndSubmitKyc()
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch flex-1 overflow-y-auto pr-1">
       {/* Form fields editor */}
@@ -64,134 +91,105 @@ export function KycStep2({
         </h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-              Số CCCD
-            </label>
+          <Field label="Số CCCD" error={errors.cccdNumber}>
             <input
               type="text"
+              inputMode="numeric"
+              aria-label="Số CCCD"
               value={kycForm.cccdNumber || ''}
               onChange={e =>
                 setKycForm(prev => ({ ...prev, cccdNumber: e.target.value }))
               }
-              className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+              className={INPUT_CLASS}
             />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-              Họ và tên
-            </label>
+          </Field>
+          <Field label="Họ và tên" error={errors.fullName}>
             <input
               type="text"
+              aria-label="Họ và tên"
               value={kycForm.fullName || ''}
               onChange={e =>
                 setKycForm(prev => ({ ...prev, fullName: e.target.value }))
               }
-              className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+              className={INPUT_CLASS}
             />
-          </div>
+          </Field>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                Ngày sinh
-              </label>
-              <input
-                type="text"
-                value={kycForm.dob || ''}
-                onChange={e =>
-                  setKycForm(prev => ({ ...prev, dob: e.target.value }))
-                }
-                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                Giới tính
-              </label>
-              <input
-                type="text"
-                value={kycForm.gender || ''}
-                onChange={e =>
-                  setKycForm(prev => ({ ...prev, gender: e.target.value }))
-                }
-                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
-              />
-            </div>
-          </div>
+          <Field label="Ngày sinh" error={errors.dob}>
+            <DatePicker
+              value={dmyToIso(kycForm.dob)}
+              onChange={iso =>
+                setKycForm(prev => ({ ...prev, dob: isoToDmy(iso) }))
+              }
+              placeholder="Chọn ngày sinh"
+              minDate={MIN_BIRTH_DATE}
+              maxDate={today}
+            />
+          </Field>
+          <Field label="Giới tính" error={errors.gender}>
+            <OptionSelect
+              aria-label="Giới tính"
+              value={kycForm.gender || ''}
+              options={GENDER_OPTIONS}
+              placeholder="Chọn giới tính"
+              onChange={gender => setKycForm(prev => ({ ...prev, gender }))}
+            />
+          </Field>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                Quốc tịch
-              </label>
-              <input
-                type="text"
-                value={kycForm.nationality || ''}
-                onChange={e =>
-                  setKycForm(prev => ({ ...prev, nationality: e.target.value }))
-                }
-                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-                Quê quán
-              </label>
-              <input
-                type="text"
-                value={kycForm.placeOfOrigin || ''}
-                onChange={e =>
-                  setKycForm(prev => ({
-                    ...prev,
-                    placeOfOrigin: e.target.value,
-                  }))
-                }
-                className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-              Nơi thường trú
-            </label>
+          <Field label="Quốc tịch" error={errors.nationality}>
             <input
               type="text"
+              aria-label="Quốc tịch"
+              value={kycForm.nationality || ''}
+              onChange={e =>
+                setKycForm(prev => ({ ...prev, nationality: e.target.value }))
+              }
+              className={INPUT_CLASS}
+            />
+          </Field>
+          <div className="hidden md:block" aria-hidden="true" />
+
+          <div className="md:col-span-2">
+            <KycAddressField
+              label="Quê quán"
+              value={kycForm.placeOfOrigin || ''}
+              onChange={placeOfOrigin =>
+                setKycForm(prev => ({ ...prev, placeOfOrigin }))
+              }
+            />
+          </div>
+          <div className="md:col-span-2">
+            <KycAddressField
+              label="Nơi thường trú"
+              withWard
               value={kycForm.address || ''}
-              onChange={e =>
-                setKycForm(prev => ({ ...prev, address: e.target.value }))
-              }
-              className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+              onChange={address => setKycForm(prev => ({ ...prev, address }))}
+              {...(errors.address ? { error: errors.address } : {})}
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-              Ngày cấp
-            </label>
-            <input
-              type="text"
-              value={kycForm.issueDate || ''}
-              onChange={e =>
-                setKycForm(prev => ({ ...prev, issueDate: e.target.value }))
+          <Field label="Ngày cấp" error={errors.issueDate}>
+            <DatePicker
+              value={dmyToIso(kycForm.issueDate)}
+              onChange={iso =>
+                setKycForm(prev => ({ ...prev, issueDate: isoToDmy(iso) }))
               }
-              className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+              placeholder="Chọn ngày cấp"
+              minDate={parseDmy(kycForm.dob) ?? MIN_BIRTH_DATE}
+              maxDate={today}
             />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-              Nơi cấp
-            </label>
+          </Field>
+          <Field label="Nơi cấp">
             <input
               type="text"
+              aria-label="Nơi cấp"
               value={kycForm.placeOfIssue || ''}
               onChange={e =>
                 setKycForm(prev => ({ ...prev, placeOfIssue: e.target.value }))
               }
-              className="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-fg focus:outline-none focus:border-[#9F3F2A] bg-white font-semibold"
+              className={INPUT_CLASS}
             />
-          </div>
+          </Field>
         </div>
       </div>
 
@@ -263,6 +261,11 @@ export function KycStep2({
         </div>
 
         <div className="pt-4 space-y-2.5">
+          {attempted && hasErrors && (
+            <p role="alert" className="text-[11px] font-semibold text-red-600">
+              Vui lòng kiểm tra lại các trường được đánh dấu đỏ.
+            </p>
+          )}
           {isProcessing ? (
             <div className="flex items-center justify-center gap-2 py-2">
               <Loader2 className="h-5 w-5 text-[#9F3F2A] animate-spin" />
@@ -280,7 +283,7 @@ export function KycStep2({
                 Quay lại
               </Button>
               <Button
-                onClick={handleConfirmAndSubmitKyc}
+                onClick={handleSubmit}
                 className="flex-1 h-10 text-xs text-white rounded-full font-bold shadow-md border-none flex items-center justify-center gap-1 cursor-pointer transition-colors"
                 style={{ backgroundColor: '#9F3F2A' }}
               >
@@ -290,6 +293,30 @@ export function KycStep2({
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string
+  error?: string | undefined
+  children: React.ReactNode
+}): React.ReactElement {
+  return (
+    <div className="space-y-1">
+      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+        {label}
+      </label>
+      {children}
+      {error && (
+        <p role="alert" className="text-[11px] font-semibold text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
