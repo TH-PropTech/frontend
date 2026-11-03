@@ -52,6 +52,18 @@ describe('KycSelfieStep', () => {
     expect(props.verify).toHaveBeenCalledOnce()
   })
 
+  it('shows the face guide only while the camera is live', () => {
+    renderStep({ isCameraActive: true })
+    expect(
+      screen.getByText('Đặt khuôn mặt vào khung, nhìn thẳng, đủ sáng')
+    ).toBeInTheDocument()
+  })
+
+  it('has no face guide before the camera starts', () => {
+    renderStep()
+    expect(screen.queryByText(/Đặt khuôn mặt vào khung/)).toBeNull()
+  })
+
   it('locks capture in maintenance mode and shows progress while verifying', () => {
     renderStep({ maintenanceMode: true })
     expect(screen.getByRole('status')).toHaveTextContent('tạm bảo trì')

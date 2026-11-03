@@ -60,13 +60,23 @@ export function KycSelfieStep({
 
         <div className="h-64 w-full relative rounded-xl bg-slate-50 border border-dashed border-slate-300 overflow-hidden flex items-center justify-center shadow-inner">
           {isCameraActive ? (
-            <video
-              ref={videoRef}
-              className="w-full h-full object-cover -scale-x-100"
-              autoPlay
-              playsInline
-              muted
-            />
+            <>
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover -scale-x-100"
+                autoPlay
+                playsInline
+                muted
+              />
+              {/* Face guide: the dimmed area outside the oval comes from the oversized shadow. */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-1/2 h-52 w-40 -translate-x-1/2 -translate-y-1/2 rounded-[50%] border-2 border-white/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"
+              />
+              <p className="pointer-events-none absolute bottom-2 left-0 right-0 text-center text-[11px] font-semibold text-white drop-shadow">
+                Đặt khuôn mặt vào khung, nhìn thẳng, đủ sáng
+              </p>
+            </>
           ) : hasSelfie ? (
             <img
               src={selfiePreview}
