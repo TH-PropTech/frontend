@@ -29,8 +29,16 @@ export interface KycRecord {
   hometown: string
   address: string
   ocrScore: number | null
+  /** Kết quả sinh trắc lúc nộp; undefined với hồ sơ cũ chưa có bước selfie. */
+  face?: KycFaceSummary
   submittedAt: string
   status: 'pending' | 'approved' | 'rejected'
+}
+
+export interface KycFaceSummary {
+  match: boolean
+  liveness: boolean
+  spoofScore: number
 }
 
 interface BackendKycResponse {
@@ -46,6 +54,9 @@ interface BackendKycResponse {
   placeOfOrigin?: string
   placeOfResidence?: string
   ocrMatchRate?: number
+  faceMatchResult?: boolean
+  livenessResult?: boolean
+  spoofScore?: number
   status: 'pending' | 'verified' | 'rejected'
   createdAt: string
   user?: {
@@ -105,6 +116,17 @@ export function KycApprovalsView(): React.ReactElement {
       hometown: k.placeOfOrigin || '',
       address: k.placeOfResidence || '',
       ocrScore: k.ocrMatchRate ?? null,
+      ...(k.faceMatchResult !== undefined &&
+      k.livenessResult !== undefined &&
+      k.spoofScore !== undefined
+        ? {
+            face: {
+              match: k.faceMatchResult,
+              liveness: k.livenessResult,
+              spoofScore: k.spoofScore,
+            },
+          }
+        : {}),
       submittedAt: k.createdAt
         ? new Date(k.createdAt).toLocaleString('vi-VN')
         : '',

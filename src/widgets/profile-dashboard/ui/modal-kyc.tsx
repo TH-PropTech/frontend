@@ -6,6 +6,7 @@ import { UseProfileReturn } from '../model/use-profile'
 import { ShieldCheck, ChevronLeft } from 'lucide-react'
 import { KycRecommendations } from './components/kyc-recommendations'
 import { KycStep1 } from './components/kyc-step1'
+import { KycSelfieStep } from './components/kyc-selfie-step'
 import { KycStep2 } from './components/kyc-step2'
 import { useKycFlow } from './hooks/use-kyc-flow'
 
@@ -49,6 +50,20 @@ export function ModalKyc({
     handleConfirmAndSubmitKyc,
     handleFeedback,
     handleCloseAll,
+    selfie: {
+      videoRef: selfieVideoRef,
+      canvasRef: selfieCanvasRef,
+      fileInputRef: selfieFileInputRef,
+      selfiePreview,
+      isCameraActive,
+      isVerifying: isSelfieVerifying,
+      faceError,
+      startCamera,
+      capture,
+      retake,
+      handleFile: handleSelfieFile,
+      verify: verifyFace,
+    },
   } = useKycFlow(profile)
 
   if (!showKycModal) return null
@@ -92,7 +107,7 @@ export function ModalKyc({
             </Badge>
           ) : (
             <Badge className="bg-slate-100 text-slate-800 border-slate-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-              BƯỚC {currentStep} / 2
+              BƯỚC {currentStep} / 3
             </Badge>
           )}
         </div>
@@ -106,7 +121,7 @@ export function ModalKyc({
 
             <div
               className="absolute left-0 top-1/2 h-[2px] bg-[#9F3F2A] -translate-y-1/2 transition-all duration-300 z-0"
-              style={{ width: currentStep === 1 ? '0%' : '100%' }}
+              style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
             />
 
             {/* Step 1 */}
@@ -140,6 +155,24 @@ export function ModalKyc({
               </div>
               <span
                 className={`text-[10px] mt-1.5 font-bold transition-colors ${currentStep >= 2 ? 'text-[#9F3F2A]' : 'text-slate-500'}`}
+              >
+                Chụp Selfie
+              </span>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex flex-col items-center relative z-10">
+              <div
+                className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all duration-300 ${
+                  currentStep >= 3
+                    ? 'bg-[#9F3F2A] border-[#9F3F2A] text-white shadow-md'
+                    : 'bg-white border-slate-300 text-slate-500'
+                }`}
+              >
+                3
+              </div>
+              <span
+                className={`text-[10px] mt-1.5 font-bold transition-colors ${currentStep >= 3 ? 'text-[#9F3F2A]' : 'text-slate-500'}`}
               >
                 Nộp Hồ Sơ
               </span>
@@ -180,6 +213,24 @@ export function ModalKyc({
             )}
 
             {currentStep === 2 && (
+              <KycSelfieStep
+                selfiePreview={selfiePreview}
+                isCameraActive={isCameraActive}
+                isVerifying={isSelfieVerifying}
+                faceError={faceError}
+                maintenanceMode={kycDemoMaintenanceMode}
+                videoRef={selfieVideoRef}
+                fileInputRef={selfieFileInputRef}
+                startCamera={startCamera}
+                capture={capture}
+                retake={retake}
+                handleFile={handleSelfieFile}
+                verify={verifyFace}
+                onBack={() => setCurrentStep(1)}
+              />
+            )}
+
+            {currentStep === 3 && (
               <KycStep2
                 kycForm={kycForm}
                 setKycForm={setKycForm}
@@ -202,6 +253,7 @@ export function ModalKyc({
       {/* Hidden canvases for capturing webcam frames */}
       <canvas ref={canvasRef1} className="hidden" />
       <canvas ref={canvasRef2} className="hidden" />
+      <canvas ref={selfieCanvasRef} className="hidden" />
     </div>
   )
 }

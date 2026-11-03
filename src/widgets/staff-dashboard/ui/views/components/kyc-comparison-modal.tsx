@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Image from 'next/image'
-import type { KycRecord } from '../kyc-approvals-view'
+import type { KycFaceSummary, KycRecord } from '../kyc-approvals-view'
 import { CccdMockupCard } from './cccd-mockup-card'
 import { apiClient } from '@/shared/api/api-client'
 import { AdminCard } from '@/shared/ui/admin-card'
@@ -103,6 +103,8 @@ export function KycComparisonModal({
                 side="back"
               />
             </div>
+
+            <KycFacePanel face={selectedRecord.face} />
 
             {selfieUrl && (
               <div className="mt-4 flex items-center gap-4 rounded-lg border border-border bg-surface/70 p-3">
@@ -231,6 +233,59 @@ export function KycComparisonModal({
         </div>
       </AdminCard>
     </div>
+  )
+}
+
+function KycFacePanel({
+  face,
+}: {
+  face: KycFaceSummary | undefined
+}): React.ReactElement {
+  if (!face) {
+    return (
+      <p className="mt-4 rounded-lg border border-border bg-surface-muted/40 p-3 text-[11px] text-subtle">
+        Chưa ghi nhận kết quả khuôn mặt (hồ sơ nộp trước khi có bước selfie).
+      </p>
+    )
+  }
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface/70 p-3">
+      <span className="font-body text-[10px] font-bold uppercase tracking-wider text-muted">
+        Đối chiếu khuôn mặt
+      </span>
+      <FaceBadge
+        ok={face.match}
+        yes="Khuôn mặt khớp"
+        no="Khuôn mặt không khớp"
+      />
+      <FaceBadge ok={face.liveness} yes="Người thật" no="Nghi ngờ giả mạo" />
+      <span className="ml-auto text-[11px] text-subtle">
+        Điểm giả mạo: {face.spoofScore.toFixed(2)}
+      </span>
+    </div>
+  )
+}
+
+function FaceBadge({
+  ok,
+  yes,
+  no,
+}: {
+  ok: boolean
+  yes: string
+  no: string
+}): React.ReactElement {
+  return (
+    <span
+      className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+        ok
+          ? 'border-success/30 bg-success-soft text-success'
+          : 'border-danger/30 bg-danger/10 text-danger'
+      }`}
+    >
+      {ok ? '✓ ' : '✗ '}
+      {ok ? yes : no}
+    </span>
   )
 }
 

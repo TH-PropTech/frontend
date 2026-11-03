@@ -37,7 +37,7 @@ interface KycStep2Props {
   setIncome: (val: number) => void
   formatCurrency: (v: number) => string
   isProcessing: boolean
-  setCurrentStep: (step: 1 | 2) => void
+  setCurrentStep: (step: 1 | 2 | 3) => void
   handleConfirmAndSubmitKyc: () => void
 }
 
@@ -273,7 +273,7 @@ export function KycStep2({
           ) : (
             <div className="flex gap-2">
               <Button
-                onClick={() => setCurrentStep(1)}
+                onClick={() => setCurrentStep(2)}
                 variant="outline"
                 className="flex-1 h-10 text-xs border-slate-200 text-slate-600 rounded-full font-bold"
               >

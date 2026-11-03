@@ -7,6 +7,7 @@ import {
   extractKycFront,
   getMyKyc,
   submitKyc,
+  verifyKycFace,
 } from './kyc-api'
 
 vi.mock('@/shared/api/api-client', () => ({
@@ -80,11 +81,36 @@ describe('KYC API', () => {
       placeOfIssue: '',
       frontCard: image,
       backCard: image,
+      selfie: image,
     })
 
     const body = vi.mocked(apiClient.post).mock.calls[0]?.[1] as FormData
     expect(body.get('frontCard')).toBeInstanceOf(Blob)
+    expect(body.get('backCard')).toBeInstanceOf(Blob)
+    expect(body.get('selfie')).toBeInstanceOf(Blob)
     expect(body.get('faceMatchResult')).toBeNull()
     expect(body.get('ocrMatchRate')).toBeNull()
+  })
+
+  it('sends the selfie and front card to the face-verify precheck', async () => {
+    const face = {
+      liveness: true,
+      spoofScore: 0.1,
+      match: true,
+      distance: 0.4,
+      threshold: 0.85,
+    }
+    vi.mocked(apiClient.post).mockResolvedValue(face)
+    const image = new Blob(['image'], { type: 'image/jpeg' })
+
+    await expect(verifyKycFace(image, image)).resolves.toEqual(face)
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/kyc/face-verify',
+      expect.any(FormData)
+    )
+    const body = vi.mocked(apiClient.post).mock.calls[0]?.[1] as FormData
+    expect(body.get('selfie')).toBeInstanceOf(Blob)
+    expect(body.get('frontID')).toBeInstanceOf(Blob)
   })
 })
