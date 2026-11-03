@@ -649,6 +649,13 @@ export interface CreateSmartCaSigningSessionInput {
   certificateSerial?: string
 }
 
+export interface SignSmartCaV2Input {
+  smartCaPassword: string
+  smartCaOtp: string
+  idempotencyKey?: string
+  certificateSerial?: string
+}
+
 // ── API Functions ──
 
 export async function getMyContracts(): Promise<ContractItem[]> {
@@ -763,6 +770,17 @@ export async function createSmartCaSigningSession(
 ): Promise<SmartCaSigningSession> {
   return apiClient.post<SmartCaSigningSession>(
     `/contracts/${contractId}/smartca/signing-sessions`,
+    input
+  )
+}
+
+/** Ký trực tiếp bằng mật khẩu + OTP VNPT SmartCA (luồng v2, không cần mở app). */
+export async function submitSmartCaV2Sign(
+  contractId: string,
+  input: SignSmartCaV2Input
+): Promise<SmartCaSigningSession> {
+  return apiClient.post<SmartCaSigningSession>(
+    `/contracts/${contractId}/smartca/sign-v2`,
     input
   )
 }

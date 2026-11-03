@@ -9,6 +9,7 @@ const {
   getSigningMethods,
   testSignContract,
   pollSmartCaSigningSession,
+  submitSmartCaV2Sign,
 } = vi.hoisted(() => ({
   cancelSmartCaSigningSession: vi.fn(),
   createSmartCaSigningSession: vi.fn(),
@@ -16,6 +17,7 @@ const {
   getSigningMethods: vi.fn(),
   testSignContract: vi.fn(),
   pollSmartCaSigningSession: vi.fn(),
+  submitSmartCaV2Sign: vi.fn(),
 }))
 
 vi.mock('../api/contracts-api', () => ({
@@ -30,6 +32,7 @@ vi.mock('../api/contracts-api', () => ({
   getSigningMethods,
   testSignContract,
   pollSmartCaSigningSession,
+  submitSmartCaV2Sign,
 }))
 
 const METHODS = [
@@ -250,21 +253,40 @@ describe('SigningCeremonyModal', () => {
       name: 'Chọn phương thức ký',
     })
     expect(group).toBeInTheDocument()
-    expect(screen.getAllByRole('radio')).toHaveLength(3)
+    expect(screen.getAllByRole('radio')).toHaveLength(4)
     expect(
       screen.getByRole('radio', { name: /xác nhận trên app/ })
     ).toBeChecked()
     expect(screen.queryByLabelText('Mật khẩu SmartCA')).not.toBeInTheDocument()
   })
 
-  it('hides SmartCA v2 even when the backend still returns it', async () => {
+  it('shows SmartCA v2 password + OTP fields when selected, and submits them', async () => {
+    submitSmartCaV2Sign.mockResolvedValue(pendingSession({ status: 'signed' }))
     renderModal()
 
     await screen.findByRole('radiogroup', { name: 'Chọn phương thức ký' })
-    expect(
-      screen.queryByRole('radio', { name: /mật khẩu + OTP/ })
-    ).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Mật khẩu SmartCA')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('Xác nhận đồng thuận'))
+    fireEvent.click(screen.getByRole('radio', { name: /mật khẩu \+ OTP/ }))
+
+    fireEvent.change(await screen.findByLabelText('Mật khẩu SmartCA'), {
+      target: { value: 'Secret@123' },
+    })
+    fireEvent.change(screen.getByLabelText('OTP SmartCA'), {
+      target: { value: '123456' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
+    )
+
+    await waitFor(() =>
+      expect(submitSmartCaV2Sign).toHaveBeenCalledWith(
+        'c1',
+        expect.objectContaining({
+          smartCaPassword: 'Secret@123',
+          smartCaOtp: '123456',
+        })
+      )
+    )
   })
 
   it('does not show the dev sign option unless the backend returns it', async () => {
