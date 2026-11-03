@@ -91,6 +91,9 @@ export function KycSelfieStep({
             role="alert"
             className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700"
           >
+            <span className="block font-bold">
+              Không xác thực được khuôn mặt
+            </span>
             {faceError}
           </p>
         )}
