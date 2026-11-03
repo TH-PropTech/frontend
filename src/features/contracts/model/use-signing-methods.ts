@@ -36,8 +36,7 @@ export function useSigningMethods(
     getSigningMethods(contractId)
       .then(all => {
         if (!active) return
-        // SmartCA v2 (mật khẩu + OTP) đã bỏ khỏi giao diện.
-        const list = all.filter(item => item.id !== 'smartca_v2')
+        const list = all
         setMethods(list)
         setSelected(
           current =>

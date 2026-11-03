@@ -15,6 +15,7 @@ import { FaceVerifyCamera } from './face-verify-camera'
 import { SmartOtpStep } from './smart-otp-step'
 import { SignatureAnimation } from './signature-animation'
 import { SmartCaSigningPanel } from './smartca-signing-panel'
+import { SmartCaV2SigningPanel } from './smartca-v2-signing-panel'
 import { describeSigningMethodReason } from '../lib/signing-method-reason'
 
 export interface SigningCeremonyModalProps {
@@ -291,6 +292,17 @@ export function SigningCeremonyModal({
 
                 {methodsState.selected === 'smartca_v1' ? (
                   <SmartCaSigningPanel
+                    key={smartCaPanelKey}
+                    contractId={contractId}
+                    disabled={!consentChecked}
+                    {...(onSigningSuccess
+                      ? { onSigned: onSigningSuccess }
+                      : {})}
+                  />
+                ) : null}
+
+                {methodsState.selected === 'smartca_v2' ? (
+                  <SmartCaV2SigningPanel
                     key={smartCaPanelKey}
                     contractId={contractId}
                     disabled={!consentChecked}
