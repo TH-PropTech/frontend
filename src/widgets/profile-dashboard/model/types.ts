@@ -35,6 +35,7 @@ export interface UseProfileReturn {
   activeTab:
     | 'progress'
     | 'bills'
+    | 'wallet'
     | 'blockchain'
     | 'maintenance'
     | 'security'
@@ -47,6 +48,7 @@ export interface UseProfileReturn {
     React.SetStateAction<
       | 'progress'
       | 'bills'
+      | 'wallet'
       | 'blockchain'
       | 'maintenance'
       | 'security'

@@ -54,6 +54,7 @@ export function useProfile(): UseProfileReturn {
   const [activeTab, setActiveTabState] = React.useState<
     | 'progress'
     | 'bills'
+    | 'wallet'
     | 'blockchain'
     | 'maintenance'
     | 'security'
