@@ -5,8 +5,13 @@ import { toast } from 'sonner'
 import { env } from '@/shared/config/env'
 import { KYC_MAINTENANCE_MESSAGE } from '@/shared/config/kyc-maintenance'
 import { UseProfileReturn } from '../../model/use-profile'
-import { extractKycCards, submitKyc } from '../../api/kyc-api'
+import { extractKycBack, extractKycFront, submitKyc } from '../../api/kyc-api'
 import { attachMediaStream, base64ToBlob } from '../../lib/kyc-media'
+import {
+  attemptOcr,
+  describeOcrIssues,
+  type OcrIssue,
+} from '../../lib/kyc-ocr-issues'
 import { useKycSelfie } from './use-kyc-selfie'
 
 export interface Recommendation {
@@ -33,6 +38,7 @@ export function useKycFlow(profile: UseProfileReturn) {
 
   const [currentStep, setCurrentStep] = React.useState<1 | 2 | 3>(1)
   const [isProcessing, setIsProcessing] = React.useState(false)
+  const [ocrIssues, setOcrIssues] = React.useState<OcrIssue[]>([])
   const kycDemoMaintenanceMode = env.kycDemoMaintenanceMode
 
   // Step 1 Refs & Previews
@@ -190,39 +196,50 @@ export function useKycFlow(profile: UseProfileReturn) {
     try {
       const frontBlob = base64ToBlob(frontPreview)
       const backBlob = base64ToBlob(backPreview)
-      const [ocrResult, ocrBackResult] = await extractKycCards(
-        frontBlob,
-        backBlob
-      )
-      if (!ocrBackResult.success) {
-        throw new Error('Không thể trích xuất mặt sau CCCD')
-      }
-      const extractedAddress =
-        ocrResult.address ?? ocrBackResult.data?.address ?? ''
+      // Sequential on purpose: the eKYC service handles one image at a time.
+      const frontAttempt = await attemptOcr(() => extractKycFront(frontBlob))
+      const backAttempt = await attemptOcr(() => extractKycBack(backBlob))
+      const front = frontAttempt.value
+      const back = backAttempt.value
+      const extractedAddress = front?.address ?? back?.data?.address ?? ''
 
       setKycForm({
-        fullName: ocrResult.fullName,
-        cccdNumber: ocrResult.idNumber,
-        dob: ocrResult.dob,
+        fullName: front?.fullName ?? '',
+        cccdNumber: front?.idNumber ?? '',
+        dob: front?.dob ?? '',
         address: extractedAddress,
-        gender: ocrResult.gender,
-        nationality: ocrResult.nationality,
-        placeOfOrigin:
-          ocrResult.birthplace ?? ocrBackResult.data?.placeOfBirth ?? '',
-        issueDate: ocrBackResult.data?.issueDate ?? '',
+        gender: front?.gender ?? '',
+        nationality: front?.nationality ?? '',
+        placeOfOrigin: front?.birthplace ?? back?.data?.placeOfBirth ?? '',
+        issueDate: back?.data?.issueDate ?? '',
         placeOfIssue: '',
       })
 
       detectDistrict(extractedAddress)
+      const issues = describeOcrIssues(frontAttempt, backAttempt)
+      if (issues.length > 0) {
+        // Let the user pick: retake the flagged side or fix the fields by hand.
+        setOcrIssues(issues)
+        return
+      }
       toast.success('Trích xuất thông tin OCR thành công!')
       setCurrentStep(2)
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Không thể trích xuất CCCD'
-      )
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const dismissOcrIssues = () => setOcrIssues([])
+
+  const retakeFlaggedCards = () => {
+    if (ocrIssues.some(issue => issue.side === 'front')) setFrontPreview('')
+    if (ocrIssues.some(issue => issue.side === 'back')) setBackPreview('')
+    setOcrIssues([])
+  }
+
+  const continueWithManualEdit = () => {
+    setOcrIssues([])
+    setCurrentStep(2)
   }
 
   // API Call: Step 2 Submit
@@ -358,5 +375,9 @@ export function useKycFlow(profile: UseProfileReturn) {
     handleFeedback,
     handleCloseAll,
     selfie,
+    ocrIssues,
+    dismissOcrIssues,
+    retakeFlaggedCards,
+    continueWithManualEdit,
   }
 }

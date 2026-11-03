@@ -6,6 +6,7 @@ import { UseProfileReturn } from '../model/use-profile'
 import { ShieldCheck, ChevronLeft } from 'lucide-react'
 import { KycRecommendations } from './components/kyc-recommendations'
 import { KycStep1 } from './components/kyc-step1'
+import { KycOcrIssuesDialog } from './components/kyc-ocr-issues-dialog'
 import { KycSelfieStep } from './components/kyc-selfie-step'
 import { KycStep2 } from './components/kyc-step2'
 import { useKycFlow } from './hooks/use-kyc-flow'
@@ -50,6 +51,10 @@ export function ModalKyc({
     handleConfirmAndSubmitKyc,
     handleFeedback,
     handleCloseAll,
+    ocrIssues,
+    dismissOcrIssues,
+    retakeFlaggedCards,
+    continueWithManualEdit,
     selfie: {
       videoRef: selfieVideoRef,
       canvasRef: selfieCanvasRef,
@@ -249,6 +254,13 @@ export function ModalKyc({
           </div>
         )}
       </main>
+
+      <KycOcrIssuesDialog
+        issues={ocrIssues}
+        onRetake={retakeFlaggedCards}
+        onContinue={continueWithManualEdit}
+        onDismiss={dismissOcrIssues}
+      />
 
       {/* Hidden canvases for capturing webcam frames */}
       <canvas ref={canvasRef1} className="hidden" />
