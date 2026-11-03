@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { env } from '@/shared/config/env'
 import { KYC_MAINTENANCE_MESSAGE } from '@/shared/config/kyc-maintenance'
 import { UseProfileReturn } from '../../model/use-profile'
-import { extractKycCards, submitKyc } from '../../api/kyc-api'
+import { extractKycBack, extractKycFront, submitKyc } from '../../api/kyc-api'
 import { attachMediaStream, base64ToBlob } from '../../lib/kyc-media'
 import { useKycSelfie } from './use-kyc-selfie'
 
@@ -26,6 +26,16 @@ export interface Recommendation {
     demographics: number
   }
   reasons: string[]
+}
+
+/** OCR is a convenience: a failed read must never block the user from filling the form. */
+async function attemptOcr<T>(run: () => Promise<T>): Promise<T | null> {
+  try {
+    return await run()
+  } catch (error) {
+    console.warn('KYC OCR failed, falling back to manual entry', error)
+    return null
+  }
 }
 
 export function useKycFlow(profile: UseProfileReturn) {
@@ -190,36 +200,32 @@ export function useKycFlow(profile: UseProfileReturn) {
     try {
       const frontBlob = base64ToBlob(frontPreview)
       const backBlob = base64ToBlob(backPreview)
-      const [ocrResult, ocrBackResult] = await extractKycCards(
-        frontBlob,
-        backBlob
-      )
-      if (!ocrBackResult.success) {
-        throw new Error('Không thể trích xuất mặt sau CCCD')
-      }
-      const extractedAddress =
-        ocrResult.address ?? ocrBackResult.data?.address ?? ''
+      // Sequential on purpose: the eKYC service handles one image at a time.
+      const front = await attemptOcr(() => extractKycFront(frontBlob))
+      const back = await attemptOcr(() => extractKycBack(backBlob))
+      const extractedAddress = front?.address ?? back?.data?.address ?? ''
 
       setKycForm({
-        fullName: ocrResult.fullName,
-        cccdNumber: ocrResult.idNumber,
-        dob: ocrResult.dob,
+        fullName: front?.fullName ?? '',
+        cccdNumber: front?.idNumber ?? '',
+        dob: front?.dob ?? '',
         address: extractedAddress,
-        gender: ocrResult.gender,
-        nationality: ocrResult.nationality,
-        placeOfOrigin:
-          ocrResult.birthplace ?? ocrBackResult.data?.placeOfBirth ?? '',
-        issueDate: ocrBackResult.data?.issueDate ?? '',
+        gender: front?.gender ?? '',
+        nationality: front?.nationality ?? '',
+        placeOfOrigin: front?.birthplace ?? back?.data?.placeOfBirth ?? '',
+        issueDate: back?.data?.issueDate ?? '',
         placeOfIssue: '',
       })
 
       detectDistrict(extractedAddress)
-      toast.success('Trích xuất thông tin OCR thành công!')
+      if (front && back) {
+        toast.success('Trích xuất thông tin OCR thành công!')
+      } else {
+        toast.warning(
+          'Không đọc tự động được toàn bộ thông tin. Bạn có thể nhập hoặc chỉnh ở bước xác nhận.'
+        )
+      }
       setCurrentStep(2)
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Không thể trích xuất CCCD'
-      )
     } finally {
       setIsProcessing(false)
     }
