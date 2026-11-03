@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { Camera, PencilLine, TriangleAlert } from 'lucide-react'
+import { ArrowRight, Camera, TriangleAlert } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import {
   Dialog,
@@ -46,8 +46,8 @@ export function KycOcrIssuesDialog({
             Chưa đọc đủ thông tin trên thẻ
           </DialogTitle>
           <DialogDescription>
-            Bạn có thể chụp lại ảnh, hoặc tiếp tục và nhập hoặc chỉnh thông tin
-            ở bước xác nhận.
+            Bạn có thể chụp lại ảnh, hoặc tiếp tục. Bạn sẽ kiểm tra và sửa thông
+            tin trích xuất ở bước 3, sau khi xác thực khuôn mặt.
           </DialogDescription>
         </DialogHeader>
 
@@ -68,8 +68,8 @@ export function KycOcrIssuesDialog({
             Chụp lại ảnh
           </Button>
           <Button onClick={onContinue}>
-            <PencilLine className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Tiếp tục &amp; sửa thông tin
+            Tiếp tục
+            <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -96,6 +96,11 @@ export function KycSelfieStep({
         )}
 
         <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Bạn sẽ kiểm tra và sửa thông tin trích xuất ở bước 3, sau khi xác thực
+          khuôn mặt.
+        </p>
+
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
           Ảnh khuôn mặt được lưu mã hóa và chỉ dùng để xác minh danh tính của
           bạn.
         </p>

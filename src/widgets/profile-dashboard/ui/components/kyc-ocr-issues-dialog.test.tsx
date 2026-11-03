@@ -39,9 +39,7 @@ describe('KycOcrIssuesDialog', () => {
     expect(handlers.onRetake).toHaveBeenCalledOnce()
     expect(handlers.onContinue).not.toHaveBeenCalled()
 
-    fireEvent.click(
-      screen.getByRole('button', { name: /Tiếp tục & sửa thông tin/ })
-    )
+    fireEvent.click(screen.getByRole('button', { name: /Tiếp tục/ }))
     expect(handlers.onContinue).toHaveBeenCalledOnce()
   })
 
