@@ -7,7 +7,11 @@ import { KYC_MAINTENANCE_MESSAGE } from '@/shared/config/kyc-maintenance'
 import { UseProfileReturn } from '../../model/use-profile'
 import { extractKycBack, extractKycFront, submitKyc } from '../../api/kyc-api'
 import { attachMediaStream, base64ToBlob } from '../../lib/kyc-media'
-import { attemptOcr, describeOcrIssues } from '../../lib/kyc-ocr-issues'
+import {
+  attemptOcr,
+  describeOcrIssues,
+  type OcrIssue,
+} from '../../lib/kyc-ocr-issues'
 import { useKycSelfie } from './use-kyc-selfie'
 
 export interface Recommendation {
@@ -34,6 +38,7 @@ export function useKycFlow(profile: UseProfileReturn) {
 
   const [currentStep, setCurrentStep] = React.useState<1 | 2 | 3>(1)
   const [isProcessing, setIsProcessing] = React.useState(false)
+  const [ocrIssues, setOcrIssues] = React.useState<OcrIssue[]>([])
   const kycDemoMaintenanceMode = env.kycDemoMaintenanceMode
 
   // Step 1 Refs & Previews
@@ -212,15 +217,29 @@ export function useKycFlow(profile: UseProfileReturn) {
 
       detectDistrict(extractedAddress)
       const issues = describeOcrIssues(frontAttempt, backAttempt)
-      if (issues.length === 0) {
-        toast.success('Trích xuất thông tin OCR thành công!')
-      } else {
-        issues.forEach(message => toast.warning(message, { duration: 10000 }))
+      if (issues.length > 0) {
+        // Let the user pick: retake the flagged side or fix the fields by hand.
+        setOcrIssues(issues)
+        return
       }
+      toast.success('Trích xuất thông tin OCR thành công!')
       setCurrentStep(2)
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const dismissOcrIssues = () => setOcrIssues([])
+
+  const retakeFlaggedCards = () => {
+    if (ocrIssues.some(issue => issue.side === 'front')) setFrontPreview('')
+    if (ocrIssues.some(issue => issue.side === 'back')) setBackPreview('')
+    setOcrIssues([])
+  }
+
+  const continueWithManualEdit = () => {
+    setOcrIssues([])
+    setCurrentStep(2)
   }
 
   // API Call: Step 2 Submit
@@ -356,5 +375,9 @@ export function useKycFlow(profile: UseProfileReturn) {
     handleFeedback,
     handleCloseAll,
     selfie,
+    ocrIssues,
+    dismissOcrIssues,
+    retakeFlaggedCards,
+    continueWithManualEdit,
   }
 }

@@ -45,38 +45,41 @@ describe('describeOcrIssues', () => {
     ).toEqual([])
   })
 
-  it('names the front side and the missing fields', () => {
+  it('flags the front side with the missing fields', () => {
     const issues = describeOcrIssues(
       { value: { ...FRONT, idNumber: '', dob: '' }, error: null },
       { value: BACK, error: null }
     )
 
     expect(issues).toHaveLength(1)
-    expect(issues[0]).toContain('Mặt trước: chưa đọc được Số CCCD, Ngày sinh')
-    expect(issues[0]).toContain('đủ sáng')
+    expect(issues[0]?.side).toBe('front')
+    expect(issues[0]?.message).toContain(
+      'Mặt trước: chưa đọc được Số CCCD, Ngày sinh'
+    )
+    expect(issues[0]?.message).toContain('đủ sáng')
   })
 
-  it('names the back side when the issue date is missing', () => {
+  it('flags the back side when the issue date is missing', () => {
     const issues = describeOcrIssues(
       { value: FRONT, error: null },
       { value: { success: true, data: {} }, error: null }
     )
 
-    expect(issues).toEqual([
-      expect.stringContaining('Mặt sau: chưa đọc được Ngày cấp'),
-    ])
+    expect(issues).toHaveLength(1)
+    expect(issues[0]?.side).toBe('back')
+    expect(issues[0]?.message).toContain('Mặt sau: chưa đọc được Ngày cấp')
   })
 
-  it('reports each failed side separately with the upstream reason', () => {
+  it('flags each failed side separately with the upstream reason', () => {
     const issues = describeOcrIssues(
       { value: null, error: 'Không phát hiện nội dung mặt trước' },
       { value: null, error: null }
     )
 
-    expect(issues).toHaveLength(2)
-    expect(issues[0]).toContain(
+    expect(issues.map(issue => issue.side)).toEqual(['front', 'back'])
+    expect(issues[0]?.message).toContain(
       'Mặt trước: không đọc được (Không phát hiện nội dung mặt trước)'
     )
-    expect(issues[1]).toMatch(/^Mặt sau: không đọc được\. /)
+    expect(issues[1]?.message).toMatch(/^Mặt sau: không đọc được\. /)
   })
 })

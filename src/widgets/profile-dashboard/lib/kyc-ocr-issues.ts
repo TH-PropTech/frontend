@@ -1,7 +1,14 @@
 import type { KycOcrBackResult, KycOcrFrontResult } from '../api/kyc-api'
 
 const RETAKE_TIP =
-  'Hãy chụp lại ở nơi đủ sáng, cầm thẳng, đủ 4 góc thẻ, tránh chói hoặc mờ; hoặc nhập tay ở bước xác nhận.'
+  'Nên chụp lại ở nơi đủ sáng, cầm thẳng, đủ 4 góc thẻ, tránh chói hoặc mờ.'
+
+export type OcrSide = 'front' | 'back'
+
+export interface OcrIssue {
+  side: OcrSide
+  message: string
+}
 
 export interface OcrAttempt<T> {
   value: T | null
@@ -35,30 +42,34 @@ function missingFrontFields(front: KycOcrFrontResult): string[] {
 }
 
 function describeSide(
-  label: string,
+  side: OcrSide,
   attempt: OcrAttempt<unknown>,
   missing: string[]
-): string | null {
+): OcrIssue | null {
+  const label = side === 'front' ? 'Mặt trước' : 'Mặt sau'
   if (!attempt.value) {
     const reason = attempt.error ? ` (${attempt.error})` : ''
-    return `${label}: không đọc được${reason}. ${RETAKE_TIP}`
+    return { side, message: `${label}: không đọc được${reason}. ${RETAKE_TIP}` }
   }
   if (missing.length > 0) {
-    return `${label}: chưa đọc được ${missing.join(', ')}. ${RETAKE_TIP}`
+    return {
+      side,
+      message: `${label}: chưa đọc được ${missing.join(', ')}. ${RETAKE_TIP}`,
+    }
   }
   return null
 }
 
-/** One warning per card side that was not fully read; empty when everything was. */
+/** One issue per card side that was not fully read; empty when everything was. */
 export function describeOcrIssues(
   front: OcrAttempt<KycOcrFrontResult>,
   back: OcrAttempt<KycOcrBackResult>
-): string[] {
+): OcrIssue[] {
   const frontMissing = front.value ? missingFrontFields(front.value) : []
   const backMissing =
     back.value && !back.value.data?.issueDate ? ['Ngày cấp'] : []
   return [
-    describeSide('Mặt trước', front, frontMissing),
-    describeSide('Mặt sau', back, backMissing),
-  ].filter((message): message is string => message !== null)
+    describeSide('front', front, frontMissing),
+    describeSide('back', back, backMissing),
+  ].filter((issue): issue is OcrIssue => issue !== null)
 }
