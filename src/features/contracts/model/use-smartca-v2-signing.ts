@@ -5,6 +5,7 @@ import {
   submitSmartCaV2Sign,
   type SmartCaSigningSession,
 } from '../api/contracts-api'
+import { describeSmartCaV2Error } from '../lib/smartca-v2-error'
 
 const TERMINAL_STATUSES: ReadonlySet<SmartCaSigningSession['status']> = new Set(
   ['signed', 'rejected', 'expired', 'cancelled']
@@ -79,7 +80,7 @@ export function useSmartCaV2Signing(
     } catch (caught: unknown) {
       setError(
         caught instanceof Error
-          ? caught.message
+          ? describeSmartCaV2Error(caught.message)
           : 'Không thể gửi yêu cầu ký VNPT SmartCA.'
       )
     } finally {

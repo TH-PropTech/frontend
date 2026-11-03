@@ -115,7 +115,7 @@ describe('SmartCaV2SigningPanel', () => {
     await fillAndSubmit()
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'SMARTCA_CREDENTIAL_OR_REQUEST_REJECTED'
+      'VNPT SmartCA từ chối yêu cầu'
     )
   })
 
