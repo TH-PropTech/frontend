@@ -1,6 +1,14 @@
 'use client'
 
-import { AlertCircle, CheckCircle2, RefreshCw, XCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  CheckCircle2,
+  KeyRound,
+  Lock,
+  RefreshCw,
+  Smartphone,
+  XCircle,
+} from 'lucide-react'
 import { useSmartCaV2Signing } from '../model/use-smartca-v2-signing'
 
 interface SmartCaV2SigningPanelProps {
@@ -9,6 +17,21 @@ interface SmartCaV2SigningPanelProps {
   /** Gọi khi phiên ký chuyển sang `signed` để workspace làm mới. */
   onSigned?: () => void
 }
+
+const STEPS = [
+  {
+    icon: Smartphone,
+    text: 'Mở app VNPT SmartCA trên điện thoại, đăng nhập tài khoản đã đăng ký.',
+  },
+  {
+    icon: KeyRound,
+    text: 'Lấy mã OTP 6 số hiện trên app (hoặc trong ứng dụng sinh OTP đã liên kết).',
+  },
+  {
+    icon: Lock,
+    text: 'Nhập mật khẩu SmartCA và mã OTP vừa lấy vào ô bên dưới rồi gửi yêu cầu ký.',
+  },
+] as const
 
 /**
  * Luồng ký VNPT SmartCA v2: người dùng tự nhập mật khẩu tài khoản SmartCA và
@@ -48,6 +71,23 @@ export function SmartCaV2SigningPanel({
       <p className="mt-1 text-[var(--muted)]">
         Nhập mật khẩu và mã OTP lấy từ ứng dụng VNPT SmartCA trên điện thoại.
       </p>
+
+      {!isSigned ? (
+        <ol className="mt-3 space-y-2">
+          {STEPS.map((step, index) => (
+            <li key={step.text} className="flex items-start gap-2">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--primary)]/15 text-[10px] font-bold text-[var(--primary)]">
+                {index + 1}
+              </span>
+              <step.icon
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--primary)]"
+                aria-hidden="true"
+              />
+              <span className="text-[var(--muted)]">{step.text}</span>
+            </li>
+          ))}
+        </ol>
+      ) : null}
 
       {!isSigned ? (
         <div className="mt-3 space-y-3">
