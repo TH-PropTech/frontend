@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { FileText, BadgeCheck, Brain, Loader2, ShieldCheck } from 'lucide-react'
+import { FileText, BadgeCheck, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { DatePicker } from '@/shared/ui/date-picker'
 import { OptionSelect, type SelectOption } from '@/shared/ui/option-select'
@@ -42,13 +42,6 @@ interface KycStep2Props {
       placeOfIssue: string
     }>
   >
-  preferredDistrict: string
-  setPreferredDistrict: (val: string) => void
-  rooms: number
-  setRooms: (val: number) => void
-  income: number
-  setIncome: (val: number) => void
-  formatCurrency: (v: number) => string
   isProcessing: boolean
   setCurrentStep: (step: 1 | 2 | 3) => void
   handleConfirmAndSubmitKyc: () => void
@@ -57,13 +50,6 @@ interface KycStep2Props {
 export function KycStep2({
   kycForm,
   setKycForm,
-  preferredDistrict,
-  setPreferredDistrict,
-  rooms,
-  setRooms,
-  income,
-  setIncome,
-  formatCurrency,
   isProcessing,
   setCurrentStep,
   handleConfirmAndSubmitKyc,
@@ -193,7 +179,7 @@ export function KycStep2({
         </div>
       </div>
 
-      {/* AI Preferences & Match Results Card */}
+      {/* Match results card */}
       <div className="md:col-span-4 border border-slate-200 rounded-2xl p-5 bg-white shadow-sm flex flex-col justify-between">
         <div className="space-y-4">
           <h4 className="text-xs font-bold text-[#9F3F2A] uppercase pb-2 border-b border-slate-100 flex items-center gap-1.5">
@@ -203,60 +189,6 @@ export function KycStep2({
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
             Thông tin được AI OCR trích xuất từ ảnh CCCD. Hồ sơ chờ nhân viên
             duyệt sau khi nộp.
-          </div>
-
-          <div className="border-t border-slate-100 pt-3 space-y-3">
-            <h4 className="text-[11px] font-bold text-[#9F3F2A] uppercase flex items-center gap-1">
-              <Brain className="h-3.5 w-3.5" /> AI Preferences (Gợi ý)
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-500 block">
-                  Khu vực thuê
-                </label>
-                <select
-                  value={preferredDistrict}
-                  onChange={e => setPreferredDistrict(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs text-fg focus:outline-none bg-white font-semibold"
-                >
-                  <option value="Bình Thạnh">Bình Thạnh</option>
-                  <option value="Quận 1">Quận 1</option>
-                  <option value="Quận 2">Quận 2</option>
-                  <option value="Quận 7">Quận 7</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[9px] font-bold text-slate-500 block">
-                  Số phòng ngủ
-                </label>
-                <select
-                  value={rooms}
-                  onChange={e => setRooms(Number(e.target.value))}
-                  className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs text-fg focus:outline-none bg-white font-semibold"
-                >
-                  <option value={1}>1 PN</option>
-                  <option value={2}>2 PN</option>
-                  <option value={3}>3 PN</option>
-                </select>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[9px] font-bold text-slate-500 block">
-                Thu nhập hàng tháng:{' '}
-                <span className="text-[#9F3F2A] font-bold">
-                  {formatCurrency(income)}
-                </span>
-              </label>
-              <input
-                type="range"
-                min={8000000}
-                max={150000000}
-                step={1000000}
-                value={income}
-                onChange={e => setIncome(Number(e.target.value))}
-                className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#9F3F2A]"
-              />
-            </div>
           </div>
         </div>
 

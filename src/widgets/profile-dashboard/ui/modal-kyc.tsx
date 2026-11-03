@@ -36,12 +36,6 @@ export function ModalKyc({
     isWebcamActive1,
     isWebcamActive2,
     showResults,
-    preferredDistrict,
-    setPreferredDistrict,
-    income,
-    setIncome,
-    rooms,
-    setRooms,
     recommendations,
     feedbackGiven,
     startWebcam,
@@ -239,13 +233,6 @@ export function ModalKyc({
               <KycStep2
                 kycForm={kycForm}
                 setKycForm={setKycForm}
-                preferredDistrict={preferredDistrict}
-                setPreferredDistrict={setPreferredDistrict}
-                rooms={rooms}
-                setRooms={setRooms}
-                income={income}
-                setIncome={setIncome}
-                formatCurrency={formatCurrency}
                 isProcessing={isProcessing}
                 setCurrentStep={setCurrentStep}
                 handleConfirmAndSubmitKyc={handleConfirmAndSubmitKyc}

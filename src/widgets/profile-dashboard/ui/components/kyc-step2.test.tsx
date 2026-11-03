@@ -28,13 +28,6 @@ function renderStep(form: Form) {
   const props: Props = {
     kycForm: form,
     setKycForm: vi.fn(),
-    preferredDistrict: 'Bình Thạnh',
-    setPreferredDistrict: vi.fn(),
-    rooms: 2,
-    setRooms: vi.fn(),
-    income: 25000000,
-    setIncome: vi.fn(),
-    formatCurrency: v => String(v),
     isProcessing: false,
     setCurrentStep: vi.fn(),
     handleConfirmAndSubmitKyc,
@@ -92,6 +85,13 @@ describe('KycStep2 form', () => {
     fireEvent.click(screen.getByRole('button', { name: /Xác nhận & Nộp/ }))
 
     expect(handleConfirmAndSubmitKyc).toHaveBeenCalledOnce()
+  })
+
+  it('has no AI preferences panel', () => {
+    renderStep(VALID)
+
+    expect(screen.queryByText(/AI Preferences/i)).toBeNull()
+    expect(screen.queryByText('Khu vực thuê')).toBeNull()
   })
 
   it('prefills the birth date from the OCR value', () => {
