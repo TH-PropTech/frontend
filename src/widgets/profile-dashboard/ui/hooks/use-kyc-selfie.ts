@@ -7,9 +7,9 @@ import { verifyKycFace, type KycFaceResult } from '../../api/kyc-api'
 import { attachMediaStream, base64ToBlob } from '../../lib/kyc-media'
 
 export const FACE_SPOOF_MESSAGE =
-  'Ảnh selfie nghi ngờ là ảnh chụp lại. Vui lòng chụp trực tiếp khuôn mặt của bạn.'
+  'Ảnh selfie nghi ngờ là ảnh chụp lại (màn hình hoặc ảnh in). Hãy chụp trực tiếp khuôn mặt của bạn, đủ sáng và không bị che.'
 export const FACE_MISMATCH_MESSAGE =
-  'Khuôn mặt không khớp với ảnh trên CCCD. Vui lòng chụp lại selfie.'
+  'Khuôn mặt không khớp với ảnh trên CCCD. Nguyên nhân thường gặp: selfie thiếu sáng hoặc lệch góc; ảnh mặt trước CCCD mờ, tối hoặc chói nên không thấy rõ chân dung. Hãy chụp lại selfie, hoặc quay lại chụp lại mặt trước CCCD.'
 const CAMERA_DENIED_MESSAGE = 'Không thể truy cập camera. Vui lòng cấp quyền.'
 
 /** Liveness is checked before the match so a spoof is never reported as a mismatch. */

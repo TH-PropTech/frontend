@@ -91,9 +91,17 @@ export function KycSelfieStep({
             role="alert"
             className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700"
           >
+            <span className="block font-bold">
+              Không xác thực được khuôn mặt
+            </span>
             {faceError}
           </p>
         )}
+
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Bạn sẽ kiểm tra và sửa thông tin trích xuất ở bước 3, sau khi xác thực
+          khuôn mặt.
+        </p>
 
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           Ảnh khuôn mặt được lưu mã hóa và chỉ dùng để xác minh danh tính của
