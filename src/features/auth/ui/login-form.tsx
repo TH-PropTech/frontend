@@ -7,6 +7,12 @@ import { useRouter } from 'next/navigation'
 import { Input } from '@/shared/ui/input'
 import { Button } from '@/shared/ui/button'
 import { apiClient } from '@/shared/api/api-client'
+import {
+  buildRateLimitMessage,
+  readRateLimit,
+  type RateLimitInfo,
+} from '@/shared/api/rate-limit'
+import { useRateLimitCountdown } from '@/shared/lib/use-rate-limit-countdown'
 import { toast } from 'sonner'
 import { FeePolicyModal } from './auth-modals'
 import { loginSchema } from '../model/auth-validation'
@@ -49,6 +55,25 @@ export function LoginForm(): React.ReactElement {
   const [twoFactorTempToken, setTwoFactorTempToken] = React.useState('')
   const [twoFactorCode, setTwoFactorCode] = React.useState('')
   const [showFeeModal, setShowFeeModal] = React.useState(false)
+  const [rateLimit, setRateLimit] = React.useState<RateLimitInfo | null>(null)
+  const countdown = useRateLimitCountdown()
+  const isRateLimited = rateLimit !== null && countdown.remaining > 0
+
+  /**
+   * Lỗi 429 có thời gian chờ thì chỉ hiện một thông báo cố định trong form, có đếm ngược,
+   * và khoá nút gửi đến khi hết giờ. Lỗi khác giữ cách báo cũ.
+   */
+  function reportError(err: unknown, fallback: string): void {
+    const limit = readRateLimit(err)
+    if (limit !== null && limit.retryAfterSeconds !== null) {
+      setRateLimit(limit)
+      countdown.start(limit.retryAfterSeconds)
+      return
+    }
+    const msg = err instanceof Error ? err.message : fallback
+    setErrorMsg(msg)
+    toast.error(msg)
+  }
 
   async function handleSubmit(
     e: React.FormEvent<HTMLFormElement>
@@ -115,12 +140,7 @@ export function LoginForm(): React.ReactElement {
           }
         }, 800)
       } catch (err: unknown) {
-        const msg =
-          err instanceof Error
-            ? err.message
-            : 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'
-        setErrorMsg(msg)
-        toast.error(msg)
+        reportError(err, 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')
       } finally {
         setIsLoading(false)
       }
@@ -154,10 +174,7 @@ export function LoginForm(): React.ReactElement {
           return
         }
       } catch (err: unknown) {
-        const msg =
-          err instanceof Error ? err.message : 'Yêu cầu đăng nhập thất bại.'
-        setErrorMsg(msg)
-        toast.error(msg)
+        reportError(err, 'Yêu cầu đăng nhập thất bại.')
       } finally {
         setIsLoading(false)
       }
@@ -195,12 +212,7 @@ export function LoginForm(): React.ReactElement {
           }
         }, 800)
       } catch (err: unknown) {
-        const msg =
-          err instanceof Error
-            ? err.message
-            : 'Xác thực 2FA thất bại. Vui lòng kiểm tra lại mã.'
-        setErrorMsg(msg)
-        toast.error(msg)
+        reportError(err, 'Xác thực 2FA thất bại. Vui lòng kiểm tra lại mã.')
       } finally {
         setIsLoading(false)
       }
@@ -214,6 +226,14 @@ export function LoginForm(): React.ReactElement {
         className="flex flex-col gap-5 transition-all duration-300"
       >
         {/* Alert Messages */}
+        {isRateLimited && rateLimit && (
+          <div
+            role="alert"
+            className="bg-accent/10 border border-accent/20 text-accent text-xs p-3 rounded-lg font-semibold"
+          >
+            {buildRateLimitMessage(rateLimit.scope, countdown.remaining)}
+          </div>
+        )}
         {errorMsg && (
           <div className="bg-accent/10 border border-accent/20 text-accent text-xs p-3 rounded-lg font-semibold">
             {errorMsg}
@@ -296,6 +316,7 @@ export function LoginForm(): React.ReactElement {
               type="submit"
               size="lg"
               loading={isLoading}
+              disabled={isRateLimited}
               className="min-h-11 w-full mt-1"
             >
               Đăng nhập
@@ -372,6 +393,7 @@ export function LoginForm(): React.ReactElement {
               type="submit"
               size="lg"
               loading={isLoading}
+              disabled={isRateLimited}
               className="min-h-11 w-full mt-2"
             >
               Tiếp tục
@@ -450,6 +472,7 @@ export function LoginForm(): React.ReactElement {
               type="submit"
               size="lg"
               loading={isLoading}
+              disabled={isRateLimited}
               className="min-h-11 w-full mt-2"
             >
               Xác minh & Đăng nhập
