@@ -22,8 +22,6 @@ import {
   AlertCircle,
 } from 'lucide-react'
 
-import { LandlordPayoutHistory } from './landlord-payout-history'
-import { LandlordWallet } from './landlord-wallet'
 import { TenantBillsChart } from './components/tenant-bills-chart'
 import { LandlordBillsChart } from './components/landlord-bills-chart'
 import { LandlordRevenueChart } from './components/landlord-revenue-chart'
@@ -104,14 +102,6 @@ export function TabBills({ profile }: TabBillsProps): React.ReactElement {
 
   return (
     <div className="space-y-5 mt-0 outline-none">
-      {/* Landlord Financial Overviews */}
-      {role === 'landlord' && (
-        <>
-          <LandlordWallet />
-          <LandlordPayoutHistory />
-        </>
-      )}
-
       {/* Visual Financial Chart Card */}
       <Card className="bg-white border border-border rounded-3xl p-5 md:p-6 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-left">

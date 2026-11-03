@@ -1,22 +1,13 @@
 'use client'
 
 import * as React from 'react'
-import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { Card } from '@/shared/ui/card'
 import { maskIdNumber } from '@/shared/lib/mask-id-number'
 import { UseProfileReturn } from '../model/use-profile'
 import { LandlordHeaderWallet } from './landlord-header-wallet'
 import { ProfileEditForm } from './profile-edit-form'
-import {
-  User,
-  Briefcase,
-  ShieldCheck,
-  AlertCircle,
-  Copy,
-  CreditCard,
-  Edit3,
-} from 'lucide-react'
+import { User, Briefcase, ShieldCheck, AlertCircle, Edit3 } from 'lucide-react'
 
 interface ProfileHeaderProps {
   profile: UseProfileReturn
@@ -30,11 +21,6 @@ export function ProfileHeader({
     isKycVerified,
     kycStatus,
     kycForm,
-    isWalletConnected,
-    walletAddress,
-    usdtBalance,
-    handleConnectWallet,
-    handleCopyText,
     setShowKycModal,
     handleRoleChange,
   } = profile
@@ -198,84 +184,11 @@ export function ProfileHeader({
         </div>
 
         {/* Wallet Connection Status */}
-        {role === 'landlord' ? (
-          <div className="shrink-0 relative z-10">
-            <LandlordHeaderWallet
-              onManage={() => profile.setActiveTab('bills')}
-            />
-          </div>
-        ) : (
-          <div className="flex flex-col md:items-end gap-3 shrink-0 relative z-10">
-            {isWalletConnected ? (
-              <div className="bg-surface-muted/40 border border-border p-3 rounded-2xl text-left md:text-right space-y-1.5 min-w-[240px]">
-                <div className="flex items-center justify-between md:justify-end gap-2">
-                  <span className="inline-block h-2 w-2 rounded-full bg-success animate-pulse" />
-                  <span
-                    className="font-mono text-xs font-bold text-fg block truncate max-w-[150px]"
-                    title={walletAddress}
-                  >
-                    {walletAddress}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyText(walletAddress)}
-                    className="p-1 text-subtle hover:text-fg transition-colors inline-flex items-center justify-center rounded-md"
-                    title="Sao chép số tài khoản"
-                    aria-label="Sao chép số tài khoản"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-                <div className="border-t border-border/50 pt-1.5 flex flex-col gap-1 text-[11px] text-muted">
-                  <div className="flex justify-between">
-                    <span>
-                      Số dư:{' '}
-                      <strong className="text-fg">
-                        {usdtBalance.toLocaleString()} VND
-                      </strong>
-                    </span>
-                  </div>
-                  {isKycVerified && (
-                    <details className="border-t border-border/30 pt-1 text-left">
-                      <summary className="text-[10px] text-muted hover:text-fg cursor-pointer select-none">
-                        Chi tiết kỹ thuật định danh ▾
-                      </summary>
-                      <div className="pt-1 flex flex-col gap-0.5 text-[10px] text-muted font-mono">
-                        <span>
-                          Định danh:{' '}
-                          {userEmail
-                            ? `org1.${role}.${userEmail.split('@')[0]}`
-                            : `org1.${role}.user`}
-                        </span>
-                        <span>Chứng thư: Chuẩn số X.509</span>
-                      </div>
-                    </details>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col md:items-end gap-1">
-                <div className="flex items-center gap-2 text-xs text-muted">
-                  <CreditCard className="h-4 w-4 text-subtle" />
-                  <span>Chưa liên kết tài khoản ví</span>
-                </div>
-                {isKycVerified && (
-                  <span className="text-[11px] text-success font-medium mt-0.5">
-                    Định danh số đã sẵn sàng
-                  </span>
-                )}
-              </div>
-            )}
-            <Button
-              onClick={handleConnectWallet}
-              variant={isWalletConnected ? 'secondary' : 'primary'}
-              className="h-9 text-xs rounded-full px-5 font-bold shadow-sm transition-all flex items-center gap-1.5 self-start md:self-end"
-            >
-              <CreditCard className="h-3.5 w-3.5" />
-              {isWalletConnected ? 'Hủy liên kết ví' : 'Liên kết Ví Mộc'}
-            </Button>
-          </div>
-        )}
+        <div className="shrink-0 relative z-10">
+          <LandlordHeaderWallet
+            onManage={() => profile.setActiveTab('wallet')}
+          />
+        </div>
       </Card>
 
       {/* Edit Profile Modal */}

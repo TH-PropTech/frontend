@@ -8,6 +8,7 @@ import { ProfileHeader } from './profile-header'
 import { ProfileSidebarNav, type TabKey } from './profile-sidebar-nav'
 import { TabProgress } from './tab-progress'
 import { TabBills } from './tab-bills'
+import { TabWallet } from './tab-wallet'
 import { TabMaintenance } from './tab-maintenance'
 import { TabBlockchain } from './tab-blockchain'
 import { TabSecurity } from './tab-security'
@@ -77,6 +78,10 @@ export function ProfileWidget(): React.ReactElement {
 
             <TabsContent value="bills" className="outline-none mt-0">
               <TabBills profile={profile} />
+            </TabsContent>
+
+            <TabsContent value="wallet" className="outline-none mt-0">
+              <TabWallet profile={profile} />
             </TabsContent>
 
             <TabsContent value="maintenance" className="outline-none mt-0">

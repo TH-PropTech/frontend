@@ -5,6 +5,7 @@ import {
   Activity,
   FileText,
   Wrench,
+  Wallet,
   Database,
   Settings,
   Building,
@@ -17,6 +18,7 @@ import {
 export type TabKey =
   | 'progress'
   | 'bills'
+  | 'wallet'
   | 'blockchain'
   | 'maintenance'
   | 'security'
@@ -90,6 +92,11 @@ export function ProfileSidebarNav({
             label:
               role === 'tenant' ? 'Hóa đơn & Giao dịch' : 'Hóa đơn & Doanh thu',
             icon: FileText,
+          },
+          {
+            id: 'wallet',
+            label: 'Ví & Nhận tiền',
+            icon: Wallet,
           },
           {
             id: 'maintenance',
