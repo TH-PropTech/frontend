@@ -53,6 +53,39 @@ describe('KycComparisonModal', () => {
     ).toBeGreaterThanOrEqual(1)
   })
 
+  it('shows face match, liveness and spoof score when recorded', () => {
+    render(
+      <KycComparisonModal
+        selectedRecord={{
+          ...record,
+          face: { match: true, liveness: false, spoofScore: 0.73 },
+        }}
+        onClose={vi.fn()}
+        onVerify={vi.fn().mockResolvedValue(undefined)}
+        onShowReject={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText(/Khuôn mặt khớp/)).toBeInTheDocument()
+    expect(screen.getByText(/Nghi ngờ giả mạo/)).toBeInTheDocument()
+    expect(screen.getByText('Điểm giả mạo: 0.73')).toBeInTheDocument()
+  })
+
+  it('marks legacy records without selfie as not recorded', () => {
+    render(
+      <KycComparisonModal
+        selectedRecord={record}
+        onClose={vi.fn()}
+        onVerify={vi.fn().mockResolvedValue(undefined)}
+        onShowReject={vi.fn()}
+      />
+    )
+
+    expect(
+      screen.getByText(/Chưa ghi nhận kết quả khuôn mặt/)
+    ).toBeInTheDocument()
+  })
+
   it('displays "Hình ảnh CCCD" header when no selfie is available', () => {
     render(
       <KycComparisonModal

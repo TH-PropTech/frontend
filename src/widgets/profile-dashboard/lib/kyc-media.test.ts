@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { attachMediaStream } from './use-kyc-flow'
+import { attachMediaStream } from './kyc-media'
 
 describe('attachMediaStream', () => {
   it('binds the stream and starts the mounted video preview', () => {

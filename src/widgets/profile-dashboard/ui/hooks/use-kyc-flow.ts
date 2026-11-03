@@ -6,6 +6,8 @@ import { env } from '@/shared/config/env'
 import { KYC_MAINTENANCE_MESSAGE } from '@/shared/config/kyc-maintenance'
 import { UseProfileReturn } from '../../model/use-profile'
 import { extractKycCards, submitKyc } from '../../api/kyc-api'
+import { attachMediaStream, base64ToBlob } from '../../lib/kyc-media'
+import { useKycSelfie } from './use-kyc-selfie'
 
 export interface Recommendation {
   id: number
@@ -26,37 +28,10 @@ export interface Recommendation {
   reasons: string[]
 }
 
-const base64ToBlob = (base64: string): Blob => {
-  const arr = base64.split(',')
-  const mime = arr[0]?.match(/:(.*?);/)?.[1] || 'image/jpeg'
-  const bstr = atob(arr[1] || '')
-  let n = bstr.length
-  const u8arr = new Uint8Array(n)
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n)
-  }
-  return new Blob([u8arr], { type: mime })
-}
-
-export function attachMediaStream(
-  video: HTMLVideoElement | null,
-  stream: MediaStream | null
-): void {
-  if (!video || !stream) return
-
-  video.srcObject = stream
-  const playPromise = video.play()
-  if (playPromise) {
-    void playPromise.catch(error => {
-      console.warn('Unable to autoplay KYC camera preview', error)
-    })
-  }
-}
-
 export function useKycFlow(profile: UseProfileReturn) {
   const { setShowKycModal, kycForm, setKycForm, refreshKycStatus } = profile
 
-  const [currentStep, setCurrentStep] = React.useState<1 | 2>(1)
+  const [currentStep, setCurrentStep] = React.useState<1 | 2 | 3>(1)
   const [isProcessing, setIsProcessing] = React.useState(false)
   const kycDemoMaintenanceMode = env.kycDemoMaintenanceMode
 
@@ -74,6 +49,12 @@ export function useKycFlow(profile: UseProfileReturn) {
   const [isWebcamActive2, setIsWebcamActive2] = React.useState(false)
   const [stream1, setStream1] = React.useState<MediaStream | null>(null)
   const [stream2, setStream2] = React.useState<MediaStream | null>(null)
+
+  const selfie = useKycSelfie({
+    frontPreview,
+    maintenanceMode: kycDemoMaintenanceMode,
+    onVerified: () => setCurrentStep(3),
+  })
 
   React.useEffect(() => {
     attachMediaStream(videoRef1.current, stream1)
@@ -255,6 +236,11 @@ export function useKycFlow(profile: UseProfileReturn) {
       toast.error('Hồ sơ chưa đủ ảnh CCCD')
       return
     }
+    if (!selfie.selfiePreview || !selfie.isFaceVerified) {
+      toast.error('Cần xác thực khuôn mặt trước khi nộp hồ sơ')
+      setCurrentStep(2)
+      return
+    }
     setIsProcessing(true)
     try {
       await submitKyc({
@@ -269,6 +255,7 @@ export function useKycFlow(profile: UseProfileReturn) {
         placeOfIssue: kycForm.placeOfIssue,
         frontCard: base64ToBlob(frontPreview),
         backCard: base64ToBlob(backPreview),
+        selfie: base64ToBlob(selfie.selfiePreview),
       })
 
       await refreshKycStatus()
@@ -370,5 +357,6 @@ export function useKycFlow(profile: UseProfileReturn) {
     handleConfirmAndSubmitKyc,
     handleFeedback,
     handleCloseAll,
+    selfie,
   }
 }

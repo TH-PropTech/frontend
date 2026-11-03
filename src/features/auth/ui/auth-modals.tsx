@@ -116,6 +116,12 @@ export function PrivacyModal({
               toàn.
             </li>
             <li>
+              Ảnh khuôn mặt (selfie) dùng để xác thực sinh trắc khi nộp hồ sơ
+              KYC được lưu mã hóa, chỉ dùng để xác minh danh tính của bạn, và
+              được xử lý trên máy chủ eKYC của chúng tôi, không gửi cho bên thứ
+              ba.
+            </li>
+            <li>
               Mã hash của các giao dịch, chữ ký điện tử và trạng thái hợp đồng
               sẽ được lưu trực tiếp trên Blockchain công khai nhằm đối chiếu
               tính toàn vẹn nhưng hoàn toàn không làm lộ thông tin cá nhân trần
