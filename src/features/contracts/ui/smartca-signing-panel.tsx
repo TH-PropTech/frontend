@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import {
   AlertCircle,
   CheckCircle2,
@@ -17,6 +18,8 @@ interface SmartCaSigningPanelProps {
   disabled: boolean
   /** Gọi khi phiên ký chuyển sang `signed` để workspace làm mới. */
   onSigned?: () => void
+  /** Gọi khi phiên ký bị từ chối, hết hạn hoặc bị hủy, kèm lý do. */
+  onFailed?: (reason: string) => void
 }
 
 type Notice = {
@@ -87,6 +90,7 @@ export function SmartCaSigningPanel({
   contractId,
   disabled,
   onSigned,
+  onFailed,
 }: SmartCaSigningPanelProps) {
   const {
     certificates,
@@ -108,6 +112,22 @@ export function SmartCaSigningPanel({
   } = useSmartCaSigning(contractId, onSigned)
 
   const notice = session ? sessionNotice(session.status) : null
+
+  const onFailedRef = useRef(onFailed)
+  useEffect(() => {
+    onFailedRef.current = onFailed
+  }, [onFailed])
+  const failedStatus =
+    session?.status === 'rejected' ||
+    session?.status === 'expired' ||
+    session?.status === 'cancelled'
+      ? session.status
+      : null
+  useEffect(() => {
+    if (!failedStatus) return
+    const { label, guidance } = sessionNotice(failedStatus)
+    onFailedRef.current?.(`${label} ${guidance}`)
+  }, [failedStatus])
   const isPending = session?.status === 'pending'
 
   return (

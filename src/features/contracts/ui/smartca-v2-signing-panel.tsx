@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import {
   AlertCircle,
   CheckCircle2,
@@ -17,6 +18,8 @@ interface SmartCaV2SigningPanelProps {
   disabled: boolean
   /** Gọi khi phiên ký chuyển sang `signed` để workspace làm mới. */
   onSigned?: () => void
+  /** Gọi khi lần ký không thành công, kèm lý do để hiện cho người ký. */
+  onFailed?: (reason: string) => void
 }
 
 const STEPS = [
@@ -43,6 +46,7 @@ export function SmartCaV2SigningPanel({
   contractId,
   disabled,
   onSigned,
+  onFailed,
 }: SmartCaV2SigningPanelProps) {
   const {
     password,
@@ -65,12 +69,29 @@ export function SmartCaV2SigningPanel({
     cancel,
   } = useSmartCaV2Signing(contractId, onSigned, true)
 
+  const onFailedRef = useRef(onFailed)
+  useEffect(() => {
+    onFailedRef.current = onFailed
+  }, [onFailed])
+
   const isPending = session?.status === 'pending'
   const isSigned = session?.status === 'signed'
   const isFailed =
     session?.status === 'rejected' ||
     session?.status === 'expired' ||
     session?.status === 'cancelled'
+
+  useEffect(() => {
+    if (error) onFailedRef.current?.(error)
+  }, [error])
+
+  useEffect(() => {
+    if (isFailed) {
+      onFailedRef.current?.(
+        'Giao dịch ký VNPT SmartCA không thành công. Bạn có thể thử ký lại.'
+      )
+    }
+  }, [isFailed])
 
   return (
     <section className="rounded-lg border border-[var(--primary)]/30 bg-[var(--primary-soft)] p-3 text-[11px] text-[var(--fg)]">

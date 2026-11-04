@@ -17,6 +17,8 @@ import { SignatureAnimation } from './signature-animation'
 import { SmartCaSigningPanel } from './smartca-signing-panel'
 import { SmartCaV2SigningPanel } from './smartca-v2-signing-panel'
 import { describeSigningMethodReason } from '../lib/signing-method-reason'
+import { NO_RESPONSE_MESSAGE } from '../lib/smartca-v2-error'
+import { SigningOutcomeView, type SigningOutcome } from './signing-outcome-view'
 
 export interface SigningCeremonyModalProps {
   isOpen: boolean
@@ -41,13 +43,15 @@ export function SigningCeremonyModal({
   const [smartCaPanelKey, setSmartCaPanelKey] = useState(0)
   const [testSigning, setTestSigning] = useState(false)
   const [testSignError, setTestSignError] = useState<string | null>(null)
+  const [outcome, setOutcome] = useState<SigningOutcome | null>(null)
+  const [ceremonyDone, setCeremonyDone] = useState(false)
 
   const handleTestSign = async (): Promise<void> => {
     setTestSigning(true)
     setTestSignError(null)
     try {
       await testSignContract(contractId)
-      onSigningSuccess?.()
+      setOutcome({ status: 'success' })
     } catch (error: unknown) {
       setTestSignError(
         error instanceof Error ? error.message : 'Không thể ký ở chế độ test.'
@@ -61,16 +65,37 @@ export function SigningCeremonyModal({
 
   const ceremony = useSigningCeremony({
     contractId,
-    onSuccess: onSigningSuccess,
+    onSuccess: () => setCeremonyDone(true),
   })
 
+  const handleFailed = (reason: string): void =>
+    setOutcome({
+      status: 'failure',
+      reason,
+      unknown: reason === NO_RESPONSE_MESSAGE,
+    })
+
   if (!isOpen) return null
+
+  // A recorded (or possibly recorded) signature must refresh the contract behind this dialog.
+  const mustRefresh =
+    ceremonyDone ||
+    outcome?.status === 'success' ||
+    (outcome?.status === 'failure' && outcome.unknown)
 
   const handleClose = () => {
     ceremony.reset()
     setConsentChecked(false)
     setSmartCaPanelKey(current => current + 1)
-    onClose()
+    setOutcome(null)
+    setCeremonyDone(false)
+    if (mustRefresh && onSigningSuccess) onSigningSuccess()
+    else onClose()
+  }
+
+  const handleRetry = (): void => {
+    setOutcome(null)
+    setSmartCaPanelKey(current => current + 1)
   }
 
   return (
@@ -153,7 +178,15 @@ export function SigningCeremonyModal({
 
         {/* Dynamic Step Content */}
         <div className="py-2">
-          {ceremony.step === 'INTRO' && (
+          {outcome ? (
+            <SigningOutcomeView
+              outcome={outcome}
+              onDone={handleClose}
+              onRetry={handleRetry}
+            />
+          ) : null}
+
+          {ceremony.step === 'INTRO' && !outcome && (
             <div className="grid gap-4 text-left lg:grid-cols-2 lg:items-start lg:gap-6">
               <div className="flex flex-col gap-4">
                 <div className="p-4 rounded-xl bg-[var(--surface-muted)] border border-[var(--border)] space-y-2.5 text-xs text-[var(--fg)]">
@@ -295,9 +328,8 @@ export function SigningCeremonyModal({
                     key={smartCaPanelKey}
                     contractId={contractId}
                     disabled={!consentChecked}
-                    {...(onSigningSuccess
-                      ? { onSigned: onSigningSuccess }
-                      : {})}
+                    onSigned={() => setOutcome({ status: 'success' })}
+                    onFailed={handleFailed}
                   />
                 ) : null}
 
@@ -306,9 +338,8 @@ export function SigningCeremonyModal({
                     key={smartCaPanelKey}
                     contractId={contractId}
                     disabled={!consentChecked}
-                    {...(onSigningSuccess
-                      ? { onSigned: onSigningSuccess }
-                      : {})}
+                    onSigned={() => setOutcome({ status: 'success' })}
+                    onFailed={handleFailed}
                   />
                 ) : null}
 
