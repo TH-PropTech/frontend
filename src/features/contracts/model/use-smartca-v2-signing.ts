@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   cancelSmartCaSigningSession,
+  getSmartCaCertificates,
   pollSmartCaSigningSession,
   submitSmartCaV2Sign,
+  type SmartCaCertificate,
   type SmartCaSigningSession,
 } from '../api/contracts-api'
+import {
+  certificateChoiceProblem,
+  defaultCertificateSerial,
+} from '../lib/smartca-certificate-label'
 import { describeSmartCaV2Error } from '../lib/smartca-v2-error'
 
 const TERMINAL_STATUSES: ReadonlySet<SmartCaSigningSession['status']> = new Set(
@@ -25,6 +31,15 @@ export type UseSmartCaV2SigningResult = {
   setPassword: (value: string) => void
   otp: string
   setOtp: (value: string) => void
+  certificates: SmartCaCertificate[] | null
+  certificateSerial: string
+  setCertificateSerial: (serial: string) => void
+  loadingCertificates: boolean
+  /** True while the signer still has to pick one of several certificates. */
+  needsCertificateChoice: boolean
+  /** Set when an ordinary certificate is chosen although an integrated one exists. */
+  certificateProblem: string | null
+  loadCertificates: () => Promise<void>
   session: SmartCaSigningSession | null
   submitting: boolean
   checking: boolean
@@ -43,10 +58,17 @@ export type UseSmartCaV2SigningResult = {
  */
 export function useSmartCaV2Signing(
   contractId: string,
-  onSigned?: () => void
+  onSigned?: () => void,
+  /** Loads the signer certificates once the panel is shown. */
+  enabled = false
 ): UseSmartCaV2SigningResult {
   const [password, setPassword] = useState('')
   const [otp, setOtp] = useState('')
+  const [certificates, setCertificates] = useState<SmartCaCertificate[] | null>(
+    null
+  )
+  const [certificateSerial, setCertificateSerial] = useState('')
+  const [loadingCertificates, setLoadingCertificates] = useState(enabled)
   const [session, setSession] = useState<SmartCaSigningSession | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [checking, setChecking] = useState(false)
@@ -66,8 +88,55 @@ export function useSmartCaV2Signing(
     }
   }, [])
 
+  const applyCertificates = useCallback(
+    (list: SmartCaCertificate[] | null): void => {
+      setCertificates(list)
+      setCertificateSerial(list ? defaultCertificateSerial(list) : '')
+    },
+    []
+  )
+
+  const loadCertificates = useCallback(async (): Promise<void> => {
+    setLoadingCertificates(true)
+    try {
+      applyCertificates((await getSmartCaCertificates(contractId)).certificates)
+    } catch {
+      // Not fatal: the server picks the certificate when there is only one, and asks for
+      // a choice (handled in submit) when there are several.
+      applyCertificates(null)
+    } finally {
+      setLoadingCertificates(false)
+    }
+  }, [applyCertificates, contractId])
+
+  useEffect(() => {
+    if (!enabled) return
+    let active = true
+    getSmartCaCertificates(contractId)
+      .then(result => {
+        if (active) applyCertificates(result.certificates)
+      })
+      .catch(() => {
+        if (active) applyCertificates(null)
+      })
+      .finally(() => {
+        if (active) setLoadingCertificates(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [applyCertificates, contractId, enabled])
+
+  const needsCertificateChoice =
+    (certificates?.length ?? 0) > 1 && certificateSerial === ''
+  const certificateProblem = certificateChoiceProblem(
+    certificates,
+    certificateSerial
+  )
+
   const submit = useCallback(async (): Promise<void> => {
-    if (!password || !otp) return
+    if (!password || !otp || needsCertificateChoice || certificateProblem)
+      return
     setSubmitting(true)
     setError(null)
     try {
@@ -75,9 +144,16 @@ export function useSmartCaV2Signing(
         smartCaPassword: password,
         smartCaOtp: otp,
         idempotencyKey: idempotencyKeyRef.current,
+        ...(certificateSerial ? { certificateSerial } : {}),
       })
       applySession(result)
     } catch (caught: unknown) {
+      if (
+        caught instanceof Error &&
+        caught.message === 'SMARTCA_CERTIFICATE_SELECTION_REQUIRED'
+      ) {
+        void loadCertificates()
+      }
       setError(
         caught instanceof Error
           ? describeSmartCaV2Error(caught.message)
@@ -89,7 +165,16 @@ export function useSmartCaV2Signing(
       setOtp('')
       setSubmitting(false)
     }
-  }, [applySession, contractId, otp, password])
+  }, [
+    applySession,
+    certificateProblem,
+    certificateSerial,
+    contractId,
+    loadCertificates,
+    needsCertificateChoice,
+    otp,
+    password,
+  ])
 
   const checkStatus = useCallback(async (): Promise<void> => {
     if (!session || TERMINAL_STATUSES.has(session.status)) return
@@ -130,6 +215,13 @@ export function useSmartCaV2Signing(
     setPassword,
     otp,
     setOtp,
+    certificates,
+    certificateSerial,
+    setCertificateSerial,
+    loadingCertificates,
+    needsCertificateChoice,
+    certificateProblem,
+    loadCertificates,
     session,
     submitting,
     checking,

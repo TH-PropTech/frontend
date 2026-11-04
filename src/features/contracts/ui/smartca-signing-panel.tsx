@@ -91,6 +91,7 @@ export function SmartCaSigningPanel({
   const {
     certificates,
     selectedSerial,
+    certificateProblem,
     setSelectedSerial,
     session,
     connectionState,
@@ -154,10 +155,21 @@ export function SmartCaSigningPanel({
             ))}
           </select>
 
+          {certificateProblem ? (
+            <p role="alert" className="font-semibold text-[var(--danger)]">
+              {certificateProblem}
+            </p>
+          ) : null}
+
           <button
             type="button"
             onClick={() => void submit()}
-            disabled={disabled || submitting || !selectedSerial}
+            disabled={
+              disabled ||
+              submitting ||
+              !selectedSerial ||
+              Boolean(certificateProblem)
+            }
             className="inline-flex w-full items-center justify-center rounded-lg bg-[var(--primary)] px-3 py-2 font-semibold text-white disabled:opacity-50"
           >
             {submitting

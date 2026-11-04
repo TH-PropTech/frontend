@@ -4,16 +4,19 @@ import { SmartCaV2SigningPanel } from './smartca-v2-signing-panel'
 
 const {
   cancelSmartCaSigningSession,
+  getSmartCaCertificates,
   pollSmartCaSigningSession,
   submitSmartCaV2Sign,
 } = vi.hoisted(() => ({
   cancelSmartCaSigningSession: vi.fn(),
+  getSmartCaCertificates: vi.fn(),
   pollSmartCaSigningSession: vi.fn(),
   submitSmartCaV2Sign: vi.fn(),
 }))
 
 vi.mock('../api/contracts-api', () => ({
   cancelSmartCaSigningSession,
+  getSmartCaCertificates,
   pollSmartCaSigningSession,
   submitSmartCaV2Sign,
 }))
@@ -47,6 +50,7 @@ async function fillAndSubmit(): Promise<void> {
 describe('SmartCaV2SigningPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getSmartCaCertificates.mockResolvedValue({ certificates: [] })
   })
 
   it('shows password and OTP inputs', () => {
@@ -134,5 +138,139 @@ describe('SmartCaV2SigningPanel', () => {
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent('không thành công')
     )
+  })
+
+  describe('certificate choice', () => {
+    const TWO = {
+      certificates: [
+        {
+          serialNumber: '5401010145290e7cd66ea0054c69c163',
+          subject: 'CN=NGUYEN VAN A, UID=CCCD:079204001234, O=VNPT',
+          validTo: '2027-10-11T00:00:00.000Z',
+        },
+        {
+          serialNumber: '54010101c50b97a80d8bf76d6488494d',
+          subject: 'CN=NGUYEN VAN A (TH), UID=CCCD:079204001234',
+          validTo: '2027-10-11T00:00:00.000Z',
+        },
+      ],
+    }
+
+    it('lists several certificates by name without leaking the ID or the full serial', async () => {
+      getSmartCaCertificates.mockResolvedValue(TWO)
+      render(<SmartCaV2SigningPanel contractId="contract-1" disabled={false} />)
+
+      const radios = await screen.findAllByRole('radio')
+      expect(radios).toHaveLength(2)
+      expect(document.body.textContent).not.toContain('079204001234')
+      expect(document.body.textContent).not.toContain(
+        '54010101c50b97a80d8bf76d6488494d'
+      )
+    })
+
+    it('blocks signing until one certificate is chosen, then sends its serial', async () => {
+      getSmartCaCertificates.mockResolvedValue(TWO)
+      submitSmartCaV2Sign.mockResolvedValue(
+        pendingSession({ status: 'signed' })
+      )
+      render(<SmartCaV2SigningPanel contractId="contract-1" disabled={false} />)
+      await screen.findAllByRole('radio')
+
+      await fillAndSubmit()
+      expect(submitSmartCaV2Sign).not.toHaveBeenCalled()
+
+      fireEvent.click(screen.getByLabelText(/NGUYEN VAN A \(TH\)/))
+      await fillAndSubmit()
+
+      await waitFor(() =>
+        expect(submitSmartCaV2Sign).toHaveBeenCalledWith(
+          'contract-1',
+          expect.objectContaining({
+            certificateSerial: '54010101c50b97a80d8bf76d6488494d',
+          })
+        )
+      )
+    })
+
+    it('preselects the integrated certificate and blocks an ordinary choice', async () => {
+      getSmartCaCertificates.mockResolvedValue({
+        certificates: [
+          {
+            serialNumber: 'ORDINARY0c163',
+            serviceType: 'SMARTCA',
+            subject: 'CN=NGUYEN VAN A',
+          },
+          {
+            serialNumber: 'INTEGRATED494d',
+            serviceType: 'ESEAL',
+            subject: 'CN=NGUYEN VAN A',
+          },
+        ],
+      })
+      submitSmartCaV2Sign.mockResolvedValue(
+        pendingSession({ status: 'signed' })
+      )
+      render(<SmartCaV2SigningPanel contractId="contract-1" disabled={false} />)
+      const radios = (await screen.findAllByRole('radio')) as HTMLInputElement[]
+      expect(radios.filter(radio => radio.checked)).toHaveLength(1)
+      expect(
+        screen.getByLabelText(/Chứng thư tích hợp \(eSeal\)/)
+      ).toBeChecked()
+
+      fireEvent.click(screen.getByLabelText(/Chứng thư thường \(SmartCA\)/))
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Hãy chọn chứng thư tích hợp'
+      )
+      await fillAndSubmit()
+      expect(submitSmartCaV2Sign).not.toHaveBeenCalled()
+    })
+
+    it('picks the only certificate automatically and shows no chooser', async () => {
+      getSmartCaCertificates.mockResolvedValue({
+        certificates: [TWO.certificates[0]],
+      })
+      submitSmartCaV2Sign.mockResolvedValue(
+        pendingSession({ status: 'signed' })
+      )
+      render(<SmartCaV2SigningPanel contractId="contract-1" disabled={false} />)
+      await waitFor(() => expect(getSmartCaCertificates).toHaveBeenCalled())
+      expect(screen.queryAllByRole('radio')).toHaveLength(0)
+
+      await fillAndSubmit()
+
+      await waitFor(() =>
+        expect(submitSmartCaV2Sign).toHaveBeenCalledWith(
+          'contract-1',
+          expect.objectContaining({
+            certificateSerial: '5401010145290e7cd66ea0054c69c163',
+          })
+        )
+      )
+    })
+
+    it('explains a server demand for a choice in plain Vietnamese', async () => {
+      getSmartCaCertificates.mockResolvedValueOnce({ certificates: [] })
+      submitSmartCaV2Sign.mockRejectedValueOnce(
+        new Error('SMARTCA_CERTIFICATE_SELECTION_REQUIRED')
+      )
+      render(<SmartCaV2SigningPanel contractId="contract-1" disabled={false} />)
+
+      await fillAndSubmit()
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'nhiều chứng thư số'
+      )
+    })
+
+    it('does not claim failure when the request was cut off', async () => {
+      submitSmartCaV2Sign.mockRejectedValueOnce(new Error('Failed to fetch'))
+      render(<SmartCaV2SigningPanel contractId="contract-1" disabled={false} />)
+
+      await fillAndSubmit()
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'chưa rõ đã ký hay chưa'
+      )
+    })
   })
 })

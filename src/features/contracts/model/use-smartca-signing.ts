@@ -12,6 +12,10 @@ import {
   createSmartCaEventsClient,
   type SmartCaConnectionState,
 } from '../api/smartca-events-client'
+import {
+  certificateChoiceProblem,
+  defaultCertificateSerial,
+} from '../lib/smartca-certificate-label'
 
 const RECONCILIATION_COOLDOWN_MS = 5_000
 const RETRYABLE_TERMINAL_STATUSES: ReadonlySet<
@@ -34,6 +38,8 @@ export type UseSmartCaSigningResult = {
   certificates: SmartCaCertificate[] | null
   selectedSerial: string
   setSelectedSerial: (serial: string) => void
+  /** Set when an ordinary certificate is chosen although an integrated one exists. */
+  certificateProblem: string | null
   session: SmartCaSigningSession | null
   connectionState: SmartCaConnectionState
   loadingCertificates: boolean
@@ -195,11 +201,7 @@ export function useSmartCaSigning(
     try {
       const result = await getSmartCaCertificates(contractId)
       setCertificates(result.certificates)
-      setSelectedSerial(
-        result.certificates.length === 1
-          ? (result.certificates[0]?.serialNumber ?? '')
-          : ''
-      )
+      setSelectedSerial(defaultCertificateSerial(result.certificates))
       if (result.certificates.length === 0) {
         setError('Không có chứng thư SmartCA hợp lệ.')
       }
@@ -216,8 +218,13 @@ export function useSmartCaSigning(
     }
   }, [contractId])
 
+  const certificateProblem = certificateChoiceProblem(
+    certificates,
+    selectedSerial
+  )
+
   const submit = useCallback(async (): Promise<void> => {
-    if (!selectedSerial) return
+    if (!selectedSerial || certificateProblem) return
     setSubmitting(true)
     setError(null)
     try {
@@ -236,7 +243,13 @@ export function useSmartCaSigning(
     } finally {
       setSubmitting(false)
     }
-  }, [applySession, contractId, idempotencyKey, selectedSerial])
+  }, [
+    applySession,
+    certificateProblem,
+    contractId,
+    idempotencyKey,
+    selectedSerial,
+  ])
 
   const cancel = useCallback(async (): Promise<void> => {
     const current = sessionRef.current
@@ -260,6 +273,7 @@ export function useSmartCaSigning(
     certificates,
     selectedSerial,
     setSelectedSerial,
+    certificateProblem,
     session,
     connectionState,
     loadingCertificates,

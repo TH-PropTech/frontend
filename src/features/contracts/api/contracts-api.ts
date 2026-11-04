@@ -634,6 +634,8 @@ export interface SmartCaSigningSession {
 
 export interface SmartCaCertificate {
   serialNumber: string
+  /** VNPT service type: `SMARTCA` is the ordinary certificate, `ESEAL` the integrated one. */
+  serviceType?: string
   subject?: string
   issuer?: string
   validFrom?: string
