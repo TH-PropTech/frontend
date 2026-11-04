@@ -12,6 +12,7 @@ import {
   describeOcrIssues,
   type OcrIssue,
 } from '../../lib/kyc-ocr-issues'
+import { KYC_NATIONALITY } from '../../lib/kyc-nationality'
 import { useKycSelfie } from './use-kyc-selfie'
 
 export interface Recommendation {
@@ -209,7 +210,7 @@ export function useKycFlow(profile: UseProfileReturn) {
         dob: front?.dob ?? '',
         address: extractedAddress,
         gender: front?.gender ?? '',
-        nationality: front?.nationality ?? '',
+        nationality: KYC_NATIONALITY,
         placeOfOrigin: front?.birthplace ?? back?.data?.placeOfBirth ?? '',
         issueDate: back?.data?.issueDate ?? '',
         placeOfIssue: '',
