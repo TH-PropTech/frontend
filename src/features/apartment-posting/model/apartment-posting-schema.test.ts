@@ -215,4 +215,78 @@ describe('apartmentPostingSchema & rentalPackagePostingSchema', () => {
       expect(fallback[0]?.durationMonths).toBe(6)
     })
   })
+
+  describe('rent and deposit bounds', () => {
+    const pkg = {
+      packageId: 'pkg-12m',
+      version: 1,
+      durationMonths: 12 as const,
+      monthlyRent: 12_000_000,
+      depositPolicy: { type: 'MONTHS_OF_RENT' as const, months: 1 },
+      status: 'active' as const,
+    }
+
+    it('accepts rents from a few hundred thousand to tens of millions', () => {
+      for (const monthlyRent of [
+        100_000, 300_000, 500_000, 12_000_000, 45_000_000,
+      ]) {
+        expect(
+          rentalPackagePostingSchema.safeParse({ ...pkg, monthlyRent }).success
+        ).toBe(true)
+      }
+      for (const priceMonthly of [0.1, 0.3, 0.5, 12.5, 45]) {
+        expect(
+          apartmentPostingSchema.safeParse({ ...baseValidData, priceMonthly })
+            .success
+        ).toBe(true)
+      }
+    })
+
+    it('rejects a rent that cannot be real, which is a slip in the unit', () => {
+      const listing = apartmentPostingSchema.safeParse({
+        ...baseValidData,
+        priceMonthly: 10_000,
+      })
+      expect(listing.success).toBe(false)
+      expect(JSON.stringify(listing.error?.issues)).toContain('Giá thuê tối đa')
+
+      expect(
+        rentalPackagePostingSchema.safeParse({
+          ...pkg,
+          monthlyRent: 100_000_000_000,
+        }).success
+      ).toBe(false)
+    })
+
+    it('limits the deposit to 12 months of rent, by months or by amount', () => {
+      expect(
+        rentalPackagePostingSchema.safeParse({
+          ...pkg,
+          depositPolicy: { type: 'MONTHS_OF_RENT', months: 12 },
+        }).success
+      ).toBe(true)
+      expect(
+        rentalPackagePostingSchema.safeParse({
+          ...pkg,
+          depositPolicy: { type: 'MONTHS_OF_RENT', months: 13 },
+        }).success
+      ).toBe(false)
+      expect(
+        rentalPackagePostingSchema.safeParse({
+          ...pkg,
+          depositPolicy: { type: 'FIXED_AMOUNT', amount: 12_000_000 * 12 },
+        }).success
+      ).toBe(true)
+
+      const tooMuch = rentalPackagePostingSchema.safeParse({
+        ...pkg,
+        depositPolicy: { type: 'FIXED_AMOUNT', amount: 12_000_000 * 13 },
+      })
+      expect(tooMuch.success).toBe(false)
+      expect(tooMuch.error?.issues[0]?.path).toEqual([
+        'depositPolicy',
+        'amount',
+      ])
+    })
+  })
 })

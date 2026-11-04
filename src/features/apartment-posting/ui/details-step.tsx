@@ -12,6 +12,11 @@ import {
   SelectValue,
 } from '@/shared/ui/select'
 import { Checkbox } from '@/shared/ui/checkbox'
+import {
+  formatVndAmount,
+  millionsToVnd,
+  rentWarning,
+} from '../model/rent-limits'
 import { RentalPackagesConfigSection } from './rental-packages-config-section'
 import { APARTMENT_CATEGORIES } from '../model/apartment-categories'
 import { AMENITIES_LIST } from '../model/amenities'
@@ -51,6 +56,7 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
     formState: { errors },
   } = form
 
+  const basePriceVnd = millionsToVnd(Number(watch('priceMonthly')) || 0)
   const category = watch('category')
   const direction = watch('direction')
   const balconyDirection = watch('balconyDirection')
@@ -143,11 +149,25 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
               valueAsNumber: true,
             })}
           />
-          {errors.priceMonthly && (
+          {errors.priceMonthly ? (
             <p className="text-xs text-destructive">
               {errors.priceMonthly.message || 'Giá thuê phải lớn hơn 0'}
             </p>
-          )}
+          ) : basePriceVnd > 0 ? (
+            <p
+              data-testid="price-monthly-preview"
+              className={`text-xs ${
+                rentWarning(basePriceVnd)
+                  ? 'text-amber-700'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              = {formatVndAmount(basePriceVnd)}/tháng
+              {rentWarning(basePriceVnd)
+                ? ` · ${rentWarning(basePriceVnd)}`
+                : ''}
+            </p>
+          ) : null}
         </div>
 
         <div className="space-y-2">
