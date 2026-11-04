@@ -7,6 +7,7 @@ import {
   extractKycFront,
   getMyKyc,
   submitKyc,
+  checkKycPose,
   verifyKycFace,
 } from './kyc-api'
 
@@ -112,5 +113,26 @@ describe('KYC API', () => {
     const body = vi.mocked(apiClient.post).mock.calls[0]?.[1] as FormData
     expect(body.get('selfie')).toBeInstanceOf(Blob)
     expect(body.get('frontID')).toBeInstanceOf(Blob)
+  })
+
+  it('sends the frame and expected direction to face-pose', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({
+      faceFound: true,
+      pose: 'left',
+      matches: true,
+    })
+    const image = new Blob(['image'], { type: 'image/jpeg' })
+
+    await expect(checkKycPose(image, 'left')).resolves.toMatchObject({
+      matches: true,
+    })
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/kyc/face-pose',
+      expect.any(FormData)
+    )
+    const body = vi.mocked(apiClient.post).mock.calls[0]?.[1] as FormData
+    expect(body.get('image')).toBeInstanceOf(Blob)
+    expect(body.get('expected')).toBe('left')
   })
 })

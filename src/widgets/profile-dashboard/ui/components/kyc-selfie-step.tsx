@@ -3,11 +3,14 @@
 import * as React from 'react'
 import { Camera, Loader2, ScanFace, Upload } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { KYC_POSE_STEPS } from '../hooks/use-kyc-selfie'
 
 interface KycSelfieStepProps {
   selfiePreview: string
   isCameraActive: boolean
   isVerifying: boolean
+  isCheckingPose: boolean
+  poseStep: number
   faceError: string
   maintenanceMode: boolean
   videoRef: React.RefObject<HTMLVideoElement | null>
@@ -24,6 +27,8 @@ export function KycSelfieStep({
   selfiePreview,
   isCameraActive,
   isVerifying,
+  isCheckingPose,
+  poseStep,
   faceError,
   maintenanceMode,
   videoRef,
@@ -36,6 +41,7 @@ export function KycSelfieStep({
   onBack,
 }: KycSelfieStepProps): React.ReactElement {
   const hasSelfie = selfiePreview !== ''
+  const instruction = KYC_POSE_STEPS[poseStep]?.instruction ?? ''
 
   return (
     <div className="max-w-xl mx-auto w-full flex-1 overflow-y-auto pr-1">
@@ -74,7 +80,10 @@ export function KycSelfieStep({
                 className="pointer-events-none absolute left-1/2 top-1/2 h-52 w-40 -translate-x-1/2 -translate-y-1/2 rounded-[50%] border-2 border-white/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"
               />
               <p className="pointer-events-none absolute bottom-2 left-0 right-0 text-center text-[11px] font-semibold text-white drop-shadow">
-                Đặt khuôn mặt vào khung, nhìn thẳng, đủ sáng
+                {instruction}
+              </p>
+              <p className="pointer-events-none absolute top-2 left-0 right-0 text-center text-[11px] font-bold text-white drop-shadow">
+                Bước {poseStep + 1}/{KYC_POSE_STEPS.length}
               </p>
             </>
           ) : hasSelfie ? (
@@ -137,9 +146,15 @@ export function KycSelfieStep({
               {isCameraActive ? (
                 <Button
                   onClick={capture}
+                  disabled={isCheckingPose}
                   className="flex-1 text-[11px] h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold border-none"
                 >
-                  <Camera className="h-4 w-4 mr-1.5" /> Chụp ảnh
+                  {isCheckingPose ? (
+                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4 mr-1.5" />
+                  )}{' '}
+                  Chụp ảnh
                 </Button>
               ) : hasSelfie ? (
                 <Button
