@@ -24,6 +24,15 @@ import {
 import { LandlordCommissionDialog } from '@/features/platform-fees/ui/landlord-commission-dialog'
 import { appToast } from '@/shared/ui/app-toast'
 import { resolvePrepaidMonths } from '@/shared/lib/prepaid-rent'
+import {
+  fixedDepositError,
+  fixedDepositWarning,
+  formatVndAmount,
+  millionsToVnd,
+  packageRentWarning,
+  rentError,
+  rentWarning,
+} from '../model/rent-limits'
 
 export interface RentalPackagesConfigSectionProps {
   form: UseFormReturn<ApartmentFormValues, unknown, ApartmentFormValues>
@@ -315,6 +324,29 @@ export function RentalPackagesConfigSection({
             return `${formatVnd(pkg.depositPolicy.amount)} ₫ (Cố định)`
           })()
 
+          // Hard limits are errors; unusual-but-possible values are only a nudge to double-check.
+          const rentProblem = pkg ? rentError(pkg.monthlyRent) : null
+          const rentNote =
+            pkg && !rentProblem
+              ? (rentWarning(pkg.monthlyRent) ??
+                packageRentWarning(
+                  pkg.monthlyRent,
+                  millionsToVnd(basePriceMonthly)
+                ))
+              : null
+          const fixedDeposit =
+            pkg && pkg.depositPolicy.type === 'FIXED_AMOUNT'
+              ? pkg.depositPolicy.amount
+              : null
+          const depositProblem =
+            pkg && fixedDeposit !== null
+              ? fixedDepositError(fixedDeposit, pkg.monthlyRent)
+              : null
+          const depositNote =
+            pkg && fixedDeposit !== null && !depositProblem
+              ? fixedDepositWarning(fixedDeposit, pkg.monthlyRent)
+              : null
+
           return (
             <div
               key={duration}
@@ -349,6 +381,13 @@ export function RentalPackagesConfigSection({
                 )}
               </div>
 
+              {!isEnabled && (
+                <p className="mt-3 text-[11px] leading-relaxed text-muted">
+                  Bật gói này để đặt giá thuê và chính sách cọc riêng cho thời
+                  hạn {duration} tháng.
+                </p>
+              )}
+
               {isEnabled && pkg && (
                 <div className="mt-3 space-y-3 border-t border-border/50 pt-3">
                   <div className="space-y-1">
@@ -374,6 +413,19 @@ export function RentalPackagesConfigSection({
                       className="h-8 text-xs bg-surface"
                       data-testid={`price-input-${duration}`}
                     />
+                    <p
+                      data-testid={`price-preview-${duration}`}
+                      className="text-[11px] text-muted"
+                    >
+                      = {formatVndAmount(pkg.monthlyRent)}/tháng
+                    </p>
+                    {rentProblem ? (
+                      <p role="alert" className="text-[11px] text-destructive">
+                        {rentProblem}
+                      </p>
+                    ) : rentNote ? (
+                      <p className="text-[11px] text-amber-700">{rentNote}</p>
+                    ) : null}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -458,6 +510,13 @@ export function RentalPackagesConfigSection({
                       <strong className="text-fg">{depositDisplay}</strong>
                     </span>
                   </div>
+                  {depositProblem ? (
+                    <p role="alert" className="text-[11px] text-destructive">
+                      {depositProblem}
+                    </p>
+                  ) : depositNote ? (
+                    <p className="text-[11px] text-amber-700">{depositNote}</p>
+                  ) : null}
 
                   <section
                     className="space-y-2 rounded-lg border border-border/70 bg-surface-muted/30 p-3"

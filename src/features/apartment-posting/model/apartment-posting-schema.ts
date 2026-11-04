@@ -1,5 +1,11 @@
 import { z } from 'zod'
 import { APARTMENT_CATEGORIES } from './apartment-categories'
+import {
+  fixedDepositError,
+  MAX_DEPOSIT_MONTHS,
+  MAX_MONTHLY_RENT_VND,
+  rentError,
+} from './rent-limits'
 
 const rentalExecutionPolicyRefSchema = z.object({
   policyId: z.string().min(1),
@@ -8,7 +14,7 @@ const rentalExecutionPolicyRefSchema = z.object({
   contentHash: z.string().min(1),
 })
 
-export const rentalPackagePostingSchema = z.object({
+const rentalPackageShape = z.object({
   packageId: z.string().min(1),
   version: z.number().int().min(1).default(1),
   durationMonths: z.union([
@@ -17,11 +23,20 @@ export const rentalPackagePostingSchema = z.object({
     z.literal(12),
     z.literal(24),
   ]),
-  monthlyRent: z.number().gt(0, 'Giá thuê gói phải lớn hơn 0'),
+  monthlyRent: z
+    .number()
+    .gt(0, 'Giá thuê gói phải lớn hơn 0')
+    .refine(rent => rentError(rent) === null, {
+      message: rentError(MAX_MONTHLY_RENT_VND + 1) ?? 'Giá thuê quá cao',
+    }),
   depositPolicy: z.discriminatedUnion('type', [
     z.object({
       type: z.literal('MONTHS_OF_RENT'),
-      months: z.number().int().min(1, 'Số tháng cọc tối thiểu là 1'),
+      months: z
+        .number()
+        .int()
+        .min(1, 'Số tháng cọc tối thiểu là 1')
+        .max(MAX_DEPOSIT_MONTHS, `Tiền cọc tối đa ${MAX_DEPOSIT_MONTHS} tháng`),
     }),
     z.object({
       type: z.literal('FIXED_AMOUNT'),
@@ -78,6 +93,20 @@ export const rentalPackagePostingSchema = z.object({
   defaultExecutionPolicy: rentalExecutionPolicyRefSchema.optional(),
 })
 
+export const rentalPackagePostingSchema = rentalPackageShape.superRefine(
+  (pkg, ctx) => {
+    if (pkg.depositPolicy.type !== 'FIXED_AMOUNT') return
+    const problem = fixedDepositError(pkg.depositPolicy.amount, pkg.monthlyRent)
+    if (problem) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['depositPolicy', 'amount'],
+        message: problem,
+      })
+    }
+  }
+)
+
 export type RentalPackagePostingSchemaType = z.infer<
   typeof rentalPackagePostingSchema
 >
@@ -112,7 +141,13 @@ export const apartmentPostingSchema = z.object({
   ward: z.string().min(1, 'Vui lòng chọn Phường/Xã'),
   street: z.string().min(1, 'Vui lòng nhập Tên đường/phố'),
   address: z.string().min(1, 'Vui lòng nhập địa chỉ hiển thị'),
-  priceMonthly: z.number().gt(0, 'Giá thuê phải lớn hơn 0'),
+  priceMonthly: z
+    .number()
+    .gt(0, 'Giá thuê phải lớn hơn 0')
+    .max(
+      MAX_MONTHLY_RENT_VND / 1_000_000,
+      rentError(MAX_MONTHLY_RENT_VND + 1) ?? 'Giá thuê quá cao'
+    ),
   rentalPackages: z.array(rentalPackagePostingSchema).optional().default([]),
   area: z.number().gt(0, 'Diện tích phải lớn hơn 0'),
   bedrooms: z.number().nonnegative('Số phòng ngủ phải từ 0 trở lên'),

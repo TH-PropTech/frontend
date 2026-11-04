@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import * as React from 'react'
 import { useForm } from 'react-hook-form'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -112,7 +112,7 @@ describe('RentalPackagesConfigSection', () => {
     expect(priceInput.value).toBe('15')
 
     // Deposit preview should show 15.000.000 (1 month)
-    expect(screen.getByText(/15\.000\.000/)).toBeDefined()
+    expect(screen.getByText(/15\.000\.000 ₫ \(1 tháng\)/)).toBeDefined()
   })
 
   it('configures settlement and updates the first-cycle rent estimate', () => {
@@ -358,6 +358,95 @@ describe('RentalPackagesConfigSection', () => {
       expect(input.value).toBe('15')
       fireEvent.change(input, { target: { value: '0' } })
       expect(input.value).toBe('1')
+    })
+  })
+
+  describe('rent and deposit guards', () => {
+    function enable12(): void {
+      fireEvent.click(screen.getByTestId('toggle-duration-12'))
+    }
+
+    it('shows the full amount under the package rent', () => {
+      render(<TestHarness initialValues={{ priceMonthly: 0.3 }} />)
+      enable12()
+
+      expect(screen.getByTestId('price-preview-12')).toHaveTextContent(
+        '= 300.000 ₫/tháng'
+      )
+    })
+
+    it('accepts rents from a few hundred thousand to tens of millions without a warning', () => {
+      render(<TestHarness initialValues={{ priceMonthly: 0.5 }} />)
+      enable12()
+      const input = screen.getByTestId('price-input-12')
+
+      for (const value of ['0.3', '0.5', '12', '45']) {
+        fireEvent.change(input, { target: { value } })
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+        expect(screen.queryByText(/khá cao/)).not.toBeInTheDocument()
+      }
+    })
+
+    it('stops a rent that cannot be real and says the field is in millions', () => {
+      render(<TestHarness initialValues={{ priceMonthly: 10 }} />)
+      enable12()
+
+      fireEvent.change(screen.getByTestId('price-input-12'), {
+        target: { value: '100000' },
+      })
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Giá thuê tối đa')
+      expect(screen.getByRole('alert')).toHaveTextContent('triệu đồng')
+    })
+
+    it('warns, without blocking, when a package is priced far from the listing', () => {
+      render(<TestHarness initialValues={{ priceMonthly: 10 }} />)
+      enable12()
+
+      fireEvent.change(screen.getByTestId('price-input-12'), {
+        target: { value: '60' },
+      })
+
+      expect(screen.getByText(/lệch nhiều/)).toBeInTheDocument()
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+
+    it('stops a fixed deposit above 12 months of rent and warns above 6', () => {
+      render(
+        <TestHarness
+          initialValues={{
+            priceMonthly: 10,
+            rentalPackages: [
+              {
+                packageId: 'pkg-12m',
+                version: 1,
+                durationMonths: 12,
+                monthlyRent: 10_000_000,
+                depositPolicy: { type: 'FIXED_AMOUNT', amount: 80_000_000 },
+                status: 'active',
+              },
+            ],
+          }}
+        />
+      )
+      const deposit = screen.getByTestId('deposit-val-12')
+
+      // 80 million is 8 months of a 10 million rent: unusual, still allowed.
+      expect(screen.getByText(/cao hơn thông thường/)).toBeInTheDocument()
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+
+      fireEvent.change(deposit, { target: { value: '300' } })
+      expect(screen.getByRole('alert')).toHaveTextContent('tối đa 12 tháng')
+    })
+
+    it('explains what turning on a package gives while it is off', () => {
+      render(<TestHarness initialValues={{ priceMonthly: 10 }} />)
+
+      expect(
+        within(screen.getByTestId('package-card-12')).getByText(
+          /Bật gói này để đặt giá thuê/
+        )
+      ).toBeInTheDocument()
     })
   })
 })
