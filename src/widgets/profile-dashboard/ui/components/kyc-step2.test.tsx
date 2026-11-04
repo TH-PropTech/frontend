@@ -99,4 +99,17 @@ describe('KycStep2 form', () => {
 
     expect(screen.getByText('22/10/2004')).toBeVisible()
   })
+  it('lists the fields the OCR could not read', () => {
+    renderStep({ ...VALID, dob: '', gender: '' })
+
+    expect(screen.getByRole('status')).toHaveTextContent(/ngày sinh, giới tính/)
+  })
+
+  it('keeps nationality fixed to Việt Nam whatever the OCR read', () => {
+    renderStep({ ...VALID, nationality: 'ham' })
+
+    const field = screen.getByLabelText('Quốc tịch')
+    expect(field).toHaveValue('Việt Nam')
+    expect(field).toHaveAttribute('readonly')
+  })
 })
