@@ -10,6 +10,8 @@ function renderStep(
     selfiePreview: '',
     isCameraActive: false,
     isVerifying: false,
+    isCheckingPose: false,
+    poseStep: 0,
     faceError: '',
     maintenanceMode: false,
     videoRef: React.createRef<HTMLVideoElement>(),
@@ -57,6 +59,17 @@ describe('KycSelfieStep', () => {
     expect(
       screen.getByText('Đặt khuôn mặt vào khung, nhìn thẳng, đủ sáng')
     ).toBeInTheDocument()
+  })
+
+  it('walks through the four directions', () => {
+    renderStep({ isCameraActive: true, poseStep: 1 })
+    expect(screen.getByText('Quay mặt sang trái')).toBeInTheDocument()
+    expect(screen.getByText('Bước 2/4')).toBeInTheDocument()
+  })
+
+  it('disables capture while a direction is being checked', () => {
+    renderStep({ isCameraActive: true, isCheckingPose: true })
+    expect(screen.getByRole('button', { name: /Chụp ảnh/ })).toBeDisabled()
   })
 
   it('has no face guide before the camera starts', () => {

@@ -30,6 +30,14 @@ export interface KycFaceResult {
   threshold: number
 }
 
+export type KycPose = 'center' | 'left' | 'right' | 'up'
+
+export interface KycPoseResult {
+  faceFound: boolean
+  pose: KycPose | null
+  matches: boolean
+}
+
 export interface KycSubmission {
   idCardNumber: string
   fullName: string
@@ -99,6 +107,17 @@ export function verifyKycFace(
   formData.append('selfie', selfie, 'selfie.jpg')
   formData.append('frontID', frontCard, 'front.jpg')
   return apiClient.post('/kyc/face-verify', formData)
+}
+
+export function checkKycPose(
+  image: Blob,
+  expected: KycPose
+): Promise<KycPoseResult> {
+  assertKycAvailable(env.kycDemoMaintenanceMode)
+  const formData = new FormData()
+  formData.append('image', image, 'pose.jpg')
+  formData.append('expected', expected)
+  return apiClient.post('/kyc/face-pose', formData)
 }
 
 export function submitKyc(

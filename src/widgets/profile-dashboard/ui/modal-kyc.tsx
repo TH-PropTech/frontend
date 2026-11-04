@@ -56,6 +56,8 @@ export function ModalKyc({
       selfiePreview,
       isCameraActive,
       isVerifying: isSelfieVerifying,
+      isCheckingPose,
+      poseStep,
       faceError,
       startCamera,
       capture,
@@ -216,6 +218,8 @@ export function ModalKyc({
                 selfiePreview={selfiePreview}
                 isCameraActive={isCameraActive}
                 isVerifying={isSelfieVerifying}
+                isCheckingPose={isCheckingPose}
+                poseStep={poseStep}
                 faceError={faceError}
                 maintenanceMode={kycDemoMaintenanceMode}
                 videoRef={selfieVideoRef}
