@@ -9,6 +9,7 @@ import {
   Smartphone,
   XCircle,
 } from 'lucide-react'
+import { formatSmartCaCertificateLabel } from '../lib/smartca-certificate-label'
 import { useSmartCaV2Signing } from '../model/use-smartca-v2-signing'
 
 interface SmartCaV2SigningPanelProps {
@@ -48,6 +49,12 @@ export function SmartCaV2SigningPanel({
     setPassword,
     otp,
     setOtp,
+    certificates,
+    certificateSerial,
+    setCertificateSerial,
+    loadingCertificates,
+    needsCertificateChoice,
+    certificateProblem,
     session,
     submitting,
     checking,
@@ -56,7 +63,7 @@ export function SmartCaV2SigningPanel({
     submit,
     checkStatus,
     cancel,
-  } = useSmartCaV2Signing(contractId, onSigned)
+  } = useSmartCaV2Signing(contractId, onSigned, true)
 
   const isPending = session?.status === 'pending'
   const isSigned = session?.status === 'signed'
@@ -91,6 +98,49 @@ export function SmartCaV2SigningPanel({
 
       {!isSigned ? (
         <div className="mt-3 space-y-3">
+          {loadingCertificates ? (
+            <p role="status" className="text-[var(--muted)]">
+              Đang tải chứng thư…
+            </p>
+          ) : certificates && certificates.length > 1 ? (
+            <fieldset className="space-y-2">
+              <legend className="font-semibold">
+                Tài khoản có {certificates.length} chứng thư số, chọn một chứng
+                thư để ký:
+              </legend>
+              {certificates.map(certificate => {
+                const label = formatSmartCaCertificateLabel(certificate)
+                return (
+                  <label
+                    key={certificate.serialNumber}
+                    className={`flex cursor-pointer items-start gap-2 rounded-lg border p-2 ${
+                      certificateSerial === certificate.serialNumber
+                        ? 'border-[var(--primary)] bg-[var(--surface)]'
+                        : 'border-[var(--border)]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="smartca-v2-certificate"
+                      aria-label={`Chọn chứng thư ${label}`}
+                      checked={certificateSerial === certificate.serialNumber}
+                      onChange={() =>
+                        setCertificateSerial(certificate.serialNumber)
+                      }
+                      disabled={disabled || submitting}
+                      className="mt-0.5"
+                    />
+                    <span className="min-w-0 font-semibold">{label}</span>
+                  </label>
+                )
+              })}
+            </fieldset>
+          ) : null}
+          {certificateProblem ? (
+            <p role="alert" className="font-semibold text-[var(--danger)]">
+              {certificateProblem}
+            </p>
+          ) : null}
           <div>
             <label
               className="block font-semibold"
@@ -131,7 +181,14 @@ export function SmartCaV2SigningPanel({
           <button
             type="button"
             onClick={() => void submit()}
-            disabled={disabled || submitting || !password || !otp}
+            disabled={
+              disabled ||
+              submitting ||
+              !password ||
+              !otp ||
+              needsCertificateChoice ||
+              Boolean(certificateProblem)
+            }
             className="inline-flex w-full items-center justify-center rounded-lg bg-[var(--primary)] px-3 py-2 font-semibold text-white disabled:opacity-50"
           >
             {submitting
