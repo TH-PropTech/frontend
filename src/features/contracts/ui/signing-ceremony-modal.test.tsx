@@ -324,4 +324,102 @@ describe('SigningCeremonyModal', () => {
       screen.queryByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
     ).not.toBeInTheDocument()
   })
+
+  describe('signing result', () => {
+    async function submitV2(): Promise<void> {
+      await screen.findByRole('radiogroup', { name: 'Chọn phương thức ký' })
+      fireEvent.click(screen.getByLabelText('Xác nhận đồng thuận'))
+      fireEvent.click(screen.getByRole('radio', { name: /mật khẩu \+ OTP/ }))
+      fireEvent.change(await screen.findByLabelText('Mật khẩu SmartCA'), {
+        target: { value: 'Secret@123' },
+      })
+      fireEvent.change(screen.getByLabelText('OTP SmartCA'), {
+        target: { value: '123456' },
+      })
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
+      )
+    }
+
+    it('shows a success notice and refreshes only once the signer confirms', async () => {
+      submitSmartCaV2Sign.mockResolvedValue(
+        pendingSession({ status: 'signed' })
+      )
+      const onSigningSuccess = vi.fn()
+      render(
+        <SigningCeremonyModal {...props} onSigningSuccess={onSigningSuccess} />
+      )
+
+      await submitV2()
+
+      expect(
+        await screen.findByTestId('signing-outcome-success')
+      ).toHaveTextContent('Ký hợp đồng thành công')
+      expect(onSigningSuccess).not.toHaveBeenCalled()
+
+      fireEvent.click(screen.getByRole('button', { name: 'Hoàn tất và đóng' }))
+      expect(onSigningSuccess).toHaveBeenCalledTimes(1)
+    })
+
+    it('shows a failure notice with the reason and lets the signer try again', async () => {
+      submitSmartCaV2Sign.mockRejectedValueOnce(
+        new Error('SMARTCA_OTP_INVALID')
+      )
+      render(<SigningCeremonyModal {...props} />)
+
+      await submitV2()
+
+      const failure = await screen.findByTestId('signing-outcome-failure')
+      expect(failure).toHaveTextContent('Ký hợp đồng chưa thành công')
+      expect(failure).toHaveTextContent('Mã OTP không đúng')
+
+      fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }))
+      expect(
+        await screen.findByLabelText('Mật khẩu SmartCA')
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByTestId('signing-outcome-failure')
+      ).not.toBeInTheDocument()
+    })
+
+    it('says the result is unknown when the request was cut off, and offers a re-check', async () => {
+      submitSmartCaV2Sign.mockRejectedValueOnce(new Error('Failed to fetch'))
+      const onSigningSuccess = vi.fn()
+      render(
+        <SigningCeremonyModal {...props} onSigningSuccess={onSigningSuccess} />
+      )
+
+      await submitV2()
+
+      const notice = await screen.findByTestId('signing-outcome-failure')
+      expect(notice).toHaveTextContent('Chưa rõ kết quả ký')
+      expect(
+        screen.queryByRole('button', { name: 'Thử lại' })
+      ).not.toBeInTheDocument()
+
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Kiểm tra lại hợp đồng' })
+      )
+      expect(onSigningSuccess).toHaveBeenCalledTimes(1)
+    })
+
+    it('reports a rejected app-approval session as a failure', async () => {
+      createSmartCaSigningSession.mockResolvedValue(pendingSession())
+      pollSmartCaSigningSession.mockResolvedValue(
+        pendingSession({ status: 'rejected' })
+      )
+      render(<SigningCeremonyModal {...props} />)
+      await openSmartCaForm()
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Gửi yêu cầu ký VNPT SmartCA' })
+      )
+      await screen.findByRole('button', { name: /Tôi đã ký/ }).catch(() => null)
+      const poll = screen.queryByRole('button', { name: /Tôi đã ký/ })
+      if (poll) fireEvent.click(poll)
+
+      expect(
+        await screen.findByTestId('signing-outcome-failure')
+      ).toHaveTextContent('chưa thành công')
+    })
+  })
 })

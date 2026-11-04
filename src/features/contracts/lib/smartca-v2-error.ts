@@ -25,7 +25,7 @@ const SMARTCA_V2_ERROR_REASONS: Readonly<Record<string, string>> = {
  */
 const NO_RESPONSE_PATTERN =
   /timeout|failed to fetch|fetch failed|canceled|aborted|network/i
-const NO_RESPONSE_MESSAGE =
+export const NO_RESPONSE_MESSAGE =
   'Chưa nhận được phản hồi từ máy chủ nên chưa rõ đã ký hay chưa. Hãy tải lại trang và kiểm tra trạng thái hợp đồng trước khi ký lại.'
 
 /** Chuyển mã lỗi ký v2 thành câu tiếng Việt; mã lạ giữ nguyên để không giấu thông tin. */
