@@ -10,6 +10,7 @@ vi.mock('../api/move-in-settlement-api', () => ({
   updateHandover: vi.fn(),
   confirmHandover: vi.fn(),
   reportHandoverDiscrepancy: vi.fn(),
+  getHandoverTemplate: vi.fn(),
 }))
 
 const HASH = 'f'.repeat(64)

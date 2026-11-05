@@ -32,7 +32,7 @@ export interface ContractTemplateAddendumDto {
 export interface ContractTemplateDto {
   templateKey: string
   version: number
-  status: 'draft' | 'published' | 'retired'
+  status: 'draft' | 'published' | 'archived' | 'retired'
   legalProfile:
     | 'PRIVATE_CIVIL_APARTMENT_LEASE'
     | 'REAL_ESTATE_BUSINESS_STANDARD'
@@ -53,6 +53,7 @@ export interface ContractTemplateDto {
 
 export interface ContractTemplateAuditDto {
   id?: string
+  _id?: string
   templateKey: string
   version: number
   action: string

@@ -40,6 +40,7 @@ export function HandoverRecordView({
   const [note, setNote] = useState('')
   const [downloading, setDownloading] = useState(false)
   const items = handover.inventoryItems ?? []
+  const checklist = handover.checklist ?? []
   const discrepancies = handover.discrepancies ?? []
   const hasOpenDiscrepancy = discrepancies.some(
     item => item.revision === handover.revision
@@ -127,6 +128,20 @@ export function HandoverRecordView({
           </ul>
         )}
       </div>
+      {checklist.length > 0 ? (
+        <div>
+          <p className="font-semibold text-[var(--fg)]">
+            Các mục kiểm tra khi bàn giao
+          </p>
+          <ul className="mt-1 space-y-1" data-testid="handover-checklist">
+            {checklist.map(entry => (
+              <li key={entry.id} className="break-words">
+                {entry.checked ? '✓' : '○'} {entry.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {handover.notes ? (
         <p className="break-words">
           <span className="text-[var(--muted)]">Ghi chú chung: </span>
