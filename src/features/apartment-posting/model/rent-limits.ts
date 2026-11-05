@@ -25,7 +25,7 @@ export function millionsToVnd(millions: number): number {
 export function rentWarning(rentVnd: number): string | null {
   if (!Number.isFinite(rentVnd) || rentVnd <= 0) return null
   if (rentVnd >= HIGH_MONTHLY_RENT_VND) {
-    return `Giá thuê ${formatVndAmount(rentVnd)}/tháng khá cao. Ô này tính theo triệu đồng, hãy kiểm tra lại số vừa nhập.`
+    return `Giá thuê ${formatVndAmount(rentVnd)}/tháng khá cao, hãy kiểm tra lại số vừa nhập.`
   }
   return null
 }
@@ -60,7 +60,7 @@ export function fixedDepositWarning(
 /** Hard stop: a rent no landlord would charge, almost always a slip in the unit. */
 export function rentError(rentVnd: number): string | null {
   if (rentVnd > MAX_MONTHLY_RENT_VND) {
-    return `Giá thuê tối đa ${formatVndAmount(MAX_MONTHLY_RENT_VND)}/tháng. Ô này tính theo triệu đồng.`
+    return `Giá thuê tối đa ${formatVndAmount(MAX_MONTHLY_RENT_VND)}/tháng.`
   }
   return null
 }

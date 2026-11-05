@@ -18,6 +18,7 @@ import {
   rentWarning,
 } from '../model/rent-limits'
 import { RentalPackagesConfigSection } from './rental-packages-config-section'
+import { VndInput } from './vnd-input'
 import { APARTMENT_CATEGORIES } from '../model/apartment-categories'
 import { AMENITIES_LIST } from '../model/amenities'
 import {
@@ -136,18 +137,19 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
         <div className="space-y-2">
           <Label htmlFor="priceMonthly" className="flex items-center gap-1">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
-            Giá thuê hằng tháng (Triệu VND / tháng) *
+            Giá thuê hằng tháng (VNĐ / tháng) *
           </Label>
-          <Input
+          <VndInput
             id="priceMonthly"
-            type="number"
-            step="0.1"
-            placeholder="Ví dụ: 12.5"
+            placeholder="Ví dụ: 12.500.000"
             className="bg-background/50 backdrop-blur-sm border-border"
-            {...register('priceMonthly', {
-              required: true,
-              valueAsNumber: true,
-            })}
+            valueVnd={basePriceVnd}
+            onValueChange={vnd =>
+              setValue('priceMonthly', vnd / 1_000_000, {
+                shouldValidate: true,
+                shouldDirty: true,
+              })
+            }
           />
           {errors.priceMonthly ? (
             <p className="text-xs text-destructive">

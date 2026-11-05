@@ -109,7 +109,7 @@ describe('RentalPackagesConfigSection', () => {
     // Price input should appear with 15 (million VND)
     const priceInput = screen.getByTestId('price-input-12') as HTMLInputElement
     expect(priceInput).toBeDefined()
-    expect(priceInput.value).toBe('15')
+    expect(priceInput.value).toBe('15.000.000')
 
     // Deposit preview should show 15.000.000 (1 month)
     expect(screen.getByText(/15\.000\.000 ₫ \(1 tháng\)/)).toBeDefined()
@@ -146,8 +146,8 @@ describe('RentalPackagesConfigSection', () => {
     )
 
     const priceInput = screen.getByTestId('price-input-12') as HTMLInputElement
-    fireEvent.change(priceInput, { target: { value: '18.5' } })
-    expect(priceInput.value).toBe('18.5')
+    fireEvent.change(priceInput, { target: { value: '18500000' } })
+    expect(priceInput.value).toBe('18.500.000')
   })
 
   it('allows changing deposit value for active package', () => {
@@ -447,23 +447,22 @@ describe('RentalPackagesConfigSection', () => {
       enable12()
       const input = screen.getByTestId('price-input-12')
 
-      for (const value of ['0.3', '0.5', '12', '45']) {
+      for (const value of ['300000', '500000', '12000000', '45000000']) {
         fireEvent.change(input, { target: { value } })
         expect(screen.queryByRole('alert')).not.toBeInTheDocument()
         expect(screen.queryByText(/khá cao/)).not.toBeInTheDocument()
       }
     })
 
-    it('stops a rent that cannot be real and says the field is in millions', () => {
+    it('stops a rent that cannot be real', () => {
       render(<TestHarness initialValues={{ priceMonthly: 10 }} />)
       enable12()
 
       fireEvent.change(screen.getByTestId('price-input-12'), {
-        target: { value: '100000' },
+        target: { value: '100000000000' },
       })
 
       expect(screen.getByRole('alert')).toHaveTextContent('Giá thuê tối đa')
-      expect(screen.getByRole('alert')).toHaveTextContent('triệu đồng')
     })
 
     it('warns, without blocking, when a package is priced far from the listing', () => {
@@ -471,7 +470,7 @@ describe('RentalPackagesConfigSection', () => {
       enable12()
 
       fireEvent.change(screen.getByTestId('price-input-12'), {
-        target: { value: '60' },
+        target: { value: '60000000' },
       })
 
       expect(screen.getByText(/lệch nhiều/)).toBeInTheDocument()
@@ -502,7 +501,7 @@ describe('RentalPackagesConfigSection', () => {
       expect(screen.getByText(/cao hơn thông thường/)).toBeInTheDocument()
       expect(screen.queryByRole('alert')).not.toBeInTheDocument()
 
-      fireEvent.change(deposit, { target: { value: '300' } })
+      fireEvent.change(deposit, { target: { value: '300000000' } })
       expect(screen.getByRole('alert')).toHaveTextContent('tối đa 12 tháng')
     })
 
