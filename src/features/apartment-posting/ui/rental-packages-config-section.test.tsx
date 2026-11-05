@@ -361,6 +361,73 @@ describe('RentalPackagesConfigSection', () => {
     })
   })
 
+  describe('lease terms set by the landlord', () => {
+    const sixMonth = {
+      packageId: 'pkg-6',
+      version: 1,
+      durationMonths: 6 as const,
+      monthlyRent: 10_000_000,
+      depositPolicy: { type: 'MONTHS_OF_RENT' as const, months: 1 },
+      status: 'active' as const,
+    }
+    const renderSix = (extra: Record<string, unknown> = {}) =>
+      render(
+        <TestHarness
+          initialValues={{ rentalPackages: [{ ...sixMonth, ...extra }] }}
+        />
+      )
+
+    it('shows the defaults as placeholders for a package without terms', () => {
+      renderSix()
+      const day = screen.getByTestId('payment-day-6') as HTMLInputElement
+      expect(day.value).toBe('')
+      expect(day.placeholder).toBe('1')
+      expect(
+        (screen.getByTestId('late-penalty-rate-6') as HTMLInputElement)
+          .placeholder
+      ).toBe('0')
+      expect(
+        (screen.getByTestId('termination-notice-days-6') as HTMLInputElement)
+          .placeholder
+      ).toBe('30')
+    })
+
+    it('shows saved terms and edits them', () => {
+      renderSix({
+        paymentDay: 5,
+        latePenaltyRate: 10,
+        terminationNoticeDays: 45,
+      })
+      const day = screen.getByTestId('payment-day-6') as HTMLInputElement
+      expect(day.value).toBe('5')
+      fireEvent.change(day, { target: { value: '12' } })
+      expect(day.value).toBe('12')
+      fireEvent.change(day, { target: { value: '' } })
+      expect(day.value).toBe('')
+    })
+
+    it('counts down the remaining characters of the custom clauses', () => {
+      renderSix({ customClauses: 'Không nuôi thú cưng.' })
+      expect(
+        screen.getByTestId('custom-clauses-remaining-6').textContent
+      ).toContain('Còn 1980 ký tự')
+      fireEvent.change(screen.getByTestId('custom-clauses-6'), {
+        target: { value: 'a'.repeat(100) },
+      })
+      expect(
+        screen.getByTestId('custom-clauses-remaining-6').textContent
+      ).toContain('Còn 1900 ký tự')
+    })
+
+    it('limits the custom clauses to 2000 characters', () => {
+      renderSix()
+      expect(
+        (screen.getByTestId('custom-clauses-6') as HTMLTextAreaElement)
+          .maxLength
+      ).toBe(2000)
+    })
+  })
+
   describe('rent and deposit guards', () => {
     function enable12(): void {
       fireEvent.click(screen.getByTestId('toggle-duration-12'))

@@ -25,6 +25,11 @@ export interface RentalPackageItem {
   prepaidRent?: PrepaidRentPolicy
   resolvedPrepaidRentMonths?: number
   resolvedPrepaidRentAmount?: number
+  /** Điều khoản hợp đồng do chủ nhà đặt; vắng mặt = gói cũ (1 / 0 / 30 / không có). */
+  paymentDay?: number
+  latePenaltyRate?: number
+  terminationNoticeDays?: number
+  customClauses?: string
   status: 'active' | 'inactive'
 }
 

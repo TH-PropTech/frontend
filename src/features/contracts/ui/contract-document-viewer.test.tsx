@@ -145,6 +145,26 @@ describe('ContractDocumentViewer', () => {
     expect(screen.getAllByText('Bắt buộc')).toHaveLength(2)
   })
 
+  it('shows the landlord custom clauses annex with its own text and note', () => {
+    const withClauses: ContractDocumentView = {
+      ...mockDocument,
+      annexes: [
+        ...mockDocument.annexes,
+        {
+          id: 'LANDLORD_CUSTOM_CLAUSES',
+          title: 'Điều khoản bổ sung do chủ nhà cung cấp',
+          description: 'Không nuôi thú cưng.',
+          required: false,
+        },
+      ],
+    }
+    render(<ContractDocumentViewer {...defaultProps} document={withClauses} />)
+    const annex = screen.getByTestId('annex-LANDLORD_CUSTOM_CLAUSES')
+    expect(annex.textContent).toContain('Không nuôi thú cưng.')
+    expect(annex.textContent).toContain('không thay đổi 12 điều bắt buộc')
+    expect(annex.textContent).not.toContain('Đính kèm tự động theo mẫu chuẩn')
+  })
+
   it('renders a published layout in configured order and separates supplementary clauses', () => {
     const documentWithLayout: ContractDocumentView = {
       ...mockDocument,

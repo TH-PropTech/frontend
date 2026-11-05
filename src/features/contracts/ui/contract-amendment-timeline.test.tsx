@@ -31,4 +31,29 @@ describe('ContractAmendmentTimeline', () => {
     ).toBeInTheDocument()
     expect(screen.getByText(/phụ lục nào/)).toBeInTheDocument()
   })
+
+  it('lets a participant start an amendment without staff rights', async () => {
+    render(
+      <ContractAmendmentTimeline
+        contractId="contract-1"
+        canManage={false}
+        canRequest
+        canSign
+      />
+    )
+    await waitFor(() => expect(getAmendments).toHaveBeenCalled())
+    expect(screen.getByLabelText(/Giá thuê mới/)).toBeInTheDocument()
+  })
+
+  it('hides the create form from a viewer who cannot request', async () => {
+    render(
+      <ContractAmendmentTimeline
+        contractId="contract-1"
+        canManage={false}
+        canSign={false}
+      />
+    )
+    await waitFor(() => expect(getAmendments).toHaveBeenCalled())
+    expect(screen.queryByLabelText(/Giá thuê mới/)).not.toBeInTheDocument()
+  })
 })

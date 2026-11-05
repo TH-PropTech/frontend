@@ -289,4 +289,40 @@ describe('apartmentPostingSchema & rentalPackagePostingSchema', () => {
       ])
     })
   })
+
+  describe('lease terms on a rental package', () => {
+    const basePackage = {
+      packageId: 'pkg-12',
+      version: 1,
+      durationMonths: 12 as const,
+      monthlyRent: 12_000_000,
+      depositPolicy: { type: 'MONTHS_OF_RENT' as const, months: 2 },
+      status: 'active' as const,
+    }
+    const parse = (extra: Record<string, unknown>): boolean =>
+      rentalPackagePostingSchema.safeParse({ ...basePackage, ...extra }).success
+
+    it('accepts a legacy package without terms and in-range terms', () => {
+      expect(parse({})).toBe(true)
+      expect(
+        parse({
+          paymentDay: 5,
+          latePenaltyRate: 10,
+          terminationNoticeDays: 45,
+          customClauses: 'Không nuôi thú cưng.',
+        })
+      ).toBe(true)
+    })
+
+    it.each([
+      ['payment day 0', { paymentDay: 0 }],
+      ['payment day 32', { paymentDay: 32 }],
+      ['penalty above 20', { latePenaltyRate: 21 }],
+      ['negative penalty', { latePenaltyRate: -1 }],
+      ['notice below 30', { terminationNoticeDays: 29 }],
+      ['clauses over 2000 characters', { customClauses: 'a'.repeat(2001) }],
+    ])('rejects %s', (_label, extra) => {
+      expect(parse(extra)).toBe(false)
+    })
+  })
 })

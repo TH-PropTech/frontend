@@ -34,6 +34,7 @@ import {
   BilateralSigningTimeline,
   FabricLedgerEvidenceCard,
   ContractAmendmentTimeline,
+  ContractChangeRequestsPanel,
   ContractSummaryCard,
   ContractTechnicalDetails,
   NextActionBanner,
@@ -547,6 +548,17 @@ export function ContractWorkspace({
                 data.actions.canEditContent && !data.access?.canSign
               )}
               canSign={Boolean(data.access?.canSign)}
+              canRequest={Boolean(data.access?.canSign)}
+            />
+
+            <ContractChangeRequestsPanel
+              contractId={contractId}
+              viewerRole={data.access?.canSign ? signerRole : undefined}
+              currentUserId={currentUserId}
+              canModerate={Boolean(
+                data.actions.canEditContent && !data.access?.canSign
+              )}
+              onApplied={() => void refresh()}
             />
           </RailGroup>
 

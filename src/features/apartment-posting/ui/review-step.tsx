@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { LeaseTermsReview } from './lease-terms-review'
 import type { UseFormReturn } from 'react-hook-form'
 import type { ApartmentFormValues } from '../model/types'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -178,6 +179,8 @@ export function ReviewStep({
               )}
             </div>
           </div>
+
+          <LeaseTermsReview packages={values.rentalPackages} />
         </div>
 
         {/* Right Column: Media Preview & Policies */}
