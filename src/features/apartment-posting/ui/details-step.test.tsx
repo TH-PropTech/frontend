@@ -75,8 +75,8 @@ describe('DetailsStep', () => {
     const priceInput = screen.getByLabelText(
       /Giá thuê hằng tháng/i
     ) as HTMLInputElement
-    fireEvent.change(priceInput, { target: { value: '20' } })
-    expect(priceInput.value).toBe('20')
+    fireEvent.change(priceInput, { target: { value: '20000000' } })
+    expect(priceInput.value).toBe('20.000.000')
   })
 
   it('allows selecting amenities and activating rental packages in step', () => {

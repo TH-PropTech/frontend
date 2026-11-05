@@ -22,6 +22,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import { LeaseTermsFields, type LeaseTermsPatch } from './lease-terms-fields'
+import { VndInput } from './vnd-input'
 import { LandlordCommissionDialog } from '@/features/platform-fees/ui/landlord-commission-dialog'
 import { appToast } from '@/shared/ui/app-toast'
 import { resolvePrepaidMonths } from '@/shared/lib/prepaid-rent'
@@ -126,8 +127,7 @@ export function RentalPackagesConfigSection({
     }
   }
 
-  const handleUpdatePrice = (duration: number, priceMillion: number) => {
-    const rentVnd = Math.round(priceMillion * 1_000_000)
+  const handleUpdatePrice = (duration: number, rentVnd: number) => {
     setValue(
       'rentalPackages',
       currentPackages.map(p =>
@@ -159,7 +159,7 @@ export function RentalPackagesConfigSection({
           ...p,
           depositPolicy: {
             type: 'FIXED_AMOUNT',
-            amount: Math.max(1, Math.round(val * 1_000_000)),
+            amount: Math.max(1, Math.round(val)),
           },
         }
       }),
@@ -312,6 +312,16 @@ export function RentalPackagesConfigSection({
           <p className="text-xs text-muted mt-1">
             Luồng thuê: ký hợp đồng số trước, sau đó khách đặt cọc.
           </p>
+          <p
+            className="text-xs text-muted mt-1"
+            data-testid="package-change-scope-note"
+          >
+            Nội dung gói được chốt vào hợp đồng ngay khi khách nộp hồ sơ. Căn
+            chưa có đơn thuê: hợp đồng mới lấy theo nội dung đã cập nhật. Căn đã
+            có đơn thuê: thay đổi chỉ áp dụng cho các đơn thuê sau, hợp đồng của
+            đơn đã tạo giữ nguyên. Chủ nhà cần sửa thì nhân viên là người cập
+            nhật.
+          </p>
         </div>
         <LandlordCommissionDialog
           packages={activeCommissionPackages}
@@ -325,9 +335,6 @@ export function RentalPackagesConfigSection({
             p => p.durationMonths === duration && p.status === 'active'
           )
           const isEnabled = Boolean(pkg)
-          const currentPriceMillion = pkg
-            ? pkg.monthlyRent / 1_000_000
-            : basePriceMonthly
 
           const depositDisplay = (() => {
             if (!pkg) return null
@@ -410,20 +417,12 @@ export function RentalPackagesConfigSection({
                       className="text-[11px] text-muted flex items-center gap-1"
                     >
                       <CircleDollarSign className="h-3 w-3 text-primary" />
-                      Giá thuê (Triệu VNĐ/tháng) *
+                      Giá thuê (VNĐ/tháng) *
                     </Label>
-                    <Input
+                    <VndInput
                       id={`price-input-${duration}`}
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      value={currentPriceMillion || ''}
-                      onChange={e =>
-                        handleUpdatePrice(
-                          duration,
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
+                      valueVnd={pkg.monthlyRent}
+                      onValueChange={vnd => handleUpdatePrice(duration, vnd)}
                       className="h-8 text-xs bg-surface"
                       data-testid={`price-input-${duration}`}
                     />
@@ -456,7 +455,7 @@ export function RentalPackagesConfigSection({
                           handleUpdateDepositPolicy(
                             duration,
                             val as 'MONTHS_OF_RENT' | 'FIXED_AMOUNT',
-                            val === 'MONTHS_OF_RENT' ? 1 : currentPriceMillion
+                            val === 'MONTHS_OF_RENT' ? 1 : pkg.monthlyRent
                           )
                         }
                       >
@@ -488,32 +487,40 @@ export function RentalPackagesConfigSection({
                       >
                         {pkg.depositPolicy.type === 'MONTHS_OF_RENT'
                           ? 'Số tháng cọc'
-                          : 'Tiền cọc (Triệu đ)'}
+                          : 'Tiền cọc (VNĐ)'}
                       </Label>
-                      <Input
-                        id={`deposit-val-${duration}`}
-                        type="number"
-                        min="1"
-                        step={
-                          pkg.depositPolicy.type === 'MONTHS_OF_RENT'
-                            ? '1'
-                            : '0.5'
-                        }
-                        value={
-                          pkg.depositPolicy.type === 'MONTHS_OF_RENT'
-                            ? pkg.depositPolicy.months
-                            : pkg.depositPolicy.amount / 1_000_000
-                        }
-                        onChange={e =>
-                          handleUpdateDepositPolicy(
-                            duration,
-                            pkg.depositPolicy.type,
-                            parseFloat(e.target.value) || 1
-                          )
-                        }
-                        className="h-8 text-xs bg-surface"
-                        data-testid={`deposit-val-${duration}`}
-                      />
+                      {pkg.depositPolicy.type === 'MONTHS_OF_RENT' ? (
+                        <Input
+                          id={`deposit-val-${duration}`}
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={pkg.depositPolicy.months}
+                          onChange={e =>
+                            handleUpdateDepositPolicy(
+                              duration,
+                              'MONTHS_OF_RENT',
+                              parseFloat(e.target.value) || 1
+                            )
+                          }
+                          className="h-8 text-xs bg-surface"
+                          data-testid={`deposit-val-${duration}`}
+                        />
+                      ) : (
+                        <VndInput
+                          id={`deposit-val-${duration}`}
+                          valueVnd={pkg.depositPolicy.amount}
+                          onValueChange={vnd =>
+                            handleUpdateDepositPolicy(
+                              duration,
+                              'FIXED_AMOUNT',
+                              vnd
+                            )
+                          }
+                          className="h-8 text-xs bg-surface"
+                          data-testid={`deposit-val-${duration}`}
+                        />
+                      )}
                     </div>
                   </div>
 
@@ -540,6 +547,10 @@ export function RentalPackagesConfigSection({
                       <Wallet className="h-3 w-3 text-primary" />
                       <span>Tiền thuê trả trước khi nhận nhà</span>
                     </div>
+                    <p className="text-[10px] text-muted">
+                      Quyết định số tiền khách trả khi nhận nhà, ghi vào lịch
+                      thanh toán và phần tóm tắt hợp đồng.
+                    </p>
                     <div
                       role="radiogroup"
                       aria-label={`Tiền thuê trả trước gói ${duration} tháng`}
@@ -801,7 +812,8 @@ export function RentalPackagesConfigSection({
                       trừ cọc. Khách có số ngày này (từ 1 đến 15 ngày, tính cả
                       ngày nghỉ) để đồng ý hoặc phản đối. Nếu khách không phản
                       hồi trong hạn, nội dung được xem là đã đồng ý. Số ngày
-                      được ghi vào hợp đồng.
+                      được ghi vào điều Bàn giao và hoàn trả nhà ở thuê của hợp
+                      đồng (khoản 3 và 4).
                     </p>
                   </section>
 

@@ -320,7 +320,7 @@ describe('ApartmentEditDialog amenities and rental packages', () => {
     renderDialog(packagePriced)
 
     fireEvent.change(screen.getByTestId('price-input-12'), {
-      target: { value: '13' },
+      target: { value: '13000000' },
     })
     submit()
 
