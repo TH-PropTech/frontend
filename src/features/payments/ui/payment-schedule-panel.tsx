@@ -46,21 +46,25 @@ export function PaymentSchedulePanel({
     choice,
   } = usePaymentProviders()
 
-  const load = React.useCallback(async (): Promise<void> => {
-    setLoading(true)
-    setError(null)
-    try {
-      setPayments(await getPaymentsByContract(contractId))
-    } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : 'Không tải được lịch thanh toán.'
-      )
-    } finally {
-      setLoading(false)
-    }
-  }, [contractId])
+  const load = React.useCallback(
+    async (silent = false): Promise<void> => {
+      // Background refreshes keep the list on screen instead of flashing a spinner.
+      if (!silent) setLoading(true)
+      setError(null)
+      try {
+        setPayments(await getPaymentsByContract(contractId))
+      } catch (loadError) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : 'Không tải được lịch thanh toán.'
+        )
+      } finally {
+        setLoading(false)
+      }
+    },
+    [contractId]
+  )
 
   React.useEffect(() => {
     const scheduleLoad = window.setTimeout(() => {
@@ -72,7 +76,7 @@ export function PaymentSchedulePanel({
 
   React.useEffect(() => {
     const refreshWhenVisible = (): void => {
-      if (document.visibilityState === 'visible') void load()
+      if (document.visibilityState === 'visible') void load(true)
     }
     window.addEventListener('focus', refreshWhenVisible)
     document.addEventListener('visibilitychange', refreshWhenVisible)
