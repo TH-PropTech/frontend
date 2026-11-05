@@ -221,7 +221,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   },
   {
     id: 'contract-layouts',
-    label: 'Bố cục hợp đồng',
+    label: 'Hợp đồng & biên bản mẫu',
     icon: icon(LayoutTemplate),
     group: 'system',
     audience: 'admin',

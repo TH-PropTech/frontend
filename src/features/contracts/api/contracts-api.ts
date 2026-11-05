@@ -462,6 +462,9 @@ export interface MoveInSettlementView {
     inventoryReference: string | null
     /** Các trường phương án A; bản ghi cũ có thể thiếu. */
     inventoryItems?: HandoverInventoryItem[]
+    /** Mục kiểm tra theo mẫu bàn giao tại thời điểm lập; bản ghi cũ không có. */
+    checklist?: HandoverChecklistEntry[]
+    templateRef?: { version: number; contentHash: string } | null
     discrepancies?: Array<{ revision: number; note: string; at: string }>
     responseDueAt?: string | null
     completionReason?: HandoverCompletionReason | null
@@ -479,8 +482,15 @@ export interface HandoverInput {
   water: number
   keyCount: number
   inventoryItems?: HandoverInventoryItem[]
+  checklist?: Array<{ id: string; checked: boolean }>
   inventoryReference?: string
   notes?: string
+}
+
+export interface HandoverChecklistEntry {
+  id: string
+  label: string
+  checked: boolean
 }
 
 export interface ContractAuditEventDto {

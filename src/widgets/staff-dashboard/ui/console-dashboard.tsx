@@ -7,7 +7,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { Logo } from '@/shared/ui/logo'
 import { AdminCard } from '@/shared/ui/admin-card'
 import { OwnershipTransferPanel } from '@/features/property-ownership-transfer'
-import { LayoutProfileEditor } from '@/features/contract-layouts'
 import { FeeRevenueReport, FeeScheduleEditor } from '@/features/platform-fees'
 import { AdminWalletsView } from '@/features/admin-wallets'
 import { StaffDesignRequestsView } from '@/features/design-requests'
@@ -23,6 +22,7 @@ import { SupportQueueView } from './views/support-queue-view'
 import { ApartmentManagementView } from './views/apartment-management-view'
 import { FabricAuditView } from './views/fabric-audit-view'
 import { PermissionMatrixView } from './views/permission-matrix-view'
+import { ContractTemplatesView } from './views/contract-templates-view'
 import { PoliciesView } from './views/policies-view'
 import { RentalFlowControlView } from './views/rental-flow-control-view'
 import { AiConfigView } from './views/ai-config-view'
@@ -92,7 +92,7 @@ function renderView(
     case 'ai-engine':
       return <AiConfigView />
     case 'contract-layouts':
-      return <LayoutProfileEditor profileKey="default" />
+      return <ContractTemplatesView />
     case 'fees':
       return (
         <div className="space-y-5">

@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, type FormEvent, type ReactElement } from 'react'
+import { useEffect, useState, type FormEvent, type ReactElement } from 'react'
 import { ClipboardList, Loader2, Plus, Trash2 } from 'lucide-react'
 import type {
   HandoverInput,
   HandoverInventoryItem,
 } from '@/features/contracts/api/contracts-api'
 import { Button } from '@/shared/ui/button'
+import {
+  getHandoverTemplate,
+  type HandoverTemplate,
+} from '../api/move-in-settlement-api'
 import { ITEM_CONDITION_LABELS } from '../lib/move-in-labels'
 
 export interface HandoverRecordFormProps {
@@ -53,6 +57,35 @@ export function HandoverRecordForm({
   })
   const [items, setItems] = useState<ItemDraft[]>([])
   const [notes, setNotes] = useState('')
+  const [template, setTemplate] = useState<HandoverTemplate | null>(null)
+  const [checked, setChecked] = useState<Record<string, boolean>>({})
+
+  // Mẫu do admin soạn: nạp danh mục đồ mặc định và checklist. Lỗi tải thì dùng form trống như trước.
+  useEffect(() => {
+    let active = true
+    const loadTemplate = async (): Promise<void> => {
+      try {
+        const loaded = await getHandoverTemplate()
+        if (!active || !loaded) return
+        setTemplate(loaded)
+        setItems(current =>
+          current.length > 0
+            ? current
+            : loaded.inventoryDefaults.map(item => ({
+                ...EMPTY_ITEM,
+                name: item.name,
+                quantity: String(item.quantity),
+              }))
+        )
+      } catch {
+        // Không có mẫu thì vẫn ghi biên bản được.
+      }
+    }
+    void loadTemplate()
+    return () => {
+      active = false
+    }
+  }, [])
 
   const updateItem = (index: number, patch: Partial<ItemDraft>): void =>
     setItems(current =>
@@ -74,6 +107,14 @@ export function HandoverRecordForm({
         condition: item.condition,
         ...(item.note.trim() ? { note: item.note.trim() } : {}),
       })),
+      ...(template && template.checklist.length > 0
+        ? {
+            checklist: template.checklist.map(entry => ({
+              id: entry.id,
+              checked: Boolean(checked[entry.id]),
+            })),
+          }
+        : {}),
       ...(trimmedNotes ? { notes: trimmedNotes } : {}),
     })
   }
@@ -207,6 +248,31 @@ export function HandoverRecordForm({
           Thêm tài sản
         </Button>
       </fieldset>
+      {template && template.checklist.length > 0 ? (
+        <fieldset className="space-y-2 sm:col-span-2">
+          <legend className="text-xs font-semibold text-[var(--fg)]">
+            Các mục kiểm tra khi bàn giao
+          </legend>
+          {template.checklist.map(entry => (
+            <label
+              key={entry.id}
+              className="flex min-h-11 items-center gap-2 text-xs"
+            >
+              <input
+                type="checkbox"
+                checked={Boolean(checked[entry.id])}
+                onChange={event =>
+                  setChecked(current => ({
+                    ...current,
+                    [entry.id]: event.target.checked,
+                  }))
+                }
+              />
+              {entry.label}
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
       <label className="text-xs sm:col-span-2">
         Ghi chú chung
         <textarea
