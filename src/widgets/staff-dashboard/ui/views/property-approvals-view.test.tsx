@@ -45,7 +45,6 @@ function apartment(
     vrUrl: '',
     images360: [],
     gallery: [],
-    documents: [],
     landlord: { fullName: 'Nguyễn Văn A', phone: '0901234567' },
     ...extra,
   }
@@ -228,24 +227,20 @@ describe('PropertyApprovalsView', () => {
     ).toBeTruthy()
   })
 
-  it('displays empty 360 state and empty legal documents message', async () => {
+  it('displays the empty 360 state', async () => {
     mockLists({
       pending: [
-        apartment('p1', 'Căn hộ không có tài liệu', 'pending', {
+        apartment('p1', 'Căn hộ không có ảnh 360', 'pending', {
           images360: [],
           vrUrl: '',
-          documents: [],
         }),
       ],
     })
     render(<PropertyApprovalsView />)
-    await screen.findByText('Căn hộ không có tài liệu')
+    await screen.findByText('Căn hộ không có ảnh 360')
     fireEvent.click(screen.getByRole('button', { name: /Thẩm định & Duyệt/ }))
 
     expect(await screen.findByText('Chưa có ảnh 360°')).toBeTruthy()
-    expect(
-      screen.getByText('Chưa có hồ sơ pháp lý đính kèm trong hệ thống')
-    ).toBeTruthy()
     expect(screen.queryByText('Ảnh quét đạt tiêu chuẩn')).toBeNull()
   })
 })

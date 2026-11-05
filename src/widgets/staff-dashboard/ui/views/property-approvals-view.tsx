@@ -34,7 +34,6 @@ interface Property {
   price: string
   landlord: string
   phone: string
-  documents: string[]
   status: ApartmentModerationStatus
   vrUrl: string
   images360: string[]
@@ -52,7 +51,6 @@ interface BackendApartmentResponse {
   images360?: string[]
   gallery?: string[]
   vrUrl?: string
-  documents?: string[]
   landlord?: {
     fullName: string
     phone: string
@@ -81,7 +79,6 @@ export function PropertyApprovalsView(): React.ReactElement {
         price: apt.price || 'Chưa cập nhật',
         landlord: apt.landlord?.fullName || 'Chủ nhà TH PropTech',
         phone: apt.landlord?.phone || 'Chưa cung cấp',
-        documents: apt.documents || [],
         status: mapApartmentStatus(apt.status),
         vrUrl: apt.vrUrl || '',
         images360: apt.images360 || [],
@@ -355,7 +352,7 @@ export function PropertyApprovalsView(): React.ReactElement {
             onClick={() => setSelectedProp(null)}
           />
 
-          <AdminCard className="relative z-10 flex flex-col lg:flex-row w-full max-w-5xl h-[85vh] shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <AdminCard className="relative z-10 flex flex-col lg:flex-row w-full max-w-7xl h-[90vh] shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Left side: VR 360 / Media Preview */}
             <VrPreviewPanel
               images360={selectedProp.images360}
@@ -363,7 +360,7 @@ export function PropertyApprovalsView(): React.ReactElement {
               vrUrl={selectedProp.vrUrl}
             />
 
-            {/* Right side: Property Details and Document Verification */}
+            {/* Right side: Property Details */}
             <div className="w-full lg:w-[420px] flex flex-col h-full bg-surface overflow-hidden">
               {/* Header */}
               <div className="px-6 py-4 border-b border-line bg-surface-muted/30 flex justify-between items-center">
@@ -418,46 +415,6 @@ export function PropertyApprovalsView(): React.ReactElement {
                       {selectedProp.landlord} ({selectedProp.phone})
                     </p>
                   </div>
-                </div>
-
-                <div className="border-t border-line/60 pt-4">
-                  <h4 className="text-xs font-bold text-fg font-body uppercase tracking-wider">
-                    Hồ sơ pháp lý đính kèm
-                  </h4>
-                  {selectedProp.documents &&
-                  selectedProp.documents.length > 0 ? (
-                    <div className="mt-2.5 space-y-2">
-                      {selectedProp.documents.map((doc, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-2 p-2.5 bg-bg/40 border border-line rounded-lg text-xs hover:bg-bg/60 transition-colors"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className="text-primary shrink-0"
-                          >
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                          </svg>
-                          <span className="font-semibold text-fg truncate flex-1">
-                            {doc}
-                          </span>
-                          <span className="text-[10px] text-accent-2 font-medium bg-accent-2/10 px-1.5 py-0.5 rounded">
-                            PDF
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-2.5 p-3 rounded-lg bg-surface-muted/30 border border-line/60 text-xs text-muted italic">
-                      Chưa có hồ sơ pháp lý đính kèm trong hệ thống
-                    </div>
-                  )}
                 </div>
               </div>
 
