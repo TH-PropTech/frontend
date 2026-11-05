@@ -255,7 +255,9 @@ export function PaymentProviderPicker({
       : undefined
   const brands =
     value === 'mocbank'
-      ? providers.find(option => option.provider === 'mocbank')?.brands
+      ? providers
+          .find(option => option.provider === 'mocbank')
+          ?.brands?.filter(option => option.brand === 'mocbank')
       : undefined
   const handleBrandChange = (next: string): void => {
     onBrandChange?.(next as WalletBrand)

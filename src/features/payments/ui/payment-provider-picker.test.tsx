@@ -189,8 +189,7 @@ describe('PaymentProviderPicker', () => {
     expect(screen.queryByLabelText(/Thẻ Visa/)).toBeNull()
   })
 
-  it('shows the brand group only when the mocbank option has brands', () => {
-    const onBrand = vi.fn()
+  it('shows only the Ví Mộc brand when the mocbank option has brands', () => {
     const withBrands = gateways.map(option =>
       option.provider === 'mocbank'
         ? {
@@ -226,12 +225,11 @@ describe('PaymentProviderPicker', () => {
         value="mocbank"
         onChange={vi.fn()}
         brand="mocbank"
-        onBrandChange={onBrand}
       />
     )
     expect(screen.getByText('Nhận tiền vào ví')).toBeTruthy()
-    fireEvent.click(screen.getByRole('radio', { name: 'Momo' }))
-    expect(onBrand).toHaveBeenCalledWith('momo')
+    expect(screen.getByRole('radio', { name: 'Ví Mộc' })).toBeTruthy()
+    expect(screen.queryByRole('radio', { name: 'Momo' })).toBeNull()
   })
 
   it('offers ZaloPay card entry as a separate method', () => {
