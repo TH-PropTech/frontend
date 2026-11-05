@@ -71,6 +71,15 @@ const CONTRACT_PAYOUT_ITEM_STATUS_LABELS: Record<string, string> = {
 
 const AMENDMENT_FIELD_LABELS: Record<string, string> = {
   monthlyRent: 'Giá thuê hàng tháng',
+  deposit: 'Tiền cọc',
+  durationMonths: 'Thời hạn thuê (tháng)',
+  paymentDay: 'Ngày thanh toán hằng tháng',
+  latePenaltyRate: 'Lãi phạt chậm đóng (%/năm)',
+  terminationNoticeDays: 'Số ngày báo trước khi chấm dứt',
+  utilities: 'Bên chịu tiện ích',
+  handoverNotes: 'Ghi chú bàn giao',
+  inventoryReference: 'Mã danh mục tài sản',
+  customClauses: 'Điều khoản riêng của chủ nhà',
 }
 
 /** Mã nội bộ lạ: bỏ `_`/`-`, chữ thường, viết hoa chữ đầu; không bao giờ hiện mã thô. */

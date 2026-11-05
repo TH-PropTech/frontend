@@ -1125,14 +1125,18 @@ export function ContractDocumentViewer({
                         )}
                       </div>
                       {annex.description && (
-                        <p className="text-[11px] text-[var(--muted)] leading-relaxed">
+                        <p className="text-[11px] text-[var(--muted)] leading-relaxed whitespace-pre-line">
                           {annex.description}
                         </p>
                       )}
                     </div>
                     <div className="pt-2.5 border-t border-[var(--border)]/60 flex items-center gap-1.5 text-[10px] text-[var(--muted)]">
                       <CheckCircle2 className="w-3.5 h-3.5 text-[var(--success)] shrink-0" />
-                      <span>Đính kèm tự động theo mẫu chuẩn</span>
+                      <span>
+                        {annex.id === 'LANDLORD_CUSTOM_CLAUSES'
+                          ? 'Do chủ nhà cung cấp, không thay đổi 12 điều bắt buộc'
+                          : 'Đính kèm tự động theo mẫu chuẩn'}
+                      </span>
                     </div>
                   </div>
                 ))}

@@ -27,6 +27,8 @@ import {
 export interface ContractAmendmentTimelineProps {
   contractId: string
   canManage: boolean
+  /** Chủ nhà hoặc khách được tự khởi tạo phụ lục; bên còn lại vẫn phải ký. */
+  canRequest?: boolean
   canSign: boolean
 }
 
@@ -48,6 +50,7 @@ function statusLabel(status: string): string {
 export function ContractAmendmentTimeline({
   contractId,
   canManage,
+  canRequest = false,
   canSign,
 }: ContractAmendmentTimelineProps): React.ReactElement {
   const [items, setItems] = React.useState<ContractAmendment[]>([])
@@ -184,7 +187,7 @@ export function ContractAmendmentTimeline({
           <h2 className="text-sm font-bold text-fg">
             Phụ lục và phiên bản thương mại
           </h2>
-          {canManage || items.length > 0 ? (
+          {canManage || canRequest || items.length > 0 ? (
             <p className="mt-1 text-xs leading-relaxed text-muted">
               Hợp đồng gốc không bị sửa; thay đổi chỉ có hiệu lực sau khi đủ chữ
               ký và tới ngày áp dụng.
@@ -203,7 +206,7 @@ export function ContractAmendmentTimeline({
         </Alert>
       ) : null}
 
-      {canManage ? (
+      {canManage || canRequest ? (
         <div className="grid gap-3 rounded-xl border border-border bg-surface-muted p-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
           <Input
             label="Giá thuê mới (VND)"

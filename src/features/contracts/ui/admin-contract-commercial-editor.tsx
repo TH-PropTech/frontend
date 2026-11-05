@@ -55,6 +55,7 @@ export function AdminContractCommercialEditor({
     React.useState<ContractCommercialDraft>(EMPTY_DRAFT)
   const [revision, setRevision] = React.useState(0)
   const [locked, setLocked] = React.useState(false)
+  const [consentFields, setConsentFields] = React.useState<string[]>([])
   const [loading, setLoading] = React.useState(true)
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -72,6 +73,7 @@ export function AdminContractCommercialEditor({
       setInitialDraft(next)
       setRevision(response.revision)
       setLocked(response.locked)
+      setConsentFields(response.consentRequiredFields ?? [])
     } catch (cause: unknown) {
       setError(
         cause instanceof Error
@@ -177,6 +179,8 @@ export function AdminContractCommercialEditor({
     }
   }
 
+  const needsConsent = (field: string): boolean => consentFields.includes(field)
+
   const changedFields = Object.keys(draft).filter(
     field =>
       JSON.stringify(draft[field as keyof ContractCommercialDraft]) !==
@@ -240,13 +244,23 @@ export function AdminContractCommercialEditor({
         </Alert>
       ) : null}
 
+      {consentFields.length > 0 ? (
+        <Alert data-testid="commercial-consent-note">
+          <AlertDescription>
+            Giá thuê, tiền cọc và thời hạn đã được khách chấp thuận khi nộp hồ
+            sơ nên admin không sửa trực tiếp. Muốn đổi, chủ nhà hoặc khách gửi
+            yêu cầu chỉnh sửa và bên còn lại phải đồng ý.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-2">
         <Input
           label="Giá thuê mỗi tháng (VND)"
           type="number"
           min={0}
           value={draft.monthlyRent}
-          disabled={locked || busy}
+          disabled={locked || busy || needsConsent('monthlyRent')}
           onChange={event => setNumber('monthlyRent', event.target.value)}
         />
         <Input
@@ -254,7 +268,7 @@ export function AdminContractCommercialEditor({
           type="number"
           min={0}
           value={draft.deposit}
-          disabled={locked || busy}
+          disabled={locked || busy || needsConsent('deposit')}
           onChange={event => setNumber('deposit', event.target.value)}
         />
         <Input
@@ -282,7 +296,7 @@ export function AdminContractCommercialEditor({
           min={1}
           max={120}
           value={draft.durationMonths}
-          disabled={locked || busy}
+          disabled={locked || busy || needsConsent('durationMonths')}
           onChange={event => setNumber('durationMonths', event.target.value)}
         />
         <Input
@@ -363,6 +377,20 @@ export function AdminContractCommercialEditor({
           onChange={event => setText('handoverNotes', event.target.value)}
         />
       </label>
+
+      {draft.customClauses ? (
+        <div
+          className="rounded-xl border border-border bg-surface-muted p-4"
+          data-testid="commercial-custom-clauses"
+        >
+          <h3 className="text-sm font-semibold text-fg">
+            Điều khoản riêng của chủ nhà · chỉ đọc
+          </h3>
+          <p className="mt-2 whitespace-pre-line text-xs text-muted">
+            {draft.customClauses}
+          </p>
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-border bg-surface-muted p-4">
         <h3 className="text-sm font-semibold text-fg">

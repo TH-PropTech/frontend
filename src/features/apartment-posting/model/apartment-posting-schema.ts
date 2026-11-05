@@ -7,6 +7,9 @@ import {
   rentError,
 } from './rent-limits'
 
+/** Khớp giới hạn của backend cho điều khoản riêng của chủ nhà. */
+export const CUSTOM_CLAUSES_MAX_LENGTH = 2000
+
 const rentalExecutionPolicyRefSchema = z.object({
   policyId: z.string().min(1),
   version: z.number().int().min(1),
@@ -84,6 +87,28 @@ const rentalPackageShape = z.object({
       }),
       z.object({ type: z.literal('FULL') }),
     ])
+    .optional(),
+  // điều khoản hợp đồng do chủ nhà đặt; vắng mặt = backend dùng 1 / 0 / 30 / không có điều khoản riêng
+  paymentDay: z
+    .number()
+    .int()
+    .min(1, 'Ngày thanh toán từ 1 đến 31')
+    .max(31, 'Ngày thanh toán từ 1 đến 31')
+    .optional(),
+  latePenaltyRate: z
+    .number()
+    .min(0, 'Lãi phạt không âm')
+    .max(20, 'Lãi phạt tối đa 20%/năm')
+    .optional(),
+  terminationNoticeDays: z
+    .number()
+    .int()
+    .min(30, 'Báo trước tối thiểu 30 ngày')
+    .max(365, 'Báo trước tối đa 365 ngày')
+    .optional(),
+  customClauses: z
+    .string()
+    .max(CUSTOM_CLAUSES_MAX_LENGTH, 'Điều khoản riêng tối đa 2000 ký tự')
     .optional(),
   status: z.enum(['active', 'inactive']).default('active'),
   allowedExecutionPolicies: z

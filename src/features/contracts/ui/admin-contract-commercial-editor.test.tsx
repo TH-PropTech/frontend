@@ -118,4 +118,41 @@ describe('AdminContractCommercialEditor', () => {
     await waitFor(() => expect(mocks.get).toHaveBeenCalledTimes(2))
     expect(screen.getByText(/Revision 3/)).toBeInTheDocument()
   })
+
+  it('locks rent, deposit and duration when the tenant already consented to them', async () => {
+    mocks.get.mockResolvedValue({
+      contractId: 'contract-1',
+      revision: 0,
+      locked: false,
+      protectedFields: ['customClauses'],
+      consentRequiredFields: ['monthlyRent', 'deposit', 'durationMonths'],
+      commercial: {
+        monthlyRent: 12_000_000,
+        deposit: 24_000_000,
+        paymentDay: 5,
+        latePenaltyRate: 10,
+        terminationNoticeDays: 45,
+        durationMonths: 12,
+        customClauses: 'Không nuôi thú cưng. Giờ yên tĩnh 22:00 đến 06:00.',
+      },
+    })
+    render(<AdminContractCommercialEditor contractId="contract-1" />)
+
+    expect(await screen.findByTestId('commercial-consent-note')).toBeDefined()
+    expect(screen.getByLabelText(/Giá thuê mỗi tháng/)).toBeDisabled()
+    expect(screen.getByLabelText(/Tiền đặt cọc/)).toBeDisabled()
+    expect(screen.getByLabelText(/Thời hạn thuê/)).toBeDisabled()
+    expect(screen.getByLabelText(/Ngày thanh toán/)).toBeEnabled()
+    expect(
+      screen.getByTestId('commercial-custom-clauses').textContent
+    ).toContain('Không nuôi thú cưng.')
+  })
+
+  it('keeps every commercial field editable for a contract without a package baseline', async () => {
+    render(<AdminContractCommercialEditor contractId="contract-1" />)
+    await screen.findByTestId('admin-contract-commercial-editor')
+    expect(screen.queryByTestId('commercial-consent-note')).toBeNull()
+    expect(screen.queryByTestId('commercial-custom-clauses')).toBeNull()
+    expect(screen.getByLabelText(/Giá thuê mỗi tháng/)).toBeEnabled()
+  })
 })

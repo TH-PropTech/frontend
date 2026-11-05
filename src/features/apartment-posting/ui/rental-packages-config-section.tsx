@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Wallet,
 } from 'lucide-react'
+import { LeaseTermsFields, type LeaseTermsPatch } from './lease-terms-fields'
 import { LandlordCommissionDialog } from '@/features/platform-fees/ui/landlord-commission-dialog'
 import { appToast } from '@/shared/ui/app-toast'
 import { resolvePrepaidMonths } from '@/shared/lib/prepaid-rent'
@@ -275,6 +276,19 @@ export function RentalPackagesConfigSection({
         pkg.durationMonths !== duration
           ? pkg
           : { ...pkg, moveOutPolicy: { responseDays } }
+      ),
+      { shouldValidate: true }
+    )
+  }
+
+  const handleLeaseTermsChange = (
+    duration: number,
+    patch: LeaseTermsPatch
+  ): void => {
+    setValue(
+      'rentalPackages',
+      currentPackages.map(pkg =>
+        pkg.durationMonths !== duration ? pkg : { ...pkg, ...patch }
       ),
       { shouldValidate: true }
     )
@@ -790,6 +804,12 @@ export function RentalPackagesConfigSection({
                       được ghi vào hợp đồng.
                     </p>
                   </section>
+
+                  <LeaseTermsFields
+                    duration={duration}
+                    pkg={pkg}
+                    onChange={patch => handleLeaseTermsChange(duration, patch)}
+                  />
                 </div>
               )}
             </div>

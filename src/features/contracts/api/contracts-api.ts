@@ -172,6 +172,8 @@ export interface ContractCommercialDraft {
   inventoryReference?: string | null
   noticePeriodDays?: number | null
   addendaIds?: string[]
+  /** Chỉ đọc: điều khoản riêng của chủ nhà, không gửi lại khi lưu. */
+  customClauses?: string | null
 }
 
 export interface ContractCommercialEditorResponse {
@@ -180,6 +182,8 @@ export interface ContractCommercialEditorResponse {
   commercial: ContractCommercialDraft | null
   protectedFields: string[]
   locked: boolean
+  /** Trường chỉ đổi khi khách đồng ý; rỗng nếu hợp đồng không có gói thuê làm mốc. */
+  consentRequiredFields?: string[]
 }
 
 export interface ContractCommercialValidation {
@@ -983,13 +987,22 @@ export async function getAdminContractEditor(
   )
 }
 
+/** Điều khoản riêng do chủ nhà đặt là dữ liệu chỉ đọc, server từ chối nếu gửi lại. */
+function withoutCustomClauses(
+  commercial: ContractCommercialDraft
+): Omit<ContractCommercialDraft, 'customClauses'> {
+  const { customClauses: _readOnly, ...editable } = commercial
+  void _readOnly
+  return editable
+}
+
 export async function validateAdminCommercialDraft(
   contractId: string,
   commercial: ContractCommercialDraft
 ): Promise<ContractCommercialValidation> {
   return apiClient.post<ContractCommercialValidation>(
     `/contracts/${contractId}/commercial-draft/validate`,
-    { commercial }
+    { commercial: withoutCustomClauses(commercial) }
   )
 }
 
@@ -1000,7 +1013,7 @@ export async function saveAdminCommercialDraft(
 ): Promise<ContractCommercialEditorResponse> {
   return apiClient.put<ContractCommercialEditorResponse>(
     `/contracts/${contractId}/commercial-draft`,
-    { commercial, expectedRevision }
+    { commercial: withoutCustomClauses(commercial), expectedRevision }
   )
 }
 
