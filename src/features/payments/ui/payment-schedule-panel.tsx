@@ -16,6 +16,13 @@ import {
   usePaymentProviders,
 } from './payment-provider-picker'
 
+const PAYMENT_STATUS_LABELS: Record<PaymentItem['status'], string> = {
+  unpaid: 'Chưa thanh toán',
+  paid: 'Đã thanh toán',
+  overdue: 'Quá hạn',
+  waived: 'Đã miễn',
+}
+
 export interface PaymentSchedulePanelProps {
   contractId: string
 }
@@ -179,7 +186,7 @@ export function PaymentSchedulePanel({
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-muted">
-                  {payment.status}
+                  {PAYMENT_STATUS_LABELS[payment.status]}
                 </span>
                 {payment.status === 'unpaid' || payment.status === 'overdue' ? (
                   <PayButton
