@@ -13,6 +13,8 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+import { Textarea } from '@/shared/ui/textarea'
+import { CHANGE_REQUEST_CUSTOM_CLAUSES_MAX } from '../lib/change-request-labels'
 import { getAmendmentFieldLabel } from '../lib/contract-labels'
 import {
   createContractAmendment,
@@ -47,6 +49,20 @@ function statusLabel(status: string): string {
   return labels[status] ?? status
 }
 
+function buildChanges(
+  monthlyRent: string,
+  customClauses: string
+): Array<{ field: string; after: unknown }> {
+  const changes: Array<{ field: string; after: unknown }> = []
+  if (monthlyRent) {
+    changes.push({ field: 'monthlyRent', after: Number(monthlyRent) })
+  }
+  if (customClauses.trim()) {
+    changes.push({ field: 'customClauses', after: customClauses })
+  }
+  return changes
+}
+
 export function ContractAmendmentTimeline({
   contractId,
   canManage,
@@ -55,6 +71,7 @@ export function ContractAmendmentTimeline({
 }: ContractAmendmentTimelineProps): React.ReactElement {
   const [items, setItems] = React.useState<ContractAmendment[]>([])
   const [monthlyRent, setMonthlyRent] = React.useState('')
+  const [customClauses, setCustomClauses] = React.useState('')
   const [effectiveFrom, setEffectiveFrom] = React.useState('')
   const [loading, setLoading] = React.useState(true)
   const [busy, setBusy] = React.useState(false)
@@ -106,10 +123,11 @@ export function ContractAmendmentTimeline({
         throw new Error('Ngày hiệu lực không hợp lệ.')
       }
       await createContractAmendment(contractId, {
-        changes: [{ field: 'monthlyRent', after: Number(monthlyRent) }],
+        changes: buildChanges(monthlyRent, customClauses),
         effectiveFrom: effectiveDate.toISOString(),
       })
       setMonthlyRent('')
+      setCustomClauses('')
       setEffectiveFrom('')
       await load()
     } catch (cause: unknown) {
@@ -222,11 +240,31 @@ export function ContractAmendmentTimeline({
           />
           <Button
             type="button"
-            disabled={busy || !monthlyRent || !effectiveFrom}
+            disabled={
+              busy || !effectiveFrom || (!monthlyRent && !customClauses.trim())
+            }
             onClick={() => void create()}
           >
             Tạo phụ lục
           </Button>
+          <div className="flex flex-col gap-1 md:col-span-3">
+            <label
+              htmlFor="amendment-custom-clauses"
+              className="text-xs sm:text-sm font-medium text-fg"
+            >
+              Điều khoản riêng mới (để trống nếu không đổi)
+            </label>
+            <Textarea
+              id="amendment-custom-clauses"
+              rows={4}
+              maxLength={CHANGE_REQUEST_CUSTOM_CLAUSES_MAX}
+              value={customClauses}
+              onChange={event => setCustomClauses(event.target.value)}
+            />
+            <span className="self-end text-xs text-muted">
+              {customClauses.length}/{CHANGE_REQUEST_CUSTOM_CLAUSES_MAX}
+            </span>
+          </div>
         </div>
       ) : null}
 
