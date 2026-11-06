@@ -110,6 +110,24 @@ const rentalPackageShape = z.object({
     .string()
     .max(CUSTOM_CLAUSES_MAX_LENGTH, 'Điều khoản riêng tối đa 2000 ký tự')
     .optional(),
+  // Đơn giá hai bên thỏa thuận, chốt vào hợp đồng; không phải giá nhà nước quy định.
+  utilityRates: z
+    .object({
+      electricityPerKwh: z
+        .number()
+        .min(0, 'Đơn giá điện không được âm')
+        .max(10_000_000, 'Đơn giá điện vượt mức cho phép'),
+      waterPerM3: z
+        .number()
+        .min(0, 'Đơn giá nước không được âm')
+        .max(10_000_000, 'Đơn giá nước vượt mức cho phép'),
+      serviceFeeMonthly: z
+        .number()
+        .min(0, 'Phí dịch vụ không được âm')
+        .max(10_000_000, 'Phí dịch vụ vượt mức cho phép'),
+      note: z.string().max(500, 'Ghi chú tối đa 500 ký tự').optional(),
+    })
+    .optional(),
   status: z.enum(['active', 'inactive']).default('active'),
   allowedExecutionPolicies: z
     .array(rentalExecutionPolicyRefSchema)
@@ -176,6 +194,14 @@ export const apartmentPostingSchema = z.object({
   rentalPackages: z.array(rentalPackagePostingSchema).optional().default([]),
   area: z.number().gt(0, 'Diện tích phải lớn hơn 0'),
   bedrooms: z.number().nonnegative('Số phòng ngủ phải từ 0 trở lên'),
+  // Không bắt buộc: để trống thì hồ sơ thuê theo cấu hình luồng thuê của Chủ nhà.
+  maxOccupants: z
+    .number()
+    .int('Số người ở tối đa phải là số nguyên từ 1 đến 20.')
+    .min(1, 'Số người ở tối đa phải từ 1 đến 20.')
+    .max(20, 'Số người ở tối đa phải từ 1 đến 20.')
+    .nullable()
+    .optional(),
   bathrooms: z.number().nonnegative('Số phòng vệ sinh phải từ 0 trở lên'),
   direction: z.string().optional().default(''),
   balconyDirection: z.string().optional().default(''),

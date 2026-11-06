@@ -4,6 +4,7 @@ import type { ReactElement } from 'react'
 import {
   acknowledgeDepositRefund,
   disputeDepositStatement,
+  getUtilitySuggestions,
   recordDepositRefund,
   respondDepositStatement,
   saveDepositStatementDraft,
@@ -106,8 +107,12 @@ export function DepositStatementSection({
                 reason: line.reason,
                 amount: line.amount,
                 evidenceUrls: line.evidenceUrls,
+                ...(line.source ? { source: line.source } : {}),
               }))}
               busy={createBusy}
+              loadSuggestions={months =>
+                getUtilitySuggestions(contractId, months)
+              }
               onSave={lines => void saveDraft(lines)}
               onSubmit={saveAndSubmit}
             />

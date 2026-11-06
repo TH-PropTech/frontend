@@ -38,6 +38,16 @@ export function LeaseTermsReview({
               LEASE_TERM_DEFAULTS.terminationNoticeDays}{' '}
             ngày khi chấm dứt.
           </p>
+          {pkg.utilityRates ? (
+            <p data-testid={`utility-rates-review-${pkg.durationMonths}`}>
+              Điện {pkg.utilityRates.electricityPerKwh.toLocaleString('vi-VN')}{' '}
+              đồng/kWh, nước{' '}
+              {pkg.utilityRates.waterPerM3.toLocaleString('vi-VN')} đồng/m³,
+              dịch vụ{' '}
+              {pkg.utilityRates.serviceFeeMonthly.toLocaleString('vi-VN')}{' '}
+              đồng/tháng, tính khi bàn giao lại nhà.
+            </p>
+          ) : null}
           <p>
             Điều khoản riêng:{' '}
             {pkg.customClauses?.trim() ? pkg.customClauses : 'Không có'}

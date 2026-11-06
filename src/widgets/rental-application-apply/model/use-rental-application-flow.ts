@@ -395,12 +395,17 @@ export function useRentalApplicationFlow(apartmentId: string) {
   const goToStep2 = React.useCallback(() => {
     const errors = validateStepInfo(
       state.details,
-      state.context?.flowProfile?.steps?.step1
+      state.context?.flowProfile?.steps?.step1,
+      state.context?.maxOccupants
     )
     if (Object.keys(errors).length > 0) return false
     dispatch({ type: 'SET_STEP', step: 2 })
     return true
-  }, [state.details, state.context?.flowProfile?.steps?.step1])
+  }, [
+    state.details,
+    state.context?.flowProfile?.steps?.step1,
+    state.context?.maxOccupants,
+  ])
 
   const goToStep3 = React.useCallback(() => {
     if (!state.selectedPackageId) return false

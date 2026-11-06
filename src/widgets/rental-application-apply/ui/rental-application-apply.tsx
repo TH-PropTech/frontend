@@ -320,6 +320,7 @@ export function RentalApplicationApply({
                 values={state.details}
                 apartmentArea={apartmentArea}
                 step1Config={state.context?.flowProfile?.steps?.step1}
+                apartmentMaxOccupants={state.context?.maxOccupants}
                 onChange={actions.updateDetails}
                 onNext={actions.goToStep2}
               />

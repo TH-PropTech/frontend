@@ -5,6 +5,13 @@ import { ApiClientError } from '@/shared/api/api-client'
 import { MoveInSettlementPanel } from './move-in-settlement-panel'
 import * as api from '../api/move-in-settlement-api'
 
+vi.mock('@/shared/api/upload-images', () => ({
+  uploadImages: vi.fn().mockResolvedValue(['https://cdn.example.com/m.jpg']),
+}))
+vi.mock('@/entities/legal-source', async () => {
+  const actual = await vi.importActual<object>('@/entities/legal-source')
+  return { ...actual, LegalReferences: () => null }
+})
 vi.mock('../api/move-in-settlement-api', () => ({
   initSettlementPayment: vi.fn(),
   updateHandover: vi.fn(),
@@ -120,6 +127,17 @@ describe('MoveInSettlementPanel', () => {
     fireEvent.change(screen.getByLabelText('Số chìa khóa'), {
       target: { value: '2' },
     })
+    const photo = new File([new Uint8Array(10)], 'ct.jpg', {
+      type: 'image/jpeg',
+    })
+    fireEvent.change(screen.getByLabelText('Chọn ảnh công tơ điện'), {
+      target: { files: [photo] },
+    })
+    await screen.findByAltText('Ảnh công tơ điện 1')
+    fireEvent.change(screen.getByLabelText('Chọn ảnh công tơ nước'), {
+      target: { files: [photo] },
+    })
+    await screen.findByAltText('Ảnh công tơ nước 1')
     fireEvent.click(screen.getByRole('button', { name: 'Thêm tài sản' }))
     fireEvent.click(screen.getByRole('button', { name: 'Thêm tài sản' }))
     expect(screen.getAllByTestId('inventory-row')).toHaveLength(2)
@@ -140,6 +158,10 @@ describe('MoveInSettlementPanel', () => {
           electricity: 100,
           water: 25,
           keyCount: 2,
+          meterPhotos: {
+            electricity: ['https://cdn.example.com/m.jpg'],
+            water: ['https://cdn.example.com/m.jpg'],
+          },
           handedOverAt: new Date('2026-10-01T10:00').toISOString(),
           inventoryItems: [
             { name: 'Tủ lạnh', quantity: 1, condition: 'damaged' },

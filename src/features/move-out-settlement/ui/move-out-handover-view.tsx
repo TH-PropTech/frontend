@@ -3,6 +3,11 @@
 import type { ReactElement } from 'react'
 import { useNow } from '../model/use-now'
 import { CheckCircle2, Clock } from 'lucide-react'
+import { MeterPhotoGallery } from '@/shared/ui/meter-photo-gallery'
+import {
+  UtilitySettlementNote,
+  type UtilityRatesView,
+} from '@/entities/legal-source'
 import type { MoveOutHandover } from '../api/move-out-types'
 import {
   formatDateTime,
@@ -13,6 +18,7 @@ import {
 
 export interface MoveOutHandoverViewProps {
   handover: MoveOutHandover
+  utilityRates?: UtilityRatesView | undefined
 }
 
 const confirmation = (done: boolean): string =>
@@ -21,6 +27,7 @@ const confirmation = (done: boolean): string =>
 /** Chỉ đọc: nội dung biên bản, hạn phản hồi, phản đối và chi tiết kỹ thuật. */
 export function MoveOutHandoverView({
   handover,
+  utilityRates,
 }: MoveOutHandoverViewProps): ReactElement {
   const now = useNow()
   const isOpen = handover.status === 'recorded'
@@ -51,6 +58,17 @@ export function MoveOutHandoverView({
           </div>
         ))}
       </dl>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <MeterPhotoGallery
+          label="Ảnh công tơ điện"
+          urls={handover.meterPhotos?.electricity}
+        />
+        <MeterPhotoGallery
+          label="Ảnh công tơ nước"
+          urls={handover.meterPhotos?.water}
+        />
+      </div>
+      <UtilitySettlementNote rates={utilityRates} />
       <div>
         <p className="font-semibold text-[var(--fg)]">Đồ đạc, thiết bị</p>
         {handover.inventoryItems.length === 0 ? (

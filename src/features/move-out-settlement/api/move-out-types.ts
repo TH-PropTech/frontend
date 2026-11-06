@@ -16,6 +16,8 @@ export interface MoveOutHandover {
   revision: number
   handedBackAt: string
   meterReadings: { electricity: number; water: number }
+  /** Ảnh công tơ; biên bản cũ không có. */
+  meterPhotos?: { electricity: string[]; water: string[] } | null
   keyCount: number
   inventoryItems: MoveOutInventoryItem[]
   notes: string | null
@@ -35,6 +37,9 @@ export interface MoveOutHandoverInput {
   handedBackAt: string
   electricity: number
   water: number
+  meterPhotos?: { electricity: string[]; water: string[] }
+  /** Gửi khi người ghi xác nhận chỉ số nhỏ hơn lúc nhận nhà (ví dụ công tơ đã được thay). */
+  acknowledgeMeterRegression?: boolean
   keyCount: number
   inventoryItems: {
     name: string
@@ -58,6 +63,8 @@ export interface DepositStatementLine {
   reason: string
   amount: number
   evidenceUrls: string[]
+  /** Vắng mặt = Chủ nhà tự nhập; `meter-suggestion` = gợi ý từ chỉ số công tơ. */
+  source?: 'manual' | 'meter-suggestion'
   tenantResponse: {
     decision: 'accept' | 'reject'
     note: string | null
@@ -106,6 +113,25 @@ export interface DeductionLineInput {
   reason: string
   amount: number
   evidenceUrls?: string[]
+  source?: 'manual' | 'meter-suggestion'
+}
+
+export type UtilitySuggestionNote =
+  | 'NO_RATES'
+  | 'NO_MOVE_IN_READINGS'
+  | 'ELECTRICITY_READING_REGRESSION'
+  | 'WATER_READING_REGRESSION'
+  | 'NO_SERVICE_MONTHS'
+
+export interface UtilitySuggestion {
+  lines: Array<{
+    kind: 'electricity' | 'water' | 'service'
+    reason: string
+    amount: number
+    evidenceUrls: string[]
+    source: 'meter-suggestion'
+  }>
+  notes: UtilitySuggestionNote[]
 }
 
 export interface LineResponseInput {

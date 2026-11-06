@@ -5,6 +5,11 @@ import { AlertTriangle, CheckCircle2, Clock, FileDown } from 'lucide-react'
 import { toast } from 'sonner'
 import type { MoveInSettlementView } from '@/features/contracts/api/contracts-api'
 import { Button } from '@/shared/ui/button'
+import { MeterPhotoGallery } from '@/shared/ui/meter-photo-gallery'
+import {
+  UtilitySettlementNote,
+  type UtilityRatesView,
+} from '@/entities/legal-source'
 import { downloadHandoverPdf } from '../api/move-in-settlement-api'
 import {
   ITEM_CONDITION_LABELS,
@@ -20,6 +25,7 @@ export interface HandoverRecordViewProps {
   busy: boolean
   onConfirm: () => void
   onReportDiscrepancy: (note: string) => void
+  utilityRates?: UtilityRatesView | undefined
 }
 
 const formatDateTime = (value: string): string =>
@@ -35,6 +41,7 @@ export function HandoverRecordView({
   busy,
   onConfirm,
   onReportDiscrepancy,
+  utilityRates,
 }: HandoverRecordViewProps): ReactElement {
   const [isReporting, setIsReporting] = useState(false)
   const [note, setNote] = useState('')
@@ -110,6 +117,17 @@ export function HandoverRecordView({
           </div>
         ))}
       </dl>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <MeterPhotoGallery
+          label="Ảnh công tơ điện"
+          urls={handover.meterPhotos?.electricity}
+        />
+        <MeterPhotoGallery
+          label="Ảnh công tơ nước"
+          urls={handover.meterPhotos?.water}
+        />
+      </div>
+      <UtilitySettlementNote rates={utilityRates} />
       <div>
         <p className="font-semibold text-[var(--fg)]">
           Danh mục thiết bị, nội thất

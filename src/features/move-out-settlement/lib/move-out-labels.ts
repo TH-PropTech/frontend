@@ -48,6 +48,8 @@ const CLOSE_REASON_LABELS: Record<string, string> = {
 }
 
 const ERROR_LABELS: Record<string, string> = {
+  METER_READING_REGRESSION:
+    'Chỉ số trả nhà nhỏ hơn chỉ số nhận nhà. Vui lòng kiểm tra lại hoặc xác nhận công tơ đã được thay.',
   MOVE_OUT_HANDOVER_EXISTS: 'Biên bản trả nhà đã có. Hãy tải lại trang để sửa.',
   STATEMENT_EXISTS:
     'Bảng khấu trừ vừa được tạo ở nơi khác. Hãy tải lại trang để tiếp tục.',
@@ -97,6 +99,19 @@ export function getMoveOutErrorMessage(
 ): string {
   const code = readApiErrorCode(error)
   return (code && ERROR_LABELS[code]) || fallback
+}
+
+export const UTILITY_SUGGESTION_NOTES: Record<string, string> = {
+  NO_RATES:
+    'Hợp đồng không ghi đơn giá điện, nước nên chưa gợi ý được. Bạn có thể tự thêm khoản và đính ảnh công tơ.',
+  NO_MOVE_IN_READINGS:
+    'Biên bản nhận nhà không có chỉ số điện, nước nên chưa gợi ý được khoản điện nước.',
+  ELECTRICITY_READING_REGRESSION:
+    'Chỉ số điện lúc trả nhà nhỏ hơn lúc nhận nhà, nên chưa gợi ý khoản điện.',
+  WATER_READING_REGRESSION:
+    'Chỉ số nước lúc trả nhà nhỏ hơn lúc nhận nhà, nên chưa gợi ý khoản nước.',
+  NO_SERVICE_MONTHS:
+    'Nhập số tháng phí dịch vụ chưa thu nếu muốn gợi ý khoản dịch vụ.',
 }
 
 export const formatMoney = (amount: number): string =>

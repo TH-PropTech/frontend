@@ -7,6 +7,7 @@ import type {
   MoveInSettlementView,
 } from '@/features/contracts/api/contracts-api'
 import { Button } from '@/shared/ui/button'
+import type { UtilityRatesView } from '@/entities/legal-source'
 import {
   confirmHandover,
   initSettlementPayment,
@@ -28,6 +29,8 @@ export interface MoveInSettlementPanelProps {
   depositConfirmed: boolean
   onRefresh: () => void
   onOpenInvoices: () => void
+  /** Đơn giá điện nước trong hợp đồng; hợp đồng cũ không có. */
+  utilityRates?: UtilityRatesView | undefined
 }
 
 const formatMoney = (amount: number): string =>
@@ -39,6 +42,7 @@ export function MoveInSettlementPanel({
   depositConfirmed,
   onRefresh,
   onOpenInvoices,
+  utilityRates,
 }: MoveInSettlementPanelProps): ReactElement {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -190,12 +194,14 @@ export function MoveInSettlementPanel({
           busy={busy}
           onConfirm={handleConfirm}
           onReportDiscrepancy={handleReport}
+          utilityRates={utilityRates}
         />
       ) : null}
       {canRecord && !handover ? (
         <HandoverRecordForm
           busy={busy}
           isRevision={false}
+          utilityRates={utilityRates}
           onSubmit={handleRecord}
         />
       ) : null}
@@ -204,7 +210,12 @@ export function MoveInSettlementPanel({
           <summary className="min-h-11 cursor-pointer py-2 font-semibold text-[var(--fg)]">
             Sửa biên bản (tạo bản mới, khách thuê xác nhận lại)
           </summary>
-          <HandoverRecordForm busy={busy} isRevision onSubmit={handleRecord} />
+          <HandoverRecordForm
+            busy={busy}
+            isRevision
+            utilityRates={utilityRates}
+            onSubmit={handleRecord}
+          />
         </details>
       ) : null}
       {error ? (

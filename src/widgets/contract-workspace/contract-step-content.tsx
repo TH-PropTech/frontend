@@ -19,6 +19,7 @@ import { DepositPaymentPanel } from '@/features/payments'
 import { PaymentSchedulePanel } from '@/features/payments/ui/payment-schedule-panel'
 import { MoveInSettlementPanel } from '@/features/move-in-settlement'
 import { MoveOutPanel, toMoveOutGates } from '@/features/move-out-settlement'
+import { OccupantRequestsPanel } from '@/features/occupant-requests'
 import type { ContractAuditEventDto } from '@/features/contracts'
 import { ledgerEventLabel } from '@/shared/lib/ledger-event-labels'
 import { LandlordReceiptsPanel } from './landlord-receipts-panel'
@@ -334,6 +335,7 @@ export function ContractStepContent({
           gates={toMoveOutGates(data.flow?.nextActions ?? [])}
           onChanged={refresh}
           phase={data.flow?.moveOut?.phase}
+          utilityRates={data.contract.commercial.utilityRates}
         />
       </div>
     )
@@ -350,12 +352,20 @@ export function ContractStepContent({
           settlement={data.settlement ?? null}
           role={signerRole}
           depositConfirmed={isDepositPaid(data.deposit?.status)}
+          utilityRates={data.contract.commercial.utilityRates}
           onRefresh={() => void refresh()}
           onOpenInvoices={() =>
             document
               .getElementById('payment-schedule')
               ?.scrollIntoView({ behavior: 'smooth' })
           }
+        />
+        <OccupantRequestsPanel
+          contractId={contractId}
+          role={signerRole}
+          contractActive={data.contract.status === 'active'}
+          currentRent={data.contract.commercial.monthlyRent}
+          onChanged={refresh}
         />
         {signerRole === 'tenant' ? (
           <PaymentSchedulePanel contractId={contractId} />

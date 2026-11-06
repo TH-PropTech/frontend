@@ -64,6 +64,19 @@ export interface ContractPropertySnapshot {
   value: number
 }
 
+export interface ContractOccupantSnapshot {
+  fullName: string
+  birthYear: number
+  relationship: string
+}
+
+export interface ContractUtilityRatesSnapshot {
+  electricityPerKwh: number
+  waterPerM3: number
+  serviceFeeMonthly: number
+  note?: string
+}
+
 export interface ContractCommercialSnapshot {
   monthlyRent: number
   deposit: number
@@ -71,6 +84,9 @@ export interface ContractCommercialSnapshot {
   durationMonths?: number | null
   latePenaltyRate: number
   terminationNoticeDays: number
+  /** Người ở kèm ngoài người thuê; vắng mặt ở hợp đồng cũ. */
+  occupants?: ContractOccupantSnapshot[]
+  utilityRates?: ContractUtilityRatesSnapshot
 }
 
 export interface ContractDocumentSection {
@@ -462,6 +478,8 @@ export interface MoveInSettlementView {
     revision: number
     handedOverAt: string
     meterReadings: { electricity: number; water: number }
+    /** Ảnh công tơ; biên bản cũ không có. */
+    meterPhotos?: { electricity: string[]; water: string[] } | null
     keyCount: number
     inventoryReference: string | null
     /** Các trường phương án A; bản ghi cũ có thể thiếu. */
@@ -484,6 +502,8 @@ export interface HandoverInput {
   handedOverAt: string
   electricity: number
   water: number
+  /** Ảnh công tơ điện và nước: tùy chọn. */
+  meterPhotos?: { electricity: string[]; water: string[] }
   keyCount: number
   inventoryItems?: HandoverInventoryItem[]
   checklist?: Array<{ id: string; checked: boolean }>

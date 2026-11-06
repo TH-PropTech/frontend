@@ -3,6 +3,11 @@
 import { useState, type FormEvent, type ReactElement } from 'react'
 import { ClipboardList, Loader2, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { MeterPhotoField } from '@/shared/ui/meter-photo-field'
+import {
+  UtilitySettlementNote,
+  type UtilityRatesView,
+} from '@/entities/legal-source'
 import type {
   MoveOutHandover,
   MoveOutHandoverInput,
@@ -15,6 +20,8 @@ export interface MoveOutHandoverFormProps {
   busy: boolean
   /** Có bản trước: điền sẵn và nút là "Sửa biên bản". */
   initial?: MoveOutHandover | null
+  /** Đơn giá điện nước trong hợp đồng, hiển thị cạnh ghi chú tính khi trả nhà. */
+  utilityRates?: UtilityRatesView | undefined
   onSubmit: (input: MoveOutHandoverInput) => void
 }
 
@@ -43,6 +50,7 @@ const toLocalInput = (iso: string): string => {
 export function MoveOutHandoverForm({
   busy,
   initial,
+  utilityRates,
   onSubmit,
 }: MoveOutHandoverFormProps): ReactElement {
   const [handedBackAt, setHandedBackAt] = useState(
@@ -62,6 +70,13 @@ export function MoveOutHandoverForm({
     }))
   )
   const [notes, setNotes] = useState(initial?.notes ?? '')
+  const [photos, setPhotos] = useState<{
+    electricity: string[]
+    water: string[]
+  }>({
+    electricity: initial?.meterPhotos?.electricity ?? [],
+    water: initial?.meterPhotos?.water ?? [],
+  })
 
   const updateItem = (index: number, patch: Partial<ItemDraft>): void =>
     setItems(current =>
@@ -75,6 +90,9 @@ export function MoveOutHandoverForm({
       handedBackAt: new Date(handedBackAt).toISOString(),
       electricity: Number(meters.electricity),
       water: Number(meters.water),
+      ...(photos.electricity.length + photos.water.length > 0
+        ? { meterPhotos: photos }
+        : {}),
       keyCount: Number(meters.keyCount),
       inventoryItems: items.map(item => ({
         name: item.name.trim(),
@@ -121,6 +139,26 @@ export function MoveOutHandoverForm({
           />
         </label>
       ))}
+      <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+        <MeterPhotoField
+          id="move-out-photo-electricity"
+          label="Ảnh công tơ điện"
+          urls={photos.electricity}
+          disabled={busy}
+          onChange={urls => {
+            setPhotos(current => ({ ...current, electricity: urls }))
+          }}
+        />
+        <MeterPhotoField
+          id="move-out-photo-water"
+          label="Ảnh công tơ nước"
+          urls={photos.water}
+          disabled={busy}
+          onChange={urls => {
+            setPhotos(current => ({ ...current, water: urls }))
+          }}
+        />
+      </div>
       <fieldset className="space-y-2 sm:col-span-2">
         <legend className="text-xs font-semibold text-[var(--fg)]">
           Đồ đạc, thiết bị khi trả nhà
@@ -229,6 +267,7 @@ export function MoveOutHandoverForm({
           className={FIELD_CLASS}
         />
       </label>
+      <UtilitySettlementNote rates={utilityRates} />
       <Button type="submit" disabled={busy} className="min-h-11 sm:col-span-2">
         {busy ? (
           <Loader2 className="h-4 w-4 animate-spin" />

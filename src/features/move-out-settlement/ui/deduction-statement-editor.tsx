@@ -4,9 +4,17 @@ import { useState, type ChangeEvent, type ReactElement } from 'react'
 import Image from 'next/image'
 import { ImagePlus, Loader2, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { LegalReferences, LEGAL_SOURCE_KEYS } from '@/entities/legal-source'
 import { uploadEvidencePhotos } from '../api/move-out-api'
-import type { DeductionLineInput } from '../api/move-out-types'
-import { formatMoney, getMoveOutErrorMessage } from '../lib/move-out-labels'
+import type {
+  DeductionLineInput,
+  UtilitySuggestion,
+} from '../api/move-out-types'
+import {
+  UTILITY_SUGGESTION_NOTES,
+  formatMoney,
+  getMoveOutErrorMessage,
+} from '../lib/move-out-labels'
 import { FIELD_CLASS } from './note-action'
 
 export interface DeductionStatementEditorProps {
@@ -16,12 +24,17 @@ export interface DeductionStatementEditorProps {
   onSave: (lines: DeductionLineInput[]) => void
   /** Lưu rồi gửi khách. */
   onSubmit: (lines: DeductionLineInput[]) => void
+  /** Gợi ý khoản điện nước từ chỉ số công tơ; vắng thì ẩn nút gợi ý. */
+  loadSuggestions?:
+    | ((unpaidServiceMonths: number) => Promise<UtilitySuggestion>)
+    | undefined
 }
 
 interface LineDraft {
   reason: string
   amount: string
   evidenceUrls: string[]
+  source?: 'meter-suggestion'
 }
 
 const MAX_LINES = 50
@@ -36,6 +49,7 @@ const toInputs = (drafts: LineDraft[]): DeductionLineInput[] =>
     ...(line.evidenceUrls.length > 0
       ? { evidenceUrls: line.evidenceUrls }
       : {}),
+    ...(line.source ? { source: line.source } : {}),
   }))
 
 export function DeductionStatementEditor({
@@ -44,14 +58,22 @@ export function DeductionStatementEditor({
   busy,
   onSave,
   onSubmit,
+  loadSuggestions,
 }: DeductionStatementEditorProps): ReactElement {
   const [lines, setLines] = useState<LineDraft[]>(
     initialLines.map(line => ({
       reason: line.reason,
       amount: String(line.amount),
       evidenceUrls: line.evidenceUrls ?? [],
+      ...(line.source === 'meter-suggestion'
+        ? { source: 'meter-suggestion' as const }
+        : {}),
     }))
   )
+  const [unpaidMonths, setUnpaidMonths] = useState('0')
+  const [suggesting, setSuggesting] = useState(false)
+  const [suggestNotes, setSuggestNotes] = useState<string[]>([])
+  const [suggestError, setSuggestError] = useState<string | null>(null)
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
@@ -66,6 +88,36 @@ export function DeductionStatementEditor({
     setLines(current =>
       current.map((line, i) => (i === index ? { ...line, ...patch } : line))
     )
+
+  const handleSuggest = async (): Promise<void> => {
+    if (!loadSuggestions) return
+    setSuggesting(true)
+    setSuggestError(null)
+    try {
+      const result = await loadSuggestions(
+        Math.max(0, Math.floor(Number(unpaidMonths) || 0))
+      )
+      // Gợi ý mới thay gợi ý cũ; khoản Chủ nhà tự nhập được giữ nguyên.
+      setLines(current => [
+        ...current.filter(line => line.source !== 'meter-suggestion'),
+        ...result.lines.map(line => ({
+          reason: line.reason,
+          amount: String(line.amount),
+          evidenceUrls: line.evidenceUrls,
+          source: 'meter-suggestion' as const,
+        })),
+      ])
+      setSuggestNotes(
+        result.notes.map(code => UTILITY_SUGGESTION_NOTES[code] ?? code)
+      )
+    } catch (error) {
+      setSuggestError(
+        getMoveOutErrorMessage(error, 'Không tải được gợi ý. Vui lòng thử lại.')
+      )
+    } finally {
+      setSuggesting(false)
+    }
+  }
 
   const handlePhotos = async (
     index: number,
@@ -104,12 +156,69 @@ export function DeductionStatementEditor({
         trừ cần có lý do; nên kèm ảnh chứng từ. Nếu không khấu trừ khoản nào,
         hãy chốt bảng trống.
       </p>
+      {loadSuggestions ? (
+        <section
+          data-testid="utility-suggestion"
+          className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3 text-xs"
+        >
+          <p className="font-semibold text-[var(--fg)]">
+            Gợi ý khoản điện, nước và dịch vụ
+          </p>
+          <p className="text-[var(--muted)]">
+            Hệ thống tính từ chỉ số công tơ ở biên bản nhận nhà và trả nhà, nhân
+            với đơn giá trong hợp đồng. Bạn xem và sửa trước khi gửi khách; ảnh
+            công tơ của hai biên bản được đính kèm làm chứng cứ.
+          </p>
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="text-xs">
+              Số tháng phí dịch vụ chưa thu
+              <input
+                type="number"
+                min="0"
+                max="60"
+                step="1"
+                value={unpaidMonths}
+                onChange={event => setUnpaidMonths(event.target.value)}
+                className={FIELD_CLASS}
+              />
+            </label>
+            <Button
+              type="button"
+              variant="secondary"
+              className="min-h-11"
+              disabled={busy || suggesting}
+              onClick={() => void handleSuggest()}
+            >
+              {suggesting ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : null}
+              Gợi ý khoản điện nước từ chỉ số công tơ
+            </Button>
+          </div>
+          {suggestNotes.map(message => (
+            <p key={message} role="status" className="text-[var(--muted)]">
+              {message}
+            </p>
+          ))}
+          {suggestError ? (
+            <p role="alert" className="text-[var(--danger)]">
+              {suggestError}
+            </p>
+          ) : null}
+          <LegalReferences sourceKeys={LEGAL_SOURCE_KEYS.utilities} />
+        </section>
+      ) : null}
       {lines.map((line, index) => (
         <div
           key={index}
           data-testid="deduction-line-editor"
           className="space-y-2 rounded-lg border border-[var(--border)] p-3"
         >
+          {line.source === 'meter-suggestion' ? (
+            <p className="text-[11px] font-semibold text-[var(--info)]">
+              Gợi ý từ chỉ số công tơ
+            </p>
+          ) : null}
           <div className="grid gap-2 sm:grid-cols-[3fr_1fr_auto]">
             <label className="text-xs">
               Lý do khấu trừ

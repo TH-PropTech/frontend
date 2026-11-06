@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
+import { LegalReferences, LEGAL_SOURCE_KEYS } from '@/entities/legal-source'
 import {
   CUSTOM_CLAUSES_MAX_LENGTH,
   type RentalPackagePostingSchemaType,
@@ -17,7 +18,11 @@ export const LEASE_TERM_DEFAULTS = {
 export type LeaseTermsPatch = Partial<
   Pick<
     RentalPackagePostingSchemaType,
-    'paymentDay' | 'latePenaltyRate' | 'terminationNoticeDays' | 'customClauses'
+    | 'paymentDay'
+    | 'latePenaltyRate'
+    | 'terminationNoticeDays'
+    | 'customClauses'
+    | 'utilityRates'
   >
 >
 
@@ -33,6 +38,36 @@ function parseOptionalNumber(raw: string): number | undefined {
   return Number.isFinite(value) ? value : undefined
 }
 
+type UtilityRatesValue = NonNullable<
+  RentalPackagePostingSchemaType['utilityRates']
+>
+type UtilityRateField = 'electricityPerKwh' | 'waterPerM3' | 'serviceFeeMonthly'
+
+const UTILITY_NOTE =
+  'Đơn giá do hai bên thỏa thuận và ghi vào hợp đồng; hệ thống không áp bảng giá nhà nước. Tiền điện, nước và dịch vụ được tính vào lúc bàn giao lại nhà khi hết hợp đồng, theo chỉ số công tơ và ảnh công tơ trong biên bản nhận nhà và trả nhà.'
+
+/** Ba đơn giá đi cùng nhau: nhập một ô thì các ô còn lại coi là 0; xóa hết thì bỏ đơn giá. */
+function nextUtilityRates(
+  current: UtilityRatesValue | undefined,
+  patch: Partial<UtilityRatesValue>
+): UtilityRatesValue | undefined {
+  const merged: UtilityRatesValue = {
+    electricityPerKwh: 0,
+    waterPerM3: 0,
+    serviceFeeMonthly: 0,
+    ...current,
+    ...patch,
+  }
+  const empty =
+    merged.electricityPerKwh === 0 &&
+    merged.waterPerM3 === 0 &&
+    merged.serviceFeeMonthly === 0 &&
+    !merged.note?.trim()
+  if (empty) return undefined
+  if (!merged.note?.trim()) delete merged.note
+  return merged
+}
+
 export function LeaseTermsFields({
   duration,
   pkg,
@@ -41,6 +76,34 @@ export function LeaseTermsFields({
   const clauses = pkg.customClauses ?? ''
   const remaining = CUSTOM_CLAUSES_MAX_LENGTH - clauses.length
   const hintId = `custom-clauses-hint-${duration}`
+  const rates = pkg.utilityRates
+
+  const rateInput = (
+    field: UtilityRateField,
+    label: string,
+    testId: string
+  ): React.JSX.Element => (
+    <label className="block space-y-1 text-[11px] font-semibold text-fg">
+      {label}
+      <Input
+        type="number"
+        min={0}
+        max={10_000_000}
+        step={500}
+        placeholder="0"
+        data-testid={`${testId}-${duration}`}
+        value={rates?.[field] ?? ''}
+        onChange={event =>
+          onChange({
+            utilityRates: nextUtilityRates(rates, {
+              [field]: parseOptionalNumber(event.target.value) ?? 0,
+            }),
+          })
+        }
+        className="h-8 text-xs bg-surface"
+      />
+    </label>
+  )
 
   return (
     <section
@@ -103,6 +166,46 @@ export function LeaseTermsFields({
             className="h-8 text-xs bg-surface"
           />
         </label>
+      </div>
+      <div
+        className="space-y-2 rounded-md border border-border/60 p-3"
+        data-testid={`utility-rates-${duration}`}
+      >
+        <p className="text-[11px] font-semibold text-fg">
+          Đơn giá điện, nước và dịch vụ (không bắt buộc)
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {rateInput(
+            'electricityPerKwh',
+            'Điện (đồng/kWh)',
+            'electricity-rate'
+          )}
+          {rateInput('waterPerM3', 'Nước (đồng/m³)', 'water-rate')}
+          {rateInput(
+            'serviceFeeMonthly',
+            'Phí dịch vụ (đồng/tháng)',
+            'service-fee'
+          )}
+        </div>
+        <label className="block space-y-1 text-[11px] font-semibold text-fg">
+          Ghi chú cách tính
+          <Input
+            maxLength={500}
+            placeholder="Ví dụ: tính theo chỉ số công tơ riêng"
+            data-testid={`utility-note-${duration}`}
+            value={rates?.note ?? ''}
+            onChange={event =>
+              onChange({
+                utilityRates: nextUtilityRates(rates, {
+                  note: event.target.value,
+                }),
+              })
+            }
+            className="h-8 text-xs bg-surface"
+          />
+        </label>
+        <p className="text-[10px] text-muted">{UTILITY_NOTE}</p>
+        <LegalReferences sourceKeys={LEGAL_SOURCE_KEYS.utilities} />
       </div>
       <label className="block space-y-1 text-[11px] font-semibold text-fg">
         Điều khoản riêng của chủ nhà
