@@ -7,6 +7,11 @@ import type {
   HandoverInventoryItem,
 } from '@/features/contracts/api/contracts-api'
 import { Button } from '@/shared/ui/button'
+import { MeterPhotoField } from '@/shared/ui/meter-photo-field'
+import {
+  UtilitySettlementNote,
+  type UtilityRatesView,
+} from '@/entities/legal-source'
 import {
   getHandoverTemplate,
   type HandoverTemplate,
@@ -17,6 +22,8 @@ export interface HandoverRecordFormProps {
   busy: boolean
   /** Có biên bản trước → nút là "Sửa biên bản". */
   isRevision: boolean
+  /** Đơn giá điện nước trong hợp đồng, để hiển thị cạnh ghi chú tính khi trả nhà. */
+  utilityRates?: UtilityRatesView | undefined
   onSubmit: (input: HandoverInput) => void
 }
 
@@ -47,6 +54,7 @@ type MeterKey = (typeof METER_FIELDS)[number]['key']
 export function HandoverRecordForm({
   busy,
   isRevision,
+  utilityRates,
   onSubmit,
 }: HandoverRecordFormProps): ReactElement {
   const [handedOverAt, setHandedOverAt] = useState('')
@@ -57,6 +65,10 @@ export function HandoverRecordForm({
   })
   const [items, setItems] = useState<ItemDraft[]>([])
   const [notes, setNotes] = useState('')
+  const [photos, setPhotos] = useState<{
+    electricity: string[]
+    water: string[]
+  }>({ electricity: [], water: [] })
   const [template, setTemplate] = useState<HandoverTemplate | null>(null)
   const [checked, setChecked] = useState<Record<string, boolean>>({})
 
@@ -100,6 +112,9 @@ export function HandoverRecordForm({
       handedOverAt: new Date(handedOverAt).toISOString(),
       electricity: Number(meters.electricity),
       water: Number(meters.water),
+      ...(photos.electricity.length + photos.water.length > 0
+        ? { meterPhotos: photos }
+        : {}),
       keyCount: Number(meters.keyCount),
       inventoryItems: items.map(item => ({
         name: item.name.trim(),
@@ -153,6 +168,26 @@ export function HandoverRecordForm({
           />
         </label>
       ))}
+      <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+        <MeterPhotoField
+          id="handover-photo-electricity"
+          label="Ảnh công tơ điện"
+          urls={photos.electricity}
+          disabled={busy}
+          onChange={urls => {
+            setPhotos(current => ({ ...current, electricity: urls }))
+          }}
+        />
+        <MeterPhotoField
+          id="handover-photo-water"
+          label="Ảnh công tơ nước"
+          urls={photos.water}
+          disabled={busy}
+          onChange={urls => {
+            setPhotos(current => ({ ...current, water: urls }))
+          }}
+        />
+      </div>
       <fieldset className="space-y-2 sm:col-span-2">
         <legend className="text-xs font-semibold text-[var(--fg)]">
           Danh mục thiết bị, nội thất
@@ -282,6 +317,7 @@ export function HandoverRecordForm({
           className={INPUT_CLASS}
         />
       </label>
+      <UtilitySettlementNote rates={utilityRates} />
       <Button type="submit" disabled={busy} className="min-h-11 sm:col-span-2">
         {busy ? (
           <Loader2 className="h-4 w-4 animate-spin" />

@@ -26,7 +26,12 @@ vi.mock('../api/move-out-api', () => ({
   recordDepositRefund: vi.fn(),
   acknowledgeDepositRefund: vi.fn(),
   uploadEvidencePhotos: vi.fn(),
+  getUtilitySuggestions: vi.fn(),
 }))
+vi.mock('@/entities/legal-source', async () => {
+  const actual = await vi.importActual<object>('@/entities/legal-source')
+  return { ...actual, LegalReferences: () => null }
+})
 
 const renderSection = (
   role: 'tenant' | 'landlord',
@@ -110,6 +115,103 @@ describe('DepositStatementSection', () => {
     expect(api.saveDepositStatementDraft).toHaveBeenCalledWith('c1', [
       { reason: 'Sửa tường', amount: 500000 },
     ])
+  })
+
+  it('adds suggested utility lines with their meter photos, keeps manual lines and sends the suggestion source', async () => {
+    vi.mocked(api.getDepositStatement).mockResolvedValue(null)
+    vi.mocked(api.getUtilitySuggestions).mockResolvedValue({
+      lines: [
+        {
+          kind: 'electricity',
+          reason: 'Tiền điện: chỉ số đầu 1200, chỉ số cuối 1450',
+          amount: 875000,
+          evidenceUrls: ['https://cdn.example.com/in-e.jpg'],
+          source: 'meter-suggestion',
+        },
+      ],
+      notes: ['NO_SERVICE_MONTHS'],
+    })
+    renderSection('landlord')
+    fireEvent.click(
+      await screen.findByRole('button', { name: /Thêm khoản khấu trừ/ })
+    )
+    const manual = screen.getByTestId('deduction-line-editor')
+    const [reason, amount] = Array.from(manual.querySelectorAll('input'))
+    fireEvent.change(reason as HTMLInputElement, {
+      target: { value: 'Sơn tường' },
+    })
+    fireEvent.change(amount as HTMLInputElement, {
+      target: { value: '100000' },
+    })
+
+    fireEvent.change(screen.getByLabelText('Số tháng phí dịch vụ chưa thu'), {
+      target: { value: '2' },
+    })
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /Gợi ý khoản điện nước từ chỉ số công tơ/,
+      })
+    )
+
+    expect(await screen.findByText('Gợi ý từ chỉ số công tơ')).toBeDefined()
+    expect(api.getUtilitySuggestions).toHaveBeenCalledWith('c1', 2)
+    expect(screen.getAllByTestId('deduction-line-editor')).toHaveLength(2)
+    expect(screen.getByText(/Nhập số tháng phí dịch vụ chưa thu/)).toBeDefined()
+
+    vi.mocked(api.saveDepositStatementDraft).mockResolvedValue(makeStatement())
+    fireEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }))
+    await waitFor(() =>
+      expect(api.saveDepositStatementDraft).toHaveBeenCalledWith('c1', [
+        { reason: 'Sơn tường', amount: 100000 },
+        {
+          reason: 'Tiền điện: chỉ số đầu 1200, chỉ số cuối 1450',
+          amount: 875000,
+          evidenceUrls: ['https://cdn.example.com/in-e.jpg'],
+          source: 'meter-suggestion',
+        },
+      ])
+    )
+  })
+
+  it('replaces an earlier suggestion instead of duplicating it', async () => {
+    vi.mocked(api.getDepositStatement).mockResolvedValue(null)
+    vi.mocked(api.getUtilitySuggestions).mockResolvedValue({
+      lines: [
+        {
+          kind: 'water',
+          reason: 'Tiền nước',
+          amount: 120000,
+          evidenceUrls: [],
+          source: 'meter-suggestion',
+        },
+      ],
+      notes: [],
+    })
+    renderSection('landlord')
+    const button = await screen.findByRole('button', {
+      name: /Gợi ý khoản điện nước từ chỉ số công tơ/,
+    })
+    fireEvent.click(button)
+    await screen.findByText('Gợi ý từ chỉ số công tơ')
+    fireEvent.click(button)
+    await waitFor(() =>
+      expect(api.getUtilitySuggestions).toHaveBeenCalledTimes(2)
+    )
+    expect(screen.getAllByTestId('deduction-line-editor')).toHaveLength(1)
+  })
+
+  it('tells the landlord when the suggestion cannot be loaded', async () => {
+    vi.mocked(api.getDepositStatement).mockResolvedValue(null)
+    vi.mocked(api.getUtilitySuggestions).mockRejectedValue(new Error('down'))
+    renderSection('landlord')
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: /Gợi ý khoản điện nước từ chỉ số công tơ/,
+      })
+    )
+    expect(
+      await screen.findByText('Không tải được gợi ý. Vui lòng thử lại.')
+    ).toBeDefined()
   })
 
   it('uploads an evidence photo and attaches its URL', async () => {

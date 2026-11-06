@@ -52,6 +52,8 @@ export interface RentalApplicationContext {
     landlordDisplayName: string | null
   }
   pricingRevision: number
+  /** Giới hạn số người ở của căn hộ; null khi tin cũ chưa đặt. */
+  maxOccupants?: number | null
   packages: Array<{
     packageId: string
     version: number

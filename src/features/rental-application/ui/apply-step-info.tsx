@@ -50,6 +50,8 @@ export interface ApplyStepInfoProps {
   values: ApplyStepInfoValues
   apartmentArea?: number | undefined
   step1Config?: FlowStep1Config | undefined
+  /** Giới hạn số người ở của căn hộ; nhỏ hơn giới hạn của luồng thuê thì dùng giới hạn này. */
+  apartmentMaxOccupants?: number | null | undefined
   onChange: (values: Partial<ApplyStepInfoValues>) => void
   onNext: () => void
 }
@@ -62,23 +64,49 @@ export function getTodayDateString(): string {
   return `${year}-${month}-${day}`
 }
 
+/** Giới hạn áp dụng: nhỏ hơn giữa giới hạn của căn hộ và của luồng thuê. */
+export function resolveOccupantLimit(
+  profileMax: number | undefined,
+  apartmentMax: number | null | undefined,
+  fallbackMax: number
+): { max: number; fromApartment: boolean } {
+  const profile = profileMax ?? fallbackMax
+  if (
+    apartmentMax !== null &&
+    apartmentMax !== undefined &&
+    apartmentMax < profile
+  ) {
+    return { max: apartmentMax, fromApartment: true }
+  }
+  return { max: profile, fromApartment: false }
+}
+
 export function validateStepInfo(
   values: ApplyStepInfoValues,
-  config?: Partial<FlowStep1Config>
+  config?: Partial<FlowStep1Config>,
+  apartmentMaxOccupants?: number | null
 ): Record<string, string> {
   const errors: Record<string, string> = {}
   const minOccupants = config?.minOccupants ?? 1
-  const maxOccupants = config?.maxOccupants ?? 20
+  const { max: maxOccupants, fromApartment } = resolveOccupantLimit(
+    config?.maxOccupants,
+    apartmentMaxOccupants,
+    20
+  )
 
   if (
     !Number.isInteger(values.occupants) ||
     values.occupants < minOccupants ||
     values.occupants > maxOccupants
   ) {
-    errors.occupants =
-      config?.minOccupants !== undefined || config?.maxOccupants !== undefined
-        ? `Số người ở phải từ ${minOccupants} đến ${maxOccupants}.`
-        : 'Số người ở phải từ 1 đến 20.'
+    if (fromApartment && values.occupants > maxOccupants) {
+      errors.occupants = `Căn hộ này cho phép tối đa ${maxOccupants} người ở.`
+    } else {
+      errors.occupants =
+        config?.minOccupants !== undefined || config?.maxOccupants !== undefined
+          ? `Số người ở phải từ ${minOccupants} đến ${maxOccupants}.`
+          : 'Số người ở phải từ 1 đến 20.'
+    }
   }
 
   const today = new Date()
@@ -193,6 +221,7 @@ export function ApplyStepInfo({
   values,
   apartmentArea = 68,
   step1Config,
+  apartmentMaxOccupants,
   onChange,
   onNext,
 }: ApplyStepInfoProps): React.ReactElement {
@@ -202,7 +231,8 @@ export function ApplyStepInfo({
   const moveInDateLabel =
     step1Config?.moveInDateLabel?.trim() || 'Ngày dự kiến vào ở'
   const minOccupants = step1Config?.minOccupants ?? 1
-  const maxOccupants = step1Config?.maxOccupants ?? 10
+  const { max: maxOccupants, fromApartment: limitedByApartment } =
+    resolveOccupantLimit(step1Config?.maxOccupants, apartmentMaxOccupants, 10)
   const minMoveInLeadDays = step1Config?.minMoveInLeadDays ?? 0
   const maxMoveInLeadDays = step1Config?.maxMoveInLeadDays ?? 90
   const allowNotes = step1Config?.allowNotes ?? true
@@ -251,7 +281,11 @@ export function ApplyStepInfo({
 
   const handleSubmit = (event: React.FormEvent): void => {
     event.preventDefault()
-    const validationErrors = validateStepInfo(values, step1Config)
+    const validationErrors = validateStepInfo(
+      values,
+      step1Config,
+      apartmentMaxOccupants
+    )
     setErrors(validationErrors)
 
     if (Object.keys(validationErrors).length > 0) {
@@ -309,7 +343,9 @@ export function ApplyStepInfo({
                 <span className="text-danger">*</span>
               </Label>
               <span className="text-[11px] text-muted">
-                Tối ưu: 1 – {recommendedMaxOccupants} người
+                {limitedByApartment
+                  ? `Căn hộ này cho phép tối đa ${maxOccupants} người ở.`
+                  : `Tối ưu: 1 – ${recommendedMaxOccupants} người`}
               </span>
             </div>
 

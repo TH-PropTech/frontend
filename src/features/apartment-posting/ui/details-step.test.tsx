@@ -79,6 +79,25 @@ describe('DetailsStep', () => {
     expect(priceInput.value).toBe('20.000.000')
   })
 
+  it('suggests the occupant limit from area and bedrooms and lets the landlord adopt or override it', () => {
+    render(<DetailsStepHarness />)
+
+    // 65 m2 / 8 = 8 người, 2 phòng ngủ x 2 = 4 người => gợi ý 4
+    const adopt = screen.getByRole('button', { name: /Dùng gợi ý: 4 người/ })
+    fireEvent.click(adopt)
+    const input = screen.getByLabelText(
+      /Số người ở tối đa/i
+    ) as HTMLInputElement
+    expect(input.value).toBe('4')
+    expect(screen.queryByRole('button', { name: /Dùng gợi ý/ })).toBeNull()
+
+    fireEvent.change(input, { target: { value: '3' } })
+    expect(input.value).toBe('3')
+    expect(
+      screen.getByRole('button', { name: /Dùng gợi ý: 4 người/ })
+    ).toBeDefined()
+  })
+
   it('allows selecting amenities and activating rental packages in step', () => {
     render(<DetailsStepHarness />)
 

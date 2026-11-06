@@ -84,6 +84,11 @@ export function DeductionStatementView({
               data-testid="deduction-line"
               className="space-y-2 rounded-lg border border-[var(--border)] p-3"
             >
+              {line.source === 'meter-suggestion' ? (
+                <p className="text-[11px] font-semibold text-[var(--info)]">
+                  Tính từ chỉ số công tơ
+                </p>
+              ) : null}
               <div className="flex flex-wrap justify-between gap-2">
                 <span className="min-w-0 break-words font-semibold text-[var(--fg)]">
                   {index + 1}. {line.reason}

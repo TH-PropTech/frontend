@@ -2,6 +2,7 @@ import { ApiClientError, apiClient } from '@/shared/api'
 import type {
   DeductionLineInput,
   DepositStatement,
+  UtilitySuggestion,
   LineResponseInput,
   MoveOutHandover,
   MoveOutHandoverInput,
@@ -73,6 +74,14 @@ export const getDepositStatement = (
   contractId: string
 ): Promise<DepositStatement | null> =>
   getOrNull<DepositStatement>(statementPath(contractId))
+
+export const getUtilitySuggestions = (
+  contractId: string,
+  unpaidServiceMonths: number
+): Promise<UtilitySuggestion> =>
+  apiClient.get<UtilitySuggestion>(
+    `${statementPath(contractId)}/utility-suggestions?unpaidServiceMonths=${unpaidServiceMonths}`
+  )
 
 export const saveDepositStatementDraft = (
   contractId: string,

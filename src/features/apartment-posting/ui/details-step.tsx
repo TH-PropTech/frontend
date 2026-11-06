@@ -18,6 +18,12 @@ import {
   rentWarning,
 } from '../model/rent-limits'
 import { RentalPackagesConfigSection } from './rental-packages-config-section'
+import { suggestMaxOccupants } from '../model/occupancy'
+import {
+  LegalReferences,
+  LEGAL_SOURCE_KEYS,
+  RESIDENCE_AREA_NOTE,
+} from '@/entities/legal-source'
 import { VndInput } from './vnd-input'
 import { APARTMENT_CATEGORIES } from '../model/apartment-categories'
 import { AMENITIES_LIST } from '../model/amenities'
@@ -66,6 +72,11 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
   const water = watch('water')
   const internet = watch('internet')
   const selectedAmenities = watch('amenities') || []
+  const maxOccupants = watch('maxOccupants')
+  const suggestedOccupants = suggestMaxOccupants(
+    Number(watch('area')),
+    Number(watch('bedrooms'))
+  )
 
   const toggleAmenity = (id: string, checked: boolean) => {
     if (checked) {
@@ -194,6 +205,58 @@ export function DetailsStep({ form }: DetailsStepProps): React.ReactElement {
 
       {/* Gói thuê linh hoạt & Chính sách cọc */}
       <RentalPackagesConfigSection form={form} />
+
+      {/* Số người ở tối đa */}
+      <div className="space-y-2" data-testid="max-occupants-field">
+        <Label htmlFor="maxOccupants" className="flex items-center gap-1">
+          Số người ở tối đa
+        </Label>
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            id="maxOccupants"
+            type="number"
+            min={1}
+            max={20}
+            placeholder="Ví dụ: 4"
+            className="w-32 bg-background/50 backdrop-blur-sm border-border"
+            {...register('maxOccupants', {
+              setValueAs: (value: unknown) =>
+                value === '' || value === null || value === undefined
+                  ? null
+                  : Number(value),
+            })}
+          />
+          {suggestedOccupants !== null &&
+          maxOccupants !== suggestedOccupants ? (
+            <button
+              type="button"
+              onClick={() =>
+                setValue('maxOccupants', suggestedOccupants, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-fg hover:bg-surface-muted"
+            >
+              Dùng gợi ý: {suggestedOccupants} người
+            </button>
+          ) : null}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Hồ sơ thuê và yêu cầu thêm người ở không vượt quá số này. Để trống thì
+          theo cấu hình luồng thuê của bạn.
+        </p>
+        {errors.maxOccupants && (
+          <p className="text-xs text-destructive">
+            {errors.maxOccupants.message ||
+              'Số người ở tối đa phải từ 1 đến 20.'}
+          </p>
+        )}
+        <LegalReferences
+          sourceKeys={LEGAL_SOURCE_KEYS.residence}
+          note={RESIDENCE_AREA_NOTE}
+        />
+      </div>
 
       {/* Số lượng phòng */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

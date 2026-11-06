@@ -22,6 +22,39 @@ vi.mock('../api/move-out-api', () => ({
   downloadMoveOutHandoverPdf: vi.fn(),
 }))
 vi.mock('sonner', () => ({ toast: { error: vi.fn() } }))
+vi.mock('@/shared/api/upload-images', () => ({
+  uploadImages: vi.fn().mockResolvedValue(['https://cdn.example.com/m.jpg']),
+}))
+vi.mock('@/entities/legal-source', async () => {
+  const actual = await vi.importActual<object>('@/entities/legal-source')
+  return { ...actual, LegalReferences: () => null }
+})
+
+const PHOTO = new File([new Uint8Array(10)], 'ct.jpg', { type: 'image/jpeg' })
+
+async function attachMeterPhotos(): Promise<void> {
+  fireEvent.change(screen.getByLabelText('Chọn ảnh công tơ điện'), {
+    target: { files: [PHOTO] },
+  })
+  await screen.findByAltText('Ảnh công tơ điện 1')
+  fireEvent.change(screen.getByLabelText('Chọn ảnh công tơ nước'), {
+    target: { files: [PHOTO] },
+  })
+  await screen.findByAltText('Ảnh công tơ nước 1')
+}
+
+async function fillAndSubmit(): Promise<void> {
+  const form = await screen.findByRole('form', { name: 'Biên bản trả nhà' })
+  const inputs = form.querySelectorAll('input')
+  fireEvent.change(inputs[0] as HTMLInputElement, {
+    target: { value: '2026-10-01T10:00' },
+  })
+  fireEvent.change(inputs[1] as HTMLInputElement, { target: { value: '120' } })
+  fireEvent.change(inputs[2] as HTMLInputElement, { target: { value: '30' } })
+  fireEvent.change(inputs[3] as HTMLInputElement, { target: { value: '2' } })
+  await attachMeterPhotos()
+  fireEvent.click(screen.getByRole('button', { name: 'Ghi biên bản trả nhà' }))
+}
 
 const renderSection = (
   role: 'tenant' | 'landlord',
@@ -68,6 +101,23 @@ describe('MoveOutHandoverSection', () => {
     vi.mocked(api.getMoveOutHandover).mockResolvedValue(null)
     vi.mocked(api.recordMoveOutHandover).mockResolvedValue(makeHandover())
     renderSection('landlord')
+    await fillAndSubmit()
+    await waitFor(() => expect(api.recordMoveOutHandover).toHaveBeenCalled())
+    const input = vi.mocked(api.recordMoveOutHandover).mock.calls[0]?.[1]
+    expect(input).toMatchObject({
+      electricity: 120,
+      water: 30,
+      keyCount: 2,
+      meterPhotos: {
+        electricity: ['https://cdn.example.com/m.jpg'],
+        water: ['https://cdn.example.com/m.jpg'],
+      },
+    })
+  })
+
+  it('records without meter photos and omits meterPhotos from the payload', async () => {
+    vi.mocked(api.getMoveOutHandover).mockResolvedValue(null)
+    renderSection('landlord')
     const form = await screen.findByRole('form', { name: 'Biên bản trả nhà' })
     const inputs = form.querySelectorAll('input')
     fireEvent.change(inputs[0] as HTMLInputElement, {
@@ -81,9 +131,56 @@ describe('MoveOutHandoverSection', () => {
     fireEvent.click(
       screen.getByRole('button', { name: 'Ghi biên bản trả nhà' })
     )
-    await waitFor(() => expect(api.recordMoveOutHandover).toHaveBeenCalled())
-    const input = vi.mocked(api.recordMoveOutHandover).mock.calls[0]?.[1]
-    expect(input).toMatchObject({ electricity: 120, water: 30, keyCount: 2 })
+    expect(api.recordMoveOutHandover).toHaveBeenCalledTimes(1)
+    expect(
+      vi.mocked(api.recordMoveOutHandover).mock.calls[0]![1]
+    ).not.toHaveProperty('meterPhotos')
+  })
+
+  it('asks the landlord to confirm when the meter is below the move-in reading, then resubmits with the acknowledgement', async () => {
+    vi.mocked(api.getMoveOutHandover).mockResolvedValue(null)
+    vi.mocked(api.recordMoveOutHandover)
+      .mockRejectedValueOnce(
+        new ApiClientError('Conflict', 409, {
+          code: 'METER_READING_REGRESSION',
+          message: 'Chỉ số trả nhà nhỏ hơn chỉ số nhận nhà.',
+        })
+      )
+      .mockResolvedValueOnce(makeHandover())
+    renderSection('landlord')
+    await fillAndSubmit()
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Xác nhận chỉ số và ghi biên bản',
+      })
+    )
+    await waitFor(() =>
+      expect(api.recordMoveOutHandover).toHaveBeenCalledTimes(2)
+    )
+    expect(
+      vi.mocked(api.recordMoveOutHandover).mock.calls[1]?.[1]
+    ).toMatchObject({ electricity: 120, acknowledgeMeterRegression: true })
+    await waitFor(() =>
+      expect(screen.queryByTestId('meter-regression-prompt')).toBeNull()
+    )
+  })
+
+  it('lets the landlord go back and fix the reading instead of confirming', async () => {
+    vi.mocked(api.getMoveOutHandover).mockResolvedValue(null)
+    vi.mocked(api.recordMoveOutHandover).mockRejectedValue(
+      new ApiClientError('Conflict', 409, {
+        code: 'METER_READING_REGRESSION',
+        message: 'x',
+      })
+    )
+    renderSection('landlord')
+    await fillAndSubmit()
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Sửa lại chỉ số' })
+    )
+    expect(screen.queryByTestId('meter-regression-prompt')).toBeNull()
+    expect(api.recordMoveOutHandover).toHaveBeenCalledTimes(1)
   })
 
   it('lets the tenant confirm with the current hash', async () => {

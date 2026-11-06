@@ -17,6 +17,7 @@ export interface LandlordApartmentItem {
   priceMonthly: number
   area: number
   bedrooms: number
+  maxOccupants?: number | null
   bathrooms: number
   direction: string
   balconyDirection: string

@@ -69,6 +69,7 @@ export function ApartmentPostingForm({
           : 0,
         area: initialData.area || 0,
         bedrooms: initialData.bedrooms || 0,
+        maxOccupants: initialData.maxOccupants ?? null,
         bathrooms: initialData.bathrooms || 0,
         direction: initialData.direction || '',
         balconyDirection: initialData.balconyDirection || '',
@@ -100,6 +101,7 @@ export function ApartmentPostingForm({
       rentalPackages: [],
       area: 0,
       bedrooms: 1,
+      maxOccupants: null,
       bathrooms: 1,
       direction: '',
       balconyDirection: '',
@@ -139,6 +141,7 @@ export function ApartmentPostingForm({
         'priceMonthly',
         'area',
         'bedrooms',
+        'maxOccupants',
         'bathrooms',
         'description',
       ]

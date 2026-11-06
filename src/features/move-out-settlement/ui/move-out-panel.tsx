@@ -3,6 +3,7 @@
 import { useState, type ReactElement } from 'react'
 import type { ContractMoveOutPhase } from '@/features/contracts/api/contracts-api'
 import { getMoveOutPhaseLabel } from '@/features/contracts/lib/contract-labels'
+import type { UtilityRatesView } from '@/entities/legal-source'
 import type { MoveOutGates } from '../api/move-out-types'
 import { DepositStatementSection } from './deposit-statement-section'
 import {
@@ -21,6 +22,8 @@ export interface MoveOutPanelProps {
   onChanged?: () => unknown
   /** Giai đoạn do server tính, hiện thành nhãn tiếng Việt. */
   phase?: ContractMoveOutPhase | undefined
+  /** Đơn giá điện nước trong hợp đồng; hợp đồng cũ không có. */
+  utilityRates?: UtilityRatesView | undefined
 }
 
 /** Trả nhà và hoàn cọc: biên bản trả nhà trước, bảng khấu trừ và hoàn cọc sau. */
@@ -31,6 +34,7 @@ export function MoveOutPanel({
   gates,
   onChanged,
   phase,
+  utilityRates,
 }: MoveOutPanelProps): ReactElement {
   const [handoverCompleted, setHandoverCompleted] = useState(false)
   return (
@@ -45,6 +49,7 @@ export function MoveOutPanel({
         role={role}
         gates={gates}
         onChanged={onChanged}
+        utilityRates={utilityRates}
         onCompletedChange={setHandoverCompleted}
       />
       <DepositStatementSection

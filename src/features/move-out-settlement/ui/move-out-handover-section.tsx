@@ -4,6 +4,8 @@ import { useEffect, useState, type ReactElement } from 'react'
 import { FileDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/shared/ui/button'
+import { readApiErrorCode } from '@/shared/api'
+import type { UtilityRatesView } from '@/entities/legal-source'
 import {
   confirmMoveOutHandover,
   disputeMoveOutHandover,
@@ -28,6 +30,8 @@ export interface MoveOutHandoverSectionProps {
   gates?: MoveOutGates | undefined
   /** Gọi sau mỗi thao tác ghi thành công để cha tải lại hợp đồng. */
   onChanged?: (() => unknown) | undefined
+  /** Đơn giá điện nước trong hợp đồng; hợp đồng cũ không có. */
+  utilityRates?: UtilityRatesView | undefined
   /** Báo lên cha khi biên bản đã hoàn tất để mở bảng khấu trừ. */
   onCompletedChange: (completed: boolean) => void
 }
@@ -37,12 +41,15 @@ export function MoveOutHandoverSection({
   role,
   gates,
   onChanged,
+  utilityRates,
   onCompletedChange,
 }: MoveOutHandoverSectionProps): ReactElement {
   const { handover, isLoading, isError, refetch, busy, error, run } =
     useMoveOutHandover(contractId, onChanged)
   const [downloading, setDownloading] = useState(false)
   const [showRevise, setShowRevise] = useState(false)
+  const [pendingRegression, setPendingRegression] =
+    useState<MoveOutHandoverInput | null>(null)
 
   const isCompleted = handover?.status === 'completed'
   const recordBusy = busy || isGateBlocked(gates, 'RECORD_MOVE_OUT_HANDOVER')
@@ -79,14 +86,73 @@ export function MoveOutHandoverSection({
   }
 
   const handleRecord = (input: MoveOutHandoverInput): void => {
-    void run(
-      () =>
-        handover
+    let needsConfirmation = false
+    void run(async () => {
+      try {
+        await (handover
           ? reviseMoveOutHandover(contractId, input)
-          : recordMoveOutHandover(contractId, input),
-      'Không ghi được biên bản trả nhà.'
-    ).then(ok => ok && setShowRevise(false))
+          : recordMoveOutHandover(contractId, input))
+      } catch (recordError) {
+        // Công tơ có thể đã được thay: hỏi lại thay vì chặn hẳn.
+        if (
+          !input.acknowledgeMeterRegression &&
+          readApiErrorCode(recordError) === 'METER_READING_REGRESSION'
+        ) {
+          needsConfirmation = true
+          return
+        }
+        throw recordError
+      }
+    }, 'Không ghi được biên bản trả nhà.').then(ok => {
+      if (needsConfirmation) {
+        setPendingRegression(input)
+        return
+      }
+      if (ok) {
+        setPendingRegression(null)
+        setShowRevise(false)
+      }
+    })
   }
+
+  const regressionPrompt = pendingRegression ? (
+    <div
+      role="alert"
+      data-testid="meter-regression-prompt"
+      className="space-y-2 rounded-lg border border-[var(--warning)] bg-[var(--surface-muted)] p-3 text-xs"
+    >
+      <p className="font-semibold text-[var(--fg)]">
+        Chỉ số trả nhà nhỏ hơn chỉ số nhận nhà.
+      </p>
+      <p className="text-[var(--muted)]">
+        Hãy kiểm tra lại chỉ số. Nếu công tơ đã được thay hoặc chỉ số đúng như
+        ảnh chụp, bạn có thể xác nhận để ghi biên bản.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          className="min-h-11"
+          disabled={recordBusy}
+          onClick={() =>
+            handleRecord({
+              ...pendingRegression,
+              acknowledgeMeterRegression: true,
+            })
+          }
+        >
+          Xác nhận chỉ số và ghi biên bản
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          className="min-h-11"
+          onClick={() => setPendingRegression(null)}
+        >
+          Sửa lại chỉ số
+        </Button>
+      </div>
+    </div>
+  ) : null
 
   return (
     <section
@@ -119,12 +185,20 @@ export function MoveOutHandoverSection({
               Ghi lại hiện trạng căn hộ khi khách trả nhà. Khách thuê sẽ xác
               nhận hoặc phản đối trong hạn đã ghi trong hợp đồng.
             </p>
-            <MoveOutHandoverForm busy={recordBusy} onSubmit={handleRecord} />
+            <MoveOutHandoverForm
+              busy={recordBusy}
+              utilityRates={utilityRates}
+              onSubmit={handleRecord}
+            />
+            {regressionPrompt}
           </>
         ) : null}
         {handover ? (
           <>
-            <MoveOutHandoverView handover={handover} />
+            <MoveOutHandoverView
+              handover={handover}
+              utilityRates={utilityRates}
+            />
             {role === 'tenant' && handover.status === 'recorded' ? (
               <TenantActions
                 confirmBusy={confirmBusy}
@@ -168,9 +242,11 @@ export function MoveOutHandoverSection({
                   <MoveOutHandoverForm
                     busy={recordBusy}
                     initial={handover}
+                    utilityRates={utilityRates}
                     onSubmit={handleRecord}
                   />
                 ) : null}
+                {regressionPrompt}
               </div>
             ) : null}
             {handover.status === 'recorded' ? (

@@ -62,6 +62,45 @@ describe('ApplyStepInfo Component', () => {
     expect(errors.notes).toBe('Ghi chú không được vượt quá 1000 ký tự.')
   })
 
+  it('limits occupants by the apartment when it is stricter than the flow profile', () => {
+    const profile = { minOccupants: 1, maxOccupants: 10 }
+    expect(
+      validateStepInfo({ ...validValues, occupants: 5 }, profile, 4).occupants
+    ).toBe('Căn hộ này cho phép tối đa 4 người ở.')
+    expect(
+      validateStepInfo({ ...validValues, occupants: 4 }, profile, 4).occupants
+    ).toBeUndefined()
+  })
+
+  it('keeps the flow profile limit when it is stricter than the apartment', () => {
+    const profile = { minOccupants: 1, maxOccupants: 4 }
+    expect(
+      validateStepInfo({ ...validValues, occupants: 5 }, profile, 6).occupants
+    ).toBe('Số người ở phải từ 1 đến 4.')
+  })
+
+  it('does not block legacy listings without an apartment limit', () => {
+    expect(
+      validateStepInfo({ ...validValues, occupants: 12 }, undefined, null)
+        .occupants
+    ).toBeUndefined()
+  })
+
+  it('tells the tenant the apartment limit next to the occupants field', () => {
+    render(
+      <ApplyStepInfo
+        values={validValues}
+        apartmentArea={60}
+        apartmentMaxOccupants={3}
+        onChange={vi.fn()}
+        onNext={vi.fn()}
+      />
+    )
+    expect(
+      screen.getByText('Căn hộ này cho phép tối đa 3 người ở.')
+    ).toBeInTheDocument()
+  })
+
   it('submits form successfully and calls onNext when all inputs are valid', () => {
     const onNext = vi.fn()
     const onChange = vi.fn()
