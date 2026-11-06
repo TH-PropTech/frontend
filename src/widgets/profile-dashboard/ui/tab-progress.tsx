@@ -14,6 +14,7 @@ import {
   SelectItem,
 } from '@/shared/ui/select'
 import { UseProfileReturn } from '../model/use-profile'
+import type { Property } from '../model/types'
 import {
   Sparkles,
   AlertTriangle,
@@ -35,6 +36,12 @@ import { LandlordContractSummary } from './landlord-contract-summary'
 import { LandlordAppointments } from './landlord-appointments'
 import { TenantAppointments } from './tenant-appointments'
 import { LandlordAcceptedAppointments } from './landlord-accepted-appointments'
+
+const PROPERTY_STATUS_STYLE: Record<Property['status'], string> = {
+  'Đang thuê': 'bg-success-soft text-success',
+  'Đang chờ cọc': 'bg-warning-soft text-warning',
+  Trống: 'bg-surface-muted text-muted',
+}
 
 interface TabProgressProps {
   profile: UseProfileReturn
@@ -184,12 +191,21 @@ export function TabProgress({ profile }: TabProgressProps): React.ReactElement {
               onValueChange={handlePropertyChange}
             >
               <SelectTrigger className="w-full bg-white border border-border rounded-xl px-4 py-2.5 text-xs font-semibold text-fg focus:ring-1 focus:ring-primary">
-                <SelectValue placeholder="Chọn căn hộ" />
+                <SelectValue placeholder="Chọn căn hộ">
+                  {activeProperty?.name}
+                </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-white border border-border">
+              <SelectContent className="bg-white border border-border max-h-72 max-w-[min(30rem,calc(100vw-2rem))]">
                 {properties.map(p => (
                   <SelectItem key={p.id} value={p.id} className="text-xs">
-                    {p.name} ({p.status})
+                    <span className="flex items-center gap-2">
+                      <span className="max-w-[18rem] truncate">{p.name}</span>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${PROPERTY_STATUS_STYLE[p.status]}`}
+                      >
+                        {p.status}
+                      </span>
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
