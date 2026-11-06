@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import * as React from 'react'
-import { renderHook as baseRenderHook, act } from '@testing-library/react'
+import {
+  renderHook as baseRenderHook,
+  act,
+  waitFor,
+} from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useProfile } from './use-profile'
 
@@ -29,13 +33,13 @@ vi.mock('next/navigation', () => ({
   }),
 }))
 
-vi.mock('../api/kyc-api', () => ({
-  getMyKyc: vi.fn().mockResolvedValue(null),
-}))
+const getMyKycMock = vi.hoisted(() => vi.fn())
+vi.mock('../api/kyc-api', () => ({ getMyKyc: getMyKycMock }))
 
 describe('useProfile', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    getMyKycMock.mockResolvedValue(null)
     localStorage.clear()
     window.history.replaceState({}, '', '/profile')
   })
@@ -120,6 +124,27 @@ describe('useProfile', () => {
       expect.stringContaining('role=landlord'),
       { scroll: false }
     )
+  })
+
+  it('keeps the verified KYC status when the role changes', async () => {
+    localStorage.setItem('accessToken', 'token')
+    getMyKycMock.mockResolvedValue({
+      status: 'verified',
+      idCardNumber: '054200000683',
+    })
+    const { result } = renderHook(() => useProfile())
+    await waitFor(() => expect(result.current.isKycVerified).toBe(true))
+
+    act(() => {
+      result.current.handleRoleChange('landlord')
+    })
+    expect(result.current.isKycVerified).toBe(true)
+    expect(result.current.kycForm.cccdNumber).toBe('054200000683')
+
+    act(() => {
+      result.current.handleRoleChange('tenant')
+    })
+    expect(result.current.isKycVerified).toBe(true)
   })
 
   it('reads URL query params on mount and applies them', async () => {

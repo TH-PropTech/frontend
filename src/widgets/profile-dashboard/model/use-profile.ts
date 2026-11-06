@@ -575,9 +575,7 @@ export function useProfile(): UseProfileReturn {
     setRole(newRole)
     setIsWalletConnected(false)
     setWalletAddress('')
-    setKycStatus('not-started')
-    setCccdUploaded(false)
-    setKycForm(EMPTY_KYC)
+    // KYC gắn với tài khoản, không theo vai trò: không đặt lại khi đổi vai trò.
     setActivePropertyId('prop-1')
     const targetTab =
       newRole === 'tenant' && activeTab === 'listings' ? 'progress' : activeTab
