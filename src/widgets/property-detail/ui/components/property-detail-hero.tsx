@@ -11,6 +11,19 @@ import {
 import { useFavorites } from '@/shared/lib/use-favorites'
 import { AuthRequiredModal } from '@/widgets/community-dashboard/ui/components/auth-required-modal'
 
+const subscribeNoop = (): (() => void) => () => {}
+
+function readStoredUserId(): string | null {
+  try {
+    const raw = localStorage.getItem('user')
+    if (!raw) return null
+    const u = JSON.parse(raw) as { id?: string; _id?: string }
+    return u.id ?? u._id ?? null
+  } catch {
+    return null
+  }
+}
+
 interface PropertyDetailHeroProps {
   property: ApartmentItem
 }
@@ -21,6 +34,12 @@ export function PropertyDetailHero({
   const { isFavorite, toggleFavorite } = useFavorites()
   const [showAuthModal, setShowAuthModal] = React.useState(false)
   const favorite = isFavorite(property.id)
+  const viewerId = React.useSyncExternalStore(
+    subscribeNoop,
+    readStoredUserId,
+    () => null
+  )
+  const isOwnListing = Boolean(viewerId) && property.landlord?.id === viewerId
   const availability = getRentalAvailabilityPresentation(property)
   const [copied, setCopied] = React.useState(false)
   const shortListingId = property.id.slice(-8)
@@ -128,30 +147,32 @@ export function PropertyDetailHero({
               <span>Quay lại danh sách căn hộ</span>
             </span>
           </Link>
-          <button
-            onClick={() => {
-              const success = toggleFavorite(property.id, property.title)
-              if (!success) {
-                setShowAuthModal(true)
-              }
-            }}
-            className="flex shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2 rounded-full border border-border bg-white shadow-sm hover:border-danger/40 hover:bg-danger/5 active:scale-95 transition-all text-xs font-bold text-fg cursor-pointer"
-          >
-            <svg
-              className={`h-4 w-4 shrink-0 transition-colors ${favorite ? 'fill-danger text-danger' : 'text-primary'}`}
-              fill={favorite ? 'currentColor' : 'none'}
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2.2"
+          {!isOwnListing && (
+            <button
+              onClick={() => {
+                const success = toggleFavorite(property.id, property.title)
+                if (!success) {
+                  setShowAuthModal(true)
+                }
+              }}
+              className="flex shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2 rounded-full border border-border bg-white shadow-sm hover:border-danger/40 hover:bg-danger/5 active:scale-95 transition-all text-xs font-bold text-fg cursor-pointer"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
-              />
-            </svg>
-            <span>{favorite ? 'Đã lưu' : 'Lưu tin'}</span>
-          </button>
+              <svg
+                className={`h-4 w-4 shrink-0 transition-colors ${favorite ? 'fill-danger text-danger' : 'text-primary'}`}
+                fill={favorite ? 'currentColor' : 'none'}
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2.2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+                />
+              </svg>
+              <span>{favorite ? 'Đã lưu' : 'Lưu tin'}</span>
+            </button>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-3 mb-3">

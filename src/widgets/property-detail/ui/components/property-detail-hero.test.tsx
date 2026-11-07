@@ -55,7 +55,33 @@ const property: ApartmentItem = {
 }
 
 describe('PropertyDetailHero availability projection', () => {
-  afterEach(() => cleanup())
+  afterEach(() => {
+    cleanup()
+    localStorage.clear()
+  })
+
+  const landlord = {
+    id: 'landlord-1',
+    fullName: 'A',
+    email: 'a@x.vn',
+    phone: '0900000000',
+    avatar: '',
+    kycStatus: 'verified',
+  }
+
+  it('hides the save button when the viewer owns the listing', () => {
+    localStorage.setItem('user', JSON.stringify({ id: 'landlord-1' }))
+    render(<PropertyDetailHero property={{ ...property, landlord }} />)
+
+    expect(screen.queryByText('Lưu tin')).not.toBeInTheDocument()
+  })
+
+  it('shows the save button for other viewers and guests', () => {
+    localStorage.setItem('user', JSON.stringify({ id: 'tenant-9' }))
+    render(<PropertyDetailHero property={{ ...property, landlord }} />)
+
+    expect(screen.getByText('Lưu tin')).toBeInTheDocument()
+  })
 
   it('renders the backend availability label as accessible status text', () => {
     render(<PropertyDetailHero property={property} />)
