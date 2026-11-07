@@ -17,6 +17,7 @@ import {
 import { Button } from '@/shared/ui/button'
 import { getMyRentalApplications } from '../api/rental-application-api'
 import type { RentalApplicationItem } from '../api/rental-application-api'
+import { getApplicationReasonLabel } from '../lib/application-labels'
 import { ApplicationStatusBadge } from './application-status-badge'
 import { ApplicationDetailDialog } from './application-detail-dialog'
 
@@ -183,7 +184,7 @@ export function ApplicationList(): React.ReactElement {
 
               {isRejected && item.reasonCode ? (
                 <p className="text-xs text-danger">
-                  Lý do từ chối: {item.reasonCode}
+                  Lý do từ chối: {getApplicationReasonLabel(item.reasonCode)}
                 </p>
               ) : null}
 

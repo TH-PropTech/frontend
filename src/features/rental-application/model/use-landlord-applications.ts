@@ -10,6 +10,7 @@ import {
   type RentalApplicationItem,
   type RentalApplicationList,
 } from '../api/rental-application-api'
+import { getRespondErrorMessage } from '../lib/application-labels'
 
 export type ApplicationFilterStatus =
   | 'all'
@@ -74,18 +75,12 @@ export function useLandlordApplications() {
       setSelectedApplication(null)
     },
     onError: (err: unknown) => {
-      if (isApplicationRevisionStaleError(err)) {
-        toast.error(
-          'Hồ sơ đã được cập nhật bởi một phiên làm việc khác. Dữ liệu đang được làm mới.'
-        )
-        queryClient.invalidateQueries({
-          queryKey: ['rental-applications', 'received'],
-        })
-      } else {
-        const message =
-          err instanceof Error ? err.message : 'Xử lý hồ sơ thất bại'
-        toast.error(message)
-      }
+      toast.error(
+        getRespondErrorMessage(err, isApplicationRevisionStaleError(err))
+      )
+      queryClient.invalidateQueries({
+        queryKey: ['rental-applications', 'received'],
+      })
     },
   })
 

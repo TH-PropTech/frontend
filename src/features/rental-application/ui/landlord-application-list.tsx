@@ -15,6 +15,7 @@ import {
   PawPrint,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
+import { getApplicationReasonLabel } from '../lib/application-labels'
 import { ApplicationStatusBadge } from './application-status-badge'
 import {
   useLandlordApplications,
@@ -245,7 +246,10 @@ export function LandlordApplicationList({
 
                   {isRejected && item.reasonCode && (
                     <p className="text-xs text-danger">
-                      Lý do từ chối: <strong>{item.reasonCode}</strong>
+                      Lý do từ chối:{' '}
+                      <strong>
+                        {getApplicationReasonLabel(item.reasonCode)}
+                      </strong>
                     </p>
                   )}
                 </div>

@@ -36,6 +36,7 @@ import {
   UserCheck,
   Users,
 } from 'lucide-react'
+import { getApplicationReasonLabel } from '../lib/application-labels'
 import { ApplicationStatusBadge } from './application-status-badge'
 import type { RentalApplicationItem } from '../api/rental-application-api'
 
@@ -522,7 +523,10 @@ export function ApplicationDetailDialog({
                       </p>
                       {isRejected && application.reasonCode && (
                         <p className="text-xs text-danger mt-1">
-                          Lý do: <strong>{application.reasonCode}</strong>
+                          Lý do:{' '}
+                          <strong>
+                            {getApplicationReasonLabel(application.reasonCode)}
+                          </strong>
                         </p>
                       )}
                       {!isAccepted && !isRejected && (

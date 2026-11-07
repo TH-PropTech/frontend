@@ -255,6 +255,36 @@ describe('useLandlordApplications', () => {
     )
   })
 
+  it('shows the Vietnamese conflict message and refetches on reservation conflict', async () => {
+    vi.mocked(api.getReceivedRentalApplications).mockResolvedValue(mockResponse)
+    vi.mocked(api.respondToRentalApplication).mockRejectedValue(
+      new Error('RENTAL_RESERVATION_CONFLICT')
+    )
+    vi.mocked(api.isApplicationRevisionStaleError).mockReturnValue(true)
+
+    const { result } = renderHook(() => useLandlordApplications(), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+    expect(api.getReceivedRentalApplications).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      await result.current
+        .respond({ id: 'app-1', status: 'accepted', reasonCode: 'APPROVED' })
+        .catch(() => undefined)
+    })
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'Căn hộ đã có hồ sơ khác được chấp thuận. Hồ sơ này đã được tự động từ chối.'
+    )
+    await waitFor(() => {
+      expect(api.getReceivedRentalApplications).toHaveBeenCalledTimes(2)
+    })
+  })
+
   it('handles generic error on respond failure', async () => {
     vi.mocked(api.getReceivedRentalApplications).mockResolvedValue(mockResponse)
     const error = new Error('Network failure')
