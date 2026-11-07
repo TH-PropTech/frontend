@@ -118,23 +118,42 @@ describe('HandoverRecordForm template', () => {
     })
   })
 
-  it('submits with only one meter photo attached', async () => {
-    vi.mocked(api.getHandoverTemplate).mockResolvedValue(null)
-    const onSubmit = vi.fn()
-    render(
-      <HandoverRecordForm busy={false} isRevision={false} onSubmit={onSubmit} />
-    )
-    fillRequired()
-    fireEvent.change(screen.getByLabelText('Chọn ảnh công tơ điện'), {
-      target: { files: [PHOTO] },
-    })
-    await screen.findByAltText('Ảnh công tơ điện 1')
-    fireEvent.click(screen.getByRole('button', { name: /Ghi biên bản/ }))
+  it.each([
+    [
+      'water',
+      'Chọn ảnh công tơ điện',
+      'Ảnh công tơ điện 1',
+      'Vui lòng tải ít nhất một ảnh công tơ nước.',
+    ],
+    [
+      'electricity',
+      'Chọn ảnh công tơ nước',
+      'Ảnh công tơ nước 1',
+      'Vui lòng tải ít nhất một ảnh công tơ điện.',
+    ],
+  ])(
+    'blocks submit and names the missing %s photo',
+    async (_missing, attachLabel, attachedAlt, message) => {
+      vi.mocked(api.getHandoverTemplate).mockResolvedValue(null)
+      const onSubmit = vi.fn()
+      render(
+        <HandoverRecordForm
+          busy={false}
+          isRevision={false}
+          onSubmit={onSubmit}
+        />
+      )
+      fillRequired()
+      fireEvent.change(screen.getByLabelText(attachLabel), {
+        target: { files: [PHOTO] },
+      })
+      await screen.findByAltText(attachedAlt)
+      fireEvent.click(screen.getByRole('button', { name: /Ghi biên bản/ }))
 
-    expect(onSubmit).toHaveBeenCalledTimes(1)
-    expect(onSubmit.mock.calls[0]![0].meterPhotos.water).toEqual([])
-    expect(onSubmit.mock.calls[0]![0].meterPhotos.electricity).toHaveLength(1)
-  })
+      expect(onSubmit).not.toHaveBeenCalled()
+      expect(screen.getByRole('alert').textContent).toBe(message)
+    }
+  )
 
   it('shows the hand-back settlement note with the contract rates', () => {
     vi.mocked(api.getHandoverTemplate).mockResolvedValue(null)

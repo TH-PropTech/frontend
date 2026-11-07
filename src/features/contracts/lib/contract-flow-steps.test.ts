@@ -50,6 +50,20 @@ describe('contract-flow-steps', () => {
     expect(isContractRouteStep('document')).toBe(true)
     expect(isContractRouteStep('unknown')).toBe(false)
   })
+
+  it.each(['document', 'deposit', 'signing', 'ledger', 'move-in', 'move-out'])(
+    'accepts the route step %s',
+    step => {
+      expect(isContractRouteStep(step)).toBe(true)
+    }
+  )
+
+  it.each(['xyz', '', 'completed', 'Move-In'])(
+    'rejects the route step %j',
+    step => {
+      expect(isContractRouteStep(step)).toBe(false)
+    }
+  )
 })
 
 describe('contract-flow-steps with serverFlow', () => {

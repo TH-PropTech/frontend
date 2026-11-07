@@ -37,7 +37,8 @@ export interface MoveOutHandoverInput {
   handedBackAt: string
   electricity: number
   water: number
-  meterPhotos?: { electricity: string[]; water: string[] }
+  /** Ảnh công tơ điện và nước: bắt buộc mỗi loại 1–3 ảnh. */
+  meterPhotos: { electricity: string[]; water: string[] }
   /** Gửi khi người ghi xác nhận chỉ số nhỏ hơn lúc nhận nhà (ví dụ công tơ đã được thay). */
   acknowledgeMeterRegression?: boolean
   keyCount: number

@@ -115,27 +115,49 @@ describe('MoveOutHandoverSection', () => {
     })
   })
 
-  it('records without meter photos and omits meterPhotos from the payload', async () => {
-    vi.mocked(api.getMoveOutHandover).mockResolvedValue(null)
-    renderSection('landlord')
-    const form = await screen.findByRole('form', { name: 'Biên bản trả nhà' })
-    const inputs = form.querySelectorAll('input')
-    fireEvent.change(inputs[0] as HTMLInputElement, {
-      target: { value: '2026-10-01T10:00' },
-    })
-    fireEvent.change(inputs[1] as HTMLInputElement, {
-      target: { value: '120' },
-    })
-    fireEvent.change(inputs[2] as HTMLInputElement, { target: { value: '30' } })
-    fireEvent.change(inputs[3] as HTMLInputElement, { target: { value: '2' } })
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Ghi biên bản trả nhà' })
-    )
-    expect(api.recordMoveOutHandover).toHaveBeenCalledTimes(1)
-    expect(
-      vi.mocked(api.recordMoveOutHandover).mock.calls[0]![1]
-    ).not.toHaveProperty('meterPhotos')
-  })
+  it.each([
+    [
+      'water',
+      'Chọn ảnh công tơ điện',
+      'Ảnh công tơ điện 1',
+      'Vui lòng tải ít nhất một ảnh công tơ nước.',
+    ],
+    [
+      'electricity',
+      'Chọn ảnh công tơ nước',
+      'Ảnh công tơ nước 1',
+      'Vui lòng tải ít nhất một ảnh công tơ điện.',
+    ],
+  ])(
+    'blocks submit and names the missing %s photo',
+    async (_missing, attachLabel, attachedAlt, message) => {
+      vi.mocked(api.getMoveOutHandover).mockResolvedValue(null)
+      renderSection('landlord')
+      const form = await screen.findByRole('form', { name: 'Biên bản trả nhà' })
+      const inputs = form.querySelectorAll('input')
+      fireEvent.change(inputs[0] as HTMLInputElement, {
+        target: { value: '2026-10-01T10:00' },
+      })
+      fireEvent.change(inputs[1] as HTMLInputElement, {
+        target: { value: '120' },
+      })
+      fireEvent.change(inputs[2] as HTMLInputElement, {
+        target: { value: '30' },
+      })
+      fireEvent.change(inputs[3] as HTMLInputElement, {
+        target: { value: '2' },
+      })
+      fireEvent.change(screen.getByLabelText(attachLabel), {
+        target: { files: [PHOTO] },
+      })
+      await screen.findByAltText(attachedAlt)
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Ghi biên bản trả nhà' })
+      )
+      expect(api.recordMoveOutHandover).not.toHaveBeenCalled()
+      expect(screen.getByRole('alert').textContent).toBe(message)
+    }
+  )
 
   it('asks the landlord to confirm when the meter is below the move-in reading, then resubmits with the acknowledgement', async () => {
     vi.mocked(api.getMoveOutHandover).mockResolvedValue(null)

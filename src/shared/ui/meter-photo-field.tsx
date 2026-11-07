@@ -30,6 +30,29 @@ function validateFiles(files: File[], room: number): string | null {
   return null
 }
 
+export interface MeterPhotos {
+  electricity: string[]
+  water: string[]
+}
+
+export type MeterPhotoErrors = Partial<
+  Record<keyof MeterPhotos, string | undefined>
+>
+
+/** Biên bản bàn giao bắt buộc có ít nhất một ảnh mỗi loại công tơ. */
+export function getMissingMeterPhotoErrors(
+  photos: MeterPhotos
+): MeterPhotoErrors {
+  return {
+    ...(photos.electricity.length === 0
+      ? { electricity: 'Vui lòng tải ít nhất một ảnh công tơ điện.' }
+      : {}),
+    ...(photos.water.length === 0
+      ? { water: 'Vui lòng tải ít nhất một ảnh công tơ nước.' }
+      : {}),
+  }
+}
+
 /** Chọn, tải lên và xem trước ảnh công tơ; giữ lại các ảnh hợp lệ khi một lần tải lỗi. */
 export function MeterPhotoField({
   id,

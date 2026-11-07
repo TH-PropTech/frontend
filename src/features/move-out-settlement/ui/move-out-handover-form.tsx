@@ -3,7 +3,12 @@
 import { useState, type FormEvent, type ReactElement } from 'react'
 import { ClipboardList, Loader2, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
-import { MeterPhotoField } from '@/shared/ui/meter-photo-field'
+import {
+  MeterPhotoField,
+  getMissingMeterPhotoErrors,
+  type MeterPhotoErrors,
+  type MeterPhotos,
+} from '@/shared/ui/meter-photo-field'
 import {
   UtilitySettlementNote,
   type UtilityRatesView,
@@ -70,13 +75,11 @@ export function MoveOutHandoverForm({
     }))
   )
   const [notes, setNotes] = useState(initial?.notes ?? '')
-  const [photos, setPhotos] = useState<{
-    electricity: string[]
-    water: string[]
-  }>({
+  const [photos, setPhotos] = useState<MeterPhotos>({
     electricity: initial?.meterPhotos?.electricity ?? [],
     water: initial?.meterPhotos?.water ?? [],
   })
+  const [photoErrors, setPhotoErrors] = useState<MeterPhotoErrors>({})
 
   const updateItem = (index: number, patch: Partial<ItemDraft>): void =>
     setItems(current =>
@@ -85,14 +88,15 @@ export function MoveOutHandoverForm({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault()
+    const missing = getMissingMeterPhotoErrors(photos)
+    setPhotoErrors(missing)
+    if (Object.keys(missing).length > 0) return
     const trimmedNotes = notes.trim()
     onSubmit({
       handedBackAt: new Date(handedBackAt).toISOString(),
       electricity: Number(meters.electricity),
       water: Number(meters.water),
-      ...(photos.electricity.length + photos.water.length > 0
-        ? { meterPhotos: photos }
-        : {}),
+      meterPhotos: photos,
       keyCount: Number(meters.keyCount),
       inventoryItems: items.map(item => ({
         name: item.name.trim(),
@@ -145,8 +149,10 @@ export function MoveOutHandoverForm({
           label="Ảnh công tơ điện"
           urls={photos.electricity}
           disabled={busy}
+          error={photoErrors.electricity}
           onChange={urls => {
             setPhotos(current => ({ ...current, electricity: urls }))
+            setPhotoErrors(current => ({ ...current, electricity: undefined }))
           }}
         />
         <MeterPhotoField
@@ -154,8 +160,10 @@ export function MoveOutHandoverForm({
           label="Ảnh công tơ nước"
           urls={photos.water}
           disabled={busy}
+          error={photoErrors.water}
           onChange={urls => {
             setPhotos(current => ({ ...current, water: urls }))
+            setPhotoErrors(current => ({ ...current, water: undefined }))
           }}
         />
       </div>
