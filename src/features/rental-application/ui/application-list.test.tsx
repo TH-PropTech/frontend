@@ -72,6 +72,47 @@ describe('ApplicationList Component', () => {
     expect(exploreLink).toHaveAttribute('href', '/properties')
   })
 
+  it('shows a Vietnamese rejection reason without leaking raw codes', async () => {
+    const base = {
+      apartmentId: 'apt-1',
+      tenantId: 'tenant-1',
+      landlordId: 'landlord-1',
+      status: 'rejected' as const,
+      actorId: null,
+      actorTimestamp: null,
+      createdAt: '2026-09-13T00:00:00Z',
+      updatedAt: '2026-09-13T00:00:00Z',
+      occupants: 2,
+      moveInDate: '2026-10-01',
+      occupation: 'Designer',
+      hasPets: false,
+    }
+    vi.mocked(getMyRentalApplications).mockResolvedValue({
+      items: [
+        { ...base, _id: 'r1', reasonCode: 'PROPERTY_UNAVAILABLE' },
+        { ...base, _id: 'r2', reasonCode: 'OTHER' },
+        { ...base, _id: 'r3', reasonCode: 'SOME_NEW_REASON' },
+      ],
+      total: 3,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+    })
+
+    renderWithClient(<ApplicationList />)
+    const list = await screen.findByTestId('application-list')
+
+    expect(
+      screen.getByText('Lý do từ chối: Căn hộ đã có người thuê/giữ chỗ')
+    ).toBeInTheDocument()
+    expect(screen.getByText('Lý do từ chối: Lý do khác')).toBeInTheDocument()
+    expect(
+      screen.getByText('Lý do từ chối: Some new reason')
+    ).toBeInTheDocument()
+    expect(list.textContent).not.toMatch(/[A-Z]{3,}(_[A-Z0-9]+){1,}/)
+    expect(list.textContent).not.toContain('OTHER')
+  })
+
   it('renders applications list with pending item and accepted item linking to contract', async () => {
     const mockItems = [
       {
