@@ -7,7 +7,12 @@ import type {
   HandoverInventoryItem,
 } from '@/features/contracts/api/contracts-api'
 import { Button } from '@/shared/ui/button'
-import { MeterPhotoField } from '@/shared/ui/meter-photo-field'
+import {
+  MeterPhotoField,
+  getMissingMeterPhotoErrors,
+  type MeterPhotoErrors,
+  type MeterPhotos,
+} from '@/shared/ui/meter-photo-field'
 import {
   UtilitySettlementNote,
   type UtilityRatesView,
@@ -65,10 +70,11 @@ export function HandoverRecordForm({
   })
   const [items, setItems] = useState<ItemDraft[]>([])
   const [notes, setNotes] = useState('')
-  const [photos, setPhotos] = useState<{
-    electricity: string[]
-    water: string[]
-  }>({ electricity: [], water: [] })
+  const [photos, setPhotos] = useState<MeterPhotos>({
+    electricity: [],
+    water: [],
+  })
+  const [photoErrors, setPhotoErrors] = useState<MeterPhotoErrors>({})
   const [template, setTemplate] = useState<HandoverTemplate | null>(null)
   const [checked, setChecked] = useState<Record<string, boolean>>({})
 
@@ -106,15 +112,16 @@ export function HandoverRecordForm({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault()
+    const missing = getMissingMeterPhotoErrors(photos)
+    setPhotoErrors(missing)
+    if (Object.keys(missing).length > 0) return
     const trimmedNotes = notes.trim()
     onSubmit({
       // datetime-local không có múi giờ: đổi sang ISO theo giờ trình duyệt.
       handedOverAt: new Date(handedOverAt).toISOString(),
       electricity: Number(meters.electricity),
       water: Number(meters.water),
-      ...(photos.electricity.length + photos.water.length > 0
-        ? { meterPhotos: photos }
-        : {}),
+      meterPhotos: photos,
       keyCount: Number(meters.keyCount),
       inventoryItems: items.map(item => ({
         name: item.name.trim(),
@@ -174,8 +181,10 @@ export function HandoverRecordForm({
           label="Ảnh công tơ điện"
           urls={photos.electricity}
           disabled={busy}
+          error={photoErrors.electricity}
           onChange={urls => {
             setPhotos(current => ({ ...current, electricity: urls }))
+            setPhotoErrors(current => ({ ...current, electricity: undefined }))
           }}
         />
         <MeterPhotoField
@@ -183,8 +192,10 @@ export function HandoverRecordForm({
           label="Ảnh công tơ nước"
           urls={photos.water}
           disabled={busy}
+          error={photoErrors.water}
           onChange={urls => {
             setPhotos(current => ({ ...current, water: urls }))
+            setPhotoErrors(current => ({ ...current, water: undefined }))
           }}
         />
       </div>

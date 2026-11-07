@@ -502,8 +502,8 @@ export interface HandoverInput {
   handedOverAt: string
   electricity: number
   water: number
-  /** Ảnh công tơ điện và nước: tùy chọn. */
-  meterPhotos?: { electricity: string[]; water: string[] }
+  /** Ảnh công tơ điện và nước: bắt buộc mỗi loại 1–3 ảnh. */
+  meterPhotos: { electricity: string[]; water: string[] }
   keyCount: number
   inventoryItems?: HandoverInventoryItem[]
   checklist?: Array<{ id: string; checked: boolean }>
