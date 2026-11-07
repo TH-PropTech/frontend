@@ -169,6 +169,18 @@ export function getMoveOutPhaseLabel(phase: string): string {
   return MOVE_OUT_PHASE_LABELS[phase] ?? humanizeCode(phase)
 }
 
+const PAYMENT_TYPE_LABELS: Record<string, string> = {
+  rent: 'Tiền thuê',
+  penalty: 'Lãi chậm trả',
+  deposit: 'Tiền cọc',
+  'deposit-topup': 'Bổ sung cọc',
+  'platform-fee': 'Phí nền tảng',
+}
+
+export function getPaymentTypeLabel(type: string): string {
+  return PAYMENT_TYPE_LABELS[type] ?? humanizeCode(type)
+}
+
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   MOC_WALLET: 'Ví Mộc',
   MOMOBANK: 'Ví MoMo',

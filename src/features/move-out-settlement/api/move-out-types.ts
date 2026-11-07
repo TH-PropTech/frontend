@@ -80,6 +80,15 @@ export interface DepositRefund {
   note: string | null
   recordedAt: string
   tenantAcknowledgedAt: string | null
+  /** Lãi chủ nhà chậm hoàn cọc; `null` khi hoàn đúng hạn. */
+  lateInterest?: RefundLateInterest | null
+}
+
+export interface RefundLateInterest {
+  ratePerYear: number
+  daysLate: number
+  amount: number
+  legalBasis: string
 }
 
 export interface DepositStatement {
@@ -100,6 +109,8 @@ export interface DepositStatement {
     | null
   refundDueAt: string | null
   refundOverdueAt: string | null
+  /** Lãi tạm tính trên phần cọc còn phải hoàn khi đã quá hạn; không lưu, hai bên tự thanh toán. */
+  accruedRefundInterest?: number | null
   closedAt: string | null
   closeReason:
     | 'tenant-acknowledged'

@@ -367,9 +367,7 @@ export function ContractStepContent({
           currentRent={data.contract.commercial.monthlyRent}
           onChanged={refresh}
         />
-        {signerRole === 'tenant' ? (
-          <PaymentSchedulePanel contractId={contractId} />
-        ) : null}
+        <PaymentSchedulePanel contractId={contractId} viewerRole={signerRole} />
       </div>
     )
   }

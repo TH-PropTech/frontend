@@ -37,6 +37,23 @@ export interface PaymentItem {
   txRef: string | null
   ledgerStatus: 'not-required' | 'pending' | 'confirmed' | 'failed'
   reminderSentForDate?: string | null
+  periodKey?: string | null
+  /** Hóa đơn `rent` đang quá hạn: số ngày trễ tính đến hôm nay; còn lại `null`. */
+  daysLate?: number | null
+  /** Lãi tạm tính, chỉ để hiển thị; số chốt tính khi thanh toán. */
+  accruedLateInterest?: number | null
+  /** Hóa đơn `penalty`: id hóa đơn tiền thuê trả trễ đã sinh ra khoản này. */
+  sourcePaymentId?: string | null
+  latePenalty?: LatePenaltyDetail | null
+  waiveReason?: string | null
+}
+
+export interface LatePenaltyDetail {
+  baseAmount: number
+  ratePerYear: number
+  daysLate: number
+  dueDateKey: string
+  paidDateKey: string
 }
 
 export interface PaymentInit {
@@ -162,6 +179,17 @@ export async function getPaymentsByContract(
   contractId: string
 ): Promise<PaymentItem[]> {
   return apiClient.get<PaymentItem[]>(`/payments?contractId=${contractId}`)
+}
+
+/** Chủ nhà miễn một hóa đơn lãi chậm trả chưa thanh toán; bắt buộc có lý do. */
+export async function waivePenalty(
+  paymentId: string,
+  reason: string
+): Promise<PaymentItem> {
+  return apiClient.post<PaymentItem>(
+    `/payments/${encodeURIComponent(paymentId)}/waive-penalty`,
+    { reason }
+  )
 }
 
 export async function initDepositPayment(

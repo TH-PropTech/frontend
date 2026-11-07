@@ -187,6 +187,15 @@ export function LedgerEvidenceDrawer({
                 </span>
                 <span>{data.events.length} sự kiện</span>
               </div>
+              {data.signingProvider === 'dev-test' ? (
+                <p
+                  data-testid="ledger-dev-test-signing"
+                  className="rounded-lg border border-[var(--warning)] bg-[var(--surface-raised)] p-3 text-xs text-[var(--warning)]"
+                >
+                  Ký thử: hợp đồng này được ký bằng chữ ký thử nghiệm của môi
+                  trường phát triển, không phải chữ ký số SmartCA.
+                </p>
+              ) : null}
               <div
                 data-testid="ledger-governance-reference"
                 className="rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-3 text-xs text-[var(--muted)]"

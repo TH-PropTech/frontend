@@ -15,6 +15,11 @@ import {
   choiceLimitNote,
   usePaymentProviders,
 } from './payment-provider-picker'
+import {
+  AccruedInterestNote,
+  PenaltyBreakdown,
+  WaivePenaltyControl,
+} from './late-penalty-details'
 
 const PAYMENT_STATUS_LABELS: Record<PaymentItem['status'], string> = {
   unpaid: 'Chưa thanh toán',
@@ -25,11 +30,15 @@ const PAYMENT_STATUS_LABELS: Record<PaymentItem['status'], string> = {
 
 export interface PaymentSchedulePanelProps {
   contractId: string
+  /** Chủ nhà chỉ xem lịch và miễn khoản lãi; khách thuê thanh toán. Mặc định: khách thuê. */
+  viewerRole?: 'tenant' | 'landlord'
 }
 
 export function PaymentSchedulePanel({
   contractId,
+  viewerRole = 'tenant',
 }: PaymentSchedulePanelProps): React.ReactElement {
+  const isLandlord = viewerRole === 'landlord'
   const [payments, setPayments] = React.useState<PaymentItem[]>([])
   const [loading, setLoading] = React.useState(true)
   const [busyPaymentId, setBusyPaymentId] = React.useState<string | null>(null)
@@ -59,7 +68,13 @@ export function PaymentSchedulePanel({
       if (!silent) setLoading(true)
       setError(null)
       try {
-        setPayments(await getPaymentsByContract(contractId))
+        const items = await getPaymentsByContract(contractId)
+        // Phí nền tảng của chủ nhà được trả ở tab ví, không nằm trong lịch tiền thuê.
+        setPayments(
+          isLandlord
+            ? items.filter(item => item.type !== 'platform-fee')
+            : items
+        )
       } catch (loadError) {
         setError(
           loadError instanceof Error
@@ -70,7 +85,7 @@ export function PaymentSchedulePanel({
         setLoading(false)
       }
     },
-    [contractId]
+    [contractId, isLandlord]
   )
 
   React.useEffect(() => {
@@ -151,18 +166,20 @@ export function PaymentSchedulePanel({
         </span>
       </header>
 
-      <PaymentProviderPicker
-        providers={providers}
-        value={selected}
-        onChange={setSelected}
-        momoMethod={momoMethod}
-        onMomoMethodChange={setMomoMethod}
-        zalopayMethod={zalopayMethod}
-        onZalopayMethodChange={setZalopayMethod}
-        brand={brand}
-        onBrandChange={setBrand}
-        disabled={busyPaymentId !== null}
-      />
+      {isLandlord ? null : (
+        <PaymentProviderPicker
+          providers={providers}
+          value={selected}
+          onChange={setSelected}
+          momoMethod={momoMethod}
+          onMomoMethodChange={setMomoMethod}
+          zalopayMethod={zalopayMethod}
+          onZalopayMethodChange={setZalopayMethod}
+          brand={brand}
+          onBrandChange={setBrand}
+          disabled={busyPaymentId !== null}
+        />
+      )}
 
       {payments.length === 0 ? (
         <p className="rounded-xl border border-border bg-surface-muted p-4 text-sm text-muted">
@@ -183,12 +200,22 @@ export function PaymentSchedulePanel({
                   Hạn {new Date(payment.dueDate).toLocaleDateString('vi-VN')} ·{' '}
                   {payment.amount.toLocaleString('vi-VN')} đ
                 </p>
+                <PenaltyBreakdown payment={payment} />
+                <AccruedInterestNote payment={payment} />
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-muted">
                   {PAYMENT_STATUS_LABELS[payment.status]}
                 </span>
-                {payment.status === 'unpaid' || payment.status === 'overdue' ? (
+                {isLandlord ? (
+                  <WaivePenaltyControl
+                    payment={payment}
+                    onWaived={() => void load(true)}
+                  />
+                ) : null}
+                {!isLandlord &&
+                (payment.status === 'unpaid' ||
+                  payment.status === 'overdue') ? (
                   <PayButton
                     busy={busyPaymentId === payment._id}
                     disabled={busyPaymentId !== null}

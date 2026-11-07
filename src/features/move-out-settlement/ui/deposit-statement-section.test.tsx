@@ -404,6 +404,79 @@ describe('DepositStatementSection', () => {
     expect(text).not.toMatch(INTERNAL_CODE)
   })
 
+  it('shows the late refund interest of a refund recorded after the deadline', async () => {
+    vi.mocked(api.getDepositStatement).mockResolvedValue(
+      makeStatement({
+        status: 'refund-recorded',
+        refunds: [
+          {
+            id: 'r1',
+            amount: 4_000_000,
+            transactionRef: 'FT123',
+            paidAt: '2026-12-10T00:00:00.000Z',
+            note: null,
+            recordedAt: '2026-12-10T00:00:00.000Z',
+            tenantAcknowledgedAt: null,
+            lateInterest: {
+              ratePerYear: 10,
+              daysLate: 9,
+              amount: 9863,
+              legalBasis: 'Điều 357 và khoản 2 Điều 468 Bộ luật Dân sự 2015',
+            },
+          },
+        ],
+      })
+    )
+    renderSection('tenant')
+    const interest = await screen.findByTestId('refund-late-interest')
+    expect(interest.textContent).toMatch(/Hoàn trễ 9 ngày/)
+    expect(interest.textContent).toMatch(/9\.863/)
+    expect(interest.textContent).toMatch(/Điều 357 và khoản 2 Điều 468/)
+    expect(interest.textContent).toMatch(/tự thanh toán/)
+    expect(document.body.textContent ?? '').not.toMatch(BANNED_TERMS)
+  })
+
+  it('shows no late interest for an on-time refund', async () => {
+    vi.mocked(api.getDepositStatement).mockResolvedValue(
+      makeStatement({
+        status: 'refund-recorded',
+        refunds: [
+          {
+            id: 'r1',
+            amount: 7_500_000,
+            transactionRef: 'FT123',
+            paidAt: '2026-10-05T00:00:00.000Z',
+            note: null,
+            recordedAt: '2026-10-05T00:00:00.000Z',
+            tenantAcknowledgedAt: null,
+            lateInterest: null,
+          },
+        ],
+      })
+    )
+    renderSection('tenant')
+    await screen.findByTestId('refund-item')
+    expect(screen.queryByTestId('refund-late-interest')).toBeNull()
+    expect(screen.queryByTestId('accrued-refund-interest')).toBeNull()
+  })
+
+  it('shows the provisional interest while the refund is overdue', async () => {
+    vi.mocked(api.getDepositStatement).mockResolvedValue(
+      makeStatement({
+        status: 'accepted',
+        acceptedReason: 'tenant-no-response',
+        refundDueAt: '2020-01-01T00:00:00.000Z',
+        refundOverdueAt: '2020-01-02T00:00:00.000Z',
+        accruedRefundInterest: 21918,
+      })
+    )
+    renderSection('landlord')
+    const note = await screen.findByTestId('accrued-refund-interest')
+    expect(note.textContent).toMatch(/Lãi chậm hoàn tạm tính/)
+    expect(note.textContent).toMatch(/21\.918/)
+    expect(document.body.textContent ?? '').not.toMatch(BANNED_TERMS)
+  })
+
   it('shows the closed reason', async () => {
     vi.mocked(api.getDepositStatement).mockResolvedValue(
       makeStatement({ status: 'closed', closeReason: 'tenant-acknowledged' })

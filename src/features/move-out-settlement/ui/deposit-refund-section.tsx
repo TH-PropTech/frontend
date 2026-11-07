@@ -97,6 +97,17 @@ export function DepositRefundSection({
           Quá hạn hoàn cọc. Hệ thống đã nhắc hai bên và ghi lại sự kiện này.
         </p>
       ) : null}
+      {statement.accruedRefundInterest ? (
+        <p
+          data-testid="accrued-refund-interest"
+          className="text-[var(--warning)]"
+        >
+          Lãi chậm hoàn tạm tính {formatMoney(statement.accruedRefundInterest)}{' '}
+          trên số cọc còn phải hoàn (10%/năm theo Điều 357 và khoản 2 Điều 468
+          Bộ luật Dân sự 2015). Hai bên tự thanh toán; sàn không thu hộ hay giữ
+          tiền.
+        </p>
+      ) : null}
       {statement.refunds.length === 0 ? (
         <p className="text-[var(--muted)]">
           Chưa có khoản hoàn nào được khai báo.
@@ -116,6 +127,18 @@ export function DepositRefundSection({
               </p>
               {refund.note ? (
                 <p className="break-words">{refund.note}</p>
+              ) : null}
+              {refund.lateInterest ? (
+                <p
+                  data-testid="refund-late-interest"
+                  className="text-[var(--warning)]"
+                >
+                  Hoàn trễ {refund.lateInterest.daysLate} ngày: lãi chậm hoàn{' '}
+                  {formatMoney(refund.lateInterest.amount)} (
+                  {refund.lateInterest.ratePerYear}%/năm,{' '}
+                  {refund.lateInterest.legalBasis}
+                  ). Hai bên tự thanh toán.
+                </p>
               ) : null}
               {refund.tenantAcknowledgedAt ? (
                 <p className="text-[var(--success)]">

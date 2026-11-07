@@ -14,6 +14,84 @@ vi.mock('../api/contracts-api', () => ({
 describe('LedgerEvidenceDrawer', () => {
   beforeEach(() => vi.clearAllMocks())
 
+  it('labels a contract signed through the dev-test path as "Ký thử"', async () => {
+    vi.mocked(getContractLedgerEvidence).mockResolvedValue({
+      networkMode: 'fabric',
+      connectionState: 'connected',
+      explorerAvailable: false,
+      signingProvider: 'dev-test',
+      events: [
+        {
+          id: 'log-1',
+          eventType: 'createContract',
+          aggregateType: 'contract',
+          aggregateRef: '123456',
+          status: 'confirmed',
+          networkMode: 'fabric',
+          txId: 'tx_1',
+          blockNumber: 3,
+          recordedAt: '2026-09-14T10:00:00Z',
+          payloadHash: 'a'.repeat(64),
+          dependsOn: null,
+          attempts: 1,
+          errorCode: null,
+          explorerUrl: null,
+        },
+      ],
+    })
+
+    render(
+      <LedgerEvidenceDrawer
+        contractId="contract-1"
+        open
+        onOpenChange={vi.fn()}
+      />
+    )
+
+    expect(
+      (await screen.findByTestId('ledger-dev-test-signing')).textContent
+    ).toContain('Ký thử')
+  })
+
+  it('shows no signing label for a SmartCA contract or a contract anchored before the signing provider was recorded', async () => {
+    for (const signingProvider of ['smartca', null, undefined] as const) {
+      vi.mocked(getContractLedgerEvidence).mockResolvedValue({
+        networkMode: 'fabric',
+        connectionState: 'connected',
+        explorerAvailable: false,
+        ...(signingProvider === undefined ? {} : { signingProvider }),
+        events: [
+          {
+            id: 'log-1',
+            eventType: 'createContract',
+            aggregateType: 'contract',
+            aggregateRef: '123456',
+            status: 'confirmed',
+            networkMode: 'fabric',
+            txId: 'tx_1',
+            blockNumber: 3,
+            recordedAt: '2026-09-14T10:00:00Z',
+            payloadHash: 'a'.repeat(64),
+            dependsOn: null,
+            attempts: 1,
+            errorCode: null,
+            explorerUrl: null,
+          },
+        ],
+      })
+      const { unmount } = render(
+        <LedgerEvidenceDrawer
+          contractId="contract-1"
+          open
+          onOpenChange={vi.fn()}
+        />
+      )
+      await screen.findByTestId('ledger-governance-reference')
+      expect(screen.queryByTestId('ledger-dev-test-signing')).toBeNull()
+      unmount()
+    }
+  })
+
   it('renders a cleaned simulation timeline without Explorer links', async () => {
     vi.mocked(getContractLedgerEvidence).mockResolvedValue({
       networkMode: 'simulation',
