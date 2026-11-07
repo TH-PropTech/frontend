@@ -153,6 +153,8 @@ export function PropertyDetail(): React.ReactElement {
   }, [storedUser])
 
   const [property, setProperty] = React.useState<ApartmentItem | null>(null)
+  const viewerId = viewer?.id ?? viewer?._id
+  const isOwner = !!viewerId && property?.landlord?.id === viewerId
   const [propertyError, setPropertyError] = React.useState<Error | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [isOpen360, setIsOpen360] = React.useState(false)
@@ -273,7 +275,7 @@ export function PropertyDetail(): React.ReactElement {
             title={property.title}
           />
           <FreshnessBadge listingId={apartmentResourceId} />
-          {viewer?.roles?.includes('tenant') ? (
+          {viewer?.roles?.includes('tenant') && !isOwner ? (
             availability.isApplicationAllowed ? (
               <Button
                 asChild

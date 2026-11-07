@@ -209,6 +209,88 @@ describe('PropertyDetail backend resource identity', () => {
     })
   })
 
+  describe('listing owner viewing own listing', () => {
+    const landlord = {
+      id: 'owner-1',
+      fullName: 'Owner',
+      email: 'owner@example.com',
+      phone: '0900000000',
+      avatar: '',
+      kycStatus: 'verified',
+    }
+    const ownedProperty: ApartmentItem = { ...property, landlord }
+
+    it.each([
+      ['available', {}],
+      [
+        'unavailable',
+        {
+          rentalAvailabilityStatus: 'deposit-paid',
+          rentalAvailabilityLabel: 'Đã đặt cọc',
+        },
+      ],
+    ])('hides the rent action for the owner (%s)', async (_n, extra) => {
+      window.localStorage.setItem(
+        'user',
+        JSON.stringify({ id: 'owner-1', roles: ['tenant'] })
+      )
+      mocks.get.mockResolvedValue({ ...ownedProperty, ...extra })
+
+      render(<PropertyDetail />)
+
+      await screen.findByTestId('booking-id')
+      expect(
+        screen.queryByRole('link', { name: /Đặt thuê căn hộ/i })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByTestId('rental-application-unavailable')
+      ).not.toBeInTheDocument()
+    })
+
+    it('hides the rent action when the owner id comes from _id', async () => {
+      window.localStorage.setItem(
+        'user',
+        JSON.stringify({ _id: 'owner-1', roles: ['tenant'] })
+      )
+      mocks.get.mockResolvedValue(ownedProperty)
+
+      render(<PropertyDetail />)
+
+      await screen.findByTestId('booking-id')
+      expect(
+        screen.queryByRole('link', { name: /Đặt thuê căn hộ/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it('still shows the rent action to a different tenant', async () => {
+      window.localStorage.setItem(
+        'user',
+        JSON.stringify({ id: 'tenant-1', roles: ['tenant'] })
+      )
+      mocks.get.mockResolvedValue(ownedProperty)
+
+      render(<PropertyDetail />)
+
+      expect(
+        await screen.findByRole('link', { name: /Đặt thuê căn hộ/i })
+      ).toBeInTheDocument()
+    })
+
+    it('still shows the rent action when the viewer has no id', async () => {
+      window.localStorage.setItem('user', JSON.stringify({ roles: ['tenant'] }))
+      mocks.get.mockResolvedValue({
+        ...property,
+        landlord: { ...landlord, id: undefined },
+      })
+
+      render(<PropertyDetail />)
+
+      expect(
+        await screen.findByRole('link', { name: /Đặt thuê căn hộ/i })
+      ).toBeInTheDocument()
+    })
+  })
+
   it('renders the finance and reviews tabs and handles tab switching', async () => {
     render(<PropertyDetail />)
 
