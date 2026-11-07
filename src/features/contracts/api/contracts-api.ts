@@ -560,6 +560,8 @@ export interface ContractLedgerEvidence {
   networkMode: 'fabric' | 'simulation'
   connectionState: 'disabled' | 'connected' | 'unavailable'
   explorerAvailable: boolean
+  /** `dev-test` khi hợp đồng ký thử (ngoài production); `null` khi chưa neo hoặc neo trước ABI 3. */
+  signingProvider?: 'smartca' | 'dev-test' | null
   events: LedgerEvidenceEvent[]
 }
 
